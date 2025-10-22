@@ -2,6 +2,11 @@
 
 A complete web-based data analysis and reporting system for managing elementary school read-a-thon events. **Built entirely with [Claude Code](https://claude.ai/code)** - see [how it was built](#-built-with-claude-code) below.
 
+## 📸 Screenshots
+
+![School Dashboard](docs/screenshots/school_tab_sample.png)
+*School Overview dashboard showing team competition, top performers, and participation metrics*
+
 ## 📤 Data Source
 
 This application processes data from **[Read-A-Thon.com](https://www.read-a-thon.com/)**, the official platform where:
@@ -287,13 +292,6 @@ This project demonstrates that complex, production-ready applications can be bui
 - **Incremental refinement** (review, adjust, repeat)
 
 The complete 3,723-line specification document is available in the app at **Help → Application Requirements**.
-
----
-
-## 📸 Screenshots
-
-![School Dashboard](docs/screenshots/school_tab_sample.png)
-*School Overview dashboard showing team competition, top performers, and participation metrics*
 
 ---
 
