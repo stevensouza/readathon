@@ -1100,7 +1100,12 @@ class ReportGenerator:
             'columns': ['table_name', 'row_count'],
             'data': results,
             'sort': 'table_name (asc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'All database tables (system query)',
+                'columns': COLUMN_METADATA['q1'],
+                'terms': get_report_terms('q1')
+            }
         }
 
     def q2_daily_summary(self, log_date: Optional[str] = None, group_by: str = 'class') -> Dict[str, Any]:
@@ -1203,7 +1208,12 @@ class ReportGenerator:
             'columns': list(results[0].keys()) if results else [],
             'data': results,
             'sort': f'{group_by}_name (asc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Class_Info, Grade_Rules',
+                'columns': COLUMN_METADATA['q2'],
+                'terms': get_report_terms('q2')
+            }
         }
 
     def q3_reader_cumulative_enhanced(self) -> Dict[str, Any]:
@@ -1239,7 +1249,12 @@ class ReportGenerator:
                        'days_participated', 'days_met_goal', 'cumulative_minutes', 'donation_amount', 'sponsors'],
             'data': results,
             'sort': 'cumulative_minutes (desc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Reader_Cumulative, Roster, Daily_Logs, Grade_Rules',
+                'columns': COLUMN_METADATA['q3'],
+                'terms': get_report_terms('q3')
+            }
         }
 
     def q4_prize_drawing(self, log_date: str) -> Dict[str, Any]:
@@ -1286,7 +1301,12 @@ class ReportGenerator:
             'data': winners,
             'sort': 'grade_level (asc)',
             'note': 'Winners are randomly selected each time this report runs',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Grade_Rules',
+                'columns': COLUMN_METADATA['q4'],
+                'terms': get_report_terms('q4')
+            }
         }
 
     def q5_student_cumulative(self, sort_by: str = 'minutes', limit: int = None) -> Dict[str, Any]:
@@ -1336,7 +1356,12 @@ class ReportGenerator:
             'columns': list(results[0].keys()) if results else [],
             'data': results,
             'sort': f'{sort_by} (desc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Grade_Rules, Reader_Cumulative',
+                'columns': COLUMN_METADATA['q5'],
+                'terms': get_report_terms('q5')
+            }
         }
 
     def q6_class_participation(self) -> Dict[str, Any]:
@@ -1398,7 +1423,12 @@ class ReportGenerator:
             'winners': winners,
             'sort': 'avg_participation_rate_with_color (desc)',
             'note': 'Tie-breaking: All classes with the highest rate (with color bonus) are listed as winners',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Class_Info, Daily_Logs, Team_Color_Bonus',
+                'columns': COLUMN_METADATA['q6'],
+                'terms': get_report_terms('q6')
+            }
         }
 
     def q7_complete_log(self, log_date: Optional[str] = None) -> Dict[str, Any]:
@@ -1436,7 +1466,12 @@ class ReportGenerator:
             'columns': ['log_date', 'student_name', 'minutes_read', 'class_name', 'home_room', 'teacher_name', 'grade_level', 'team_name'],
             'data': results,
             'sort': 'log_date (desc), team_name (asc), class_name (asc), student_name (asc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Daily_Logs, Roster',
+                'columns': COLUMN_METADATA['q7'],
+                'terms': get_report_terms('q7')
+            }
         }
 
     def q14_team_participation(self) -> Dict[str, Any]:
@@ -1492,7 +1527,12 @@ class ReportGenerator:
             'data': results,
             'winners': winners,
             'sort': 'avg_participation_rate_with_color (desc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Class_Info, Team_Color_Bonus',
+                'columns': COLUMN_METADATA['q14'],
+                'terms': get_report_terms('q14')
+            }
         }
 
     def q18_lead_class_by_grade(self) -> Dict[str, Any]:
@@ -1564,7 +1604,12 @@ class ReportGenerator:
             'data': results,
             'sort': 'grade_level (asc)',
             'note': 'Ties are shown when multiple classes have the same max participation rate (with color bonus)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Class_Info, Daily_Logs, Team_Color_Bonus',
+                'columns': COLUMN_METADATA['q18'],
+                'terms': get_report_terms('q18')
+            }
         }
 
     def q19_team_minutes(self) -> Dict[str, Any]:
@@ -1641,7 +1686,12 @@ Calculation Rules:<br>
             'columns': list(results[0].keys()) if results else [],
             'data': results,
             'sort': 'total_minutes_with_color (desc), with TOTAL row at bottom',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Team_Color_Bonus, Class_Info',
+                'columns': COLUMN_METADATA['q19'],
+                'terms': get_report_terms('q19')
+            }
         }
 
     def q20_team_donations(self) -> Dict[str, Any]:
@@ -1668,7 +1718,12 @@ Calculation Rules:<br>
             'columns': ['team_name', 'total_donations', 'total_sponsors', 'total_students', 'avg_donation_per_student'],
             'data': results,
             'sort': 'total_donations (desc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Reader_Cumulative',
+                'columns': COLUMN_METADATA['q20'],
+                'terms': get_report_terms('q20')
+            }
         }
 
     def q21_minutes_integrity_check(self) -> Dict[str, Any]:
@@ -1778,7 +1833,12 @@ Calculation Rules:<br>
             'columns': ['student_name', 'class_name', 'teacher_name', 'grade_level', 'team_name', 'total_minutes_read', 'days_met_goal', 'days_participated'],
             'data': results,
             'sort': 'total_minutes_read (desc)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Grade_Rules',
+                'columns': COLUMN_METADATA['q8'],
+                'terms': get_report_terms('q8')
+            }
         }
 
     def q22_student_name_sync_check(self) -> Dict[str, Any]:
@@ -1936,7 +1996,12 @@ Calculation Rules:<br>
             'data': results,
             'sort': 'grade_level (asc)',
             'note': 'Prize: Book Store $25 Gift Card per grade level',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Reader_Cumulative',
+                'columns': COLUMN_METADATA['q9'],
+                'terms': get_report_terms('q9')
+            }
         }
 
     def q10_most_minutes_by_grade(self) -> Dict[str, Any]:
@@ -1985,7 +2050,12 @@ Calculation Rules:<br>
             'data': results,
             'sort': 'grade_level (asc)',
             'note': 'Prize: Grandpa Joe\'s $25 Gift Card per grade level. Uses 120-minute daily cap.',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs',
+                'columns': COLUMN_METADATA['q10'],
+                'terms': get_report_terms('q10')
+            }
         }
 
     def q11_most_sponsors_by_grade(self) -> Dict[str, Any]:
@@ -2024,7 +2094,12 @@ Calculation Rules:<br>
             'data': results,
             'sort': 'grade_level (asc)',
             'note': 'Prize: Learning Express $25 Gift Card per grade level',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Reader_Cumulative',
+                'columns': COLUMN_METADATA['q11'],
+                'terms': get_report_terms('q11')
+            }
         }
 
     def q12_best_class_by_grade_simplified(self) -> Dict[str, Any]:
@@ -2092,7 +2167,12 @@ Calculation Rules:<br>
             'data': results,
             'sort': 'grade_level (asc)',
             'note': 'Prize: Classroom party/activity per grade level',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Class_Info, Daily_Logs, Team_Color_Bonus',
+                'columns': COLUMN_METADATA['q12'],
+                'terms': get_report_terms('q12')
+            }
         }
 
     def q13_overall_best_class_simplified(self) -> Dict[str, Any]:
@@ -2150,7 +2230,12 @@ Calculation Rules:<br>
             'data': winners,
             'sort': 'avg_participation_rate_with_color (desc)',
             'note': 'Prize: $100 for the teacher',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Class_Info, Daily_Logs, Team_Color_Bonus',
+                'columns': COLUMN_METADATA['q13'],
+                'terms': get_report_terms('q13')
+            }
         }
 
     def q15_goal_getters(self) -> Dict[str, Any]:
@@ -2203,7 +2288,12 @@ Calculation Rules:<br>
             'data': results,
             'sort': 'grade_level (asc), student_name (asc)',
             'note': 'Prize: Books (varies by grade level)',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Daily_Logs, Grade_Rules',
+                'columns': COLUMN_METADATA['q15'],
+                'terms': get_report_terms('q15')
+            }
         }
 
     def q16_top_earner_per_team(self) -> Dict[str, Any]:
@@ -2242,5 +2332,10 @@ Calculation Rules:<br>
             'data': results,
             'sort': 'team_name (asc)',
             'note': 'Prize: Principal for a day / Librarian for a day',
-            'last_updated': self._get_report_timestamp()
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Roster, Reader_Cumulative',
+                'columns': COLUMN_METADATA['q16'],
+                'terms': get_report_terms('q16')
+            }
         }

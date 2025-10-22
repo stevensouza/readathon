@@ -101,6 +101,721 @@ GLOBAL_TERMS = {
 # ============================================================================
 
 COLUMN_METADATA = {
+    # Q1: Table Counts
+    'q1': {
+        'table_name': {
+            'source': 'Database tables',
+            'description': 'The name of the database table'
+        },
+        'row_count': {
+            'source': 'COUNT(*)',
+            'formula': '[calculated]',
+            'description': 'The number of rows currently in this table'
+        }
+    },
+
+    # Q2: Daily Summary Report
+    'q2': {
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to. Classes are assigned to teams for competition'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher who leads this class'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this class (K-5). Grade determines daily reading goals and caps'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this class is competing for (Kitsko or Staub)'
+        },
+        'total_students': {
+            'source': 'Class_Info.total_students',
+            'description': 'The number of students enrolled in this class according to the roster'
+        },
+        'days_with_data': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT log_date)',
+            'description': 'The number of days for which reading data has been uploaded. This defines the contest period for this report'
+        },
+        'total_participations': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT student-day combinations)',
+            'description': 'The total number of student-day instances where a student read at least 1 minute. If 20 students read on 5 days, this could be up to 100 participations'
+        },
+        'participation_rate': {
+            'source': 'Calculated',
+            'formula': '(total_participations / (total_students * days_with_data)) * 100',
+            'description': 'The percentage of possible participation opportunities that were completed. 100% means every student participated every day. Expressed as a percentage (0-100)'
+        },
+        'student_count_met_goal_any_day': {
+            'source': 'Daily_Logs + Grade_Rules',
+            'formula': 'COUNT(DISTINCT students where minutes_read >= min_daily_minutes on any day)',
+            'description': 'The number of unique students who met their grade-level reading goal on at least one day during the contest period'
+        },
+        'student_count_met_goal_all_days': {
+            'source': 'Daily_Logs + Grade_Rules',
+            'formula': 'COUNT(DISTINCT students where days_met_goal = total_days)',
+            'description': 'The number of students who met their grade-level reading goal on every single day of the contest. These are "perfect attendance goal-getters"'
+        },
+        'total_minutes': {
+            'source': 'Daily_Logs.minutes_read',
+            'formula': 'SUM(MIN(minutes_read, 120))',
+            'description': 'Total reading minutes for this class with the 120-minute daily cap applied. This is the official count for team competition'
+        }
+    },
+
+    # Q3: Reader Cumulative Enhanced
+    'q3': {
+        'student_name': {
+            'source': 'Reader_Cumulative.student_name',
+            'description': "The student's full name as it appears in the cumulative stats download"
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'teacher_name': {
+            'source': 'Reader_Cumulative.teacher_name',
+            'description': 'The name of the teacher for this student (from cumulative download)'
+        },
+        'team_name': {
+            'source': 'Reader_Cumulative.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'days_participated': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(CASE WHEN minutes_read > 0)',
+            'description': 'The number of days this student logged at least 1 minute of reading'
+        },
+        'days_met_goal': {
+            'source': 'Daily_Logs + Grade_Rules',
+            'formula': 'SUM(CASE WHEN minutes_read >= min_daily_minutes)',
+            'description': 'The number of days this student met or exceeded their grade-level daily reading goal'
+        },
+        'cumulative_minutes': {
+            'source': 'Reader_Cumulative.cumulative_minutes',
+            'description': 'Total minutes reported in the cumulative download. May include out-of-range dates if parents entered them'
+        },
+        'donation_amount': {
+            'source': 'Reader_Cumulative.donation_amount',
+            'description': 'Total money raised by this student through sponsors and pledges'
+        },
+        'sponsors': {
+            'source': 'Reader_Cumulative.sponsors',
+            'description': 'The number of sponsors supporting this student'
+        }
+    },
+
+    # Q4: Prize Drawing
+    'q4': {
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name"
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher for this student'
+        },
+        'minutes_read': {
+            'source': 'Daily_Logs.minutes_read',
+            'description': 'The number of minutes this student read on the selected date (uncapped)'
+        },
+        'min_daily_minutes': {
+            'source': 'Grade_Rules.min_daily_minutes',
+            'description': 'The daily reading goal for this student based on their grade level. Students in this report met or exceeded this goal'
+        }
+    },
+
+    # Q5: Student Cumulative Report
+    'q5': {
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name"
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'days_participated': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(CASE WHEN minutes_read > 0)',
+            'description': 'The number of days this student logged at least 1 minute of reading'
+        },
+        'total_minutes_credited': {
+            'source': 'Daily_Logs.minutes_read',
+            'formula': 'SUM(MIN(minutes_read, 120))',
+            'description': 'Total reading minutes with the 120-minute daily cap applied. This is the official credited amount for team competition'
+        },
+        'total_minutes_actual': {
+            'source': 'Daily_Logs.minutes_read',
+            'formula': 'SUM(minutes_read)',
+            'description': 'Total reading minutes without any cap applied. Shows how much the student actually read, even if it exceeds daily caps'
+        },
+        'days_met_goal': {
+            'source': 'Daily_Logs + Grade_Rules',
+            'formula': 'SUM(CASE WHEN minutes_read >= min_daily_minutes)',
+            'description': 'The number of days this student met or exceeded their grade-level daily reading goal'
+        },
+        'total_donations': {
+            'source': 'Reader_Cumulative.donation_amount',
+            'description': 'Total money raised by this student. Shows 0 if no fundraising data exists'
+        },
+        'total_sponsors': {
+            'source': 'Reader_Cumulative.sponsors',
+            'description': 'The number of sponsors supporting this student. Shows 0 if no fundraising data exists'
+        }
+    },
+
+    # Q6: Class Participation
+    'q6': {
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher who leads this class'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this class (K-5)'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this class is competing for (Kitsko or Staub)'
+        },
+        'total_students': {
+            'source': 'Class_Info.total_students',
+            'description': 'The number of students enrolled in this class'
+        },
+        'days_with_data': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT log_date)',
+            'description': 'The number of days for which reading data has been uploaded'
+        },
+        'total_participations_base': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT student-day combinations)',
+            'description': 'Total student-day instances where a student read at least 1 minute, before team color bonuses'
+        },
+        'color_bonus_points': {
+            'source': 'Team_Color_Bonus',
+            'formula': 'SUM(bonus_participation_points)',
+            'description': 'Bonus participation points awarded for team color day events. Shows 0 if no bonuses have been awarded'
+        },
+        'total_participations_with_color': {
+            'source': 'Calculated',
+            'formula': 'total_participations_base + color_bonus_points',
+            'description': 'Total participations including team color day bonuses. This is the official count for class participation competition'
+        },
+        'avg_participation_rate': {
+            'source': 'Calculated',
+            'formula': '(total_participations_base / (total_students * days_with_data)) * 100',
+            'description': 'Base participation rate as a percentage, before team color bonuses'
+        },
+        'avg_participation_rate_with_color': {
+            'source': 'Calculated',
+            'formula': '(total_participations_with_color / (total_students * days_with_data)) * 100',
+            'description': 'Official participation rate including team color bonuses. Classes are ranked by this metric'
+        }
+    },
+
+    # Q7: Complete Log
+    'q7': {
+        'log_date': {
+            'source': 'Daily_Logs.log_date',
+            'description': 'The date this reading activity was logged (YYYY-MM-DD format)'
+        },
+        'student_name': {
+            'source': 'Daily_Logs.student_name',
+            'description': "The student's full name"
+        },
+        'minutes_read': {
+            'source': 'Daily_Logs.minutes_read',
+            'description': 'The number of minutes this student read on this date (uncapped)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        },
+        'home_room': {
+            'source': 'Roster.home_room',
+            'description': 'The physical room number or location for this class'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher for this student'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        }
+    },
+
+    # Q8: Student Reading Details
+    'q8': {
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name"
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher for this student'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'total_minutes_read': {
+            'source': 'Daily_Logs.minutes_read',
+            'formula': 'SUM(minutes_read)',
+            'description': 'Total reading minutes for this student (uncapped). Only includes students who actually participated'
+        },
+        'days_met_goal': {
+            'source': 'Daily_Logs + Grade_Rules',
+            'formula': 'SUM(CASE WHEN minutes_read >= min_daily_minutes)',
+            'description': 'The number of days this student met or exceeded their grade-level daily reading goal'
+        },
+        'days_participated': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(CASE WHEN minutes_read > 0)',
+            'description': 'The number of days this student logged at least 1 minute of reading'
+        }
+    },
+
+    # Q9: Most Donations by Grade
+    'q9': {
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level (K-5)'
+        },
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name. This student has the highest donations in their grade"
+        },
+        'donation_amount': {
+            'source': 'Reader_Cumulative.donation_amount',
+            'description': 'Total money raised by this student - the maximum for their grade level'
+        },
+        'sponsors': {
+            'source': 'Reader_Cumulative.sponsors',
+            'description': 'The number of sponsors supporting this student'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        }
+    },
+
+    # Q10: Most Minutes by Grade
+    'q10': {
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level (K-5)'
+        },
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name. This student has the most reading minutes in their grade"
+        },
+        'total_minutes_capped': {
+            'source': 'Daily_Logs.minutes_read',
+            'formula': 'SUM(MIN(minutes_read, 120))',
+            'description': 'Total reading minutes with 120-minute daily cap applied - the maximum for their grade level. This is the official credited amount'
+        },
+        'days_participated': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(CASE WHEN minutes_read > 0)',
+            'description': 'The number of days this student logged at least 1 minute of reading'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        }
+    },
+
+    # Q11: Most Sponsors by Grade
+    'q11': {
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level (K-5)'
+        },
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name. This student has the most sponsors in their grade"
+        },
+        'sponsor_count': {
+            'source': 'Reader_Cumulative.sponsors',
+            'description': 'The number of sponsors supporting this student - the maximum for their grade level'
+        },
+        'donation_amount': {
+            'source': 'Reader_Cumulative.donation_amount',
+            'description': 'Total money raised by this student from all sponsors'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        }
+    },
+
+    # Q12: Best Class by Grade
+    'q12': {
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level (K-5)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class. This class has the highest participation rate in their grade'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher who leads this class'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this class is competing for (Kitsko or Staub)'
+        },
+        'total_participations_base': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT student-day combinations)',
+            'description': 'Total student-day instances where a student read at least 1 minute, before team color bonuses'
+        },
+        'color_bonus_points': {
+            'source': 'Team_Color_Bonus',
+            'formula': 'SUM(bonus_participation_points)',
+            'description': 'Bonus participation points awarded for team color day events'
+        },
+        'avg_participation_rate': {
+            'source': 'Calculated',
+            'formula': '(total_participations_base / (total_students * days_with_data)) * 100',
+            'description': 'Base participation rate as a percentage, before team color bonuses'
+        },
+        'avg_participation_rate_with_color': {
+            'source': 'Calculated',
+            'formula': '(total_participations_with_color / (total_students * days_with_data)) * 100',
+            'description': 'Official participation rate including team color bonuses - the maximum for their grade level'
+        }
+    },
+
+    # Q13: Overall Best Class
+    'q13': {
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher who leads this class'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this class (K-5)'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this class is competing for (Kitsko or Staub)'
+        },
+        'total_participations_base': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT student-day combinations)',
+            'description': 'Total student-day instances where a student read at least 1 minute, before team color bonuses'
+        },
+        'color_bonus_points': {
+            'source': 'Team_Color_Bonus',
+            'formula': 'SUM(bonus_participation_points)',
+            'description': 'Bonus participation points awarded for team color day events'
+        },
+        'avg_participation_rate': {
+            'source': 'Calculated',
+            'formula': '(total_participations_base / (total_students * days_with_data)) * 100',
+            'description': 'Base participation rate as a percentage, before team color bonuses'
+        },
+        'avg_participation_rate_with_color': {
+            'source': 'Calculated',
+            'formula': '(total_participations_with_color / (total_students * days_with_data)) * 100',
+            'description': 'Official participation rate including team color bonuses. Classes are sorted by this value (highest first)'
+        }
+    },
+
+    # Q14: Team Participation
+    'q14': {
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team name (Kitsko or Staub)'
+        },
+        'total_students': {
+            'source': 'Roster',
+            'formula': 'COUNT(DISTINCT student_name)',
+            'description': 'The total number of students assigned to this team'
+        },
+        'days_with_data': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT log_date)',
+            'description': 'The number of days for which reading data has been uploaded'
+        },
+        'total_participations_base': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT student-day combinations)',
+            'description': 'Total student-day instances where a student read at least 1 minute, before team color bonuses'
+        },
+        'color_bonus_points': {
+            'source': 'Team_Color_Bonus',
+            'formula': 'SUM(bonus_participation_points) for team',
+            'description': 'Total bonus participation points awarded to all classes on this team for team color day events'
+        },
+        'total_participations_with_color': {
+            'source': 'Calculated',
+            'formula': 'total_participations_base + color_bonus_points',
+            'description': 'Total participations including team color day bonuses. This is the official count for team participation competition'
+        },
+        'avg_participation_rate': {
+            'source': 'Calculated',
+            'formula': '(total_participations_base / (total_students * days_with_data)) * 100',
+            'description': 'Base participation rate as a percentage, before team color bonuses'
+        },
+        'avg_participation_rate_with_color': {
+            'source': 'Calculated',
+            'formula': '(total_participations_with_color / (total_students * days_with_data)) * 100',
+            'description': 'Official participation rate including team color bonuses. Teams are ranked by this metric'
+        }
+    },
+
+    # Q15: Goal Getters
+    'q15': {
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name. This student met their reading goal every single day"
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'days_met_goal': {
+            'source': 'Daily_Logs + Grade_Rules',
+            'formula': 'SUM(CASE WHEN minutes_read >= min_daily_minutes)',
+            'description': 'The number of days this student met their goal - equals total_days for all students in this report'
+        },
+        'total_days': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT log_date)',
+            'description': 'The total number of contest days. Students in this report participated and met their goal on all of these days'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this student is competing for (Kitsko or Staub)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        }
+    },
+
+    # Q16: Top Earner Per Team
+    'q16': {
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team name (Kitsko or Staub)'
+        },
+        'student_name': {
+            'source': 'Roster.student_name',
+            'description': "The student's full name. This student raised the most money on their team"
+        },
+        'donation_amount': {
+            'source': 'Reader_Cumulative.donation_amount',
+            'description': 'Total money raised by this student - the maximum for their team'
+        },
+        'sponsors': {
+            'source': 'Reader_Cumulative.sponsors',
+            'description': 'The number of sponsors supporting this student'
+        },
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level for this student (K-5)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class this student belongs to'
+        }
+    },
+
+    # Q18: Lead Class by Grade
+    'q18': {
+        'grade_level': {
+            'source': 'Roster.grade_level',
+            'description': 'The grade level (K-5)'
+        },
+        'class_name': {
+            'source': 'Roster.class_name',
+            'description': 'The teacher or homeroom class. This class has the highest participation rate in their grade'
+        },
+        'teacher_name': {
+            'source': 'Roster.teacher_name',
+            'description': 'The name of the teacher who leads this class'
+        },
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team this class is competing for (Kitsko or Staub)'
+        },
+        'total_students': {
+            'source': 'Class_Info.total_students',
+            'description': 'The number of students enrolled in this class'
+        },
+        'days_with_data': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT log_date)',
+            'description': 'The number of days for which reading data has been uploaded'
+        },
+        'total_participations_base': {
+            'source': 'Daily_Logs',
+            'formula': 'COUNT(DISTINCT student-day combinations)',
+            'description': 'Total student-day instances where a student read at least 1 minute, before team color bonuses'
+        },
+        'color_bonus_points': {
+            'source': 'Team_Color_Bonus',
+            'formula': 'SUM(bonus_participation_points)',
+            'description': 'Bonus participation points awarded for team color day events'
+        },
+        'total_participations_with_color': {
+            'source': 'Calculated',
+            'formula': 'total_participations_base + color_bonus_points',
+            'description': 'Total participations including team color day bonuses'
+        },
+        'avg_participation_rate': {
+            'source': 'Calculated',
+            'formula': '(total_participations_base / (total_students * days_with_data)) * 100',
+            'description': 'Base participation rate as a percentage, before team color bonuses'
+        },
+        'avg_participation_rate_with_color': {
+            'source': 'Calculated',
+            'formula': '(total_participations_with_color / (total_students * days_with_data)) * 100',
+            'description': 'Official participation rate including team color bonuses - the maximum for their grade level'
+        }
+    },
+
+    # Q19: Team Minutes
+    'q19': {
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team name (Kitsko, Staub, or TOTAL for school-wide sum)'
+        },
+        'total_students': {
+            'source': 'Roster',
+            'formula': 'COUNT(DISTINCT student_name)',
+            'description': 'The total number of students assigned to this team (or all students for TOTAL row)'
+        },
+        'total_minutes_base': {
+            'source': 'Daily_Logs.minutes_read',
+            'formula': 'SUM(MIN(minutes_read, 120))',
+            'description': 'Total reading minutes with 120-minute daily cap applied, before team color bonuses'
+        },
+        'total_hours_base': {
+            'source': 'Calculated',
+            'formula': 'total_minutes_base / 60',
+            'description': 'Total reading hours (base minutes divided by 60), before team color bonuses'
+        },
+        'bonus_minutes': {
+            'source': 'Team_Color_Bonus',
+            'formula': 'SUM(bonus_minutes) for team',
+            'description': 'Bonus minutes awarded to all classes on this team for team color day events'
+        },
+        'total_minutes_with_color': {
+            'source': 'Calculated',
+            'formula': 'total_minutes_base + bonus_minutes',
+            'description': 'Official total minutes including team color bonuses. This is the final count for team competition'
+        },
+        'total_hours_with_color': {
+            'source': 'Calculated',
+            'formula': 'total_minutes_with_color / 60',
+            'description': 'Official total hours including team color bonuses'
+        },
+        'avg_minutes_per_student': {
+            'source': 'Calculated',
+            'formula': 'total_minutes_base / total_students',
+            'description': 'Average reading minutes per student on this team, before team color bonuses'
+        },
+        'avg_minutes_per_student_with_color': {
+            'source': 'Calculated',
+            'formula': 'total_minutes_with_color / total_students',
+            'description': 'Official average minutes per student including team color bonuses'
+        }
+    },
+
+    # Q20: Team Donations
+    'q20': {
+        'team_name': {
+            'source': 'Roster.team_name',
+            'description': 'The team name (Kitsko or Staub)'
+        },
+        'total_donations': {
+            'source': 'Reader_Cumulative.donation_amount',
+            'formula': 'SUM(donation_amount)',
+            'description': 'Total money raised by all students on this team'
+        },
+        'total_sponsors': {
+            'source': 'Reader_Cumulative.sponsors',
+            'formula': 'SUM(sponsors)',
+            'description': 'Total number of sponsors across all students on this team'
+        },
+        'total_students': {
+            'source': 'Roster',
+            'formula': 'COUNT(DISTINCT student_name)',
+            'description': 'The total number of students assigned to this team'
+        },
+        'avg_donation_per_student': {
+            'source': 'Calculated',
+            'formula': 'total_donations / total_students',
+            'description': 'Average fundraising per student on this team. Calculated by dividing total donations by total students'
+        }
+    },
+
     # Q21: Data Sync & Minutes Integrity Check
     'q21': {
         'student_name': {
@@ -133,19 +848,6 @@ COLUMN_METADATA = {
             'source': 'CASE WHEN...',
             'formula': '[calculated]',
             'description': 'The data integrity status: OK (values match perfectly), MINUTES_MISMATCH (student in both tables but values differ), MISSING_CUMULATIVE (has daily logs but not in Reader_Cumulative), MISSING_DAILY (in Reader_Cumulative but no daily logs), or NO_DATA (no activity - filtered out)'
-        }
-    },
-
-    # Q1: Table Counts
-    'q1': {
-        'table_name': {
-            'source': 'Database tables',
-            'description': 'The name of the database table'
-        },
-        'row_count': {
-            'source': 'COUNT(*)',
-            'formula': '[calculated]',
-            'description': 'The number of rows currently in this table'
         }
     },
 
