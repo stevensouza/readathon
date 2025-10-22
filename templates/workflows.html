@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Workflows - Read-a-Thon System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-diagram-3"></i> Workflows
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQD">
+                <h5 class="mb-0">
+                    QD: Daily Slide Update
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseQD">
+                    <p>Runs all slide deck reports in sequence:</p>
+                    <ul class="small mb-3">
+                        <li>Slide 2 (Q18): Lead Class by Grade</li>
+                        <li>Slide 3 (Q14): Team Participation</li>
+                        <li>Slide 4 (Q4): Prize Drawing</li>
+                        <li>Slide 5 (Q19): Team Minutes</li>
+                        <li>Slide 6 (Q20): Team Donations</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label for="qdDate" class="form-label">Date (for Prize Drawing)</label>
+                    <select class="form-select" id="qdDate">
+                        {% for date in dates %}
+                        <option value="{{ date }}">{{ date }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="btn btn-success w-100" onclick="runWorkflow('qd')">
+                    <i class="bi bi-play-fill"></i> Run Daily Workflow
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-info text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQC">
+                <h5 class="mb-0">
+                    QC: Cumulative Workflow
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseQC">
+                    <p>Runs all final prize reports in sequence:</p>
+                    <ul class="small mb-3">
+                        <li>Q5: Student Cumulative Report</li>
+                        <li>Q6: Class Participation Winner</li>
+                        <li>Q14: Team Participation Winner</li>
+                        <li>Q18: Lead Class by Grade</li>
+                        <li>Q19: Team Minutes</li>
+                        <li>Q20: Team Donations</li>
+                    </ul>
+                </div>
+
+                <button class="btn btn-info w-100" onclick="runWorkflow('qc')">
+                    <i class="bi bi-play-fill"></i> Run Cumulative Workflow
+                </button>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQF">
+                <h5 class="mb-0">
+                    QF: Final Prize Winners
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse show" id="collapseQF">
+                    <p>Runs all final prize winner reports:</p>
+                    <ul class="small mb-3">
+                        <li>Q9: Most Donations Per Grade (6 winners)</li>
+                        <li>Q10: Most Minutes Per Grade (6 winners)</li>
+                        <li>Q11: Most Sponsors Per Grade (6 winners)</li>
+                        <li>Q12: Best Class Per Grade (6 winners)</li>
+                        <li>Q13: Best Class in School (1 winner)</li>
+                        <li>Q16: Top Earner Per Team (2 winners)</li>
+                        <li>Q4: Daily Random Drawing (requires date)</li>
+                        <li>Q14: Team Participation Winner (1 winner - losing captain dresses in costume)</li>
+                        <li>Q19: Team Minutes (cumulative team reading with color bonus)</li>
+                        <li>Q15: Goal Getters (all qualifying - shows all 68 students)</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label for="qfDate" class="form-label">Date (for Q4 Daily Drawing)</label>
+                    <select class="form-select" id="qfDate">
+                        {% for date in dates %}
+                        <option value="{{ date }}">{{ date }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="btn btn-primary w-100" onclick="runWorkflow('qf')">
+                    <i class="bi bi-trophy-fill"></i> Run Final Prize Winners
+                </button>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQA">
+                <h5 class="mb-0">
+                    QA: All Main Reports
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseQA">
+                    <p>Runs all 21 available reports in sequence:</p>
+                    <ul class="small mb-3">
+                        <li>Q1: Table Counts</li>
+                        <li>Q2: Daily Summary</li>
+                        <li>Q4: Prize Drawing</li>
+                        <li>Q5: Student Cumulative</li>
+                        <li>Q6: Class Participation</li>
+                        <li>Q7: Complete Log</li>
+                        <li>Q8: Student Reading Details</li>
+                        <li>Q9: Most Donations Per Grade</li>
+                        <li>Q10: Most Minutes Per Grade</li>
+                        <li>Q11: Most Sponsors Per Grade</li>
+                        <li>Q12: Best Class Per Grade</li>
+                        <li>Q13: Best Class in School</li>
+                        <li>Q14: Team Participation</li>
+                        <li>Q15: Goal Getters</li>
+                        <li>Q16: Top Earner Per Team</li>
+                        <li>Q18: Lead Class by Grade</li>
+                        <li>Q19: Team Minutes</li>
+                        <li>Q20: Team Donations</li>
+                        <li>Q21: Data Integrity Check</li>
+                        <li>Q22: Name Sync Check</li>
+                        <li>Q23: Roster Integrity Check</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label for="qaDate" class="form-label">Date (for Q2, Q4, Q7)</label>
+                    <select class="form-select" id="qaDate">
+                        {% for date in dates %}
+                        <option value="{{ date }}">{{ date }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="btn btn-warning w-100" onclick="runWorkflow('qa')">
+                    <i class="bi bi-play-fill"></i> Run All Main Reports
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div id="workflowResults">
+            <div class="card">
+                <div class="card-body text-center text-muted py-5">
+                    <i class="bi bi-diagram-3" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Select a workflow to run all reports in sequence</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Rotate chevron icons when collapsing/expanding
+document.addEventListener('DOMContentLoaded', function() {
+    const collapseElements = document.querySelectorAll('.collapse');
+    collapseElements.forEach(function(collapseEl) {
+        const chevron = collapseEl.closest('.card').querySelector('.bi-chevron-down');
+
+        collapseEl.addEventListener('show.bs.collapse', function() {
+            chevron.style.transform = 'rotate(180deg)';
+            chevron.style.transition = 'transform 0.3s ease';
+        });
+
+        collapseEl.addEventListener('hide.bs.collapse', function() {
+            chevron.style.transform = 'rotate(0deg)';
+            chevron.style.transition = 'transform 0.3s ease';
+        });
+
+        // Set initial chevron state for expanded sections
+        if (collapseEl.classList.contains('show')) {
+            chevron.style.transform = 'rotate(180deg)';
+        }
+    });
+});
+
+async function runWorkflow(workflowId) {
+    let url = `/api/workflow/${workflowId}`;
+
+    if (workflowId === 'qd') {
+        const date = document.getElementById('qdDate').value;
+        if (date) url += `?date=${date}`;
+    } else if (workflowId === 'qf') {
+        const date = document.getElementById('qfDate').value;
+        if (date) url += `?date=${date}`;
+    } else if (workflowId === 'qa') {
+        const date = document.getElementById('qaDate').value;
+        if (date) url += `?date=${date}`;
+    }
+
+    // Show loading
+    document.getElementById('workflowResults').innerHTML = `
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Running workflow...</p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        displayWorkflowResults(result);
+    } catch (error) {
+        document.getElementById('workflowResults').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayWorkflowResults(workflow) {
+    let reportsHtml = '';
+
+    workflow.reports.forEach((report, index) => {
+        let winnersHtml = '';
+        if (report.winners && report.winners.length > 0) {
+            winnersHtml = `
+                <div class="alert alert-warning mb-3">
+                    <strong><i class="bi bi-trophy-fill"></i> Winner(s):</strong>
+                    ${report.winners.map(w => w.class_name || w.team_name || w.student_name).join(', ')}
+                </div>
+            `;
+        }
+
+        let noteHtml = '';
+        if (report.note) {
+            noteHtml = `
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i> ${report.note}
+                </div>
+            `;
+        }
+
+        let tableHtml = '';
+        if (report.data && report.data.length > 0) {
+            const winnerKeys = report.winners ? new Set(report.winners.map(w =>
+                w.class_name || w.team_name || w.student_name
+            )) : new Set();
+
+            // Show all rows for Goal Getters (Q15) and per-grade prize reports (Q9, Q10, Q11), limit to 10 for others
+            const showAllRows = report.title && (
+                report.title.includes('Goal Getters') ||
+                report.title.includes('Q9:') ||
+                report.title.includes('Q10:') ||
+                report.title.includes('Q11:')
+            );
+            const displayData = showAllRows ? report.data : report.data.slice(0, 10);
+            const showingLimitNote = !showAllRows && report.data.length > 10;
+
+            tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-sm" id="workflowTable${index}">
+                        <thead class="table-dark">
+                            <tr>
+                                ${report.columns.map(col => `<th>${col.replace(/_/g, ' ').toUpperCase()}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${displayData.map(row => {
+                                const isWinner = winnerKeys.has(row.class_name || row.team_name || row.student_name);
+                                const rowClass = isWinner ? 'winner-row' : '';
+                                return `
+                                    <tr class="${rowClass}">
+                                        ${report.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    ${showingLimitNote ? `<p class="text-muted text-center small">Showing first 10 of ${report.data.length} rows</p>` : ''}
+                    ${showAllRows && report.data.length > 10 ? `<p class="text-muted text-center small">Showing all ${report.data.length} rows</p>` : ''}
+                </div>
+            `;
+        }
+
+        reportsHtml += `
+            <div class="card mb-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">${index + 1}. ${report.title}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">${report.description}</p>
+                    ${winnersHtml}
+                    ${noteHtml}
+                    ${tableHtml}
+                    <button class="btn btn-sm btn-success" onclick="copyTableToClipboard('workflowTable${index}')">
+                        <i class="bi bi-clipboard"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('workflowResults').innerHTML = `
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">${workflow.workflow_name}</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i> Workflow completed successfully!
+                    Generated ${workflow.reports.length} reports.
+                </div>
+                ${reportsHtml}
+            </div>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

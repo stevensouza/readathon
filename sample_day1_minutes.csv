@@ -1,0 +1,8 @@
+ClassID,Teacher,ReaderID,ReaderName,Minutes
+1001,"teacher1",1001001,"student11",200
+1002,"teacher2",1002001,"student21",25
+1002,"teacher2",1002002,"student22",10
+1003,"teacher3",1003001,"student31",30
+1003,"teacher3",1003002,"student32",15
+1004,"teacher4",1004001,"student41",30
+1004,"teacher4",1004002,"student42",15

@@ -1,0 +1,848 @@
+{% extends "base.html" %}
+
+{% block title %}How I Used Claude Code to Develop this Application - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Smooth scroll for anchor links */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* TOC link styling */
+    .toc-link {
+        text-decoration: none;
+        color: #495057;
+        transition: all 0.2s;
+        display: block;
+        padding: 0.25rem 0;
+    }
+
+    .toc-link:hover {
+        color: #0d6efd;
+        transform: translateX(5px);
+    }
+
+    /* Back to Top button */
+    #backToTop {
+        position: fixed;
+        bottom: 40px;
+        right: 40px;
+        z-index: 1000;
+        display: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s;
+        font-size: 1.5rem;
+    }
+
+    #backToTop:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    #backToTop.show {
+        display: block;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Sticky TOC when scrolling */
+    #tocCard.sticky {
+        position: sticky;
+        top: 70px;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <h1 class="mb-4">
+            <i class="bi bi-robot"></i> How I Used Claude Code to Develop this Application
+        </h1>
+
+        <!-- Hero Section -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body">
+                <h4 class="mb-3">Building a Complete Flask Application with AI Assistance</h4>
+                <p class="lead mb-2">
+                    This read-a-thon management system was built entirely using <strong>Claude Code</strong>,
+                    Anthropic's AI assistant for software development. This page shows you how to build
+                    complex applications using AI-assisted development.
+                </p>
+                <p class="mb-0">
+                    <strong>Key Insight:</strong> I provided high-level requirements and business logic.
+                    Claude recommended the technology stack, designed the architecture, and wrote the code through collaborative iteration.
+                </p>
+            </div>
+        </div>
+
+        <!-- Table of Contents (Collapsible) -->
+        <div class="card mb-4" id="tocCard">
+            <div class="card-header bg-secondary text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#tocContent">
+                <h5 class="mb-0"><i class="bi bi-list"></i> 📑 Quick Navigation <small class="ms-2">(click to expand/collapse)</small></h5>
+            </div>
+            <div id="tocContent" class="collapse show">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-2">Main Sections</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="#workflow" class="toc-link"><i class="bi bi-diagram-3"></i> Development Workflow (3-Phase Process)</a></li>
+                                <li class="mb-2"><a href="#collaborative" class="toc-link"><i class="bi bi-chat-dots"></i> Collaborative & Iterative Approach</a></li>
+                                <li class="mb-2"><a href="#prompt-library" class="toc-link"><i class="bi bi-code-square"></i> Prompt Library by Scenario</a></li>
+                                <li class="mb-2"><a href="#workflows" class="toc-link"><i class="bi bi-arrows-move"></i> Common Multi-Step Workflows</a></li>
+                                <li class="mb-2"><a href="#challenges" class="toc-link"><i class="bi bi-exclamation-triangle"></i> Challenges & Lessons Learned</a></li>
+                                <li class="mb-2"><a href="#resources" class="toc-link"><i class="bi bi-link-45deg"></i> Resources & Next Steps</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-2">Prompt Categories</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="#setup" class="toc-link">🚀 Project Setup & Database Design</a></li>
+                                <li class="mb-2"><a href="#csv" class="toc-link">📤 CSV Import & File Validation</a></li>
+                                <li class="mb-2"><a href="#ui" class="toc-link">🎨 UI/UX with Bootstrap</a></li>
+                                <li class="mb-2"><a href="#sql" class="toc-link">📊 Reports & Complex SQL Queries</a></li>
+                                <li class="mb-2"><a href="#debug" class="toc-link">🐛 Testing, Debugging & Error Handling</a></li>
+                                <li class="mb-2"><a href="#docs" class="toc-link">📝 Documentation & Code Organization</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Development Workflow -->
+        <div class="card mb-4" id="workflow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-diagram-3"></i> Development Workflow: 3-Phase Process</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Key insight:</strong> Don't ask Claude to code directly. Use prototypes first!</p>
+
+                <div class="accordion" id="workflowAccordion">
+                    <!-- Phase 1: ASCII -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#phase1">
+                                <strong>Phase 1: ASCII Prototype</strong> &nbsp;→&nbsp; Fast iteration on structure
+                            </button>
+                        </h2>
+                        <div id="phase1" class="accordion-collapse collapse" data-bs-parent="#workflowAccordion">
+                            <div class="accordion-body">
+                                <p><strong>When:</strong> Designing new screens, reorganizing information architecture, major structural changes</p>
+                                <p><strong>Why:</strong> Text-based mockups are fast to create and easy to modify. Perfect for exploring layouts before committing to code.</p>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <strong>Example Prompt:</strong>
+                                    <pre class="mb-0" style="white-space: pre-wrap;"><code>"Create an ASCII prototype for the School tab dashboard. Include sections for:
+- School-wide metrics (students, reading, fundraising)
+- Team competition (Staub vs Kitsko with metrics)
+- Top performers (students and classes)
+- Participation breakdown
+
+Show the layout and what metrics go where. Let's review structure before building HTML."</code></pre>
+                                </div>
+                                <div class="bg-dark text-light p-3 rounded" style="font-family: monospace; font-size: 0.75rem; line-height: 1.3;">
+                                    <strong>Claude's ASCII Prototype Response:</strong>
+                                    <pre class="mb-0 text-light" style="white-space: pre; overflow-x: auto;">
+╔════════════════════════════════════════════════════════════════╗
+║                    🏫 SCHOOL OVERVIEW                          ║
+╠════════════════════════════════════════════════════════════════╣
+║                                                                ║
+║  [Headline Banner - Key Metrics Across Full Width]            ║
+║  ┌──────────────┬──────────────┬──────────────┬─────────────┐ ║
+║  │ Campaign Day │ Fundraising  │ Minutes Read │ Participation│ ║
+║  │   Day 5/6    │   $12,450   │  2,340 hrs  │    87.5%    │ ║
+║  └──────────────┴──────────────┴──────────────┴─────────────┘ ║
+║                                                                ║
+║  [3-Column Layout Below]                                       ║
+║  ┌─────────────────┬─────────────────┬─────────────────────┐  ║
+║  │ TEAM COMPETITION│  TOP PERFORMERS │  PARTICIPATION      │  ║
+║  ├─────────────────┼─────────────────┼─────────────────────┤  ║
+║  │ TEAM STAUB      │ 💰 Fundraiser:  │ Total: 359/411      │  ║
+║  │ Fundraising:    │  Sarah M.       │       (87.3%)       │  ║
+║  │   $6,200        │  $450           │                     │  ║
+║  │ Reading:        │                 │ All Days: 142       │  ║
+║  │   1,200 hrs     │ 📚 Reader:      │       (34.5%)       │  ║
+║  │ Participation:  │  Alex K.        │                     │  ║
+║  │   85%           │  720 min        │ Met Goal ≥1: 320    │  ║
+║  │                 │                 │       (77.9%)       │  ║
+║  │     VS          │ 🎓 Top Class:   │                     │  ║
+║  │                 │  Fundraising:   │ Met Goal All: 89    │  ║
+║  │ TEAM KITSKO     │   Ms. Snyder     │       (21.7%)       │  ║
+║  │ Fundraising:    │   $2,340        │                     │  ║
+║  │   $6,250        │                 │ Total Roster: 411   │  ║
+║  │ Reading:        │ 🎓 Top Class:   │                     │  ║
+║  │   1,140 hrs     │  Reading:       │                     │  ║
+║  │ Participation:  │   Mr. Spencer     │                     │  ║
+║  │   82%           │   8,450 min     │                     │  ║
+║  │                 │                 │                     │  ║
+║  │ [Current Leader]│                 │                     │  ║
+║  │ Kitsko leads by │                 │                     │  ║
+║  │ $50 (fundraise) │                 │                     │  ║
+║  └─────────────────┴─────────────────┴─────────────────────┘  ║
+╚════════════════════════════════════════════════════════════════╝</pre>
+                                </div>
+                                <p class="mt-2 mb-0"><em>This ASCII prototype let us quickly iterate on layout, metric placement, and information hierarchy before writing any HTML/CSS code.</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 2: HTML -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#phase2">
+                                <strong>Phase 2: HTML Prototype</strong> &nbsp;→&nbsp; Visual refinement with styling
+                            </button>
+                        </h2>
+                        <div id="phase2" class="accordion-collapse collapse" data-bs-parent="#workflowAccordion">
+                            <div class="accordion-body">
+                                <p><strong>When:</strong> ASCII design is approved, ready for visual implementation</p>
+                                <p><strong>Why:</strong> Create fully-styled HTML with Bootstrap for browser review. Test interactions (clicks, hovers, dropdowns) before integrating with backend.</p>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <strong>Example Prompt:</strong>
+                                    <pre class="mb-0" style="white-space: pre-wrap;"><code>"Convert the approved ASCII prototype to HTML using Bootstrap 5.3.0.
+Use the Option J color scheme (Navy #1e3a5f, Teal #17a2b8, Gold #f59e0b, Coral #ff6b6b).
+Make it responsive with card layouts. Save as /prototypes/dashboard_school_tab_v2.html
+so I can review in browser before integrating with Flask."</code></pre>
+                                </div>
+                                <div class="alert alert-success mb-0">
+                                    <strong><i class="bi bi-eye"></i> View the Actual Prototype:</strong>
+                                    <a href="/prototypes/dashboard_school_tab_v2" target="_blank" class="btn btn-sm btn-success ms-2">
+                                        Open Option J Prototype <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                    <p class="mb-0 mt-2 small">This is the real HTML prototype we created before integrating with Flask. It shows the final design with all styling, colors, and layout.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 3: Production -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#phase3">
+                                <strong>Phase 3: Production Code</strong> &nbsp;→&nbsp; Integration with backend
+                            </button>
+                        </h2>
+                        <div id="phase3" class="accordion-collapse collapse" data-bs-parent="#workflowAccordion">
+                            <div class="accordion-body">
+                                <p><strong>When:</strong> HTML prototype is approved by user</p>
+                                <p><strong>Why:</strong> Deploy approved design with real data from database. Integrate Flask routes, Jinja2 templates, SQL queries.</p>
+                                <div class="bg-light p-3 rounded">
+                                    <strong>Example Prompt:</strong>
+                                    <pre class="mb-0" style="white-space: pre-wrap;"><code>"Update templates/school.html to match the approved design in
+/prototypes/dashboard_school_tab_v2.html. Add Flask route at /school
+that queries the database for metrics. Use Jinja2 templates for dynamic data."</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaborative Approach -->
+        <div class="card mb-4" id="collaborative">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-chat-dots"></i> The Real Development Process: Collaborative & Iterative</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <strong><i class="bi bi-lightbulb"></i> Important:</strong> The detailed prompts in the library below are examples for learning.
+                    In reality, my prompts were often much simpler and more conversational!
+                </div>
+
+                <h5>How It Actually Worked</h5>
+                <p>I typically started with <strong>high-level requirements</strong> and let Claude suggest the approach, then we iterated together:</p>
+
+                <div class="bg-light p-3 rounded mb-3">
+                    <h6>Example: Initial Project Prompt</h6>
+                    <pre class="mb-2" style="white-space: pre-wrap;"><code><strong>My Prompt (Simple & High-Level):</strong>
+"I want to create a read-a-thon app. The main entities are:
+- Teachers, Classes, Students, Teams (with these relationships...)
+- Metrics I care about: minutes read, participation (did they read?), donations raised, number of sponsors
+- I want to report both per day and for the full contest
+- Make it web-based and in Python
+
+Give me a first design including database design and UI best practices. You're an expert UI designer - what do you recommend?"</code></pre>
+
+                    <p class="mb-0"><strong>Claude's Response:</strong>
+                        Proposed database schema with 5 tables, <strong>recommended Flask as the web framework</strong> (lightweight, perfect for local apps),
+                        suggested <strong>SQLite for the database</strong> (no server needed, file-based, ideal for local deployment),
+                        recommended <strong>Bootstrap 5.3.0 for UI</strong> (responsive, professional look), suggested dashboard-first approach with tabs,
+                        <strong>executed pip install commands</strong> to set up the environment, and created the initial project structure.
+                    </p>
+                </div>
+
+                <p class="mb-2"><strong>Key Point:</strong> I gave high-level requirements (web-based, Python), and Claude <strong>defined the entire technology stack</strong>:</p>
+                <ul class="mb-3">
+                    <li>Flask 3.0.0 (web framework)</li>
+                    <li>SQLite 3 (database)</li>
+                    <li>Bootstrap 5.3.0 + Bootstrap Icons (UI)</li>
+                    <li>Jinja2 templates (comes with Flask)</li>
+                    <li>No npm/webpack (keep it simple)</li>
+                </ul>
+                <p class="mb-0"><em>I reviewed Claude's recommendations, agreed they made sense for a local-only application, and we proceeded with that stack.</em></p>
+
+                <h5 class="mt-4">Iterative Refinement Pattern</h5>
+                <ol>
+                    <li><strong>Claude Proposes Options:</strong> "Here are 3 approaches for handling the 120-minute cap..."</li>
+                    <li><strong>I Give Feedback:</strong> "I like option 2, but what if we combine it with the bonus logic from option 3?"</li>
+                    <li><strong>Claude Adapts:</strong> "Great idea! Here's how we can merge those approaches..."</li>
+                    <li><strong>I Ask for Expert Opinion:</strong> "Which of these color schemes would work best for accessibility?"</li>
+                    <li><strong>Claude Recommends:</strong> "Option J provides the best contrast ratios. Here's why..."</li>
+                    <li><strong>I Trust the Expertise:</strong> "Sounds good, let's go with Option J"</li>
+                </ol>
+
+                <h5 class="mt-4">Key Collaboration Techniques I Used</h5>
+                <ul>
+                    <li><strong>Ask for Multiple Options:</strong> "Show me 3 different ways to organize the dashboard"</li>
+                    <li><strong>Request Expert Input:</strong> "As a UI expert, what would you recommend for this layout?"</li>
+                    <li><strong>Combine Suggestions:</strong> "I like parts of option 1 and option 3 - can we merge them?"</li>
+                    <li><strong>Iterate on Proposals:</strong> "This is good, but move the team competition to the left"</li>
+                    <li><strong>Delegate Decisions:</strong> "These options are pretty equal in my mind - what do you think is best?"</li>
+                    <li><strong>Review & Refine:</strong> "What I don't like about this is... can we adjust?"</li>
+                </ul>
+
+                <div class="alert alert-success mt-3">
+                    <strong>💡 Takeaway:</strong> You don't need to write perfect, detailed prompts! Start with your goals,
+                    ask Claude for recommendations, then collaborate iteratively. Trust Claude's expertise in areas like
+                    UI design, database optimization, and best practices.
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt Library -->
+        <div class="card mb-4" id="prompt-library">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-code-square"></i> Prompt Library by Scenario</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <p class="mb-2">
+                        <strong>Note:</strong> These prompts reflect the actual collaborative workflow - mostly high-level requests where Claude suggests solutions.
+                    </p>
+                    <p class="mb-0">
+                        <strong>When to be explicit vs. collaborative:</strong>
+                        • <strong>High-level approach:</strong> "I need to track student data" → Claude suggests database design<br>
+                        • <strong>Explicit approach:</strong> "Add menu items for School, Teams, Classes, Students, Upload, Reports, Admin" → when you know exactly what you want
+                    </p>
+                </div>
+
+                <div class="accordion" id="promptLibrary">
+                    <!-- Project Setup -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#setup">
+                                🚀 Project Setup & Database Design
+                            </button>
+                        </h2>
+                        <div id="setup" class="accordion-collapse collapse" data-bs-parent="#promptLibrary">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6>Initial Project Setup (High-Level)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"I need a web-based application in Python to manage a school read-a-thon.
+It needs to track students, teachers, classes, and teams. I want to record
+daily reading minutes and donations. The app will run locally on my Mac -
+no server deployment needed. What do you recommend?"
+
+<strong>Claude's Response:</strong>
+"I recommend Flask (lightweight Python web framework) with SQLite (local database,
+no server needed). I'll set up the project structure, install dependencies via pip,
+and create a basic hello world app. Sound good?"
+
+<strong>My Response:</strong>
+"Yes, that makes sense. Let's proceed."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Database Schema Design (Collaborative)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"I need to store 411 students with their grade, teacher, and team assignment.
+I need to track daily reading minutes (with a 120-minute daily cap) and
+total donations/sponsors per student. The event runs Oct 10-15, 2025.
+What database structure do you recommend?"
+
+<strong>Claude's Response:</strong>
+"I recommend 4 tables: Roster (student info), Daily_Logs (date + minutes per day),
+Reader_Cumulative (total donations/sponsors), and Class_Info (teacher assignments).
+I'll add foreign keys for relationships and store both capped/uncapped minutes
+for reconciliation. Should I also add an Upload_History table for audit trail?"
+
+<strong>My Response:</strong>
+"Yes, audit trail is a good idea. Go ahead and create the schema."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Database Initialization</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"I have a CSV file with 411 students (student_id, name, grade, teacher, team).
+Create a script to initialize the database and import this roster."
+
+<strong>Claude's Response:</strong>
+"I'll create init_data.py that creates the database, defines all tables,
+imports your student roster, and confirms with a count query. Running it now..."</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CSV Import -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#csv">
+                                📤 CSV Import & File Validation
+                            </button>
+                        </h2>
+                        <div id="csv" class="accordion-collapse collapse" data-bs-parent="#promptLibrary">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6>File Type Detection</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"I have two types of CSV files from the online system - one has daily reading
+minutes, the other has cumulative donations. Users might upload the wrong type
+to the wrong page. Can we detect the file type and show an error?"
+
+<strong>Claude's Response:</strong>
+"Yes, I'll check the column names. Daily files have 'Date' and 'Minutes',
+cumulative files have 'Sponsors' and 'Donations'. I'll reject wrong file types
+with a clear error message. Want me to implement this?"
+
+<strong>My Response:</strong>
+"Perfect, yes."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Multi-File Upload</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"It's tedious to upload 6 separate daily files one at a time. Can we do
+multi-file upload? The dates are in the filenames like 'daily_2025-10-13.csv'."
+
+<strong>Claude's Response:</strong>
+"I'll modify the upload to accept multiple files, extract dates from filenames,
+and process them all at once with a summary. Want progress indicators?"
+
+<strong>My Response:</strong>
+"Yes, that would be helpful."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Audit Trail (Claude's Suggestion)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><em>Earlier, when designing the database, Claude asked:</em>
+
+<strong>Claude:</strong>
+"Should I also add an Upload_History table for audit trail? Track filename,
+timestamp, row counts, and any errors?"
+
+<strong>My Response:</strong>
+"Yes, audit trail is a good idea. Go ahead and create the schema."
+
+<em>Later when implementing upload page:</em>
+
+<strong>My Prompt:</strong>
+"Show the upload history on the admin page so I can see what files were uploaded."</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UI/UX -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ui">
+                                🎨 UI/UX with Bootstrap (Iterative Refinement)
+                            </button>
+                        </h2>
+                        <div id="ui" class="accordion-collapse collapse" data-bs-parent="#promptLibrary">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6>Navigation Menu (Explicit - I Knew What I Wanted)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt (Explicit):</strong>
+"Create base.html template with Bootstrap 5.3.0 navigation bar.
+Menu items: School, Teams, Classes, Students, Upload, Reports, Admin.
+Make it responsive with mobile toggle. Use CDN for Bootstrap."
+
+<em>Note: This is an example where I was explicit because I knew exactly what
+menu structure I wanted.</em></code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Color Scheme (Collaborative)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"I need a professional color scheme for the dashboard. Something modern but
+not too flashy - it's for an elementary school event. What do you recommend?"
+
+<strong>Claude's Response:</strong>
+"I'll create 3 color scheme options (A, B, C)... [shows options]
+Option J (Refined Zen) uses Navy, Teal, Gold, Coral - professional with good
+contrast ratios for accessibility. Which do you prefer?"
+
+<strong>My Response:</strong>
+"Option J looks great. Let's use that."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Iterative Design Changes (Very Common)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt (After Reviewing Page):</strong>
+"The School tab team competition section has too much clutter.
+Let's keep only the 'Reading (With Color)' and 'Avg. Participation (With Color)' metrics.
+Get rid of the plain Reading and Avg. Participation rows. Also update the
+CURRENT LEADERS section the same way."
+
+<em>Note: This type of iterative refinement was very common - review the page,
+identify what I didn't like, ask for specific changes.</em></code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Add Interactive Elements</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"Add a collapsible 'Data Sources' footer to reports showing which database
+tables power each metric. Hidden by default, click to expand."
+
+<strong>Claude's Response:</strong>
+"I'll use Bootstrap collapse component. Should I include last updated timestamps?"
+
+<strong>My Response:</strong>
+"Yes, good idea."</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports & SQL -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sql">
+                                📊 Reports & Complex SQL Queries
+                            </button>
+                        </h2>
+                        <div id="sql" class="accordion-collapse collapse" data-bs-parent="#promptLibrary">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6>Data Reconciliation Report</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"The online system shows different total minutes than my database.
+I need to understand why. We cap daily minutes at 120, and only count
+Oct 10-15 as sanctioned dates. Can you create a report showing the differences?"
+
+<strong>Claude's Response:</strong>
+"I'll create Q23 reconciliation report with:
+- Total uncapped minutes (raw import)
+- Total capped minutes (120/day limit applied)
+- Difference breakdown: out-of-range dates + over-cap minutes
+Should I show student-level details?"
+
+<strong>My Response:</strong>
+"Yes, I need to see which students are causing the differences."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Team Competition Metrics</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt:</strong>
+"I need a team competition dashboard showing Staub vs Kitsko. Show total
+fundraising, total reading minutes, and participation rate for each team.
+Who's leading and by how much?"
+
+<strong>Claude's Response:</strong>
+"I'll calculate those metrics and show the leader with the gap
+(e.g., 'KITSKO leads by $1,250'). Want this updated dynamically or static?"
+
+<strong>My Response:</strong>
+"Make it dynamic - return JSON so we can update without page reload."
+
+<em>Later:</em>
+
+<strong>My Prompt:</strong>
+"We're adding a Team Color Bonus - students who wore team colors on Oct 13
+get +10 bonus minutes. Add this to the team competition metrics."</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testing & Debugging -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#debug">
+                                🐛 Testing, Debugging & Error Handling
+                            </button>
+                        </h2>
+                        <div id="debug" class="accordion-collapse collapse" data-bs-parent="#promptLibrary">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6>Test Script for Features</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code>"Write test_audit_trail.py that:
+1. Creates temporary test database
+2. Uploads sample daily CSV file
+3. Verifies Upload_History table has correct entry
+4. Checks row counts, file type detection, timestamp
+5. Uploads cumulative file to wrong endpoint
+6. Confirms error is logged appropriately
+Print test results with ✅/❌ indicators."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Debugging Specific Issues</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code>"The floating analysis button scrolls to #analysis instead of opening modal.
+The working prototype at /prototypes/enhanced_report_prototype_v4.html
+uses Bootstrap modal with data-bs-toggle='modal'.
+Update reports.html and admin.html to match the prototype's implementation."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Add Error Handling</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code>"Add comprehensive error handling to CSV upload:
+- Catch FileNotFoundError, CSVParseError, DatabaseError
+- Validate: file exists, correct encoding (UTF-8), required columns present
+- Show user-friendly error messages (not stack traces)
+- Log technical details to console for debugging
+- Return HTTP 400 for validation errors, 500 for server errors"</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentation -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#docs">
+                                📝 Documentation & Code Organization
+                            </button>
+                        </h2>
+                        <div id="docs" class="accordion-collapse collapse" data-bs-parent="#promptLibrary">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6>Feature Documentation</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code>"Create feature documentation for Upload Audit Trail (Feature 28):
+- Requirements: what problem does this solve?
+- Implementation: technical approach, database schema
+- Testing: how to verify it works
+- Usage: how users interact with it
+Save as docs/features/feature-28-audit-trail.md with status and priority."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Project Instructions (CLAUDE.md)</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code>"Create CLAUDE.md with instructions for future AI sessions:
+- Project overview (Flask read-a-thon app, local SQLite)
+- Development commands (pip install, python3 app.py, testing)
+- Architecture overview (tech stack, data model, key decisions)
+- File structure (app.py, database.py, templates/, docs/)
+- Critical context (120-min cap, sanctioned dates, team competition)
+Make it a quick-start guide for continuity across sessions."</code></pre>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Master Index</h6>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code>"Generate master index (docs/00-INDEX.md) of all 35 features:
+- Organize by category (Upload, Reports, UI/UX, Database, Admin)
+- Include status (Completed, In Progress, TBD) and priority
+- Make it searchable (keywords for grep/Cmd+F)
+- Link to individual feature docs
+Add architecture reference docs (schema, API endpoints, file formats)."</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Workflows -->
+        <div class="card mb-4" id="workflows">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-arrows-move"></i> Common Multi-Step Workflows</h4>
+            </div>
+            <div class="card-body">
+                <p>Real examples of multi-step feature development showing the complete process.</p>
+
+                <div class="mb-4">
+                    <h5>Example 1: Adding Team Color Bonus Feature</h5>
+                    <ol>
+                        <li><strong>Database:</strong> "Create Team_Color_Bonus table with columns: student_id, event_date, participated (boolean)"</li>
+                        <li><strong>Import:</strong> "Add upload endpoint for team_color_bonus.csv. Import student participation data for Oct 13, 2025 event."</li>
+                        <li><strong>Calculation:</strong> "Update team metrics query to add bonus: count participating students × 10 minutes per student."</li>
+                        <li><strong>UI:</strong> "Add 'Reading (With Color)' and 'Avg. Participation (With Color)' to School tab team cards showing bonus impact."</li>
+                        <li><strong>Testing:</strong> "Upload sample data, verify bonus calculations match expected values (154 students × 10 = 1,540 bonus minutes)."</li>
+                    </ol>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Example 2: Building Upload Audit Trail</h5>
+                    <ol>
+                        <li><strong>ASCII Prototype:</strong> "Show admin page layout with upload history table (filename, date, type, rows, status)."</li>
+                        <li><strong>Database:</strong> "Create Upload_History table. Add logging to upload_daily() and upload_cumulative() functions."</li>
+                        <li><strong>HTML Prototype:</strong> "Design admin page with Bootstrap table, sortable columns, color-coded status badges."</li>
+                        <li><strong>Integration:</strong> "Update templates/admin.html with audit trail table. Add /api/upload_history endpoint."</li>
+                        <li><strong>Testing:</strong> "Run test_audit_trail.py to verify logging works for successful uploads, errors, and edge cases."</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Break large features into 3-5 prompts. Test each step before moving forward.
+                </div>
+            </div>
+        </div>
+
+        <!-- Challenges & Lessons -->
+        <div class="card mb-4" id="challenges">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Challenges & Lessons Learned</h4>
+            </div>
+            <div class="card-body">
+                <h5>Common Challenges</h5>
+
+                <div class="alert alert-warning mb-3">
+                    <h6 class="mb-2"><i class="bi bi-shield-exclamation"></i> <strong>Biggest Concern: Security & Local File Access</strong></h6>
+                    <p class="mb-2">
+                        <strong>Claude Code runs on your local machine and can read/write files.</strong> This was my primary concern when starting:
+                        giving an AI full access to my computer's file system feels risky. What if it accidentally deletes files, modifies the wrong code, or accesses sensitive data?
+                    </p>
+                    <p class="mb-2">
+                        <strong>My Approach:</strong> Always review changes before accepting them. Use git to track every modification. Never give Claude access to directories with sensitive data.
+                        Be explicit about file paths and verify Claude is editing the correct files.
+                    </p>
+                    <p class="mb-0">
+                        <strong>New Alternative (2025):</strong> Claude Code recently announced the ability to develop applications fully in the cloud without local file access.
+                        I haven't used this yet, but it could address these security concerns by isolating development in a sandboxed cloud environment.
+                        This may be a better approach for those uncomfortable with local AI file access.
+                    </p>
+                </div>
+
+                <ul>
+                    <li><strong>Token Limits:</strong> Large files (>2000 lines) hit context limits. Solution: Break into modules, use function-specific prompts.</li>
+                    <li><strong>Cost Management:</strong> API calls add up. Use sample data for testing, batch related changes in one session.</li>
+                    <li><strong>Detachment from Implementation:</strong> AI doesn't "remember" full app context across sessions. Maintain CLAUDE.md and QUICK_START docs.</li>
+                    <li><strong>Debugging Generated Code:</strong> AI can introduce bugs. Test incrementally, use prototypes before production integration.</li>
+                    <li><strong>Consistency Across Features:</strong> Provide design system references (color schemes, Bootstrap classes) to maintain visual coherence.</li>
+                </ul>
+
+                <h5 class="mt-4">Best Practices That Worked</h5>
+                <ul>
+                    <li>✅ <strong>Prototype First:</strong> ASCII → HTML → Production workflow prevents costly rewrites</li>
+                    <li>✅ <strong>Feature Branches:</strong> Never commit directly to master. Test before merging.</li>
+                    <li>✅ <strong>Document As You Go:</strong> Create feature docs during development, not after</li>
+                    <li>✅ <strong>Provide Examples:</strong> "Match the design from /prototypes/file.html" is clearer than describing layout</li>
+                    <li>✅ <strong>Iterative Refinement:</strong> Make small changes, test, refine. Don't ask for major rewrites.</li>
+                    <li>✅ <strong>Context-Rich Prompts:</strong> Include constraints (local-only, SQLite, Bootstrap CDN, no build tools)</li>
+                </ul>
+
+                <h5 class="mt-4">Token & Cost Management</h5>
+                <div class="alert alert-success">
+                    <h6 class="mb-2"><strong>💰 Cost Breakdown & Tips</strong></h6>
+                    <p class="mb-2"><strong>Requirements:</strong> Claude Code requires a paid Claude subscription ($20 or $100/month)</p>
+                    <p class="mb-2">
+                        <strong>My Experience:</strong><br>
+                        • <strong>$20/month plan:</strong> Ran out of tokens about halfway through 5-hour sessions - had to wait for window to reset<br>
+                        • <strong>$100/month plan:</strong> No token issues - smooth development without interruptions<br>
+                        • Can cancel anytime (I'll cancel next month when I'm done developing this app)<br>
+                        • <strong>Overall verdict:</strong> Still a bargain for what it delivers!
+                    </p>
+                    <p class="mb-2">
+                        <strong>⏰ "Wakeup Prompt" Trick:</strong> Send Claude Code a small prompt first thing in the morning (even just "Good morning, ready to work today")
+                        to start your 5-hour timer. If you actually start coding 3 hours later, you'll only have 2 hours before your window resets instead of 5.
+                        This reduces the time you might be blocked from coding.
+                    </p>
+                    <p class="mb-0">
+                        <strong>💡 Save Tokens:</strong> Use ChatGPT or other free tools for general questions, documentation lookup, or brainstorming.
+                        Reserve Claude Code for actual coding work where file access and execution matter.
+                    </p>
+                </div>
+
+                <h5 class="mt-4">What Could Be Improved</h5>
+                <ul>
+                    <li>⚠️ Earlier comprehensive test suite (unit tests for database.py functions)</li>
+                    <li>⚠️ Performance testing with larger datasets (simulate 1000+ students)</li>
+                    <li>⚠️ Accessibility improvements (ARIA labels, keyboard navigation)</li>
+                    <li>⚠️ More detailed API documentation (request/response examples)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="card mb-4" id="resources">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-link-45deg"></i> Resources & Next Steps</h4>
+            </div>
+            <div class="card-body">
+                <h5>Learn More About Claude Code</h5>
+                <ul>
+                    <li><a href="https://claude.ai/code" target="_blank">Claude Code Official Site</a> - Get started with AI-assisted development</li>
+                    <li><a href="https://docs.anthropic.com/claude/docs" target="_blank">Claude Documentation</a> - API reference and best practices</li>
+                </ul>
+
+                <h5 class="mt-3">Explore This Project</h5>
+                <ul>
+                    <li><a href="/help/requirements">📋 Application Requirements</a> - View the complete 3,723-line specification</li>
+                    <li><a href="/help">📖 User Manual</a> - Learn how to use this application</li>
+                    <li><a href="/admin">⚙️ Admin</a> - See upload audit trail and data management features</li>
+                </ul>
+
+                <h5 class="mt-3">Project Files</h5>
+                <ul>
+                    <li><code>CLAUDE.md</code> - Project instructions for AI sessions</li>
+                    <li><code>docs/00-INDEX.md</code> - Master index of 35 features</li>
+                    <li><code>docs/features/</code> - Individual feature specifications</li>
+                    <li><code>IMPLEMENTATION_PROMPT.md</code> - Complete requirements document (130KB)</li>
+                </ul>
+
+                <div class="alert alert-success mt-4">
+                    <strong>💡 Want to build something similar?</strong><br>
+                    Start with a clear requirements document, break it into features, and use the 3-phase prototype workflow.
+                    Claude Code can help you build complex applications faster than traditional development!
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="text-center text-muted mb-4">
+            <small>
+                <i class="bi bi-robot"></i> This page was also created with Claude Code!
+                <a href="https://claude.ai/code" target="_blank">Try it yourself</a>
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Back to Top Button -->
+<button id="backToTop" title="Back to top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Back to Top button functionality
+    const backToTopBtn = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // Optional: Make TOC sticky after scrolling past hero
+    /*
+    const tocCard = document.getElementById('tocCard');
+    const tocOffset = tocCard.offsetTop;
+
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > tocOffset - 70) {
+            tocCard.classList.add('sticky');
+        } else {
+            tocCard.classList.remove('sticky');
+        }
+    });
+    */
+</script>
+{% endblock %}

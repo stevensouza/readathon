@@ -1,0 +1,589 @@
+{% extends "base.html" %}
+
+{% block title %}User Manual - Read-a-Thon System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <h1 class="mb-4">
+            <i class="bi bi-book"></i> Read-a-Thon System - User Manual
+        </h1>
+
+        <!-- Quick Start -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-rocket"></i> Quick Start Guide</h4>
+            </div>
+            <div class="card-body">
+                <h5>Daily Workflow (3 Simple Steps)</h5>
+                <ol class="lead">
+                    <li>Click <strong>"Upload Data"</strong> → Select date → Upload your CSV files</li>
+                    <li>Click <strong>"Reports"</strong> → Select a report → Click "Run Report"</li>
+                    <li>Use <strong>"Copy to Clipboard"</strong> or <strong>"Export CSV"</strong> buttons</li>
+                </ol>
+
+                <div class="alert alert-info mt-3">
+                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Use the <strong>environment selector</strong> in the top-right to switch between Production and Sample data!
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Boxes -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-check-square"></i> Dashboard Verification Boxes</h4>
+            </div>
+            <div class="card-body">
+                <h5>What Are Verification Boxes?</h5>
+                <p>The colorful boxes at the top of the Dashboard help you verify your data matches the online program's numbers. Each box shows a "Last Updated" timestamp so you know when the data was last refreshed.</p>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success"><i class="bi bi-cash-coin"></i> Box 1: Total Raised (Green)</h6>
+                                <ul class="small">
+                                    <li>Total donations from all students</li>
+                                    <li>Count of students who have donations</li>
+                                    <li>Updated when you upload cumulative stats</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary"><i class="bi bi-book"></i> Box 2: Total Minutes (Blue)</h6>
+                                <ul class="small">
+                                    <li>Total credited minutes read (120/day cap)</li>
+                                    <li>Count of students who have read</li>
+                                    <li>Updated when you upload daily minutes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-warning mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning"><i class="bi bi-star"></i> Box 3: Top Readers (Orange)</h6>
+                                <ul class="small">
+                                    <li>Top fundraiser name and amount</li>
+                                    <li>Top reader name and minutes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-secondary mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-secondary"><i class="bi bi-people"></i> Box 4: Top Classes (Purple)</h6>
+                                <ul class="small">
+                                    <li>Top fundraising class and amount</li>
+                                    <li>Top reading class and minutes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-danger"><i class="bi bi-shield-check"></i> Box 5: Integrity Check</h6>
+                                <ul class="small">
+                                    <li>Green checkmark if data matches</li>
+                                    <li>Red warning if mismatch detected</li>
+                                    <li>Compares Daily vs Cumulative totals</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Compare these numbers with the online program to ensure your data is accurate before generating reports!
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Persistence -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-database"></i> Data Persistence</h4>
+            </div>
+            <div class="card-body">
+                <h5>Your Data is Safe!</h5>
+                <p><strong>All data is permanently stored on your Mac's hard drive</strong> in SQLite database files:</p>
+                <ul>
+                    <li><code>readathon_prod.db</code> - Your real read-a-thon data</li>
+                    <li><code>readathon_sample.db</code> - Sample test data</li>
+                </ul>
+                <p>The data is <strong>NOT</strong> stored in memory - it survives:</p>
+                <ul>
+                    <li>✅ Stopping and restarting the application</li>
+                    <li>✅ Computer restarts</li>
+                    <li>✅ Power outages</li>
+                    <li>✅ Everything!</li>
+                </ul>
+                <div class="alert alert-success">
+                    <strong>You can safely close the app at any time.</strong> Your data will still be there when you restart!
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Selector -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-toggle-on"></i> Production vs Sample Data</h4>
+            </div>
+            <div class="card-body">
+                <h5>What's the Environment Selector?</h5>
+                <p>The dropdown in the top-right corner lets you switch between two completely separate databases:</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary"><i class="bi bi-building"></i> Production</h6>
+                                <ul class="small">
+                                    <li>Your real read-a-thon data</li>
+                                    <li>411 students pre-loaded</li>
+                                    <li>All real daily uploads go here</li>
+                                    <li>Use for actual reporting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-secondary">
+                            <div class="card-body">
+                                <h6 class="card-title text-secondary"><i class="bi bi-flask"></i> Sample</h6>
+                                <ul class="small">
+                                    <li>Test data for practice</li>
+                                    <li>Same student roster</li>
+                                    <li>Safe to experiment</li>
+                                    <li>Use for learning/testing</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <strong>Note:</strong> The two environments are completely separate. Data uploaded to Sample will NOT appear in Production!
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Data -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-upload"></i> Uploading Daily Data</h4>
+            </div>
+            <div class="card-body">
+                <h5>Two Types of Uploads</h5>
+                <p>There are two separate upload processes:</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">1. Daily Minutes Upload</h6>
+                                <p class="small"><strong>When:</strong> Upload this every day after students read</p>
+                                <p class="small"><strong>File Format:</strong> CSV with columns:</p>
+                                <ul class="small">
+                                    <li><code>Reader Name</code> or <code>Student Name</code></li>
+                                    <li><code>Minutes</code> or <code>Minutes Read</code></li>
+                                </ul>
+                                <p class="small"><strong>What it does:</strong> Records daily reading activity and updates Daily_Logs table</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success">2. Cumulative Stats Upload</h6>
+                                <p class="small"><strong>When:</strong> Upload when donation totals change in the online system</p>
+                                <p class="small"><strong>File Format:</strong> CSV with columns:</p>
+                                <ul class="small">
+                                    <li><code>Reader Name</code> or <code>Student Name</code></li>
+                                    <li><code>Donations</code> or <code>Donation Amount</code></li>
+                                    <li><code>Minutes</code> (cumulative total)</li>
+                                    <li><code>Sponsors</code> (optional)</li>
+                                </ul>
+                                <p class="small"><strong>What it does:</strong> Updates Reader_Cumulative table with fundraising data</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Upload Process</h5>
+                <ol>
+                    <li>Navigate to <strong>Upload Data</strong> page</li>
+                    <li><strong>For Daily Upload:</strong> Select date → Upload minutes file</li>
+                    <li><strong>For Cumulative Upload:</strong> Upload the cumulative stats file (no date needed)</li>
+                    <li>Click the appropriate <strong>"Upload"</strong> button</li>
+                </ol>
+
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-info-circle"></i> Tips:</strong>
+                    <ul class="mb-0">
+                        <li>Student names must match the roster exactly (case-sensitive)</li>
+                        <li>Any unrecognized names will be shown as warnings</li>
+                        <li>You can re-upload data to update/correct values</li>
+                        <li>The system tracks all uploads in the Upload_History table</li>
+                        <li>Check the verification boxes on the Dashboard to confirm your uploads worked correctly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-graph-up"></i> Reports Guide</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Report</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Q1</strong></td>
+                            <td><span class="badge bg-secondary">Utility</span></td>
+                            <td>Shows row counts in each database table</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q2</strong></td>
+                            <td><span class="badge bg-info">Daily</span></td>
+                            <td>Comprehensive daily summary by class or team</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q4 / Slide 4</strong></td>
+                            <td><span class="badge bg-info">Daily</span></td>
+                            <td>Random prize drawing - one winner per grade</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q5</strong></td>
+                            <td><span class="badge bg-success">Cumulative</span></td>
+                            <td>Student cumulative stats (Top Readers, Goal Getters, Fundraisers)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q6</strong></td>
+                            <td><span class="badge bg-success">Cumulative</span></td>
+                            <td>Class participation winner by average participation rate</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q7</strong></td>
+                            <td><span class="badge bg-warning text-dark">Export</span></td>
+                            <td>Complete denormalized log for export to Excel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q14 / Slide 3</strong></td>
+                            <td><span class="badge bg-success">Cumulative</span></td>
+                            <td>Team participation winner</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q18 / Slide 2</strong></td>
+                            <td><span class="badge bg-success">Cumulative</span></td>
+                            <td>Leading class in each grade by total minutes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q19 / Slide 5</strong></td>
+                            <td><span class="badge bg-success">Cumulative</span></td>
+                            <td>Total minutes read by each team</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q20 / Slide 6</strong></td>
+                            <td><span class="badge bg-success">Cumulative</span></td>
+                            <td>Total donations raised by each team</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h5 class="mt-3">Report Options</h5>
+                <ul>
+                    <li><strong>Date Filter:</strong> Some reports can show data for a specific date or all dates</li>
+                    <li><strong>Group By:</strong> Q2 can group by class or team</li>
+                    <li><strong>Sort By:</strong> Q5 can sort by minutes, goals, or donations</li>
+                    <li><strong>Limit:</strong> Q5 can show top 10, 25, 50, or all students</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tables Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="bi bi-table"></i> Tables - Raw Data Viewer</h4>
+            </div>
+            <div class="card-body">
+                <h5>What's the Tables Section?</h5>
+                <p>The Tables page lets you view the raw contents of every database table. Think of it as looking "under the hood" of your data.</p>
+
+                <h6 class="mt-3">Available Tables:</h6>
+                <ul>
+                    <li><strong>Roster:</strong> All 411 students with class, teacher, grade, and team assignments</li>
+                    <li><strong>Class Info:</strong> Summary of all 19 classes (10 Kitsko, 9 Staub)</li>
+                    <li><strong>Grade Rules:</strong> Minimum and maximum daily minutes by grade (K-5)</li>
+                    <li><strong>Daily Logs:</strong> Every student's reading minutes for every date uploaded</li>
+                    <li><strong>Reader Cumulative:</strong> Each student's cumulative donations, sponsors, and total minutes</li>
+                    <li><strong>Upload History:</strong> Complete audit trail of all file uploads with timestamps</li>
+                    <li><strong>Q7: Complete Log (Query):</strong> Denormalized export combining all data - perfect for Excel analysis</li>
+                </ul>
+
+                <h6 class="mt-3">Table Features:</h6>
+                <ul>
+                    <li><strong>Sortable Columns:</strong> Click any column header to sort (click again to reverse)</li>
+                    <li><strong>Copy to Clipboard:</strong> Copy entire table for pasting into Excel/Google Sheets</li>
+                    <li><strong>Export CSV:</strong> Download table as CSV file</li>
+                    <li><strong>Row Count:</strong> See total number of records in each table</li>
+                </ul>
+
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-info-circle"></i> Note:</strong> Q7 Complete Log appears in both Reports and Tables sections. Use it from Tables when you want to browse all data, or from Reports when you want to filter by specific dates.
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflows -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-diagram-3"></i> Workflows</h4>
+            </div>
+            <div class="card-body">
+                <h5>What are Workflows?</h5>
+                <p>Workflows run multiple reports in sequence, perfect for generating all your slide deck data at once!</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">QD: Daily Slide Update</h6>
+                                <p class="small">Runs all reports needed for daily slideshow:</p>
+                                <ul class="small">
+                                    <li>Slide 2: Lead Class by Grade</li>
+                                    <li>Slide 3: Team Participation</li>
+                                    <li>Slide 4: Prize Drawing</li>
+                                    <li>Slide 5: Team Minutes</li>
+                                    <li>Slide 6: Team Donations</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">QC: Cumulative Workflow</h6>
+                                <p class="small">Runs all cumulative prize reports:</p>
+                                <ul class="small">
+                                    <li>Q5: Student Cumulative</li>
+                                    <li>Q6: Class Participation</li>
+                                    <li>Q14: Team Participation</li>
+                                    <li>Q18: Lead Class by Grade</li>
+                                    <li>Q19: Team Minutes</li>
+                                    <li>Q20: Team Donations</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Logic -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="bi bi-calculator"></i> Business Logic & Rules</h4>
+            </div>
+            <div class="card-body">
+                <h5>Key Definitions</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">Participation</dt>
+                    <dd class="col-sm-9">A student "participated" if they read more than 0 minutes that day</dd>
+
+                    <dt class="col-sm-3">Meeting Goal</dt>
+                    <dd class="col-sm-9">A student "met their goal" if they read at least their grade's minimum daily minutes</dd>
+
+                    <dt class="col-sm-3">Credited Minutes</dt>
+                    <dd class="col-sm-9">Maximum 120 minutes per day counts toward totals (actual minutes are still tracked separately)</dd>
+
+                    <dt class="col-sm-3">Tie-Breaking</dt>
+                    <dd class="col-sm-9">When multiple entities tie for first place, ALL tied winners are shown</dd>
+                </dl>
+
+                <h5 class="mt-3">Grade Level Minimums</h5>
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Grade</th>
+                            <th>Daily Minimum</th>
+                            <th>Max Credited</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Kindergarten (K)</td><td>20 minutes</td><td>120 minutes</td></tr>
+                        <tr><td>Grade 1</td><td>20 minutes</td><td>120 minutes</td></tr>
+                        <tr><td>Grade 2</td><td>25 minutes</td><td>120 minutes</td></tr>
+                        <tr><td>Grade 3</td><td>25 minutes</td><td>120 minutes</td></tr>
+                        <tr><td>Grade 4</td><td>30 minutes</td><td>120 minutes</td></tr>
+                        <tr><td>Grade 5</td><td>30 minutes</td><td>120 minutes</td></tr>
+                    </tbody>
+                </table>
+
+                <h5 class="mt-3">Teams</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Team Kitsko</h6>
+                        <ul class="small">
+                            <li>10 classes (including Mrs. Brown AM kindergarten)</li>
+                            <li>207 students</li>
+                            <li>Grades K-5</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Team Staub</h6>
+                        <ul class="small">
+                            <li>9 classes (including Mrs. Brown PM kindergarten)</li>
+                            <li>204 students</li>
+                            <li>Grades K-5</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <strong><i class="bi bi-info-circle"></i> Note:</strong> Mrs. Brown teaches 2 separate kindergarten classes (AM and PM sessions), which is why there are 19 total classes from 18 teachers.
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Troubleshooting</h4>
+            </div>
+            <div class="card-body">
+                <h5>Common Issues</h5>
+
+                <div class="accordion" id="troubleshootingAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble1">
+                                "Student not found in roster" warnings
+                            </button>
+                        </h2>
+                        <div id="trouble1" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <strong>Solution:</strong>
+                                <ul>
+                                    <li>Check that student names match exactly (case-sensitive)</li>
+                                    <li>Verify CSV column names are correct</li>
+                                    <li>Look for extra spaces in student names</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble2">
+                                Report shows "No data available"
+                            </button>
+                        </h2>
+                        <div id="trouble2" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <strong>Solution:</strong>
+                                <ul>
+                                    <li>Make sure you've uploaded data first</li>
+                                    <li>Check which environment you're in (Production vs Sample)</li>
+                                    <li>Verify the date filter matches uploaded data</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble3">
+                                How do I reset/clear data?
+                            </button>
+                        </h2>
+                        <div id="trouble3" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <strong>Solution:</strong>
+                                <ol>
+                                    <li>Stop the application (CTRL+C in Terminal)</li>
+                                    <li>Delete the database file:
+                                        <ul>
+                                            <li><code>rm readathon_prod.db</code> for production</li>
+                                            <li><code>rm readathon_sample.db</code> for sample</li>
+                                        </ul>
+                                    </li>
+                                    <li>Run <code>python3 init_data.py</code> to recreate</li>
+                                    <li>Restart the application</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble4">
+                                Port 5000 is already in use
+                            </button>
+                        </h2>
+                        <div id="trouble4" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <strong>Solution:</strong>
+                                <ol>
+                                    <li>Open <code>app.py</code> in a text editor</li>
+                                    <li>Find line 197: <code>app.run(debug=True, host='127.0.0.1', port=5000)</code></li>
+                                    <li>Change <code>port=5000</code> to <code>port=5001</code> (or another port)</li>
+                                    <li>Save and restart the application</li>
+                                    <li>Access at <code>http://localhost:5001</code></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips & Tricks -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-lightbulb"></i> Tips & Tricks</h4>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li><strong>Test in Sample:</strong> Try new features in Sample environment before using in Production</li>
+                    <li><strong>Copy to Clipboard:</strong> Fastest way to get data into your slideshow - just paste!</li>
+                    <li><strong>Export to CSV:</strong> Use this for Excel analysis or archiving</li>
+                    <li><strong>Run Reports Multiple Times:</strong> Reports don't change your data - run them as often as you like</li>
+                    <li><strong>Prize Drawing Randomness:</strong> Q4 picks different winners each time - run it until you're ready to announce</li>
+                    <li><strong>Workflows Save Time:</strong> Use QD workflow every day instead of running 5 separate reports</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-muted pb-4">
+            <hr>
+            <p>
+                <i class="bi bi-book"></i> Read-a-Thon Reporting System<br>
+                <small>Built with Flask & Bootstrap | Data stored locally on your Mac</small>
+            </p>
+            <p>
+                <a href="/" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-house"></i> Back to Dashboard
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

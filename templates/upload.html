@@ -1,0 +1,1234 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data - Read-a-Thon System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-upload"></i> Upload Data
+        </h1>
+
+        <!-- Daily Minutes Upload -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseDaily">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-day"></i> Daily Minutes Upload
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseDaily">
+                <p class="text-muted">Upload multiple daily reading minutes files at once. Dates are extracted from filenames automatically.</p>
+
+                <!-- Multi-File Selection -->
+                <div class="mb-3">
+                    <label for="daily_files" class="form-label fw-bold">Select Daily Minutes Files *</label>
+                    <input type="file" class="form-control" id="daily_files" name="daily_files" accept=".csv" multiple required onchange="previewDailyFiles()">
+                    <div class="form-text">
+                        Select multiple CSV files. Expected filename format: <code>daily_YYYY-MM-DD.csv</code> or similar with date pattern.
+                        <br>CSV with columns: <code>ReaderName</code>, <code>Minutes</code> (+ optional: ClassID, Teacher, ReaderID)
+                    </div>
+                </div>
+
+                <!-- File Preview Table -->
+                <div id="filePreviewSection" style="display: none;" class="mb-3">
+                    <h6 class="mb-2">Files to Upload (<span id="fileCount">0</span> selected)</h6>
+
+                    <div id="duplicateDateWarning" style="display: none;" class="alert alert-warning alert-sm mb-2">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Multiple files have the same date. Later uploads will replace earlier ones.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover" id="filePreviewTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="selectAllCheckbox" checked onchange="toggleAllFileCheckboxes(this)">
+                                    </th>
+                                    <th>Filename</th>
+                                    <th>Extracted Date</th>
+                                    <th style="width: 100px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filePreviewBody">
+                                <!-- Files will be populated here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Upload Button -->
+                    <div class="d-grid gap-2">
+                        <button type="button" id="uploadMultipleBtn" class="btn btn-primary btn-lg" onclick="uploadMultipleFiles()">
+                            <i class="bi bi-cloud-upload"></i> Upload <span id="uploadCount">0</span> Selected Files
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cumulative Stats Upload -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseCumulative">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart-fill"></i> Cumulative Stats Upload
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseCumulative">
+                <p class="text-muted">Upload cumulative fundraising and reading stats (replaces all existing cumulative data)</p>
+                <form id="uploadCumulativeForm" enctype="multipart/form-data">
+                    <!-- Cumulative File -->
+                    <div class="mb-3">
+                        <label for="cumulative_file" class="form-label fw-bold">Cumulative Stats File *</label>
+                        <input type="file" class="form-control" id="cumulative_file" name="cumulative_file" accept=".csv" required>
+                        <div class="form-text">
+                            CSV with columns: <code>"Reader Name"</code>, <code>Teacher</code>, <code>Raised</code>, <code>Sponsors</code>, <code>Minutes</code> (+ optional: Email, Sessions, PageCreated)
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-cloud-upload"></i> Upload Cumulative Stats
+                        </button>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Color Bonus Upload -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseBonus">
+                <h5 class="mb-0">
+                    <i class="bi bi-star-fill"></i> Team Color Bonus Upload
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseBonus">
+                <p class="text-muted">Upload Team Color Bonus data for a special event day (students wearing team colors earn bonus points and minutes)</p>
+                <form id="uploadBonusForm" enctype="multipart/form-data">
+                    <!-- Event Date -->
+                    <div class="mb-3">
+                        <label for="bonus_event_date" class="form-label fw-bold">Event Date *</label>
+                        <input type="date" class="form-control" id="bonus_event_date" name="bonus_event_date" required>
+                        <div class="form-text">
+                            Select the date when the Team Color Bonus event occurred
+                        </div>
+                    </div>
+
+                    <!-- Bonus File -->
+                    <div class="mb-3">
+                        <label for="bonus_file" class="form-label fw-bold">Team Color Bonus File *</label>
+                        <input type="file" class="form-control" id="bonus_file" name="bonus_file" accept=".csv" required>
+                        <div class="form-text">
+                            CSV with columns: <code>timestamp</code>, <code>class_name</code>, <code>team_name</code>, <code>grade_level</code>, <code>students_count</code>
+                            <br>Example: <code>10/16/2025 8:46:06, porter, kitsko, 1, 14</code>
+                            <br><strong>Validation:</strong> Class name (lowercase teacher name) and team name must match database (case-insensitive)
+                            <br><strong>Bonus Calculation:</strong> Each student = +1 participation point, +10 minutes for their team
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="bi bi-cloud-upload"></i> Upload Team Color Bonus
+                        </button>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Area -->
+        <div id="resultArea" class="mt-4" style="display: none;">
+            <div id="resultCard"></div>
+        </div>
+
+        <!-- Upload History -->
+        <div class="card mt-4">
+            <div class="card-header {% if environment == 'sample' %}bg-danger{% else %}bg-primary{% endif %} text-white d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseHistory">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Upload History
+                    <i class="bi bi-chevron-down"></i>
+                </h5>
+                <button id="deleteSelectedBtn" class="btn btn-sm btn-danger" style="display: none;" onclick="deleteSelectedUploads(); event.stopPropagation();">
+                    <i class="bi bi-trash"></i> Delete Selected
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="collapse show" id="collapseHistory">
+                <div id="uploadHistory">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseInstructions">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Instructions
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseInstructions">
+                <h6>Daily Minutes Upload:</h6>
+                <ul>
+                    <li>Upload daily reading minutes for participation tracking</li>
+                    <li>CSV file must include columns: <strong>ReaderName</strong> and <strong>Minutes</strong></li>
+                    <li>Other columns (ClassID, Teacher, ReaderID) are ignored if present</li>
+                    <li>Select the specific date for this data</li>
+                    <li>Data is merged with existing data for that date if re-uploading</li>
+                    <li>Student names must match the roster exactly</li>
+                </ul>
+
+                <div class="alert alert-secondary mt-2 mb-2">
+                    <strong>Daily Minutes CSV Format Example:</strong>
+                    <pre class="mb-0"><code>ClassID,Teacher,ReaderID,ReaderName,Minutes
+1001,"Ms. Spencer",2117001,"John Doe",45
+1001,"Ms. Spencer",2117002,"Jane Spencer",30</code></pre>
+                    <small class="text-muted">Required: ReaderName, Minutes | Optional/Ignored: ClassID, Teacher, ReaderID</small>
+                </div>
+
+                <h6 class="mt-3">Cumulative Stats Upload:</h6>
+                <ul>
+                    <li>Upload cumulative fundraising and reading totals</li>
+                    <li>CSV file must include: <strong>"Reader Name"</strong>, <strong>Teacher</strong>, <strong>Raised</strong>, <strong>Sponsors</strong>, <strong>Minutes</strong></li>
+                    <li>Other columns (Email, Sessions, PageCreated) are ignored if present</li>
+                    <li>This replaces ALL existing cumulative data (not incremental)</li>
+                    <li>Upload daily as data changes - contains running totals</li>
+                    <li>Students not in roster will be imported with "ERROR: NO ROSTER MATCH" tag</li>
+                </ul>
+
+                <div class="alert alert-secondary mt-2 mb-2">
+                    <strong>Cumulative Stats CSV Format Example:</strong>
+                    <pre class="mb-0"><code>"Reader Name",Teacher,Email,Raised,Sponsors,Sessions,PageCreated,Minutes
+"John Doe","Ms. Spencer",john@example.com,100.00,5,3,Yes,150
+"Jane Spencer","Ms. Spencer",jane@example.com,75.00,3,2,Yes,120</code></pre>
+                    <small class="text-muted">Required: "Reader Name", Teacher, Raised, Sponsors, Minutes | Optional/Ignored: Email, Sessions, PageCreated</small>
+                </div>
+
+                <h6 class="mt-3">What Happens During Upload:</h6>
+                <ol>
+                    <li>System validates student names against the roster</li>
+                    <li>Column names are matched case-insensitively</li>
+                    <li>Unrecognized student names are reported as warnings</li>
+                    <li>Successfully processed entries are saved to the database</li>
+                    <li>Upload history is updated with status (success/warning/error)</li>
+                </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variable to store file metadata
+let filesMetadata = [];
+
+// Extract date from filename
+function extractDateFromFilename(filename) {
+    // Try various date patterns
+    const patterns = [
+        /(\d{4}-\d{2}-\d{2})/,           // YYYY-MM-DD
+        /(\d{4}_\d{2}_\d{2})/,           // YYYY_MM_DD
+        /(\d{8})/,                        // YYYYMMDD
+        /(\d{2}-\d{2}-\d{4})/,           // MM-DD-YYYY
+        /(\d{2}_\d{2}_\d{4})/            // MM_DD_YYYY
+    ];
+
+    for (const pattern of patterns) {
+        const match = filename.match(pattern);
+        if (match) {
+            let dateStr = match[1];
+
+            // Convert to YYYY-MM-DD format
+            if (dateStr.includes('_')) {
+                dateStr = dateStr.replace(/_/g, '-');
+            }
+
+            // Handle YYYYMMDD format
+            if (dateStr.length === 8 && /^\d{8}$/.test(dateStr)) {
+                dateStr = dateStr.substring(0,4) + '-' + dateStr.substring(4,6) + '-' + dateStr.substring(6,8);
+            }
+
+            // Handle MM-DD-YYYY format
+            if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+                const parts = dateStr.split('-');
+                dateStr = parts[2] + '-' + parts[0] + '-' + parts[1];
+            }
+
+            // Validate date
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            if (datePattern.test(dateStr)) {
+                const date = new Date(dateStr);
+                if (date.toString() !== 'Invalid Date') {
+                    return dateStr;
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+// Preview selected files
+function previewDailyFiles() {
+    const fileInput = document.getElementById('daily_files');
+    const files = fileInput.files;
+    const previewSection = document.getElementById('filePreviewSection');
+    const previewBody = document.getElementById('filePreviewBody');
+    const fileCount = document.getElementById('fileCount');
+    const uploadCount = document.getElementById('uploadCount');
+
+    if (files.length === 0) {
+        previewSection.style.display = 'none';
+        return;
+    }
+
+    // Extract metadata for all files
+    filesMetadata = [];
+    const dates = [];
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const extractedDate = extractDateFromFilename(file.name);
+
+        filesMetadata.push({
+            index: i,
+            file: file,
+            filename: file.name,
+            extractedDate: extractedDate,
+            selected: true,
+            status: 'ready'
+        });
+
+        if (extractedDate) {
+            dates.push(extractedDate);
+        }
+    }
+
+    // Check for duplicate dates
+    const duplicates = dates.filter((item, index) => dates.indexOf(item) !== index);
+    const duplicateWarning = document.getElementById('duplicateDateWarning');
+    if (duplicates.length > 0) {
+        duplicateWarning.style.display = 'block';
+        duplicateWarning.innerHTML = `<i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Multiple files have the same date: ${[...new Set(duplicates)].join(', ')}. Later uploads will replace earlier ones.`;
+    } else {
+        duplicateWarning.style.display = 'none';
+    }
+
+    // Render table
+    previewBody.innerHTML = filesMetadata.map((meta, idx) => {
+        const statusBadge = meta.extractedDate
+            ? '<span class="badge bg-success">Ready</span>'
+            : '<span class="badge bg-warning">No Date</span>';
+
+        const dateDisplay = meta.extractedDate || '<span class="text-danger">Could not extract date</span>';
+
+        return `
+            <tr id="file-row-${idx}">
+                <td><input type="checkbox" class="file-checkbox" data-index="${idx}" ${meta.selected ? 'checked' : ''} onchange="updateUploadCount()"></td>
+                <td><small>${meta.filename}</small></td>
+                <td>${dateDisplay}</td>
+                <td id="status-${idx}">${statusBadge}</td>
+            </tr>
+        `;
+    }).join('');
+
+    fileCount.textContent = files.length;
+    updateUploadCount();
+    previewSection.style.display = 'block';
+}
+
+// Toggle all file checkboxes
+function toggleAllFileCheckboxes(selectAllCheckbox) {
+    const checkboxes = document.querySelectorAll('.file-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = selectAllCheckbox.checked;
+        const idx = parseInt(cb.dataset.index);
+        filesMetadata[idx].selected = cb.checked;
+    });
+    updateUploadCount();
+}
+
+// Select all files
+function selectAllFiles() {
+    document.getElementById('selectAllCheckbox').checked = true;
+    toggleAllFileCheckboxes(document.getElementById('selectAllCheckbox'));
+}
+
+// Deselect all files
+function deselectAllFiles() {
+    document.getElementById('selectAllCheckbox').checked = false;
+    toggleAllFileCheckboxes(document.getElementById('selectAllCheckbox'));
+}
+
+// Update upload count
+function updateUploadCount() {
+    const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+    document.getElementById('uploadCount').textContent = checkboxes.length;
+}
+
+// Upload multiple files sequentially
+async function uploadMultipleFiles() {
+    const selectedFiles = filesMetadata.filter(meta => {
+        const checkbox = document.querySelector(`.file-checkbox[data-index="${meta.index}"]`);
+        return checkbox && checkbox.checked && meta.extractedDate;
+    });
+
+    if (selectedFiles.length === 0) {
+        alert('Please select at least one file with a valid date.');
+        return;
+    }
+
+    // Disable upload button
+    const uploadBtn = document.getElementById('uploadMultipleBtn');
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Uploading...';
+
+    // Show result area
+    const resultArea = document.getElementById('resultArea');
+    const resultCard = document.getElementById('resultCard');
+    resultArea.style.display = 'block';
+
+    let successCount = 0;
+    let errorCount = 0;
+    const results = [];
+
+    // Upload each file sequentially
+    for (let i = 0; i < selectedFiles.length; i++) {
+        const meta = selectedFiles[i];
+        const statusCell = document.getElementById(`status-${meta.index}`);
+
+        // Update status to uploading
+        statusCell.innerHTML = '<span class="badge bg-info"><span class="spinner-border spinner-border-sm me-1"></span>Uploading...</span>';
+
+        // Show progress in result card
+        resultCard.innerHTML = `
+            <div class="alert alert-info">
+                <div class="spinner-border spinner-border-sm me-2"></div>
+                Uploading file ${i + 1} of ${selectedFiles.length}: ${meta.filename}
+            </div>
+        `;
+
+        try {
+            const formData = new FormData();
+            formData.append('log_date', meta.extractedDate);
+            formData.append('confirmed', 'true'); // Auto-confirm for batch uploads
+            formData.append('minutes_file', meta.file);
+
+            const response = await fetch('/api/upload_daily', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                statusCell.innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Success</span>';
+                successCount++;
+                results.push({
+                    date: meta.extractedDate,
+                    filename: meta.filename,
+                    success: true,
+                    minutes: result.minutes_processed || 0,
+                    warnings: result.warnings || []
+                });
+            } else {
+                statusCell.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Error</span>';
+                errorCount++;
+                results.push({
+                    date: meta.extractedDate,
+                    filename: meta.filename,
+                    success: false,
+                    error: result.error || result.errors?.[0] || 'Unknown error'
+                });
+            }
+        } catch (error) {
+            statusCell.innerHTML = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Error</span>';
+            errorCount++;
+            results.push({
+                date: meta.extractedDate,
+                filename: meta.filename,
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // Show final results
+    showBatchUploadResults(results, successCount, errorCount);
+
+    // Re-enable upload button
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload <span id="uploadCount">' + selectedFiles.length + '</span> Selected Files';
+
+    // Reload upload history
+    loadUploadHistory();
+}
+
+// Show batch upload results
+function showBatchUploadResults(results, successCount, errorCount) {
+    const resultCard = document.getElementById('resultCard');
+
+    const successList = results.filter(r => r.success).map(r =>
+        `<li><strong>${r.date}</strong>: ${r.filename} (${r.minutes} records)</li>`
+    ).join('');
+
+    const errorList = results.filter(r => !r.success).map(r =>
+        `<li><strong>${r.date}</strong>: ${r.filename} - <span class="text-danger">${r.error}</span></li>`
+    ).join('');
+
+    // Collect all info messages from successful uploads
+    const allInfo = [];
+    results.filter(r => r.success && r.info && r.info.length > 0).forEach(r => {
+        r.info.forEach(i => {
+            allInfo.push(`<strong>${r.date}</strong> (${r.filename}): ${i}`);
+        });
+    });
+
+    // Collect all warnings from successful uploads
+    const allWarnings = [];
+    results.filter(r => r.success && r.warnings && r.warnings.length > 0).forEach(r => {
+        r.warnings.forEach(w => {
+            allWarnings.push(`<strong>${r.date}</strong> (${r.filename}): ${w}`);
+        });
+    });
+
+    // Determine alert class and icon (only warnings trigger warning style, not info)
+    const hasWarnings = allWarnings.length > 0;
+    const alertClass = errorCount > 0 ? 'alert-warning' : (hasWarnings ? 'alert-warning' : 'alert-success');
+    const icon = errorCount > 0 ? 'bi-exclamation-triangle' : (hasWarnings ? 'bi-exclamation-triangle' : 'bi-check-circle-fill');
+
+    resultCard.innerHTML = `
+        <div class="alert ${alertClass}">
+            <h5 class="alert-heading">
+                <i class="bi ${icon}"></i> Batch Upload Complete
+            </h5>
+            <hr>
+            <p><strong>Summary:</strong> ${successCount} successful, ${errorCount} failed out of ${results.length} total</p>
+
+            ${successCount > 0 ? `
+                <h6 class="mt-3">✅ Successful Uploads:</h6>
+                <ul class="mb-2">${successList}</ul>
+            ` : ''}
+
+            ${allInfo.length > 0 ? `
+                <h6 class="mt-3 text-info"><i class="bi bi-info-circle"></i> Information:</h6>
+                <ul class="mb-2">
+                    ${allInfo.map(i => `<li class="text-info">${i}</li>`).join('')}
+                </ul>
+            ` : ''}
+
+            ${allWarnings.length > 0 ? `
+                <h6 class="mt-3 text-warning"><i class="bi bi-exclamation-triangle"></i> Warnings:</h6>
+                <ul class="mb-2">
+                    ${allWarnings.map(w => `<li class="text-warning">${w}</li>`).join('')}
+                </ul>
+            ` : ''}
+
+            ${errorCount > 0 ? `
+                <h6 class="mt-3 text-danger">❌ Failed Uploads:</h6>
+                <ul class="mb-0">${errorList}</ul>
+            ` : ''}
+
+            <div class="d-grid gap-2 mt-3">
+                <a href="/reports" class="btn btn-primary">
+                    <i class="bi bi-graph-up"></i> View Reports
+                </a>
+                <button class="btn btn-secondary" onclick="location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i> Upload More Data
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Cumulative Upload Handler
+async function performCumulativeUpload(confirmed = false) {
+    const formData = new FormData();
+    const cumulativeFile = document.getElementById('cumulative_file').files[0];
+
+    formData.append('cumulative_file', cumulativeFile);
+    formData.append('confirmed', confirmed ? 'true' : 'false');
+
+    // Show loading
+    const resultArea = document.getElementById('resultArea');
+    const resultCard = document.getElementById('resultCard');
+    resultArea.style.display = 'block';
+    resultCard.innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Uploading cumulative stats...
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/upload_cumulative', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        // Handle sample data warning for production
+        if (result.needs_sample_confirmation) {
+            const confirmMsg = `⚠️ WARNING: Sample Data Detection!\n\n` +
+                `You are uploading file with "sample" in the name to the PRODUCTION environment.\n\n` +
+                `File: ${result.filename || 'N/A'}\n\n` +
+                `Are you SURE you want to upload sample data to production?`;
+
+            if (confirm(confirmMsg)) {
+                await performCumulativeUpload(true);
+            } else {
+                resultCard.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-shield-exclamation"></i> Upload cancelled - sample data protection
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        showUploadResult(result, null, 'cumulative');
+    } catch (error) {
+        showErrorResult(error.message);
+    }
+}
+
+// Show upload result
+function showUploadResult(result, logDate, uploadType) {
+    const resultCard = document.getElementById('resultCard');
+
+    if (result.success) {
+        let info = '';
+        if (result.info && result.info.length > 0) {
+            info = `
+                <div class="alert alert-info mt-3">
+                    <h6><i class="bi bi-info-circle"></i> Information:</h6>
+                    <ul class="mb-0">
+                        ${result.info.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        let warnings = '';
+        if (result.warnings && result.warnings.length > 0) {
+            warnings = `
+                <div class="alert alert-warning mt-3">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Warnings:</h6>
+                    <ul class="mb-0">
+                        ${result.warnings.map(w => `<li>${w}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        let details = '';
+        if (uploadType === 'daily') {
+            details = `
+                <strong>Date:</strong> ${logDate}<br>
+                <strong>Environment:</strong> ${result.environment.toUpperCase()}<br>
+                <strong>Minutes Processed:</strong> ${result.minutes_processed}
+            `;
+        } else {
+            details = `
+                <strong>Environment:</strong> ${result.environment.toUpperCase()}<br>
+                <strong>Rows Processed:</strong> ${result.rows_processed}<br>
+                <strong>Students Matched:</strong> ${result.students_matched}<br>
+                <strong>Students Unmatched:</strong> ${result.students_unmatched}
+            `;
+        }
+
+        resultCard.innerHTML = `
+            <div class="alert alert-success">
+                <h5 class="alert-heading">
+                    <i class="bi bi-check-circle-fill"></i> Upload Successful!
+                </h5>
+                <hr>
+                <p class="mb-0">${details}</p>
+            </div>
+            ${info}
+            ${warnings}
+            <div class="d-grid gap-2 mt-3">
+                <a href="/reports" class="btn btn-primary">
+                    <i class="bi bi-graph-up"></i> View Reports
+                </a>
+                <button class="btn btn-secondary" onclick="location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i> Upload More Data
+                </button>
+            </div>
+        `;
+
+        // Reload upload history
+        loadUploadHistory();
+    } else {
+        resultCard.innerHTML = `
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">
+                    <i class="bi bi-x-circle-fill"></i> Upload Failed
+                </h5>
+                <hr>
+                <p class="mb-0">${result.error || 'Unknown error occurred'}</p>
+            </div>
+        `;
+    }
+}
+
+// Show error result
+function showErrorResult(errorMsg) {
+    const resultCard = document.getElementById('resultCard');
+    resultCard.innerHTML = `
+        <div class="alert alert-danger">
+            <h5 class="alert-heading">
+                <i class="bi bi-x-circle-fill"></i> Upload Failed
+            </h5>
+            <hr>
+            <p class="mb-0">${errorMsg}</p>
+        </div>
+    `;
+}
+
+// Load upload history
+async function loadUploadHistory() {
+    try {
+        const response = await fetch('/api/upload_history');
+        const data = await response.json();
+
+        const historyDiv = document.getElementById('uploadHistory');
+
+        if (data.success && data.history && data.history.length > 0) {
+            const historyHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover" style="table-layout: fixed; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes(this)"></th>
+                                <th style="width: 100px;">Date</th>
+                                <th style="width: 140px;">Uploaded</th>
+                                <th style="width: 200px;">File</th>
+                                <th style="width: 60px;">Rows</th>
+                                <th style="width: 80px;">Students</th>
+                                <th style="width: 80px;">Action</th>
+                                <th style="width: 80px;">Replaced</th>
+                                <th style="width: 140px;">Type</th>
+                                <th style="width: 80px;">Audit</th>
+                                <th style="width: 80px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.history.map(h => {
+                                const statusBadge = h.status === 'success' ? 'bg-success' :
+                                                   h.status === 'warning' ? 'bg-warning' : 'bg-danger';
+                                const isCumulative = (h.log_date === null || h.log_date === 'N/A' || h.log_date === '');
+                                const deleteButton = isCumulative ?
+                                    `<button class="btn btn-sm btn-danger" onclick="deleteCumulative()" title="Delete all cumulative data">
+                                        <i class="bi bi-trash"></i>
+                                    </button>` :
+                                    `<button class="btn btn-sm btn-danger" onclick="deleteDay('${h.log_date}')" title="Delete data for ${h.log_date}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>`;
+
+                                // Action badge
+                                const actionBadge = (h.action_taken === 'replaced') ?
+                                    '<span class="badge bg-warning text-dark">replaced</span>' :
+                                    '<span class="badge bg-success">inserted</span>';
+
+                                // Records replaced display
+                                const replacedDisplay = (h.records_replaced && h.records_replaced > 0) ?
+                                    `<span class="text-warning">${h.records_replaced}</span>` :
+                                    '<span class="text-muted">0</span>';
+
+                                // Audit details button with hover tooltip
+                                let auditButton = '-';
+                                if (h.audit_details) {
+                                    try {
+                                        const audit = typeof h.audit_details === 'string' ? JSON.parse(h.audit_details) : h.audit_details;
+                                        const hasErrors = audit.errors && audit.errors.length > 0;
+                                        const hasWarnings = audit.warnings && audit.warnings.length > 0;
+                                        const iconClass = hasErrors ? 'bi-exclamation-circle text-danger' :
+                                                         hasWarnings ? 'bi-exclamation-triangle text-warning' :
+                                                         'bi-info-circle text-info';
+
+                                        // No tooltip - user must click to see details
+                                        // Use data attribute to avoid issues with inline JSON in onclick
+                                        const auditDataAttr = typeof h.audit_details === 'string' ? h.audit_details : JSON.stringify(h.audit_details);
+                                        auditButton = `<button class="btn btn-sm btn-outline-secondary audit-btn" data-audit='${auditDataAttr.replace(/'/g, "&apos;")}'>
+                                            <i class="bi ${iconClass}"></i>
+                                        </button>`;
+                                    } catch(e) {
+                                        auditButton = '<span class="text-muted">-</span>';
+                                    }
+                                }
+
+                                return `
+                                    <tr>
+                                        <td><input type="checkbox" class="upload-checkbox" value="${h.upload_id}" onchange="updateDeleteButton()"></td>
+                                        <td><strong>${h.log_date || 'N/A'}</strong></td>
+                                        <td><small>${new Date(h.upload_timestamp).toLocaleString()}</small></td>
+                                        <td style="word-wrap: break-word; overflow-wrap: break-word;"><small>${h.filename || '-'}</small></td>
+                                        <td>${h.row_count || 0}</td>
+                                        <td>${h.total_students_affected}</td>
+                                        <td>${actionBadge}</td>
+                                        <td>${replacedDisplay}</td>
+                                        <td><span class="badge ${statusBadge}">${h.status}</span><br><span class="badge bg-primary">${h.upload_type}</span></td>
+                                        <td>${auditButton}</td>
+                                        <td style="white-space: nowrap;">${deleteButton}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            historyDiv.innerHTML = historyHTML;
+
+            // Add click handlers to audit buttons
+            document.querySelectorAll('.audit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const auditData = this.getAttribute('data-audit');
+                    showAuditDetails(auditData);
+                });
+            });
+        } else {
+            historyDiv.innerHTML = '<p class="text-muted text-center py-3">No uploads yet</p>';
+        }
+    } catch (error) {
+        document.getElementById('uploadHistory').innerHTML =
+            '<p class="text-danger text-center py-3">Error loading upload history</p>';
+    }
+}
+
+// Toggle all checkboxes
+function toggleAllCheckboxes(selectAllCheckbox) {
+    const checkboxes = document.querySelectorAll('.upload-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+    updateDeleteButton();
+}
+
+// Update delete button visibility
+function updateDeleteButton() {
+    const checkboxes = document.querySelectorAll('.upload-checkbox:checked');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    if (checkboxes.length > 0) {
+        deleteBtn.style.display = 'inline-block';
+        deleteBtn.textContent = `Delete Selected (${checkboxes.length})`;
+    } else {
+        deleteBtn.style.display = 'none';
+    }
+}
+
+// Delete selected uploads
+async function deleteSelectedUploads() {
+    const checkboxes = document.querySelectorAll('.upload-checkbox:checked');
+    const uploadIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+    if (uploadIds.length === 0) {
+        alert('No uploads selected');
+        return;
+    }
+
+    const confirmMsg = `⚠️ DELETE ${uploadIds.length} UPLOAD HISTORY RECORD(S)?\n\n` +
+        `This will permanently delete the selected upload history records.\n` +
+        `Note: This only deletes the upload history records, not the actual data.\n\n` +
+        `This action CANNOT be undone!\n\n` +
+        `Are you sure you want to continue?`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/delete_upload_history_batch', {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({upload_ids: uploadIds})
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert(`✅ Successfully deleted ${result.deleted_count} upload history record(s)!`);
+
+            // Reload upload history
+            loadUploadHistory();
+
+            // Clear result area
+            document.getElementById('resultArea').style.display = 'none';
+        } else {
+            alert(`❌ Delete Failed\n\n${result.error || 'Unknown error occurred'}`);
+        }
+    } catch (error) {
+        alert(`❌ Delete Failed\n\n${error.message}`);
+    }
+}
+
+// Team Color Bonus Upload Handler
+async function performBonusUpload(confirmed = false) {
+    const formData = new FormData();
+    const bonusFile = document.getElementById('bonus_file').files[0];
+    const eventDate = document.getElementById('bonus_event_date').value;
+
+    if (!eventDate) {
+        alert('Please select an event date');
+        return;
+    }
+
+    formData.append('bonus_file', bonusFile);
+    formData.append('event_date', eventDate);
+    formData.append('confirmed', confirmed ? 'true' : 'false');
+
+    // Show loading
+    const resultArea = document.getElementById('resultArea');
+    const resultCard = document.getElementById('resultCard');
+    resultArea.style.display = 'block';
+    resultCard.innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            Uploading Team Color Bonus data...
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/upload_team_color_bonus', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        // Handle sample data warning for production
+        if (result.needs_sample_confirmation) {
+            const confirmMsg = `⚠️ WARNING: Sample Data Detection!\n\n` +
+                `You are uploading file with "sample" in the name to the PRODUCTION environment.\n\n` +
+                `File: ${result.filename || 'N/A'}\n\n` +
+                `Are you SURE you want to upload sample data to production?`;
+
+            if (confirm(confirmMsg)) {
+                await performBonusUpload(true);
+            } else {
+                resultCard.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-shield-exclamation"></i> Upload cancelled - sample data protection
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        if (result.success) {
+            resultCard.innerHTML = `
+                <div class="alert alert-success">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-check-circle-fill"></i> Team Color Bonus Upload Successful!
+                    </h5>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>Event Date:</strong> ${eventDate}<br>
+                        <strong>Environment:</strong> ${result.environment.toUpperCase()}<br>
+                        <strong>Classes Processed:</strong> ${result.count}
+                    </p>
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                    <a href="/reports" class="btn btn-primary">
+                        <i class="bi bi-graph-up"></i> View Reports
+                    </a>
+                    <button class="btn btn-secondary" onclick="location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> Upload More Data
+                    </button>
+                </div>
+            `;
+
+            // Reload upload history (if applicable)
+            if (typeof loadUploadHistory === 'function') {
+                loadUploadHistory();
+            }
+        } else {
+            let errorHtml = `<p class="mb-0">${result.error || 'Unknown error occurred'}</p>`;
+
+            if (result.errors && result.errors.length > 0) {
+                errorHtml += `
+                    <div class="alert alert-warning mt-3">
+                        <h6>Errors:</h6>
+                        <ul class="mb-0">
+                            ${result.errors.map(e => `<li>${e}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            resultCard.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-x-circle-fill"></i> Upload Failed
+                    </h5>
+                    <hr>
+                    ${errorHtml}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultCard.innerHTML = `
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">
+                    <i class="bi bi-x-circle-fill"></i> Upload Failed
+                </h5>
+                <hr>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Form submission handlers
+document.getElementById('uploadCumulativeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await performCumulativeUpload(false);
+});
+
+document.getElementById('uploadBonusForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await performBonusUpload(false);
+});
+
+// Delete day data
+async function deleteDay(logDate) {
+    const confirmMsg = `⚠️ DELETE DATA FOR ${logDate}?\n\n` +
+        `This will permanently delete:\n` +
+        `- All reading minutes for this date\n` +
+        `- Upload history records for this date\n\n` +
+        `This action CANNOT be undone!\n\n` +
+        `Are you sure you want to continue?`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/delete_day/${logDate}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert(`✅ Successfully deleted data for ${logDate}!\n\n` +
+                  `Deleted ${result.deleted_records} records affecting ${result.affected_students ? result.affected_students.length : 0} students.`);
+
+            // Reload upload history
+            loadUploadHistory();
+
+            // Clear result area
+            document.getElementById('resultArea').style.display = 'none';
+        } else {
+            alert(`❌ Delete Failed\n\n${result.error || 'Unknown error occurred'}`);
+        }
+    } catch (error) {
+        alert(`❌ Delete Failed\n\n${error.message}`);
+    }
+}
+
+// Delete all cumulative data
+async function deleteCumulative() {
+    const confirmMsg = `🚨 DELETE ALL CUMULATIVE DATA?\n\n` +
+        `This will permanently delete:\n` +
+        `- ALL donation amounts\n` +
+        `- ALL sponsor counts\n` +
+        `- ALL cumulative minutes\n` +
+        `- ALL cumulative upload history\n\n` +
+        `This affects EVERY STUDENT in the database!\n` +
+        `This action CANNOT be undone!\n\n` +
+        `Type "DELETE" below to confirm:`;
+
+    const confirmation = prompt(confirmMsg);
+
+    if (confirmation !== 'DELETE') {
+        alert('Delete cancelled - confirmation text did not match.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/delete_cumulative', {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert(`✅ Successfully deleted all cumulative data!\n\n` +
+                  `Deleted ${result.deleted_records} student records.`);
+
+            // Reload upload history
+            loadUploadHistory();
+
+            // Clear result area
+            document.getElementById('resultArea').style.display = 'none';
+        } else {
+            alert(`❌ Delete Failed\n\n${result.error || 'Unknown error occurred'}`);
+        }
+    } catch (error) {
+        alert(`❌ Delete Failed\n\n${error.message}`);
+    }
+}
+
+// Show audit details modal
+function showAuditDetails(auditDetailsJson) {
+    try {
+        const audit = typeof auditDetailsJson === 'string' ? JSON.parse(auditDetailsJson) : auditDetailsJson;
+
+        let content = '<div class="audit-details">';
+
+        // Summary statistics
+        if (audit.previous_total !== undefined) {
+            // Cumulative upload audit
+            content += '<h6>Cumulative Upload Statistics:</h6>';
+            content += '<table class="table table-sm">';
+            content += `<tr><td><strong>Previous Total:</strong></td><td>${audit.previous_total}</td></tr>`;
+            content += `<tr><td><strong>New Total:</strong></td><td>${audit.new_total}</td></tr>`;
+            content += `<tr><td><strong>Students Removed:</strong></td><td class="text-danger">${audit.students_removed}</td></tr>`;
+            content += `<tr><td><strong>Students Added:</strong></td><td class="text-success">${audit.students_added}</td></tr>`;
+            content += `<tr><td><strong>Students Updated:</strong></td><td class="text-info">${audit.students_updated}</td></tr>`;
+            if (audit.unmatched_count) {
+                content += `<tr><td><strong>Unmatched Students:</strong></td><td class="text-warning">${audit.unmatched_count}</td></tr>`;
+            }
+            content += '</table>';
+        } else if (audit.dates_processed) {
+            // Multi-day upload audit
+            content += '<h6>Multi-Day Upload Statistics:</h6>';
+            content += '<table class="table table-sm">';
+            content += `<tr><td><strong>Dates Processed:</strong></td><td>${audit.dates_processed.join(', ')}</td></tr>`;
+            content += `<tr><td><strong>Total Replaced:</strong></td><td class="text-warning">${audit.records_replaced}</td></tr>`;
+            content += `<tr><td><strong>Total Added:</strong></td><td class="text-success">${audit.records_added}</td></tr>`;
+            content += '</table>';
+
+            if (audit.date_breakdown) {
+                content += '<h6>Date Breakdown:</h6>';
+                content += '<table class="table table-sm">';
+                content += '<thead><tr><th>Date</th><th>Existing</th><th>New</th><th>Total Minutes</th></tr></thead><tbody>';
+                for (const [date, info] of Object.entries(audit.date_breakdown)) {
+                    content += `<tr><td>${date}</td><td>${info.existing_count}</td><td>${info.new_count}</td><td>${info.total_minutes}</td></tr>`;
+                }
+                content += '</tbody></table>';
+            }
+        }
+
+        // Errors
+        if (audit.errors && audit.errors.length > 0) {
+            content += '<h6 class="text-danger mt-3">Errors:</h6>';
+            content += '<ul class="list-unstyled">';
+            audit.errors.forEach(err => {
+                content += `<li class="text-danger"><i class="bi bi-x-circle"></i> ${err}</li>`;
+            });
+            content += '</ul>';
+        }
+
+        // Info messages
+        if (audit.info && audit.info.length > 0) {
+            content += '<h6 class="text-info mt-3"><i class="bi bi-info-circle"></i> Information:</h6>';
+            content += '<ul class="list-unstyled">';
+            audit.info.forEach(info => {
+                content += `<li class="text-info"><i class="bi bi-info-circle"></i> ${info}</li>`;
+            });
+            content += '</ul>';
+        }
+
+        // Warnings
+        if (audit.warnings && audit.warnings.length > 0) {
+            content += '<h6 class="text-warning mt-3"><i class="bi bi-exclamation-triangle"></i> Warnings:</h6>';
+            content += '<ul class="list-unstyled">';
+            audit.warnings.forEach(warn => {
+                content += `<li class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${warn}</li>`;
+            });
+            content += '</ul>';
+        }
+
+        content += '</div>';
+
+        // Create modal or use alert
+        const modal = `
+            <div class="modal fade" id="auditModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Upload Audit Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${content}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('auditModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add new modal to body
+        document.body.insertAdjacentHTML('beforeend', modal);
+
+        // Show modal
+        const modalElement = document.getElementById('auditModal');
+        const bsModal = new bootstrap.Modal(modalElement);
+        bsModal.show();
+
+        // Remove modal from DOM after it's hidden
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+
+    } catch (e) {
+        alert('Error displaying audit details: ' + e.message);
+    }
+}
+
+// Rotate chevron icons when collapsing/expanding
+document.addEventListener('DOMContentLoaded', function() {
+    const collapseElements = document.querySelectorAll('.collapse');
+    collapseElements.forEach(function(collapseEl) {
+        const chevron = collapseEl.closest('.card').querySelector('.bi-chevron-down');
+
+        if (chevron) {
+            collapseEl.addEventListener('show.bs.collapse', function() {
+                chevron.style.transform = 'rotate(180deg)';
+                chevron.style.transition = 'transform 0.3s ease';
+            });
+
+            collapseEl.addEventListener('hide.bs.collapse', function() {
+                chevron.style.transform = 'rotate(0deg)';
+                chevron.style.transition = 'transform 0.3s ease';
+            });
+
+            // Set initial chevron state for expanded sections
+            if (collapseEl.classList.contains('show')) {
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+    });
+});
+
+// Load upload history on page load
+loadUploadHistory();
+</script>
+{% endblock %}

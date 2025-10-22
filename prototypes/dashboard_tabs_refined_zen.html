@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read-a-Thon Dashboard - Refined Zen</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f4f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* Top Navigation Tabs */
+        .main-nav-tabs {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            padding: 0.5rem;
+        }
+
+        .main-nav-tabs .nav-link {
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .main-nav-tabs .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #1e3a5f;
+        }
+
+        .main-nav-tabs .nav-link.active {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        /* Headline Banner */
+        .headline-banner {
+            background: #1e3a5f;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        .headline-metric {
+            text-align: center;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .headline-metric:last-child {
+            border-right: none;
+        }
+
+        .headline-label {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.15rem;
+        }
+
+        .headline-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #17a2b8;
+            line-height: 1;
+        }
+
+        .headline-subtitle {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.7);
+            margin-top: 0.1rem;
+        }
+
+        /* Card Styles */
+        .zen-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid #1e3a5f;
+        }
+
+        .zen-card-teal {
+            border-top-color: #17a2b8;
+        }
+
+        .zen-card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        /* Leader Cards */
+        .leader-card {
+            background: #e3f2fd;
+            border-left: 4px solid #1e3a5f;
+            padding: 0.75rem;
+            border-radius: 0.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .leader-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .leader-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .leader-value {
+            font-weight: 900;
+            color: #1e3a5f;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .leader-label {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            color: #95a5a6;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Team Cards */
+        .team-card-staub {
+            background: #e3f2fd;
+            border-left: 4px solid #1e3a5f;
+            padding: 0.75rem;
+            border-radius: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-card-kitsko {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 0.75rem;
+            border-radius: 0.4rem;
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .team-metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+        }
+
+        .team-metric-label {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+        }
+
+        .team-metric-value-staub {
+            font-weight: 900;
+            color: #1e3a5f;
+            font-size: 1rem;
+        }
+
+        .team-metric-value-kitsko {
+            font-weight: 900;
+            color: #d97706;
+            font-size: 1rem;
+        }
+
+        /* Data Tables */
+        .zen-table {
+            width: 100%;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .zen-table tbody tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+
+        .zen-table td {
+            padding: 0.25rem 0.5rem;
+            color: #7f8c8d;
+        }
+
+        .zen-table td:nth-child(2),
+        .zen-table td:nth-child(3) {
+            text-align: right;
+        }
+
+        .zen-table td:nth-child(2) {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .zen-table td:nth-child(3) {
+            color: #95a5a6;
+            font-size: 0.8rem;
+        }
+
+        .zen-table tr.total-row {
+            border-top: 2px solid #bdc3c7;
+        }
+
+        .zen-table tr.total-row td {
+            padding-top: 0.5rem;
+        }
+
+        /* Leaderboard styles */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem;
+            margin-bottom: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .leaderboard-item:hover {
+            background-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .leaderboard-rank {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #17a2b8;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .leaderboard-rank.gold { color: #f39c12; }
+        .leaderboard-rank.silver { color: #95a5a6; }
+        .leaderboard-rank.bronze { color: #cd7f32; }
+
+        .leaderboard-name {
+            flex-grow: 1;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .leaderboard-value {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #1e3a5f;
+        }
+
+        /* Data table styling */
+        .data-table {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .data-table table {
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            background-color: #1e3a5f;
+            color: white;
+            font-weight: 600;
+            border: none;
+            font-size: 0.8rem;
+            padding: 0.6rem;
+        }
+
+        .data-table td {
+            vertical-align: middle;
+            padding: 0.6rem;
+        }
+
+        /* Grade selector */
+        .grade-selector .btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 1.25rem;
+            font-size: 0.85rem;
+            padding: 0.4rem 1rem;
+        }
+
+        /* Alert banner */
+        .alert-zen {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-left: 6px solid #ff6b6b;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid" style="max-width: 1400px; padding: 1.5rem;">
+
+        <!-- Main Navigation Tabs -->
+        <ul class="nav nav-tabs main-nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+                    📊 Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button">
+                    👤 Students
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="classes-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button">
+                    🎓 Classes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="teams-tab" data-bs-toggle="tab" data-bs-target="#teams" type="button">
+                    ⚔️ Teams
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button">
+                    💾 Data & Reports
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabsContent">
+
+            <!-- OVERVIEW TAB -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+
+                <!-- Headline Banner -->
+                <div class="headline-banner">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">📅 Campaign Day</div>
+                            <div class="headline-value">3</div>
+                            <div class="headline-subtitle">of 6 Days Complete</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">💰 Total Raised</div>
+                            <div class="headline-value">$15,236</div>
+                            <div class="headline-subtitle">149 Students Contributing</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">📚 Minutes Read</div>
+                            <div class="headline-value">23,094</div>
+                            <div class="headline-subtitle">385 Hours Total</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">👥 Participation</div>
+                            <div class="headline-value">56%</div>
+                            <div class="headline-subtitle">230 of 411 Students</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Banner -->
+                <div class="alert-zen">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="font-size: 1.5rem;">⚠️</div>
+                            <div>
+                                <h6 style="font-size: 0.95rem; font-weight: 700; color: #2c3e50; margin: 0;">Data Integrity Issues Detected</h6>
+                                <p style="font-size: 0.75rem; color: #7f8c8d; margin: 0.2rem 0 0 0;">3 validation errors found - immediate attention required</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm" style="font-weight: 600; background: #ff6b6b; color: white; border: none; padding: 0.5rem 1.25rem;">
+                            Review Issues
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="row g-3">
+                    <!-- Student Participation -->
+                    <div class="col-md-4">
+                        <div class="zen-card">
+                            <h6 class="zen-card-title">📊 Student Participation</h6>
+                            <table class="zen-table">
+                                <tbody>
+                                    <tr>
+                                        <td>Total Participating</td>
+                                        <td>230</td>
+                                        <td>56.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Participated All Days</td>
+                                        <td>187</td>
+                                        <td>45.5%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Met Goal ≥1 Day</td>
+                                        <td>195</td>
+                                        <td>47.4%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Met Goal All Days</td>
+                                        <td>150</td>
+                                        <td>36.5%</td>
+                                    </tr>
+                                    <tr class="total-row">
+                                        <td>Total Roster</td>
+                                        <td>411</td>
+                                        <td>100%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Top Students + Top Classes -->
+                    <div class="col-md-4">
+                        <!-- Top Students -->
+                        <div class="zen-card zen-card-teal" style="margin-bottom: 0.75rem;">
+                            <h6 class="zen-card-title">🏆 Top Students</h6>
+
+                            <div class="section-label">Fundraising Leader</div>
+                            <div class="leader-card">
+                                <div class="leader-name">Myers Hansen</div>
+                                <div style="display: flex; justify-content: space-between; align-items: end;">
+                                    <span class="leader-label">Total Raised</span>
+                                    <span class="leader-value">$525</span>
+                                </div>
+                            </div>
+
+                            <div class="section-label">Reading Leader</div>
+                            <div class="leader-card">
+                                <div class="leader-name">Loretta Harper</div>
+                                <div style="display: flex; justify-content: space-between; align-items: end;">
+                                    <span class="leader-label">Minutes Read</span>
+                                    <span class="leader-value">360</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Classes -->
+                        <div class="zen-card">
+                            <h6 class="zen-card-title">🎓 Top Classes</h6>
+
+                            <div class="section-label">Fundraising Leader</div>
+                            <div class="leader-card">
+                                <div class="leader-name">Ms. Spencer's Class</div>
+                                <div style="display: flex; justify-content: space-between; align-items: end;">
+                                    <span class="leader-label">Total Raised</span>
+                                    <span class="leader-value">$1,891</span>
+                                </div>
+                            </div>
+
+                            <div class="section-label">Reading Leader</div>
+                            <div class="leader-card">
+                                <div class="leader-name">Mr. Reynolds's Class</div>
+                                <div style="display: flex; justify-content: space-between; align-items: end;">
+                                    <span class="leader-label">Minutes Read</span>
+                                    <span class="leader-value">2,251</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Competition -->
+                    <div class="col-md-4">
+                        <div class="zen-card">
+                            <h6 class="zen-card-title">⚔️ Team Competition: Staub vs Kitsko</h6>
+
+                            <div class="team-card-staub">
+                                <div class="team-header">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.2rem;">🔵</span>
+                                        <span class="team-name">TEAM STAUB</span>
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: #95a5a6;">8 Classes</span>
+                                </div>
+                                <div class="team-metric">
+                                    <span class="team-metric-label">Fundraising</span>
+                                    <span class="team-metric-value-staub">$8,234</span>
+                                </div>
+                                <div class="team-metric">
+                                    <span class="team-metric-label">Reading Minutes</span>
+                                    <span class="team-metric-value-staub">12,456</span>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; padding: 0.5rem 0; font-weight: 700; color: #95a5a6; font-size: 0.8rem;">VS</div>
+
+                            <div class="team-card-kitsko">
+                                <div class="team-header">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.2rem;">🟡</span>
+                                        <span class="team-name">TEAM KITSKO</span>
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: #95a5a6;">7 Classes</span>
+                                </div>
+                                <div class="team-metric">
+                                    <span class="team-metric-label">Fundraising</span>
+                                    <span class="team-metric-value-kitsko">$7,002</span>
+                                </div>
+                                <div class="team-metric">
+                                    <span class="team-metric-label">Reading Minutes</span>
+                                    <span class="team-metric-value-kitsko">10,638</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STUDENTS TAB -->
+            <div class="tab-pane fade" id="students" role="tabpanel">
+
+                <!-- Headline Banner -->
+                <div class="headline-banner">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">👥 Total Students</div>
+                            <div class="headline-value">411</div>
+                            <div class="headline-subtitle">In Database</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">💰 Fundraising</div>
+                            <div class="headline-value">149</div>
+                            <div class="headline-subtitle">Students Contributing</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">📚 Reading</div>
+                            <div class="headline-value">230</div>
+                            <div class="headline-subtitle">Students Active</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🏆 Perfect</div>
+                            <div class="headline-value">150</div>
+                            <div class="headline-subtitle">All Goals Met</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Performers -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="zen-card zen-card-teal">
+                            <h6 class="zen-card-title">💰 Top 10 Fundraisers</h6>
+
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div class="leaderboard-name">Myers Hansen <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">$525</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div class="leaderboard-name">Emma Terry <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 5</span></div>
+                                <div class="leaderboard-value">$487</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div class="leaderboard-name">Liam Harrison <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 4</span></div>
+                                <div class="leaderboard-value">$412</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">4</div>
+                                <div class="leaderboard-name">Olivia Stone <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 2</span></div>
+                                <div class="leaderboard-value">$395</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">5</div>
+                                <div class="leaderboard-name">Noah Hayes <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">$378</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="zen-card">
+                            <h6 class="zen-card-title">📚 Top 10 Readers (Total Minutes)</h6>
+
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div class="leaderboard-name">Loretta Harper <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 4</span></div>
+                                <div class="leaderboard-value">360 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div class="leaderboard-name">Sophia Martinez <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 5</span></div>
+                                <div class="leaderboard-value">342 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div class="leaderboard-name">Noah Hayes <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">318 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">4</div>
+                                <div class="leaderboard-name">Ava Morris <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 2</span></div>
+                                <div class="leaderboard-value">305 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">5</div>
+                                <div class="leaderboard-name">Ethan Brown <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 4</span></div>
+                                <div class="leaderboard-value">298 min</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- By Grade Level -->
+                <div class="zen-card">
+                    <h6 class="zen-card-title">📊 Performance by Grade Level</h6>
+
+                    <div class="mb-3 grade-selector">
+                        <button class="btn btn-sm btn-outline-primary active">Kindergarten</button>
+                        <button class="btn btn-sm btn-outline-primary">Grade 1</button>
+                        <button class="btn btn-sm btn-outline-primary">Grade 2</button>
+                        <button class="btn btn-sm btn-outline-primary">Grade 3</button>
+                        <button class="btn btn-sm btn-outline-primary">Grade 4</button>
+                        <button class="btn btn-sm btn-outline-primary">Grade 5</button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="section-label">Top 5 Fundraisers - Kindergarten</div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div class="leaderboard-name">Mia Jordan</div>
+                                <div class="leaderboard-value">$235</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div class="leaderboard-name">Lucas Hansen</div>
+                                <div class="leaderboard-value">$198</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div class="leaderboard-name">Isabella Henry</div>
+                                <div class="leaderboard-value">$165</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="section-label">Top 5 Readers - Kindergarten</div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div class="leaderboard-name">Morris Wilson</div>
+                                <div class="leaderboard-value">142 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div class="leaderboard-name">Charlotte Cooper</div>
+                                <div class="leaderboard-value">138 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div class="leaderboard-name">Benjamin Taylor</div>
+                                <div class="leaderboard-value">125 min</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLASSES TAB -->
+            <div class="tab-pane fade" id="classes" role="tabpanel">
+
+                <!-- Headline Banner -->
+                <div class="headline-banner">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🎓 Total Classes</div>
+                            <div class="headline-value">15</div>
+                            <div class="headline-subtitle">Active Classes</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">💰 Top Fundraising</div>
+                            <div class="headline-value">$1,891</div>
+                            <div class="headline-subtitle">Ms. Spencer's Class</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">📚 Top Reading</div>
+                            <div class="headline-value">2,251</div>
+                            <div class="headline-subtitle">Mr. Reynolds's Class (min)</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🏆 Best Participation</div>
+                            <div class="headline-value">96%</div>
+                            <div class="headline-subtitle">Mr. Reynolds's Class</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Class Leaderboards -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="zen-card zen-card-teal">
+                            <h6 class="zen-card-title">💰 Top Classes - Fundraising</h6>
+
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div class="leaderboard-name">Ms. Spencer's Class <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">$1,891</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div class="leaderboard-name">Mrs. Spencer's Class <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 5</span></div>
+                                <div class="leaderboard-value">$1,654</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div class="leaderboard-name">Ms. Brown's Class <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 4</span></div>
+                                <div class="leaderboard-value">$1,432</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">4</div>
+                                <div class="leaderboard-name">Mr. Wilson's Class <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 2</span></div>
+                                <div class="leaderboard-value">$1,287</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">5</div>
+                                <div class="leaderboard-name">Mrs. Taylor's Class <span class="badge bg-secondary" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">$1,145</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="zen-card">
+                            <h6 class="zen-card-title">📚 Top Classes - Reading Minutes</h6>
+
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div class="leaderboard-name">Mr. Reynolds's Class <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 4</span></div>
+                                <div class="leaderboard-value">2,251 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div class="leaderboard-name">Ms. Terry's Class <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 5</span></div>
+                                <div class="leaderboard-value">2,089 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div class="leaderboard-name">Mrs. Stone's Class <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">1,945 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">4</div>
+                                <div class="leaderboard-name">Ms. Spencer's Class <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 3</span></div>
+                                <div class="leaderboard-value">1,876 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">5</div>
+                                <div class="leaderboard-name">Mr. Martinez's Class <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Grade 2</span></div>
+                                <div class="leaderboard-value">1,734 min</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Class Comparison Table -->
+                <div class="data-table mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 style="font-size: 1rem; font-weight: 700; color: #2c3e50; margin: 0;">All Classes - Comparison View</h6>
+                        <button class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                    </div>
+
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Class Name</th>
+                                <th>Teacher</th>
+                                <th>Grade</th>
+                                <th class="text-end">Students</th>
+                                <th class="text-end">Total Raised</th>
+                                <th class="text-end">Minutes Read</th>
+                                <th class="text-center">Participation %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Ms. Spencer's Class</strong></td>
+                                <td>Ms. Spencer</td>
+                                <td>3</td>
+                                <td class="text-end">28</td>
+                                <td class="text-end">$1,891</td>
+                                <td class="text-end">1,876</td>
+                                <td class="text-center"><span class="badge bg-success">93%</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mr. Reynolds's Class</strong></td>
+                                <td>Mr. Reynolds</td>
+                                <td>4</td>
+                                <td class="text-end">26</td>
+                                <td class="text-end">$1,287</td>
+                                <td class="text-end">2,251</td>
+                                <td class="text-center"><span class="badge bg-success">96%</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <em>... 13 more classes</em>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TEAMS TAB -->
+            <div class="tab-pane fade" id="teams" role="tabpanel">
+
+                <!-- Headline Banner -->
+                <div class="headline-banner">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🔵 Team Staub</div>
+                            <div class="headline-value">$8,234</div>
+                            <div class="headline-subtitle">Total Fundraising</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🟡 Team Kitsko</div>
+                            <div class="headline-value">$7,002</div>
+                            <div class="headline-subtitle">Total Fundraising</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🏆 Current Leader</div>
+                            <div class="headline-value">Staub</div>
+                            <div class="headline-subtitle">By $1,232</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">📚 Reading Gap</div>
+                            <div class="headline-value">1,818</div>
+                            <div class="headline-subtitle">Minutes (Staub ahead)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Comparison -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="zen-card" style="border-top-color: #1e3a5f;">
+                            <h6 class="zen-card-title">🔵 Team Staub - Top Performers</h6>
+
+                            <div class="section-label">Classes: 8 total</div>
+
+                            <h6 style="font-size: 0.85rem; font-weight: 700; color: #2c3e50; margin-top: 1rem; margin-bottom: 0.5rem;">Top Fundraisers</h6>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">1</div>
+                                <div class="leaderboard-name">Myers Hansen</div>
+                                <div class="leaderboard-value">$525</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">2</div>
+                                <div class="leaderboard-name">Emma Terry</div>
+                                <div class="leaderboard-value">$487</div>
+                            </div>
+
+                            <h6 style="font-size: 0.85rem; font-weight: 700; color: #2c3e50; margin-top: 1rem; margin-bottom: 0.5rem;">Top Readers</h6>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">1</div>
+                                <div class="leaderboard-name">Loretta Harper</div>
+                                <div class="leaderboard-value">360 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">2</div>
+                                <div class="leaderboard-name">Sophia Martinez</div>
+                                <div class="leaderboard-value">342 min</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="zen-card" style="border-top-color: #f59e0b;">
+                            <h6 class="zen-card-title">🟡 Team Kitsko - Top Performers</h6>
+
+                            <div class="section-label">Classes: 7 total</div>
+
+                            <h6 style="font-size: 0.85rem; font-weight: 700; color: #2c3e50; margin-top: 1rem; margin-bottom: 0.5rem;">Top Fundraisers</h6>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">1</div>
+                                <div class="leaderboard-name">Liam Harrison</div>
+                                <div class="leaderboard-value">$412</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">2</div>
+                                <div class="leaderboard-name">Olivia Stone</div>
+                                <div class="leaderboard-value">$395</div>
+                            </div>
+
+                            <h6 style="font-size: 0.85rem; font-weight: 700; color: #2c3e50; margin-top: 1rem; margin-bottom: 0.5rem;">Top Readers</h6>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">1</div>
+                                <div class="leaderboard-name">Noah Hayes</div>
+                                <div class="leaderboard-value">318 min</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">2</div>
+                                <div class="leaderboard-name">Ava Morris</div>
+                                <div class="leaderboard-value">305 min</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATA & REPORTS TAB -->
+            <div class="tab-pane fade" id="data" role="tabpanel">
+
+                <!-- Headline Banner -->
+                <div class="headline-banner">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">✅ Data Integrity</div>
+                            <div class="headline-value">⚠️</div>
+                            <div class="headline-subtitle">3 Issues Detected</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">🕐 Last Upload</div>
+                            <div class="headline-value">Oct 13</div>
+                            <div class="headline-subtitle">10:45 AM</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">💾 Total Records</div>
+                            <div class="headline-value">2,461</div>
+                            <div class="headline-subtitle">Across All Tables</div>
+                        </div>
+                        <div class="col-md-3 headline-metric">
+                            <div class="headline-label">📊 Active Tables</div>
+                            <div class="headline-value">6</div>
+                            <div class="headline-subtitle">Database Tables</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Statistics -->
+                <div class="data-table mb-3">
+                    <h6 style="font-size: 1rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">Database Table Statistics</h6>
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Table Name</th>
+                                <th class="text-end">Record Count</th>
+                                <th>Description</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Roster</strong></td>
+                                <td class="text-end">411</td>
+                                <td>Complete student roster</td>
+                                <td class="text-center"><span class="badge bg-success">Valid</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Daily_Logs</strong></td>
+                                <td class="text-end">1,470</td>
+                                <td>Daily reading entries (6 days)</td>
+                                <td class="text-center"><span class="badge bg-success">Valid</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Reader_Cumulative</strong></td>
+                                <td class="text-end">411</td>
+                                <td>Aggregated student stats</td>
+                                <td class="text-center"><span class="badge bg-warning">Issues</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Class_Info</strong></td>
+                                <td class="text-end">15</td>
+                                <td>Class metadata</td>
+                                <td class="text-center"><span class="badge bg-success">Valid</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Grade_Rules</strong></td>
+                                <td class="text-end">6</td>
+                                <td>Daily goal by grade</td>
+                                <td class="text-center"><span class="badge bg-success">Valid</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Upload_History</strong></td>
+                                <td class="text-end">8</td>
+                                <td>Upload tracking log</td>
+                                <td class="text-center"><span class="badge bg-success">Valid</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Export Tools -->
+                <div class="zen-card">
+                    <h6 class="zen-card-title">📥 Export & Reporting Tools</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" style="font-size: 0.85rem;">Export Raw Data</label>
+                            <select class="form-select form-select-sm mb-2">
+                                <option>Select table to export...</option>
+                                <option>Roster</option>
+                                <option>Daily_Logs</option>
+                                <option>Reader_Cumulative</option>
+                                <option>Class_Info</option>
+                                <option>All Tables (ZIP)</option>
+                            </select>
+                            <button class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel"></i> Export to Excel</button>
+                            <button class="btn btn-sm btn-outline-success ms-2"><i class="bi bi-filetype-csv"></i> Export to CSV</button>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" style="font-size: 0.85rem;">Generate Reports</label>
+                            <select class="form-select form-select-sm mb-2">
+                                <option>Select report type...</option>
+                                <option>Student Performance Report</option>
+                                <option>Class Comparison Report</option>
+                                <option>Team Competition Report</option>
+                                <option>Fundraising Summary</option>
+                                <option>Reading Activity Report</option>
+                            </select>
+                            <button class="btn btn-sm btn-primary"><i class="bi bi-file-earmark-pdf"></i> Generate PDF</button>
+                            <button class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-printer"></i> Print Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

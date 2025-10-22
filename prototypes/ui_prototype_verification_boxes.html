@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Boxes - Consistent Styling - Read-a-Thon Prototypes</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .prototype-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .prototype-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0d6efd;
+        }
+
+        .prototype-description {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 4px;
+        }
+
+        /* Consistent Verification Boxes Styling */
+        .verification-box {
+            border: none;
+            border-radius: 1.25rem;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+            min-height: 160px;
+        }
+
+        .verification-box:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .verification-box .card-body {
+            padding: 1.25rem;
+        }
+
+        .verification-box-green {
+            background: linear-gradient(135deg, #7dce6f 0%, #5db54e 100%);
+        }
+
+        .verification-box-blue {
+            background: linear-gradient(135deg, #50bfec 0%, #36b0e0 100%);
+        }
+
+        .verification-box-orange {
+            background: linear-gradient(135deg, #ffb85f 0%, #ffa840 100%);
+        }
+
+        .verification-box-purple {
+            background: linear-gradient(135deg, #c77dd3 0%, #b369c3 100%);
+        }
+
+        .verification-box-red {
+            background: linear-gradient(135deg, #f35a5a 0%, #e84c3c 100%);
+        }
+
+        /* CONSISTENT FONT SIZES */
+
+        /* Title/Label: 0.9-1rem, light gray-white, bold */
+        .verification-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+        }
+
+        /* Main Value: 2rem, white, extra bold */
+        .verification-value {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0.5rem 0;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+
+        /* Subtitle/Context: 0.9rem, light gray-white, semi-bold */
+        .verification-subtitle {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        /* Secondary detail label: 0.8rem, light gray, bold, uppercase */
+        .verification-detail-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.3rem;
+        }
+
+        /* Secondary value: 1.5rem, white, bold */
+        .verification-secondary-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+            letter-spacing: -1px;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .verification-box hr {
+            border-color: rgba(255, 255, 255, 0.35);
+            margin: 0.75rem 0;
+            opacity: 0.6;
+        }
+
+        /* Icon styling for data integrity box */
+        .integrity-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Timestamp styling */
+        .verification-timestamp {
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        /* Info box for style guide */
+        .style-guide {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .style-guide h4 {
+            color: #856404;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .style-guide ul {
+            margin-bottom: 0;
+        }
+
+        .style-guide li {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .style-guide code {
+            background-color: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center mb-4">Verification Boxes - Consistent Styling</h1>
+        <p class="text-center text-muted mb-5">All verification boxes with unified font sizes and styling</p>
+
+        <div class="prototype-section">
+            <div class="prototype-title">Consistent Font Size System</div>
+            <div class="prototype-description">
+                <strong>Goal:</strong> Create visual consistency across all verification boxes using a standardized typography system.
+                All boxes use the same font sizes for comparable elements (main values, labels, subtitles, secondary values).
+            </div>
+
+            <!-- Style Guide -->
+            <div class="style-guide">
+                <h4><i class="bi bi-palette"></i> Typography Style Guide</h4>
+                <ul>
+                    <li><strong>Main Value:</strong> <code>2rem</code> (white, 900 weight) - The primary number/metric</li>
+                    <li><strong>Title/Label:</strong> <code>1rem</code> (85% white, 700 weight, uppercase) - Describes the metric</li>
+                    <li><strong>Subtitle:</strong> <code>0.9rem</code> (75% white, 600 weight) - Additional context</li>
+                    <li><strong>Secondary Value:</strong> <code>1.5rem</code> (white, 900 weight) - Related metrics</li>
+                    <li><strong>Secondary Label:</strong> <code>0.8rem</code> (70% white, 700 weight, uppercase) - Secondary metric labels</li>
+                    <li><strong>Timestamp:</strong> <code>0.7rem</code> (65% white, italic) - Metadata</li>
+                </ul>
+            </div>
+
+            <!-- Box 1: Total Readers -->
+            <h5 class="mt-4 mb-3">Box 1: Total Readers (Simple Single Value)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-green">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Total Readers</div>
+                            <div class="verification-value">245</div>
+                            <div class="verification-subtitle">In Database</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <strong>Structure:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Title: "TOTAL READERS" (1rem, uppercase)</li>
+                            <li>Main Value: "245" (2rem, white, bold)</li>
+                            <li>Subtitle: "In Database" (0.9rem)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box 2: Total Donations (Multiple Values) -->
+            <h5 class="mt-5 mb-3">Box 2: Total Donations (Multiple Values)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-orange">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Total Donations</div>
+                            <div class="verification-value">$12,450</div>
+                            <hr>
+                            <div class="verification-detail-label">Sponsors</div>
+                            <div class="verification-secondary-value">189</div>
+                            <div class="verification-detail-label">Avg per Sponsor</div>
+                            <div class="verification-secondary-value">$65.87</div>
+                            <p class="verification-timestamp mb-0">Last updated: 2025-10-13 10:45 AM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <strong>Structure:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Title: "TOTAL DONATIONS" (1rem)</li>
+                            <li>Main Value: "$12,450" (2rem)</li>
+                            <li>Divider: <code>&lt;hr&gt;</code></li>
+                            <li>Secondary Labels: "SPONSORS", "AVG PER SPONSOR" (0.8rem, uppercase)</li>
+                            <li>Secondary Values: "189", "$65.87" (1.5rem)</li>
+                            <li>Timestamp: "Last updated..." (0.7rem, italic)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box 3: Participation Rate -->
+            <h5 class="mt-5 mb-3">Box 3: Participation Rate (Percentage)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-blue">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Participation Rate</div>
+                            <div class="verification-value">94%</div>
+                            <div class="verification-subtitle">231 of 245 Readers</div>
+                            <hr>
+                            <div class="verification-detail-label">Days Tracked</div>
+                            <div class="verification-secondary-value">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <strong>Structure:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Title: "PARTICIPATION RATE" (1rem)</li>
+                            <li>Main Value: "94%" (2rem)</li>
+                            <li>Subtitle: "231 of 245 Readers" (0.9rem)</li>
+                            <li>Divider: <code>&lt;hr&gt;</code></li>
+                            <li>Secondary Label: "DAYS TRACKED" (0.8rem)</li>
+                            <li>Secondary Value: "6" (1.5rem)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box 4: Total Reading Minutes -->
+            <h5 class="mt-5 mb-3">Box 4: Total Reading Minutes (Large Number)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-purple">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Total Reading Minutes</div>
+                            <div class="verification-value">18,345</div>
+                            <div class="verification-subtitle">Across All Readers</div>
+                            <hr>
+                            <div class="verification-detail-label">Average per Reader</div>
+                            <div class="verification-secondary-value">74.9</div>
+                            <div class="verification-detail-label">Hours Total</div>
+                            <div class="verification-secondary-value">305.75</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <strong>Structure:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Title: "TOTAL READING MINUTES" (1rem)</li>
+                            <li>Main Value: "18,345" (2rem)</li>
+                            <li>Subtitle: "Across All Readers" (0.9rem)</li>
+                            <li>Divider: <code>&lt;hr&gt;</code></li>
+                            <li>Two secondary metrics with labels (0.8rem) and values (1.5rem)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box 5: Data Integrity (Icon-Based) -->
+            <h5 class="mt-5 mb-3">Box 5: Data Integrity Check (Icon-Based)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-green">
+                        <div class="card-body text-center">
+                            <div class="integrity-icon">✓</div>
+                            <div class="verification-title">Data Integrity Check</div>
+                            <div class="verification-subtitle">All Records Match</div>
+                            <hr>
+                            <div class="verification-detail-label">Daily Logs</div>
+                            <div class="verification-secondary-value">✓ 245</div>
+                            <div class="verification-detail-label">Cumulative Stats</div>
+                            <div class="verification-secondary-value">✓ 245</div>
+                            <p class="verification-timestamp mb-0">Verified: 2025-10-13 10:45 AM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <strong>Structure:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Icon: "✓" (2.5rem, centered)</li>
+                            <li>Title: "DATA INTEGRITY CHECK" (1rem)</li>
+                            <li>Subtitle: "All Records Match" (0.9rem)</li>
+                            <li>Divider: <code>&lt;hr&gt;</code></li>
+                            <li>Two status items with labels (0.8rem) and values (1.5rem)</li>
+                            <li>Timestamp: "Verified..." (0.7rem, italic)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Five Boxes Together -->
+            <h5 class="mt-5 mb-3">All Five Boxes: Side-by-Side Comparison</h5>
+            <div class="row g-3 mb-4">
+                <!-- Box 1 -->
+                <div class="col-md-4">
+                    <div class="card verification-box verification-box-green">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Total Readers</div>
+                            <div class="verification-value">245</div>
+                            <div class="verification-subtitle">In Database</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Box 2 -->
+                <div class="col-md-4">
+                    <div class="card verification-box verification-box-orange">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Total Donations</div>
+                            <div class="verification-value">$12,450</div>
+                            <hr>
+                            <div class="verification-detail-label">Sponsors</div>
+                            <div class="verification-secondary-value">189</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Box 3 -->
+                <div class="col-md-4">
+                    <div class="card verification-box verification-box-blue">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Participation Rate</div>
+                            <div class="verification-value">94%</div>
+                            <div class="verification-subtitle">231 of 245 Readers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <!-- Box 4 -->
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-purple">
+                        <div class="card-body text-center">
+                            <div class="verification-title">Total Reading Minutes</div>
+                            <div class="verification-value">18,345</div>
+                            <div class="verification-subtitle">Across All Readers</div>
+                            <hr>
+                            <div class="verification-detail-label">Average per Reader</div>
+                            <div class="verification-secondary-value">74.9</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Box 5 -->
+                <div class="col-md-6">
+                    <div class="card verification-box verification-box-green">
+                        <div class="card-body text-center">
+                            <div class="integrity-icon">✓</div>
+                            <div class="verification-title">Data Integrity Check</div>
+                            <div class="verification-subtitle">All Records Match</div>
+                            <hr>
+                            <div class="verification-detail-label">Daily Logs</div>
+                            <div class="verification-secondary-value">✓ 245</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Box -->
+            <div class="alert alert-success mt-5">
+                <h4><i class="bi bi-check-circle"></i> Font Size Consistency Summary</h4>
+                <p><strong>Achieved:</strong> All boxes now use consistent typography for equivalent elements:</p>
+                <ul class="mb-0">
+                    <li>All main values are <code>2rem</code></li>
+                    <li>All titles are <code>1rem</code> (uppercase)</li>
+                    <li>All subtitles are <code>0.9rem</code></li>
+                    <li>All secondary values are <code>1.5rem</code></li>
+                    <li>All secondary labels are <code>0.8rem</code> (uppercase)</li>
+                    <li>All timestamps are <code>0.7rem</code> (italic)</li>
+                </ul>
+                <p class="mt-3 mb-0"><strong>Result:</strong> Visual harmony across all verification boxes while maintaining color-coded categorization.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

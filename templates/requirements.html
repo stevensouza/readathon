@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Application Requirements - Read-a-Thon System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-file-text"></i> Application Requirements
+            </h1>
+            <div>
+                <a href="/help/requirements/download" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Download .md File
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;">
+            <div class="card-body">
+                <h4 class="mb-3">Complete Application Specification</h4>
+                <p class="mb-2">
+                    This is the <strong>complete requirements document</strong> (3,723 lines, 130KB) used to build this
+                    read-a-thon management system with Claude Code.
+                </p>
+                <p class="mb-0">
+                    <strong>Use Case:</strong> You could feed this document to Claude Code to recreate this application
+                    from scratch, or use it as a template for building similar event management systems.
+                </p>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ol"></i> Quick Navigation</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">The requirements document includes these major sections:</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul>
+                            <li>Project Overview & Goals</li>
+                            <li>Database Schema (8 tables)</li>
+                            <li>CSV File Formats</li>
+                            <li>Business Rules (120-min cap, sanctioned dates)</li>
+                            <li>Report Specifications (Q1-Q23)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li>Team Competition Logic</li>
+                            <li>Upload Workflows</li>
+                            <li>UI/UX Requirements</li>
+                            <li>Feature Specifications (35 features)</li>
+                            <li>Testing & Validation Rules</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <strong><i class="bi bi-lightbulb"></i> Tip:</strong> Use <kbd>Ctrl+F</kbd> (or <kbd>Cmd+F</kbd>) to search for specific topics within the document below.
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirements Document Content -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-code"></i> IMPLEMENTATION_PROMPT.md</h5>
+            </div>
+            <div class="card-body" style="max-height: 800px; overflow-y: auto; background-color: #f8f9fa;">
+                <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; color: #333;">{{ requirements_content }}</pre>
+            </div>
+        </div>
+
+        <!-- Usage Guide -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-question-circle"></i> How to Use This Document</h5>
+            </div>
+            <div class="card-body">
+                <h6>For Learning:</h6>
+                <ul>
+                    <li>Study the structure of a comprehensive requirements document</li>
+                    <li>See how business rules are specified (120-minute cap, sanctioned dates, team competition)</li>
+                    <li>Understand database design decisions and relationships</li>
+                    <li>Review report specifications with example outputs</li>
+                </ul>
+
+                <h6 class="mt-3">For Building Similar Applications:</h6>
+                <ul>
+                    <li>Download the .md file and modify for your event type</li>
+                    <li>Adapt the database schema to your data model</li>
+                    <li>Copy the report structure for your analytics needs</li>
+                    <li>Use as a template for prompting Claude Code</li>
+                </ul>
+
+                <h6 class="mt-3">For Recreating This Application:</h6>
+                <ol>
+                    <li>Download IMPLEMENTATION_PROMPT.md</li>
+                    <li>Start a new Claude Code session</li>
+                    <li>Paste the requirements and ask: "Build this Flask application following these specifications"</li>
+                    <li>Claude Code will create the project structure, database, routes, and templates</li>
+                    <li>Test and refine iteratively using the <a href="/help/claude">3-phase workflow</a></li>
+                </ol>
+
+                <div class="alert alert-warning mt-3">
+                    <strong><i class="bi bi-info-circle"></i> Note:</strong>
+                    You'll need to provide your own student roster CSV and class data files.
+                    The requirements document explains the expected file formats.
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Links -->
+        <div class="text-center mb-4">
+            <a href="/help/claude" class="btn btn-outline-primary me-2">
+                <i class="bi bi-robot"></i> How I Used Claude Code
+            </a>
+            <a href="/help" class="btn btn-outline-secondary">
+                <i class="bi bi-book"></i> User Manual
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

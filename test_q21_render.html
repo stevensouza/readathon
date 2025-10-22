@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q21 Enhanced Metadata Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Copy CSS from base.html */
+        .report-description { background: #f8f9fa; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #0066cc; }
+        .last-updated { font-size: 0.85em; color: #666; margin-top: 0.5rem; }
+        .report-section { margin: 1.5rem 0; }
+        .report-section summary { cursor: pointer; font-weight: 600; padding: 0.75rem; background: #f8f9fa; border-radius: 4px; }
+        .report-section summary:hover { background: #e9ecef; }
+        .report-section[open] summary { background: #e9ecef; margin-bottom: 1rem; }
+        .report-metadata { padding: 1rem; background: #f8f9fa; border-radius: 4px; }
+        .nested-subsection { margin: 1rem 0 1rem 1.5rem; }
+        .nested-subsection summary { font-weight: 500; font-size: 0.95em; padding: 0.5rem; background: #fff; border-left: 3px solid #0066cc; cursor: pointer; }
+        .nested-subsection summary:hover { background: #f8f9fa; }
+        .nested-subsection summary::before { content: "▸ "; display: inline-block; transition: transform 0.2s; }
+        .nested-subsection[open] > summary::before { transform: rotate(90deg) !important; }
+        .column-item, .term-item { margin: 0.75rem 0; padding: 0.5rem; background: white; border-radius: 4px; }
+        .column-mapping, .term-name { font-weight: 600; color: #0066cc; }
+        .column-description, .term-definition { margin-top: 0.25rem; color: #333; }
+        .report-analysis { margin: 1.5rem 0; }
+        .analysis-compact { padding: 1rem; background: #f8f9fa; border-radius: 4px; }
+        .summary-box { background: #fff3cd; padding: 1rem; border-left: 4px solid #ffc107; margin-bottom: 1rem; }
+        .breakdown-card { background: white; padding: 1rem; margin: 1rem 0; border-left: 4px solid #dc3545; border-radius: 4px; }
+        .breakdown-card h4 { font-size: 1.1em; color: #dc3545; margin-bottom: 0.5rem; }
+        .insights-compact { background: #d1ecf1; padding: 1rem; border-left: 4px solid #0c5460; margin-top: 1rem; }
+        .insights-compact ul { margin: 0.5rem 0 0 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Q21: Enhanced Metadata Test</h1>
+        <div id="report-container"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fetch Q21 report data
+        fetch('http://127.0.0.1:5001/api/report/q21')
+            .then(response => response.json())
+            .then(report => {
+                const container = document.getElementById('report-container');
+
+                // Build description section
+                let html = `
+                    <div class="report-description">
+                        <strong>${report.title}</strong><br>
+                        ${report.description}
+                        <div class="last-updated">Last Updated: ${report.last_updated}</div>
+                    </div>
+                `;
+
+                // Build metadata section
+                if (report.metadata) {
+                    html += `
+                        <details class="report-section">
+                            <summary>📋 Report Information</summary>
+                            <div class="report-metadata">
+                                <p><strong>Data Sources:</strong> ${report.metadata.source_tables}</p>
+                                <p><strong>Sorting:</strong> ${report.sort}</p>
+                                ${report.note ? `<p><strong>Note:</strong> ${report.note}</p>` : ''}
+
+                                <!-- Columns subsection -->
+                                <details class="nested-subsection">
+                                    <summary>Columns & Data Sources (${Object.keys(report.metadata.columns).length})</summary>
+                                    <div class="mt-2">
+                                        ${Object.entries(report.metadata.columns).map(([colName, colInfo]) => `
+                                            <div class="column-item">
+                                                <div class="column-mapping">
+                                                    ${colName}
+                                                    ${colInfo.source ? ` ← <code>${colInfo.source}</code>` : ''}
+                                                    ${colInfo.formula ? ` <span class="text-muted">${colInfo.formula}</span>` : ''}
+                                                </div>
+                                                <div class="column-description">${colInfo.description}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </details>
+
+                                <!-- Terms subsection -->
+                                <details class="nested-subsection">
+                                    <summary>Key Terms & Definitions (${Object.keys(report.metadata.terms).length})</summary>
+                                    <div class="mt-2">
+                                        ${Object.entries(report.metadata.terms).map(([termName, termInfo]) => `
+                                            <div class="term-item">
+                                                <span class="term-name">${termName}:</span>
+                                                <span class="term-definition">${termInfo.definition}</span>
+                                                ${termInfo.see_also && termInfo.see_also.length > 0 ?
+                                                    ` <em class="text-muted">(See also: ${termInfo.see_also.join(', ')})</em>` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </details>
+                            </div>
+                        </details>
+                    `;
+                }
+
+                // Build analysis section
+                if (report.analysis) {
+                    const analysis = report.analysis;
+                    html += `
+                        <details class="report-section report-analysis">
+                            <summary>📊 Analysis</summary>
+                            <div class="analysis-compact">
+                                <div class="summary-box">
+                                    <strong>Summary:</strong> ${analysis.summary}
+                                </div>
+
+                                ${analysis.breakdown ? analysis.breakdown.map(item => `
+                                    <div class="breakdown-card">
+                                        <h4>${item.issue}: ${item.minutes} ${item.unit || 'minutes'}</h4>
+                                        <p>${item.explanation}</p>
+                                        ${item.top_contributors ? `
+                                            <p><strong>Top Contributors:</strong></p>
+                                            <ul>
+                                                ${item.top_contributors.map(c =>
+                                                    `<li>${c.student}: ${c.amount} ${item.unit || 'min'}</li>`
+                                                ).join('')}
+                                            </ul>
+                                        ` : ''}
+                                    </div>
+                                `).join('') : ''}
+
+                                ${analysis.insights && analysis.insights.length > 0 ? `
+                                    <div class="insights-compact">
+                                        <strong>Insights & Recommendations:</strong>
+                                        <ul>
+                                            ${analysis.insights.map(insight => `<li>${insight}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </details>
+                    `;
+                }
+
+                // Build data table
+                html += `
+                    <div class="mt-4">
+                        <h3>Report Data (${report.data.length} rows)</h3>
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    ${report.columns.map(col => `<th>${col}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${report.data.slice(0, 10).map(row => `
+                                    <tr>
+                                        ${report.columns.map(col => `<td>${row[col] || ''}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                                ${report.data.length > 10 ? `
+                                    <tr>
+                                        <td colspan="${report.columns.length}" class="text-center text-muted">
+                                            ... ${report.data.length - 10} more rows
+                                        </td>
+                                    </tr>
+                                ` : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading report:', error);
+                document.getElementById('report-container').innerHTML =
+                    '<div class="alert alert-danger">Error loading report. See console for details.</div>';
+            });
+    </script>
+</body>
+</html>

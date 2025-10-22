@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read-a-Thon Dashboard - School Tab v2</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f4f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .brand {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-link-item {
+            padding: 0.5rem 1rem;
+            border-radius: 0.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            background: transparent;
+        }
+
+        .nav-link-item:hover {
+            background-color: #f8f9fa;
+            color: #1e3a5f;
+        }
+
+        .nav-link-item.active {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.4rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            min-width: 200px;
+            margin-top: 0.25rem;
+        }
+
+        .dropdown-menu-custom.show {
+            display: block;
+        }
+
+        .dropdown-item-custom {
+            padding: 0.6rem 1rem;
+            color: #2c3e50;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Headline Banner */
+        .headline-banner {
+            background: #1e3a5f;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        .headline-metric {
+            text-align: center;
+            padding: 0.3rem 0.5rem;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .headline-metric:last-child {
+            border-right: none;
+        }
+
+        .headline-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #17a2b8;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-subtitle {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.3;
+        }
+
+        /* Page Header with integrated filter */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 2rem;
+        }
+
+        .page-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .filter-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .filter-inline label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .filter-inline select {
+            width: 240px;
+            font-size: 0.85rem;
+        }
+
+        .filter-note {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-style: italic;
+            white-space: nowrap;
+        }
+
+        /* Card Styles */
+        .zen-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid #1e3a5f;
+            height: 100%;
+        }
+
+        .zen-card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        /* Team Cards */
+        .team-card {
+            padding: 1rem;
+            border-radius: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-card-staub {
+            background: #e3f2fd;
+            border-left: 4px solid #1e3a5f;
+        }
+
+        .team-card-kitsko {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .team-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .team-metric-label {
+            color: #7f8c8d;
+        }
+
+        .team-metric-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .team-lead {
+            text-align: center;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            background: #d1ecf1;
+            border-radius: 0.3rem;
+            font-weight: 700;
+            color: #0c5460;
+        }
+
+        /* Top Performers */
+        .performer-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .performer-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            color: #95a5a6;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .leader-card {
+            background: #e3f2fd;
+            border-left: 4px solid #1e3a5f;
+            padding: 0.75rem;
+            border-radius: 0.3rem;
+        }
+
+        .leader-name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .leader-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .leader-meta {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .leader-value {
+            font-weight: 900;
+            color: #1e3a5f;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .tie-note {
+            font-size: 0.7rem;
+            color: #856404;
+            margin-top: 0.3rem;
+            font-style: italic;
+        }
+
+        /* Participation Table */
+        .participation-table {
+            font-size: 0.85rem;
+        }
+
+        .participation-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .participation-row:last-child {
+            border-bottom: none;
+            padding-top: 1rem;
+            border-top: 2px solid #bdc3c7;
+        }
+
+        .participation-label {
+            color: #7f8c8d;
+        }
+
+        .participation-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .participation-percent {
+            color: #95a5a6;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Data Integrity Alert */
+        .alert-integrity {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-left: 6px solid #ff6b6b;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-text h6 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .alert-text p {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin: 0.2rem 0 0 0;
+        }
+
+        /* Collapsible Footer */
+        .collapsible-footer {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .collapsible-content {
+            padding: 1rem;
+            display: none;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .collapsible-content.show {
+            display: block;
+        }
+
+        .data-source-item {
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .data-source-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .data-source-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-source-value {
+            color: #6c757d;
+        }
+
+        /* Modal Styles */
+        .modal-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .data-info-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 0.3rem;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .data-info-btn:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        /* Environment Selector */
+        .env-selector {
+            margin-left: auto;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid" style="max-width: 1600px; padding: 0;">
+
+        <!-- Top Navigation Bar -->
+        <div class="top-nav">
+            <div class="d-flex align-items-center">
+                <div class="brand">
+                    <i class="bi bi-book"></i> Read-a-Thon System
+                </div>
+
+                <div class="nav-links ms-4">
+                    <a href="#" class="nav-link-item active">🏫 School</a>
+                    <a href="#" class="nav-link-item">⚔️ Teams</a>
+                    <a href="#" class="nav-link-item">🎓 Classes</a>
+                    <a href="#" class="nav-link-item">👤 Students</a>
+                    <a href="#" class="nav-link-item">📤 Upload</a>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link-item" id="reportsDropdown" onclick="toggleDropdown()">
+                            📊 Reports & Data <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <div class="dropdown-menu-custom" id="reportsMenu">
+                            <a href="#" class="dropdown-item-custom">📊 Reports (Q1-Q23)</a>
+                            <a href="#" class="dropdown-item-custom">🔄 Workflows</a>
+                            <a href="#" class="dropdown-item-custom">📋 Tables (Raw Data)</a>
+                        </div>
+                    </div>
+
+                    <a href="#" class="nav-link-item">❓ Help</a>
+                    <a href="#" class="nav-link-item">⚙️ Admin</a>
+                </div>
+
+                <div class="env-selector">
+                    <select class="form-select form-select-sm">
+                        <option>Production</option>
+                        <option>Sample</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container-fluid" style="padding: 1.5rem;">
+
+            <!-- Page Header with Integrated Filter -->
+            <div class="page-header">
+                <h2 class="page-title">🏫 SCHOOL OVERVIEW</h2>
+
+                <div class="filter-inline">
+                    <label for="dateFilter">📅 Filter Period:</label>
+                    <select id="dateFilter" class="form-select form-select-sm" onchange="updateData()">
+                        <option value="all">Full Contest (Oct 10-15)</option>
+                        <option value="2025-10-10">Oct 10 (Day 1)</option>
+                        <option value="2025-10-11">Oct 11 (Day 2)</option>
+                        <option value="2025-10-12">Oct 12 (Day 3)</option>
+                        <option value="2025-10-13">Oct 13 (Day 4)</option>
+                        <option value="2025-10-14">Oct 14 (Day 5)</option>
+                        <option value="2025-10-15">Oct 15 (Day 6)</option>
+                    </select>
+                    <span class="filter-note">(auto-updates)</span>
+                </div>
+
+                <button class="data-info-btn" data-bs-toggle="modal" data-bs-target="#dataSourceModal">
+                    <i class="bi bi-info-circle"></i> Data Info
+                </button>
+            </div>
+
+            <!-- Headline Banner -->
+            <div class="headline-banner">
+                <div class="row align-items-center">
+                    <div class="col headline-metric">
+                        <div class="headline-label">📅 Campaign Day</div>
+                        <div class="headline-value">3 of 6</div>
+                        <div class="headline-subtitle">Oct 10-15</div>
+                    </div>
+                    <div class="col headline-metric">
+                        <div class="headline-label">💰 Fundraising</div>
+                        <div class="headline-value">$15,236</div>
+                        <div class="headline-subtitle">230 of 411<br>Students (56%)</div>
+                    </div>
+                    <div class="col headline-metric">
+                        <div class="headline-label">📚 Minutes Read</div>
+                        <div class="headline-value">385 hours</div>
+                        <div class="headline-subtitle">(23,094 min)</div>
+                    </div>
+                    <div class="col headline-metric">
+                        <div class="headline-label">👥 Participation</div>
+                        <div class="headline-value">56%</div>
+                        <div class="headline-subtitle">230 of 411<br>Students</div>
+                    </div>
+                    <div class="col headline-metric">
+                        <div class="headline-label">🎯 Goals Met</div>
+                        <div class="headline-value">37%</div>
+                        <div class="headline-subtitle">150 of 411<br>Students</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3-Column Content Grid -->
+            <div class="row g-3">
+
+                <!-- LEFT: Team Competition -->
+                <div class="col-md-4">
+                    <div class="zen-card">
+                        <h6 class="zen-card-title">⚔️ TEAM COMPETITION</h6>
+
+                        <div class="team-card team-card-staub">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="team-name">🔵 TEAM STAUB</div>
+                                <span style="font-size: 0.75rem; color: #95a5a6;">8 Classes</span>
+                            </div>
+                            <div class="team-metric-row">
+                                <span class="team-metric-label">Fundraising:</span>
+                                <span class="team-metric-value">$8,234</span>
+                            </div>
+                            <div class="team-metric-row">
+                                <span class="team-metric-label">Reading:</span>
+                                <span class="team-metric-value">207 hrs</span>
+                            </div>
+                            <div class="team-metric-row">
+                                <span class="team-metric-label">Students:</span>
+                                <span class="team-metric-value">120</span>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; padding: 0.5rem 0; font-weight: 700; color: #95a5a6; font-size: 0.9rem;">
+                            VS
+                        </div>
+
+                        <div class="team-card team-card-kitsko">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="team-name">🟡 TEAM KITSKO</div>
+                                <span style="font-size: 0.75rem; color: #95a5a6;">7 Classes</span>
+                            </div>
+                            <div class="team-metric-row">
+                                <span class="team-metric-label">Fundraising:</span>
+                                <span class="team-metric-value">$7,002</span>
+                            </div>
+                            <div class="team-metric-row">
+                                <span class="team-metric-label">Reading:</span>
+                                <span class="team-metric-value">177 hrs</span>
+                            </div>
+                            <div class="team-metric-row">
+                                <span class="team-metric-label">Students:</span>
+                                <span class="team-metric-value">110</span>
+                            </div>
+                        </div>
+
+                        <div class="team-lead">
+                            🏆 STAUB LEADS BY:<br>
+                            Fundraising: $1,232<br>
+                            Reading: 30 hrs
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CENTER: Top Performers -->
+                <div class="col-md-4">
+                    <div class="zen-card">
+                        <h6 class="zen-card-title">🏆 TOP PERFORMERS</h6>
+
+                        <div class="performer-section">
+                            <div class="section-label">💰 Fundraising Leader</div>
+                            <div class="leader-card">
+                                <div class="leader-name-row">
+                                    <span class="leader-name">Myers Hansen</span>
+                                    <span class="leader-meta">Grade 3</span>
+                                </div>
+                                <div class="leader-value">$525</div>
+                            </div>
+                        </div>
+
+                        <div class="performer-section">
+                            <div class="section-label">📚 Reading Leader</div>
+                            <div class="leader-card">
+                                <div class="leader-name-row">
+                                    <span class="leader-name">Loretta Harper, Emma Harrison, Noah Hayes</span>
+                                    <span class="leader-meta">Various</span>
+                                </div>
+                                <div class="leader-value">360 minutes</div>
+                                <div class="tie-note">* 3-way tie for 1st place</div>
+                            </div>
+                        </div>
+
+                        <div class="performer-section">
+                            <div class="section-label">🎓 Top Class (Fundraising)</div>
+                            <div class="leader-card">
+                                <div class="leader-name-row">
+                                    <span class="leader-name">Ms. Spencer's Class</span>
+                                    <span class="leader-meta">Grade 3</span>
+                                </div>
+                                <div class="leader-value">$1,891</div>
+                            </div>
+                        </div>
+
+                        <div class="performer-section">
+                            <div class="section-label">🎓 Top Class (Reading)</div>
+                            <div class="leader-card">
+                                <div class="leader-name-row">
+                                    <span class="leader-name">Mr. Reynolds's Class</span>
+                                    <span class="leader-meta">Grade 4</span>
+                                </div>
+                                <div class="leader-value">2,251 minutes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Student Participation -->
+                <div class="col-md-4">
+                    <div class="zen-card">
+                        <h6 class="zen-card-title">📊 STUDENT PARTICIPATION</h6>
+
+                        <div class="participation-table">
+                            <div class="participation-row">
+                                <span class="participation-label">Total Participating</span>
+                                <span>
+                                    <span class="participation-value">230 of 411</span>
+                                    <span class="participation-percent">(56.0%)</span>
+                                </span>
+                            </div>
+                            <div class="participation-row">
+                                <span class="participation-label">All 6 Days Active</span>
+                                <span>
+                                    <span class="participation-value">187 of 411</span>
+                                    <span class="participation-percent">(45.5%)</span>
+                                </span>
+                            </div>
+                            <div class="participation-row">
+                                <span class="participation-label">Met Goal ≥1 Day</span>
+                                <span>
+                                    <span class="participation-value">195 of 411</span>
+                                    <span class="participation-percent">(47.4%)</span>
+                                </span>
+                            </div>
+                            <div class="participation-row">
+                                <span class="participation-label">Met Goal All Days</span>
+                                <span>
+                                    <span class="participation-value">150 of 411</span>
+                                    <span class="participation-percent">(36.5%)</span>
+                                </span>
+                            </div>
+                            <div class="participation-row">
+                                <span class="participation-label">Total Roster</span>
+                                <span>
+                                    <span class="participation-value">411 Students</span>
+                                    <span class="participation-percent">(100%)</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Integrity Alert (Conditional) -->
+            <div class="alert-integrity">
+                <div class="alert-content">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-text">
+                        <h6>Data Integrity Issues Detected</h6>
+                        <p>3 validation errors found - immediate attention required</p>
+                    </div>
+                </div>
+                <button class="btn btn-sm" style="font-weight: 600; background: #ff6b6b; color: white; border: none; padding: 0.5rem 1.25rem;">
+                    Review Issues
+                </button>
+            </div>
+
+            <!-- Collapsible Footer: Data Sources -->
+            <div class="collapsible-footer">
+                <div class="collapsible-header" onclick="toggleFooter()">
+                    <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+                    <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+                </div>
+                <div class="collapsible-content" id="footerContent">
+                    <div class="data-source-item">
+                        <span class="data-source-label">• Reading minutes, Participation:</span>
+                        <span class="data-source-value">Daily_Logs table (Updated: 10/17/2025 11:27 AM)</span>
+                    </div>
+                    <div class="data-source-item">
+                        <span class="data-source-label">• Fundraising, Sponsors:</span>
+                        <span class="data-source-value">Reader_Cumulative table (Updated: 10/17/2025 11:25 AM)</span>
+                    </div>
+                    <div class="data-source-item">
+                        <span class="data-source-label">• Student counts:</span>
+                        <span class="data-source-value">Roster table (Updated: 09/15/2025 8:00 AM)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Data Source Modal -->
+    <div class="modal fade" id="dataSourceModal" tabindex="-1" aria-labelledby="dataSourceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header modal-header-custom">
+                    <h5 class="modal-title" id="dataSourceModalLabel">
+                        <i class="bi bi-database"></i> Data Sources & Last Updated
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="data-source-item mb-3">
+                        <div class="data-source-label mb-1">Reading Minutes & Participation:</div>
+                        <div class="data-source-value ms-3">
+                            Source: <strong>Daily_Logs</strong> table<br>
+                            Last Updated: <strong>10/17/2025 11:27 AM</strong>
+                        </div>
+                    </div>
+                    <div class="data-source-item mb-3">
+                        <div class="data-source-label mb-1">Fundraising & Sponsors:</div>
+                        <div class="data-source-value ms-3">
+                            Source: <strong>Reader_Cumulative</strong> table<br>
+                            Last Updated: <strong>10/17/2025 11:25 AM</strong>
+                        </div>
+                    </div>
+                    <div class="data-source-item">
+                        <div class="data-source-label mb-1">Student Counts:</div>
+                        <div class="data-source-value ms-3">
+                            Source: <strong>Roster</strong> table<br>
+                            Last Updated: <strong>09/15/2025 8:00 AM</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Dropdown toggle
+        function toggleDropdown() {
+            const menu = document.getElementById('reportsMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('#reportsDropdown') && !event.target.closest('#reportsDropdown')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu-custom");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    dropdowns[i].classList.remove('show');
+                }
+            }
+        }
+
+        // Footer toggle
+        function toggleFooter() {
+            const content = document.getElementById('footerContent');
+            const icon = document.getElementById('footerIcon');
+            content.classList.toggle('show');
+            icon.classList.toggle('bi-chevron-right');
+            icon.classList.toggle('bi-chevron-down');
+        }
+
+        // Auto-update data on filter change
+        function updateData() {
+            const filter = document.getElementById('dateFilter').value;
+            console.log('Filtering data by:', filter);
+            // In production, this would trigger an API call to refresh all metrics
+            // For prototype, just log the selection
+            alert('Filter changed to: ' + document.getElementById('dateFilter').options[document.getElementById('dateFilter').selectedIndex].text + '\n\nIn production, all metrics would update automatically.');
+        }
+    </script>
+</body>
+</html>

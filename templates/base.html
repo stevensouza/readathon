@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Read-a-Thon System{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        /* v2.0 - Updated styling */
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        .report-table {
+            font-size: 0.9rem;
+        }
+        .report-header {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .stat-card {
+            border-left: 4px solid #0d6efd;
+        }
+        .btn-action {
+            margin-right: 0.5rem;
+        }
+        .winner-row {
+            background-color: #fff3cd !important;
+            font-weight: bold;
+        }
+        .copy-success {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Verification Boxes Styling - IMPROVED */
+        .verification-box {
+            border: none !important;
+            border-radius: 1.25rem !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+            transition: all 0.3s ease !important;
+            color: white !important;
+            min-height: 160px !important;
+        }
+        .verification-box:hover {
+            transform: translateY(-6px) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25) !important;
+        }
+        .verification-box .card-body {
+            padding: 1.25rem !important;
+        }
+        .verification-box-green {
+            background: linear-gradient(135deg, #7dce6f 0%, #5db54e 100%) !important;
+        }
+        .verification-box-blue {
+            background: linear-gradient(135deg, #50bfec 0%, #36b0e0 100%) !important;
+        }
+        .verification-box-orange {
+            background: linear-gradient(135deg, #ffb85f 0%, #ffa840 100%) !important;
+        }
+        .verification-box-purple {
+            background: linear-gradient(135deg, #c77dd3 0%, #b369c3 100%) !important;
+        }
+        .verification-box-red {
+            background: linear-gradient(135deg, #f35a5a 0%, #e84c3c 100%) !important;
+        }
+        .verification-box-success {
+            background: linear-gradient(135deg, #61bc67 0%, #4daf53 100%) !important;
+        }
+
+        /* Title styling */
+        .verification-title {
+            font-size: 1rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.5rem !important;
+            letter-spacing: 0.5px !important;
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        /* Large value styling - MUCH BIGGER */
+        .verification-value {
+            font-size: 3.5rem !important;
+            font-weight: 900 !important;
+            margin: 0.5rem 0 !important;
+            line-height: 0.9 !important;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
+            letter-spacing: -2px !important;
+            color: #ffffff !important;
+        }
+
+        .verification-subtitle {
+            font-size: 0.9rem !important;
+            margin-top: 0.5rem !important;
+            font-weight: 600 !important;
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        .verification-detail {
+            font-size: 0.95rem !important;
+            margin: 0.5rem 0 !important;
+            font-weight: 600 !important;
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        .verification-detail strong {
+            display: block !important;
+            margin-bottom: 0.3rem !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .verification-amount {
+            display: block !important;
+            font-size: 2rem !important;
+            font-weight: 900 !important;
+            margin-top: 0.3rem !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.12) !important;
+            letter-spacing: -1px !important;
+            color: #ffffff !important;
+        }
+
+        .verification-box hr {
+            border-color: rgba(255, 255, 255, 0.35) !important;
+            margin: 0.75rem 0 !important;
+            opacity: 0.6 !important;
+        }
+
+        .integrity-icon {
+            font-size: 3.5rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+
+        .verification-timestamp {
+            font-size: 0.7rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0 !important;
+            font-style: italic !important;
+            color: rgba(255, 255, 255, 0.65) !important;
+        }
+
+        /* Box 2 specific overrides for inline styles */
+        .verification-box div[style*="font-size: 0.7rem"] {
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        .verification-box div[style*="font-size: 0.7rem"] strong {
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .verification-box p[style*="font-size: 0.65rem"] {
+            font-size: 0.7rem !important;
+            font-weight: 500 !important;
+            color: rgba(255, 255, 255, 0.65) !important;
+        }
+
+        /* ===== ENHANCED REPORT METADATA STYLES ===== */
+
+        /* Report description section */
+        .report-description {
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        .report-description strong {
+            color: #212529;
+        }
+
+        .last-updated {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .last-updated strong {
+            color: #495057;
+        }
+
+        /* Collapsible report sections */
+        .report-section {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .report-section summary {
+            padding: 8px 20px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .report-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .report-section summary::before {
+            content: "▶";
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+
+        .report-section[open] summary::before {
+            transform: rotate(90deg) !important;
+        }
+
+        .report-section summary:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Report metadata section */
+        .report-metadata summary {
+            background-color: #e9ecef;
+        }
+
+        .metadata-body {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+        }
+
+        .metadata-item {
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .metadata-item strong {
+            color: #495057;
+            margin-right: 6px;
+        }
+
+        .metadata-item .value {
+            color: #6c757d;
+        }
+
+        /* Nested collapsible subsections */
+        .nested-subsection {
+            margin-top: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .nested-subsection summary {
+            padding: 8px 12px;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .nested-subsection summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .nested-subsection summary::before {
+            content: "▶";
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+
+        .nested-subsection[open] summary::before {
+            transform: rotate(90deg) !important;
+        }
+
+        .nested-subsection summary:hover {
+            background-color: #d1e7fd;
+        }
+
+        .subsection-body {
+            padding: 12px 15px;
+            background-color: #fff;
+        }
+
+        /* Column items with inline descriptions */
+        .column-item {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .column-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .column-mapping {
+            color: #0056b3;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .column-description {
+            color: #495057;
+        }
+
+        /* Terms with inline definitions */
+        .term-item {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .term-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .term-name {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .term-definition {
+            color: #495057;
+        }
+
+        .see-also {
+            font-style: italic;
+            color: #007bff;
+            font-size: 0.75rem;
+            margin-top: 2px;
+            display: block;
+        }
+
+        .terms-group {
+            margin-bottom: 15px;
+        }
+
+        .terms-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .terms-group-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9rem;
+        }
+
+        /* Analysis section */
+        .report-analysis summary {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .analysis-body {
+            padding: 15px 20px;
+            background-color: #f0f8ff;
+        }
+
+        .analysis-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Floating Analysis Button */
+        .floating-analysis-btn {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: none; /* Hidden by default, shown via JS when analysis exists */
+        }
+
+        .floating-analysis-btn:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .analysis-summary-box {
+            padding: 10px;
+            background-color: #d4edda;
+            border-left: 3px solid #28a745;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .analysis-summary-box strong {
+            color: #155724;
+        }
+
+        .breakdown-compact {
+            display: flex;
+            gap: 10px;
+        }
+
+        .breakdown-card {
+            flex: 1;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .breakdown-card-header {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .breakdown-minutes {
+            color: #d39e00;
+            font-size: 1rem;
+        }
+
+        .breakdown-text {
+            color: #856404;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .contributors-mini {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .contributors-mini ul {
+            margin: 4px 0 0 16px;
+            padding: 0;
+        }
+
+        .breakdown-total {
+            padding: 10px;
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #155724;
+        }
+
+        .insights-compact {
+            padding: 10px;
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .insights-compact ul {
+            margin: 4px 0 0 20px;
+            padding: 0;
+        }
+
+        .insights-compact li {
+            color: #856404;
+            margin-bottom: 3px;
+        }
+
+        /* Sortable table headers with tooltips */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .sortable-header:hover {
+            background-color: #5a6268;
+        }
+
+        .sort-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
+        .sortable-header.sorted .sort-icon {
+            opacity: 1;
+        }
+
+        .tooltip-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            color: #adb5bd;
+            cursor: help;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .breakdown-compact {
+                flex-direction: column;
+            }
+
+            .floating-analysis-btn {
+                right: 10px;
+                font-size: 0.8rem;
+                padding: 10px 12px;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark {% if environment == 'sample' %}bg-danger{% else %}bg-primary{% endif %}">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-book"></i> Read-a-Thon System
+                {% if environment == 'sample' %}
+                <span class="badge bg-warning text-dark ms-2">SAMPLE MODE</span>
+                {% endif %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' or request.path == '/school' %}active{% endif %}" href="/school">
+                            🏫 School
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/teams' %}active{% endif %}" href="/teams">
+                            ⚔️ Teams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/classes' %}active{% endif %}" href="/classes">
+                            🎓 Classes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/students' %}active{% endif %}" href="/students">
+                            👤 Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/upload' %}active{% endif %}" href="/upload">
+                            📤 Upload
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.path in ['/reports', '/workflows', '/tables'] %}active{% endif %}" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            📊 Reports & Data
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                            <li><a class="dropdown-item" href="/reports">📊 Reports (Q1-Q23)</a></li>
+                            <li><a class="dropdown-item" href="/workflows">🔄 Workflows</a></li>
+                            <li><a class="dropdown-item" href="/tables">📋 Tables (Raw Data)</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" href="/admin">
+                            ⚙️ Admin
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.path in ['/help', '/help/claude', '/help/requirements'] %}active{% endif %}" href="#" id="helpDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            ❓ Help
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="helpDropdown">
+                            <li><a class="dropdown-item" href="/help">📖 User Manual</a></li>
+                            <li><a class="dropdown-item" href="/help/claude">🤖 How I Used Claude Code to Develop this Application</a></li>
+                            <li><a class="dropdown-item" href="/help/requirements">📋 Application Requirements</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <select class="form-select form-select-sm" id="envSelector" onchange="switchEnvironment()" style="width: auto;">
+                            <option value="prod">Production</option>
+                            <option value="sample">Sample</option>
+                        </select>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Copy to Clipboard Helper -->
+    <script>
+        function copyTableToClipboard(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            let text = '';
+            const rows = table.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('th, td');
+                const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join('\t');
+                text += rowText + '\n';
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                showCopySuccess();
+            });
+        }
+
+        function showCopySuccess() {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show copy-success';
+            alert.innerHTML = `
+                <i class="bi bi-check-circle"></i> Copied to clipboard!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        // Environment switcher
+        async function switchEnvironment() {
+            const env = document.getElementById('envSelector').value;
+            try {
+                const response = await fetch('/api/set_environment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({environment: env})
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error switching environment:', error);
+            }
+        }
+
+        // Set the current environment selection on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const env = '{{ environment if environment is defined else "prod" }}';
+            document.getElementById('envSelector').value = env;
+        });
+    </script>
+
+    <!-- Analysis Modal -->
+    <div class="modal fade" id="analysisModal" tabindex="-1" aria-labelledby="analysisModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title" id="analysisModalLabel">
+                        <i class="bi bi-graph-up-arrow"></i> Report Analysis
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="analysisModalBody">
+                    <!-- Summary Box -->
+                    <div id="analysisSummary" class="analysis-summary-box mb-3" style="display: none;">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Breakdown Cards -->
+                    <div id="analysisBreakdown" class="breakdown-compact mb-3" style="display: none;">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Total Section -->
+                    <div id="analysisTotal" class="breakdown-total mb-3" style="display: none;">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Insights/Recommendations -->
+                    <div id="analysisInsights" class="insights-compact" style="display: none;">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="analysisLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading analysis...</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="analysisError" class="alert alert-danger" style="display: none;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span id="analysisErrorMessage">Failed to load analysis.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

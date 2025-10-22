@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Report Prototype V3 - Final - Q21 Minutes Integrity Check</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --header-height: 60px;
+        }
+
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+            font-size: 14px;
+        }
+
+        .report-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ===== STICKY HEADER ===== */
+        .report-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .report-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        /* ===== DESCRIPTION + LAST UPDATED ===== */
+        .report-description {
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        .report-description strong {
+            color: #212529;
+        }
+
+        .last-updated {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .last-updated strong {
+            color: #495057;
+        }
+
+        /* ===== COLLAPSIBLE SECTIONS ===== */
+        .report-section {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .report-section summary {
+            padding: 8px 20px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .report-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .report-section summary::before {
+            content: "▶";
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+
+        .report-section[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .report-section summary:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Report Information Section */
+        .report-metadata summary {
+            background-color: #e9ecef;
+        }
+
+        .metadata-body {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+        }
+
+        .metadata-item {
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .metadata-item strong {
+            color: #495057;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .metadata-item .value {
+            color: #6c757d;
+        }
+
+        /* Column Mapping */
+        .column-mapping {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .column-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .column-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .column-header {
+            color: #0056b3;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .column-desc {
+            color: #495057;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin-left: 10px;
+            font-size: 0.85rem;
+        }
+
+        /* Terms Subsection */
+        .terms-subsection {
+            margin-top: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .terms-subsection summary {
+            padding: 8px 12px;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terms-subsection summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .terms-subsection summary::before {
+            content: "▶";
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+
+        .terms-subsection[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .terms-subsection summary:hover {
+            background-color: #d1e7fd;
+        }
+
+        .terms-body {
+            padding: 15px;
+            background-color: #fff;
+        }
+
+        .terms-group {
+            margin-bottom: 20px;
+        }
+
+        .terms-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .terms-group-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9rem;
+        }
+
+        .terms-list {
+            margin: 0;
+        }
+
+        .terms-list dt {
+            font-weight: 600;
+            color: #212529;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+
+        .terms-list dd {
+            margin-left: 15px;
+            margin-bottom: 8px;
+            color: #6c757d;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .terms-list .see-also {
+            font-style: italic;
+            color: #007bff;
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        /* Analysis Section */
+        .report-analysis summary {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .analysis-body {
+            padding: 15px 20px;
+            background-color: #f0f8ff;
+        }
+
+        .analysis-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .analysis-summary-box {
+            padding: 10px;
+            background-color: #d4edda;
+            border-left: 3px solid #28a745;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .analysis-summary-box strong {
+            color: #155724;
+        }
+
+        .breakdown-compact {
+            display: flex;
+            gap: 10px;
+        }
+
+        .breakdown-card {
+            flex: 1;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .breakdown-card-header {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .breakdown-minutes {
+            color: #d39e00;
+            font-size: 1rem;
+        }
+
+        .breakdown-text {
+            color: #856404;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .contributors-mini {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .contributors-mini ul {
+            margin: 4px 0 0 16px;
+            padding: 0;
+        }
+
+        .breakdown-total {
+            padding: 10px;
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #155724;
+        }
+
+        .insights-compact {
+            padding: 10px;
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .insights-compact ul {
+            margin: 4px 0 0 20px;
+            padding: 0;
+        }
+
+        .insights-compact li {
+            color: #856404;
+            margin-bottom: 3px;
+        }
+
+        /* ===== FLOATING ANALYSIS BUTTON ===== */
+        .floating-analysis-btn {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        .floating-analysis-btn:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        /* ===== RESULTS SECTION ===== */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #343a40;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* ===== TABLE WITH STICKY HEADER ===== */
+        .table-wrapper {
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .results-table {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+
+        .results-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #495057;
+            color: white;
+        }
+
+        .results-table thead th {
+            font-weight: 600;
+            padding: 10px 8px;
+            border: none;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .results-table thead th:hover {
+            background-color: #5a6268;
+        }
+
+        .results-table thead th .sort-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
+        .results-table thead th.sorted .sort-icon {
+            opacity: 1;
+        }
+
+        .results-table thead th .tooltip-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            color: #adb5bd;
+            cursor: help;
+        }
+
+        .results-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .results-table tbody td {
+            padding: 8px;
+            vertical-align: middle;
+        }
+
+        .issue-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-cap-only {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-mismatch {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-both {
+            background-color: #e7d6ff;
+            color: #5a1a8a;
+        }
+
+        .difference-positive {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .difference-negative {
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1040;
+            display: none;
+        }
+
+        .modal-backdrop.show {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1050;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .report-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .report-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .floating-analysis-btn {
+                right: 10px;
+                font-size: 0.8rem;
+                padding: 10px 12px;
+            }
+
+            .breakdown-compact {
+                flex-direction: column;
+            }
+
+            .table-wrapper {
+                max-height: 400px;
+            }
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Bootstrap tooltip custom styling */
+        .tooltip-inner {
+            max-width: 300px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- STICKY HEADER -->
+        <div class="report-header">
+            <h1 class="report-title">
+                <i class="fas fa-chart-line"></i> Q21: Minutes Integrity Check
+            </h1>
+            <div class="report-actions">
+                <button class="btn btn-light btn-sm btn-action" onclick="copyToClipboard()">
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <button class="btn btn-success btn-sm btn-action" onclick="exportCSV()">
+                    <i class="bi bi-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <!-- DESCRIPTION + LAST UPDATED -->
+        <div class="report-description">
+            <div><strong>Description:</strong> Verify that the sum of daily minutes from Daily_Logs matches the cumulative minutes stored in Reader_Cumulative. This report identifies discrepancies and their root causes.</div>
+            <div class="last-updated">
+                <strong>Last Updated:</strong> Daily Logs (2025-10-16 9:00 AM), Reader Cumulative (2025-10-16 8:30 AM)
+            </div>
+        </div>
+
+        <!-- REPORT INFORMATION (Collapsed, Comprehensive) -->
+        <details class="report-section report-metadata">
+            <summary>
+                <i class="fas fa-info-circle"></i> Report Information
+            </summary>
+            <div class="metadata-body">
+                <div class="metadata-item">
+                    <strong>Source Tables:</strong>
+                    <span class="value">Daily_Logs, Reader_Cumulative (primary) • Roster (reference)</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Note:</strong>
+                    <span class="value">Compares SUM(Daily_Logs.minutes_read) vs Reader_Cumulative.cumulative_minutes for each student</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Sort Order:</strong>
+                    <span class="value">ABS(difference) DESC, student_name ASC (largest discrepancies first)</span>
+                </div>
+
+                <!-- COLUMN MAPPING -->
+                <div class="metadata-item">
+                    <strong>Columns & Data Sources:</strong>
+                    <div class="column-mapping">
+                        <div class="column-item">
+                            <div class="column-header">• Student Name = Roster.student_name</div>
+                            <div class="column-desc">The student's full name as it appears in school records</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Team Name = Roster.team_name</div>
+                            <div class="column-desc">The team this student is competing for (Kitsko or Staub). The school is divided into two teams to create friendly competition</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Class Name = Roster.class_name</div>
+                            <div class="column-desc">The teacher or homeroom class this student belongs to. Classes are assigned to teams</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Daily Minutes Sum = SUM(Daily_Logs.minutes_read) [calculated]</div>
+                            <div class="column-desc">The total uncapped minutes this student read across all contest days (10/10-10/15), calculated by adding up their daily reading time for each day they participated. This includes minutes over the 120-minute daily cap</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Cumulative Minutes = Reader_Cumulative.cumulative_minutes</div>
+                            <div class="column-desc">The total minutes reported in the cumulative download from the online tracking system. May include reading from dates outside the official contest period if parents entered data for non-sanctioned dates</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Difference = Cumulative - Daily [calculated]</div>
+                            <div class="column-desc">The difference between cumulative minutes and daily minutes sum. A positive number (shown in red) means the cumulative total is higher, indicating the student has extra minutes not in daily logs. A negative number (shown in blue) means daily logs show more minutes than cumulative, which is unusual and may indicate a data issue</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Cap Exceeded = SUM(CASE WHEN minutes_read > 120 THEN minutes_read - 120 ELSE 0 END) [calculated]</div>
+                            <div class="column-desc">How many minutes this student read OVER the 120-minute daily cap across all days. For example, if they read 195 minutes on one day and 130 on another, this would show 85 total (75+10). These extra minutes don't count toward contest totals but help explain discrepancies. The cap varies by grade level</div>
+                        </div>
+
+                        <div class="column-item">
+                            <div class="column-header">• Issue Type = CASE WHEN... [calculated]</div>
+                            <div class="column-desc">The type of data issue for this student:
+• CAP_ONLY - Student exceeded the 120-minute daily limit on one or more days (affects total calculation)
+• OUT_OF_RANGE - Student has reading time entered for dates outside the contest period (before 10/10 or after 10/15)
+• BOTH - Student has both cap and out-of-range issues</div>
+                        </div>
+                    </div>
+                    <small class="text-muted" style="margin-top: 8px; display: block;"><i class="bi bi-info-circle"></i> Tip: Hover over column headers in the table below for quick reference</small>
+                </div>
+
+                <!-- KEY TERMS & DEFINITIONS -->
+                <details class="terms-subsection">
+                    <summary>
+                        <i class="fas fa-book"></i> Key Terms & Definitions
+                    </summary>
+                    <div class="terms-body">
+                        <!-- Group 1: Core Contest Concepts -->
+                        <div class="terms-group">
+                            <div class="terms-group-title">📚 Core Contest Concepts</div>
+                            <dl class="terms-list">
+                                <dt>Cap / Capped / Maximum Minutes</dt>
+                                <dd>The maximum number of reading minutes per day that count toward the contest. Students can read more, but only the capped amount counts toward totals and goals. The cap is 120 minutes for most grades but varies by grade level (see Grade Level). For example, if a student reads 150 minutes, only 120 count.
+                                <div class="see-also">See also: Goal, Grade Level</div></dd>
+
+                                <dt>Class</dt>
+                                <dd>A teacher's homeroom or group of students. Each class is assigned to one of two teams (Kitsko or Staub) to balance competition. Classes are led by teachers and include students across different grade levels in some cases.
+                                <div class="see-also">See also: Teacher, Team</div></dd>
+
+                                <dt>Contest Period</dt>
+                                <dd>The official dates for the read-a-thon: October 10-15, 2025 (6 days). Only reading during these dates counts toward contest totals, participation rates, and prizes. This is also referred to as "sanctioned dates."
+                                <div class="see-also">See also: Sanctioned Dates, Out-of-Range</div></dd>
+
+                                <dt>Contest vs. Non-Contest Dates</dt>
+                                <dd>Contest dates are the official 6-day period (10/10-10/15). Non-contest dates are any dates before or after this period. Parents may enter reading for non-contest dates, but those minutes don't count toward the competition even though they appear in the cumulative download.
+                                <div class="see-also">See also: Contest Period, Out-of-Range</div></dd>
+
+                                <dt>Cumulative</dt>
+                                <dd>A running total across all days. Cumulative minutes is the sum of all daily reading time for a student. Cumulative stats include total minutes read and total donations raised, updated throughout the contest.
+                                <div class="see-also">See also: Reader Cumulative</div></dd>
+
+                                <dt>Goal / Minimum Minutes</dt>
+                                <dd>The daily reading target for students, which varies by grade level. Students who meet or exceed their goal each day are eligible for prizes and recognition. For example, kindergarten students might have a 20-minute daily goal while 5th graders have a 60-minute goal. Also called "minimum minutes."
+                                <div class="see-also">See also: Grade Level, Participation</div></dd>
+
+                                <dt>Grade Level</dt>
+                                <dd>The student's grade in school (K-5). Grade level determines both the minimum minutes (goal) and maximum minutes (cap) for daily reading. For example: K might be 20-60 minutes, 1st grade 30-80 minutes, 5th grade 60-120 minutes. Check Grade_Rules table for specific values.
+                                <div class="see-also">See also: Goal, Cap</div></dd>
+
+                                <dt>Participation</dt>
+                                <dd>When a student reads and logs at least 1 minute on a given day, they are considered "participating" that day. Participation rate is the percentage of students who participated on a day, or the percentage of days a student participated. High participation is a key contest metric.
+                                <div class="see-also">See also: Reader, Goal</div></dd>
+
+                                <dt>Reader / Student</dt>
+                                <dd>A student participating in the read-a-thon. "Reader" and "student" are used interchangeably. All students are listed in the Roster, but only those who log reading minutes become active readers.
+                                <div class="see-also">See also: Participation, Roster</div></dd>
+
+                                <dt>Sanctioned Dates</dt>
+                                <dd>The official contest dates (October 10-15, 2025) when reading counts toward the competition. Same as "contest period." Only reading on sanctioned dates is included in Daily_Logs and counts toward participation, prizes, and team totals.
+                                <div class="see-also">See also: Contest Period, Out-of-Range</div></dd>
+
+                                <dt>Team</dt>
+                                <dd>One of two groups (Kitsko or Staub) that students are divided into for friendly competition. The school is split roughly in half, with classes assigned to balance the teams. Teams compete for total minutes read, participation rates, and fundraising.
+                                <div class="see-also">See also: Class</div></dd>
+
+                                <dt>Teacher</dt>
+                                <dd>An educator who leads a class. Teachers are assigned students, and their classes are assigned to teams. Teacher names are used to identify classes (e.g., "Mrs. Spencer's class").
+                                <div class="see-also">See also: Class</div></dd>
+                            </dl>
+                        </div>
+
+                        <!-- Group 2: Data & Technical Terms -->
+                        <div class="terms-group">
+                            <div class="terms-group-title">💾 Data & Technical Terms</div>
+                            <dl class="terms-list">
+                                <dt>Daily Logs</dt>
+                                <dd>The Daily_Logs database table containing day-by-day reading records. Each row represents one student's reading on one specific date, showing how many minutes they read. This is downloaded from the online system as separate daily report files and only includes sanctioned contest dates.
+                                <div class="see-also">See also: Reader Cumulative, Sanctioned Dates</div></dd>
+
+                                <dt>Discrepancy</dt>
+                                <dd>When numbers don't match between different data sources or tables. For example, when the sum of a student's daily minutes doesn't equal their cumulative minutes total. This report identifies and explains discrepancies to help maintain data quality.
+                                <div class="see-also">See also: Difference</div></dd>
+
+                                <dt>Donations / Sponsors</dt>
+                                <dd>Money raised through the read-a-thon. Sponsors pledge to donate based on minutes read (e.g., $0.10 per minute) or make flat donations. Total donations per student are tracked in Reader_Cumulative and are a key fundraising metric alongside reading minutes.
+                                <div class="see-also">See also: Reader Cumulative</div></dd>
+
+                                <dt>Download / Upload</dt>
+                                <dd>Data files received from the online read-a-thon tracking system. "Download" is from the system's perspective (we download their files), "upload" is when we load them into our database. We download two types: daily logs (one file per day) and cumulative stats (running totals).
+                                <div class="see-also">See also: Daily Logs, Reader Cumulative</div></dd>
+
+                                <dt>Out-of-Range</dt>
+                                <dd>Reading entries for dates outside the official contest period (before October 10 or after October 15, 2025). These appear in Reader_Cumulative totals if parents entered them, but they don't appear in Daily_Logs and don't count toward the contest. This is a common cause of discrepancies.
+                                <div class="see-also">See also: Contest Period, Sanctioned Dates, Discrepancy</div></dd>
+
+                                <dt>Reader Cumulative</dt>
+                                <dd>The Reader_Cumulative database table containing summary totals for each student: total cumulative minutes read, total donations raised, and sponsor information. Downloaded as a single cumulative stats file from the online system. May include minutes from non-sanctioned dates if parents entered them.
+                                <div class="see-also">See also: Daily Logs, Cumulative</div></dd>
+
+                                <dt>Roster</dt>
+                                <dd>The master list of all students in the school, stored in the Roster database table. Includes each student's name, class, teacher, team, and grade level. This is the authoritative source for student information and is used to join data from Daily_Logs and Reader_Cumulative.
+                                <div class="see-also">See also: Student</div></dd>
+                            </dl>
+                        </div>
+
+                        <!-- Group 3: Report-Specific Terms -->
+                        <div class="terms-group">
+                            <div class="terms-group-title">📊 This Report</div>
+                            <dl class="terms-list">
+                                <dt>Difference</dt>
+                                <dd>The calculated difference between Reader_Cumulative.cumulative_minutes and the sum of Daily_Logs.minutes_read for a student. Positive values (red in table) mean cumulative is higher; negative values (blue) mean daily logs are higher. Large differences indicate data quality issues.
+                                <div class="see-also">See also: Discrepancy</div></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </details>
+
+        <!-- ANALYSIS (Collapsed, Compact) -->
+        <details class="report-section report-analysis">
+            <summary>
+                <i class="fas fa-chart-pie"></i> Analysis
+            </summary>
+            <div class="analysis-body">
+                <div class="analysis-compact">
+                    <div class="analysis-summary-box">
+                        <strong>Summary:</strong> The 752-minute discrepancy between Daily_Logs (61,946) and Reader_Cumulative (62,698) consists of two issues.
+                    </div>
+
+                    <div class="breakdown-compact">
+                        <div class="breakdown-card">
+                            <div class="breakdown-card-header">
+                                <span>1. 120-Min Cap</span>
+                                <span class="breakdown-minutes">242 min</span>
+                            </div>
+                            <div class="breakdown-text">
+                                9 students exceeded 120 min/day. Daily_Logs caps at 120/day, Reader_Cumulative doesn't.
+                            </div>
+                            <div class="contributors-mini">
+                                <strong>Top:</strong>
+                                <ul>
+                                    <li>Noah S.C.: 75 min</li>
+                                    <li>Hansen K.: 52 min</li>
+                                    <li>Alice S.: 45 min</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="breakdown-card">
+                            <div class="breakdown-card-header">
+                                <span>2. Out-of-Range Dates</span>
+                                <span class="breakdown-minutes">510 min</span>
+                            </div>
+                            <div class="breakdown-text">
+                                11 students have reading outside contest dates (10/10-10/15). Reader_Cumulative includes all dates.
+                            </div>
+                            <div class="contributors-mini">
+                                <strong>Top:</strong>
+                                <ul>
+                                    <li>Fenton M.: +120 min</li>
+                                    <li>Hunt N.: +120 min</li>
+                                    <li>Loretta M.: +120 min</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="breakdown-total">
+                        <i class="fas fa-equals"></i> TOTAL: 242 + 510 = 752 minutes ✓
+                    </div>
+
+                    <div class="insights-compact">
+                        <strong><i class="fas fa-lightbulb"></i> Recommendations:</strong>
+                        <ul>
+                            <li>Verify contest date range (10/10-10/15) matches data downloads</li>
+                            <li>Ensure parents only enter reading for sanctioned dates</li>
+                            <li>Consider applying 120-min cap to Reader_Cumulative for consistency</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- RESULTS HEADER -->
+        <div class="results-header">
+            <span>
+                <i class="fas fa-table"></i> Results: 20 students with discrepancies
+            </span>
+        </div>
+
+        <!-- RESULTS TABLE (Sticky Header, Sortable, Tooltips) -->
+        <div class="table-wrapper">
+            <table class="table results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)" title="The student's full name as it appears in school records">
+                            Student Name
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(1)" title="The team this student is competing for (Kitsko or Staub). The school is divided into two teams">
+                            Team
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(2)" title="The teacher or homeroom class this student belongs to. Classes are assigned to teams">
+                            Class
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(3)" title="The total uncapped minutes this student read across all contest days (10/10-10/15), calculated by adding up their daily reading time. This includes minutes over the 120-minute daily cap">
+                            Daily Minutes Sum
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(4)" title="The total minutes reported in the cumulative download from the online tracking system. May include reading from dates outside the official contest period if parents entered data for non-sanctioned dates">
+                            Cumulative Minutes
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(5)" title="The difference between cumulative minutes and daily minutes. A positive number (red) means cumulative is higher. A negative number (blue) means daily logs show more">
+                            Difference
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(6)" title="How many minutes this student read OVER the 120-minute daily cap. For example, if they read 195 minutes in one day, this shows 75 (195-120). These extra minutes don't count toward contest totals">
+                            Cap Exceeded
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                        <th onclick="sortTable(7)" title="CAP_ONLY: Exceeded 120-min daily limit&#10;OUT_OF_RANGE: Reading outside contest dates&#10;BOTH: Has both issues">
+                            Issue Type
+                            <i class="bi bi-info-circle tooltip-icon"></i>
+                            <i class="bi bi-chevron-expand sort-icon"></i>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Fenton Harper</td>
+                        <td>Kitsko</td>
+                        <td>Rice</td>
+                        <td>720</td>
+                        <td>840</td>
+                        <td class="difference-positive">+120</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Alex Terry</td>
+                        <td>Staub</td>
+                        <td>Richards</td>
+                        <td>120</td>
+                        <td>240</td>
+                        <td class="difference-positive">+120</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Loretta Harper</td>
+                        <td>Kitsko</td>
+                        <td>Price</td>
+                        <td>720</td>
+                        <td>840</td>
+                        <td class="difference-positive">+120</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Asra Henry</td>
+                        <td>Kitsko</td>
+                        <td>Reed</td>
+                        <td>150</td>
+                        <td>240</td>
+                        <td class="difference-positive">+90</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Noah Saldivar Hughes</td>
+                        <td>Staub</td>
+                        <td>Hansen</td>
+                        <td>655</td>
+                        <td>330</td>
+                        <td class="difference-negative">-325</td>
+                        <td>75</td>
+                        <td><span class="issue-badge badge-both">BOTH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Hansen Lawrence</td>
+                        <td>Kitsko</td>
+                        <td>Richardson</td>
+                        <td>462</td>
+                        <td>462</td>
+                        <td>0</td>
+                        <td>52</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Alice Knight</td>
+                        <td>Staub</td>
+                        <td>Pierce</td>
+                        <td>525</td>
+                        <td>525</td>
+                        <td>0</td>
+                        <td>45</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Layla Lawrence</td>
+                        <td>Kitsko</td>
+                        <td>Spencer AM</td>
+                        <td>165</td>
+                        <td>225</td>
+                        <td class="difference-positive">+60</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Chloe Hunter</td>
+                        <td>Staub</td>
+                        <td>Stone</td>
+                        <td>100</td>
+                        <td>140</td>
+                        <td class="difference-positive">+40</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Peter Holmes</td>
+                        <td>Kitsko</td>
+                        <td>Porter</td>
+                        <td>435</td>
+                        <td>435</td>
+                        <td>0</td>
+                        <td>30</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Matthew Lawrence</td>
+                        <td>Kitsko</td>
+                        <td>Rice</td>
+                        <td>196</td>
+                        <td>221</td>
+                        <td class="difference-positive">+25</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Madelyn Morgan</td>
+                        <td>Staub</td>
+                        <td>Brown PM</td>
+                        <td>95</td>
+                        <td>110</td>
+                        <td class="difference-positive">+15</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Friedrich Olson</td>
+                        <td>Kitsko</td>
+                        <td>Peters</td>
+                        <td>220</td>
+                        <td>220</td>
+                        <td>0</td>
+                        <td>10</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Wes Lane</td>
+                        <td>Staub</td>
+                        <td>Powell</td>
+                        <td>190</td>
+                        <td>190</td>
+                        <td>0</td>
+                        <td>10</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Abigail Hill</td>
+                        <td>Kitsko</td>
+                        <td>Price</td>
+                        <td>419</td>
+                        <td>419</td>
+                        <td>0</td>
+                        <td>8</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Aloisia Howard</td>
+                        <td>Kitsko</td>
+                        <td>Peters</td>
+                        <td>318</td>
+                        <td>318</td>
+                        <td>0</td>
+                        <td>7</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Luna Murray</td>
+                        <td>Staub</td>
+                        <td>Rose</td>
+                        <td>260</td>
+                        <td>260</td>
+                        <td>0</td>
+                        <td>5</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Brynn Myers</td>
+                        <td>Staub</td>
+                        <td>Hansen</td>
+                        <td>245</td>
+                        <td>215</td>
+                        <td class="difference-negative">-30</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Henry Kennedy</td>
+                        <td>Kitsko</td>
+                        <td>Rice</td>
+                        <td>175</td>
+                        <td>145</td>
+                        <td class="difference-negative">-30</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                    <tr>
+                        <td>Margaret Kennedy</td>
+                        <td>Staub</td>
+                        <td>Powell</td>
+                        <td>100</td>
+                        <td>80</td>
+                        <td class="difference-negative">-20</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">OUT_OF_RANGE</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FLOATING ANALYSIS BUTTON -->
+    <button class="floating-analysis-btn" onclick="openAnalysisModal()">
+        📊 Analysis
+    </button>
+
+    <!-- ANALYSIS MODAL -->
+    <div class="modal-backdrop" id="modalBackdrop" onclick="closeAnalysisModal()"></div>
+    <div class="modal" id="analysisModal">
+        <div class="modal-header">
+            <h5><i class="fas fa-chart-line"></i> Analysis - Q21 Minutes Integrity Check</h5>
+            <button class="modal-close" onclick="closeAnalysisModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="analysis-summary-box" style="margin-bottom: 15px;">
+                <strong>Summary:</strong> The 752-minute discrepancy between Daily_Logs (61,946) and Reader_Cumulative (62,698) consists of two issues.
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="breakdown-card">
+                    <div class="breakdown-card-header">
+                        <span>1. 120-Minute Daily Cap Issue</span>
+                        <span class="breakdown-minutes">242 minutes</span>
+                    </div>
+                    <div class="breakdown-text">
+                        9 students exceeded 120 minutes on specific days. Daily_Logs caps at 120/day when totaling, but Reader_Cumulative contains uncapped values.
+                    </div>
+                    <div class="contributors-mini">
+                        <strong>Top Contributors:</strong>
+                        <ul>
+                            <li>Noah Saldivar Hughes: 75 minutes</li>
+                            <li>Hansen Lawrence: 52 minutes</li>
+                            <li>Alice Knight: 45 minutes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="breakdown-card">
+                    <div class="breakdown-card-header">
+                        <span>2. Out-of-Range Reading Dates</span>
+                        <span class="breakdown-minutes">510 minutes</span>
+                    </div>
+                    <div class="breakdown-text">
+                        11 students have reading entries for dates OUTSIDE the contest period (10/10-10/15).
+                        Parents may have entered data before contest start or after the last data download.
+                        Reader_Cumulative includes all dates, but Daily_Logs only contains sanctioned contest dates.
+                    </div>
+                    <div class="contributors-mini">
+                        <strong>Top Contributors:</strong>
+                        <ul>
+                            <li>Fenton Harper: +120 minutes</li>
+                            <li>Alex Terry: +120 minutes</li>
+                            <li>Loretta Harper: +120 minutes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="breakdown-total">
+                    <i class="fas fa-equals"></i> TOTAL DISCREPANCY: 242 + 510 = 752 minutes ✓
+                </div>
+
+                <div class="insights-compact">
+                    <strong><i class="fas fa-lightbulb"></i> Recommendations:</strong>
+                    <ul>
+                        <li>Verify contest date range (10/10-10/15) matches data downloads</li>
+                        <li>Ensure parents only enter reading for sanctioned contest dates</li>
+                        <li>Consider applying 120-minute daily cap to Reader_Cumulative for consistency</li>
+                        <li>Review students with large negative differences (Daily > Cumulative)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Initialize Bootstrap tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Copy to Clipboard
+        function copyToClipboard() {
+            const table = document.querySelector('.results-table');
+            let text = 'Student Name\tTeam\tClass\tDaily Minutes Sum\tCumulative Minutes\tDifference\tCap Exceeded\tIssue Type\n';
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim()).join('\t');
+                text += rowData + '\n';
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Success!', 'Table data copied to clipboard', 'success');
+            }).catch(err => {
+                showToast('Error', 'Failed to copy to clipboard', 'danger');
+            });
+        }
+
+        // Export CSV
+        function exportCSV() {
+            const table = document.querySelector('.results-table');
+            let csv = 'Student Name,Team,Class,Daily Minutes Sum,Cumulative Minutes,Difference,Cap Exceeded,Issue Type\n';
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => {
+                    let text = cell.textContent.trim();
+                    if (text.includes(',') || text.includes('"')) {
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                    }
+                    return text;
+                }).join(',');
+                csv += rowData + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'q21_minutes_integrity_check_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showToast('Success!', 'Report exported as CSV', 'success');
+        }
+
+        // Table Sorting
+        let sortDirection = {};
+        function sortTable(columnIndex) {
+            const table = document.getElementById('resultsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            sortDirection[columnIndex] = !sortDirection[columnIndex];
+            const ascending = sortDirection[columnIndex];
+
+            rows.sort((a, b) => {
+                let aVal = a.cells[columnIndex].textContent.trim();
+                let bVal = b.cells[columnIndex].textContent.trim();
+
+                if (columnIndex >= 3 && columnIndex <= 6) {
+                    aVal = parseFloat(aVal.replace(/[^0-9.-]/g, '')) || 0;
+                    bVal = parseFloat(bVal.replace(/[^0-9.-]/g, '')) || 0;
+                }
+
+                if (aVal < bVal) return ascending ? -1 : 1;
+                if (aVal > bVal) return ascending ? 1 : -1;
+                return 0;
+            });
+
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+
+            table.querySelectorAll('thead th').forEach((th, idx) => {
+                const icon = th.querySelector('.sort-icon');
+                if (idx === columnIndex) {
+                    th.classList.add('sorted');
+                    icon.className = ascending ? 'bi bi-chevron-up sort-icon' : 'bi bi-chevron-down sort-icon';
+                } else {
+                    th.classList.remove('sorted');
+                    icon.className = 'bi bi-chevron-expand sort-icon';
+                }
+            });
+        }
+
+        // Analysis Modal
+        function openAnalysisModal() {
+            document.getElementById('analysisModal').classList.add('show');
+            document.getElementById('modalBackdrop').classList.add('show');
+        }
+
+        function closeAnalysisModal() {
+            document.getElementById('analysisModal').classList.remove('show');
+            document.getElementById('modalBackdrop').classList.remove('show');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAnalysisModal();
+            }
+        });
+
+        // Toast notification
+        function showToast(title, message, type) {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}</strong><br>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            toast.show();
+
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+    </script>
+</body>
+</html>

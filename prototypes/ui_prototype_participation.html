@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Participation Metrics - Read-a-Thon Prototypes</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .prototype-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .prototype-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0d6efd;
+        }
+
+        .prototype-description {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 4px;
+        }
+
+        /* Verification Boxes Styling */
+        .verification-box {
+            border: none;
+            border-radius: 1.25rem;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: white;
+            min-height: 160px;
+        }
+
+        .verification-box:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .verification-box .card-body {
+            padding: 1.25rem;
+        }
+
+        .verification-box-blue {
+            background: linear-gradient(135deg, #50bfec 0%, #36b0e0 100%);
+        }
+
+        .verification-box-teal {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44b3aa 100%);
+        }
+
+        .verification-box-indigo {
+            background: linear-gradient(135deg, #6c63ff 0%, #5a52e5 100%);
+        }
+
+        /* CONSISTENT FONT SIZES */
+        .verification-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+        }
+
+        .verification-value {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0.5rem 0;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+
+        .verification-subtitle {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .verification-detail-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.3rem;
+        }
+
+        .verification-secondary-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+            letter-spacing: -1px;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .verification-box hr {
+            border-color: rgba(255, 255, 255, 0.35);
+            margin: 0.75rem 0;
+            opacity: 0.6;
+        }
+
+        /* Stat Card Styling */
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #0d6efd;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .stat-card-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            margin-bottom: 10px;
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #0d6efd;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .stat-card-teal {
+            border-left-color: #4ecdc4;
+        }
+
+        .stat-card-teal .stat-card-icon,
+        .stat-card-teal .stat-card-value {
+            color: #4ecdc4;
+        }
+
+        .stat-card-indigo {
+            border-left-color: #6c63ff;
+        }
+
+        .stat-card-indigo .stat-card-icon,
+        .stat-card-indigo .stat-card-value {
+            color: #6c63ff;
+        }
+
+        /* Tab styling */
+        .nav-tabs .nav-link {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        /* Comparison table */
+        .comparison-table {
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .comparison-table td {
+            vertical-align: middle;
+        }
+
+        .pro {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .con {
+            color: #dc3545;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center mb-4">Enhanced Participation Metrics - Layout Options</h1>
+        <p class="text-center text-muted mb-5">Compare three different approaches to displaying enhanced participation data</p>
+
+        <!-- Context Box -->
+        <div class="alert alert-info mb-4">
+            <h5><i class="bi bi-info-circle"></i> Enhancement Context</h5>
+            <p><strong>New Metrics to Display:</strong></p>
+            <ul class="mb-0">
+                <li><strong>Participated All Days:</strong> Count of readers who logged minutes every single day</li>
+                <li><strong>Met Goal All Days:</strong> Count of readers who met their daily goal every single day</li>
+                <li><strong>Current Participation Rate:</strong> Percentage of readers who logged any minutes</li>
+            </ul>
+            <p class="mt-3 mb-0"><strong>Challenge:</strong> How to best integrate these new metrics with the existing participation box without cluttering the UI?</p>
+        </div>
+
+        <!-- Tabs for switching between layouts -->
+        <ul class="nav nav-tabs mb-4" id="layoutTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="layout-a-tab" data-bs-toggle="tab" data-bs-target="#layout-a" type="button">
+                    Layout A: Expanded Blue Box
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="layout-b-tab" data-bs-toggle="tab" data-bs-target="#layout-b" type="button">
+                    Layout B: Side-by-Side Boxes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="layout-c-tab" data-bs-toggle="tab" data-bs-target="#layout-c" type="button">
+                    Layout C: Stat Cards Row
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="comparison-tab" data-bs-toggle="tab" data-bs-target="#comparison" type="button">
+                    Comparison Matrix
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="layoutTabsContent">
+            <!-- LAYOUT A: Expanded Blue Box -->
+            <div class="tab-pane fade show active" id="layout-a" role="tabpanel">
+                <div class="prototype-section">
+                    <div class="prototype-title">Layout A: Expanded Blue Box</div>
+                    <div class="prototype-description">
+                        <strong>Approach:</strong> Keep all participation metrics together in one expanded verification box.
+                        Main participation rate stays prominent, with new metrics as secondary values below.
+                        <br><strong>Best for:</strong> Users who want all participation data centralized in one location.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="card verification-box verification-box-blue">
+                                <div class="card-body text-center">
+                                    <div class="verification-title">Participation Rate</div>
+                                    <div class="verification-value">94%</div>
+                                    <div class="verification-subtitle">231 of 245 Readers</div>
+
+                                    <hr>
+
+                                    <!-- New Metrics as Secondary Values -->
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="verification-detail-label">Participated All Days</div>
+                                            <div class="verification-secondary-value">187</div>
+                                            <div class="verification-subtitle">76% of readers</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="verification-detail-label">Met Goal All Days</div>
+                                            <div class="verification-secondary-value">142</div>
+                                            <div class="verification-subtitle">58% of readers</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="verification-detail-label">Days Tracked</div>
+                                            <div class="verification-secondary-value">6</div>
+                                            <div class="verification-subtitle">Out of 10 total</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-4">
+                        <h6 class="pro"><i class="bi bi-check-circle"></i> Advantages:</h6>
+                        <ul class="mb-0">
+                            <li>All participation data in one place - easy to find</li>
+                            <li>Maintains existing verification box style</li>
+                            <li>Clear hierarchy: overall rate → detailed breakdowns</li>
+                            <li>Minimal changes to existing layout</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning mt-2">
+                        <h6 class="con"><i class="bi bi-exclamation-triangle"></i> Considerations:</h6>
+                        <ul class="mb-0">
+                            <li>Box becomes taller and more information-dense</li>
+                            <li>May feel cramped with too many numbers</li>
+                            <li>Secondary metrics may compete for attention</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LAYOUT B: Side-by-Side Boxes -->
+            <div class="tab-pane fade" id="layout-b" role="tabpanel">
+                <div class="prototype-section">
+                    <div class="prototype-title">Layout B: Side-by-Side Boxes</div>
+                    <div class="prototype-description">
+                        <strong>Approach:</strong> Split participation metrics into three separate verification boxes.
+                        Each metric gets equal visual weight and prominence.
+                        <br><strong>Best for:</strong> Users who want to emphasize all three participation metrics equally.
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Box 1: Participation Rate (Original) -->
+                        <div class="col-md-4">
+                            <div class="card verification-box verification-box-blue">
+                                <div class="card-body text-center">
+                                    <div class="verification-title">Participation Rate</div>
+                                    <div class="verification-value">94%</div>
+                                    <div class="verification-subtitle">231 of 245 Readers</div>
+                                    <hr>
+                                    <div class="verification-detail-label">Days Tracked</div>
+                                    <div class="verification-secondary-value">6</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Box 2: Participated All Days -->
+                        <div class="col-md-4">
+                            <div class="card verification-box verification-box-teal">
+                                <div class="card-body text-center">
+                                    <div class="verification-title">Participated All Days</div>
+                                    <div class="verification-value">187</div>
+                                    <div class="verification-subtitle">76% of Readers</div>
+                                    <hr>
+                                    <div class="verification-detail-label">Logged Minutes</div>
+                                    <div class="verification-secondary-value">6 of 6 Days</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Box 3: Met Goal All Days -->
+                        <div class="col-md-4">
+                            <div class="card verification-box verification-box-indigo">
+                                <div class="card-body text-center">
+                                    <div class="verification-title">Met Goal All Days</div>
+                                    <div class="verification-value">142</div>
+                                    <div class="verification-subtitle">58% of Readers</div>
+                                    <hr>
+                                    <div class="verification-detail-label">Achieved Goal</div>
+                                    <div class="verification-secondary-value">6 of 6 Days</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-4">
+                        <h6 class="pro"><i class="bi bi-check-circle"></i> Advantages:</h6>
+                        <ul class="mb-0">
+                            <li>Each metric gets equal visual prominence</li>
+                            <li>Color-coded for easy differentiation</li>
+                            <li>Less cramped - more breathing room</li>
+                            <li>Follows existing verification box pattern</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning mt-2">
+                        <h6 class="con"><i class="bi bi-exclamation-triangle"></i> Considerations:</h6>
+                        <ul class="mb-0">
+                            <li>Takes up more horizontal space</li>
+                            <li>Increases total number of verification boxes to 7 (from 5)</li>
+                            <li>May push other content further down the page</li>
+                            <li>Three participation boxes might feel repetitive</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LAYOUT C: Stat Cards Row -->
+            <div class="tab-pane fade" id="layout-c" role="tabpanel">
+                <div class="prototype-section">
+                    <div class="prototype-title">Layout C: Stat Cards Row</div>
+                    <div class="prototype-description">
+                        <strong>Approach:</strong> Keep the original participation verification box unchanged.
+                        Add a new row of lightweight stat cards below to show the enhanced metrics.
+                        <br><strong>Best for:</strong> Users who want to maintain the current layout while adding supplementary details.
+                    </div>
+
+                    <!-- Original Participation Box (Unchanged) -->
+                    <h5 class="mb-3">Existing Verification Box (Unchanged):</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <div class="card verification-box verification-box-blue">
+                                <div class="card-body text-center">
+                                    <div class="verification-title">Participation Rate</div>
+                                    <div class="verification-value">94%</div>
+                                    <div class="verification-subtitle">231 of 245 Readers</div>
+                                    <hr>
+                                    <div class="verification-detail-label">Days Tracked</div>
+                                    <div class="verification-secondary-value">6</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Stat Cards Row -->
+                    <h5 class="mt-4 mb-3">New Enhanced Metrics (Stat Cards):</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-card-icon"><i class="bi bi-calendar-check"></i></div>
+                                <div class="stat-card-value">187</div>
+                                <div class="stat-card-label">Participated All Days</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card stat-card-teal">
+                                <div class="stat-card-icon"><i class="bi bi-trophy"></i></div>
+                                <div class="stat-card-value">142</div>
+                                <div class="stat-card-label">Met Goal All Days</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card stat-card-indigo">
+                                <div class="stat-card-icon"><i class="bi bi-graph-up"></i></div>
+                                <div class="stat-card-value">76%</div>
+                                <div class="stat-card-label">Full Participation Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-card-icon"><i class="bi bi-award"></i></div>
+                                <div class="stat-card-value">58%</div>
+                                <div class="stat-card-label">Perfect Goal Achievement</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-4">
+                        <h6 class="pro"><i class="bi bi-check-circle"></i> Advantages:</h6>
+                        <ul class="mb-0">
+                            <li>No changes to existing verification box - zero disruption</li>
+                            <li>Stat cards visually distinct from verification boxes</li>
+                            <li>Horizontal layout maximizes screen space efficiency</li>
+                            <li>Icons provide quick visual identification</li>
+                            <li>Easy to add/remove cards without affecting other elements</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning mt-2">
+                        <h6 class="con"><i class="bi bi-exclamation-triangle"></i> Considerations:</h6>
+                        <ul class="mb-0">
+                            <li>Introduces a new visual element type (stat cards vs boxes)</li>
+                            <li>Participation data now split across two rows</li>
+                            <li>May require scrolling on smaller screens</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPARISON MATRIX -->
+            <div class="tab-pane fade" id="comparison" role="tabpanel">
+                <div class="prototype-section">
+                    <div class="prototype-title">Layout Comparison Matrix</div>
+                    <div class="prototype-description">
+                        <strong>Side-by-side comparison</strong> of all three layout approaches across key criteria.
+                    </div>
+
+                    <table class="table table-bordered comparison-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Criteria</th>
+                                <th style="width: 25%;">Layout A: Expanded Box</th>
+                                <th style="width: 25%;">Layout B: Side-by-Side</th>
+                                <th style="width: 25%;">Layout C: Stat Cards</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Information Density</strong></td>
+                                <td class="pro">High - All in one box</td>
+                                <td>Medium - Spread across 3 boxes</td>
+                                <td>Medium - Two separate rows</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Visual Clarity</strong></td>
+                                <td>Medium - Can feel crowded</td>
+                                <td class="pro">High - Each metric isolated</td>
+                                <td class="pro">High - Clear separation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vertical Space Used</strong></td>
+                                <td class="pro">Minimal - One tall box</td>
+                                <td class="pro">Minimal - One row</td>
+                                <td class="con">More - Two rows needed</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Horizontal Space Used</strong></td>
+                                <td class="pro">Minimal - Single column</td>
+                                <td class="con">Maximum - Three columns</td>
+                                <td>Medium - Four stat cards</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Consistency with Current Design</strong></td>
+                                <td class="pro">High - Extends existing box</td>
+                                <td class="pro">High - Uses verification boxes</td>
+                                <td>Medium - Introduces new element</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Scalability</strong></td>
+                                <td class="con">Low - Hard to add more metrics</td>
+                                <td>Medium - Can add more boxes</td>
+                                <td class="pro">High - Easy to add/remove cards</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mobile Responsiveness</strong></td>
+                                <td class="pro">Excellent - Single column</td>
+                                <td>Good - Stack vertically</td>
+                                <td>Good - Stack in pairs</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Focus on Primary Metric</strong></td>
+                                <td class="pro">Strong - Rate stays prominent</td>
+                                <td>Medium - All metrics equal</td>
+                                <td class="pro">Strong - Box vs cards hierarchy</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Implementation Complexity</strong></td>
+                                <td class="pro">Low - Modify existing box</td>
+                                <td>Medium - Create 2 new boxes</td>
+                                <td>Medium - Create new card component</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Verification Boxes</strong></td>
+                                <td class="pro">5 (unchanged)</td>
+                                <td class="con">7 (adds 2)</td>
+                                <td class="pro">5 (unchanged)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="alert alert-primary mt-4">
+                        <h5><i class="bi bi-lightbulb"></i> Recommendation Considerations</h5>
+                        <p><strong>Choose Layout A if:</strong></p>
+                        <ul>
+                            <li>You want minimal changes to existing design</li>
+                            <li>Screen space is at a premium</li>
+                            <li>Users expect all participation data together</li>
+                        </ul>
+
+                        <p class="mt-3"><strong>Choose Layout B if:</strong></p>
+                        <ul>
+                            <li>You want to emphasize all three participation metrics equally</li>
+                            <li>You have horizontal screen space available</li>
+                            <li>Visual separation is more important than compactness</li>
+                        </ul>
+
+                        <p class="mt-3"><strong>Choose Layout C if:</strong></p>
+                        <ul>
+                            <li>You want to preserve the current participation box exactly as-is</li>
+                            <li>You plan to add more supplementary metrics in the future</li>
+                            <li>You like the idea of a visual hierarchy (main boxes → detail cards)</li>
+                            <li>You want flexibility to show/hide enhanced metrics easily</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

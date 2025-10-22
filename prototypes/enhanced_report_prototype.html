@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Report Prototype - Q21 Minutes Integrity Check</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Report Header */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .report-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #212529;
+            margin: 0;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Analysis Section */
+        .report-analysis {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid #5a67d8;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .report-analysis summary {
+            padding: 12px 20px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            color: white;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .report-analysis summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .report-analysis summary::before {
+            content: "▼";
+            transition: transform 0.3s;
+        }
+
+        .report-analysis:not([open]) summary::before {
+            transform: rotate(-90deg);
+        }
+
+        .report-analysis summary:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .analysis-body {
+            padding: 20px;
+            background-color: white;
+        }
+
+        .analysis-summary-box {
+            padding: 15px;
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .analysis-summary-box h6 {
+            margin: 0 0 10px 0;
+            color: #155724;
+            font-weight: 600;
+        }
+
+        .analysis-summary-box p {
+            margin: 0;
+            color: #155724;
+        }
+
+        .analysis-breakdown {
+            margin-bottom: 20px;
+        }
+
+        .breakdown-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breakdown-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+
+        .breakdown-item-header {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breakdown-minutes {
+            font-size: 1.1rem;
+            color: #d39e00;
+        }
+
+        .breakdown-explanation {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .top-contributors {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .top-contributors-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .top-contributors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .top-contributors li {
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .breakdown-total {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #155724;
+        }
+
+        .analysis-insights {
+            padding: 15px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+
+        .analysis-insights h6 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analysis-insights ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .analysis-insights li {
+            color: #856404;
+            margin-bottom: 5px;
+        }
+
+        /* Report Information Section */
+        .report-metadata {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .report-metadata summary {
+            padding: 12px 20px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            background-color: #e9ecef;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .report-metadata summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .report-metadata summary::before {
+            content: "▶";
+            transition: transform 0.3s;
+        }
+
+        .report-metadata[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .report-metadata summary:hover {
+            background-color: #dee2e6;
+        }
+
+        .metadata-body {
+            padding: 20px;
+        }
+
+        .metadata-section {
+            margin-bottom: 20px;
+        }
+
+        .metadata-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .metadata-section h6 {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .metadata-section p {
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .column-descriptions {
+            margin: 0;
+        }
+
+        .column-descriptions dt {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #007bff;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #e7f1ff;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .column-descriptions dd {
+            margin-left: 20px;
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+
+        /* Results Section */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .results-count {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        /* Table Styling */
+        .results-table {
+            margin-bottom: 0;
+        }
+
+        .results-table thead {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .results-table thead th {
+            font-weight: 600;
+            padding: 12px;
+            border: none;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .results-table tbody td {
+            padding: 10px 12px;
+            vertical-align: middle;
+        }
+
+        .issue-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-cap-only {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-mismatch {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-both {
+            background-color: #e7d6ff;
+            color: #5a1a8a;
+        }
+
+        .difference-positive {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .difference-negative {
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .report-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .report-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Report Header -->
+        <div class="report-header">
+            <h1 class="report-title">
+                <i class="fas fa-chart-line"></i> Q21: Minutes Integrity Check
+            </h1>
+            <div class="report-actions">
+                <button class="btn btn-primary btn-action" onclick="copyToClipboard()">
+                    <i class="bi bi-clipboard"></i> Copy to Clipboard
+                </button>
+                <button class="btn btn-success btn-action" onclick="exportCSV()">
+                    <i class="bi bi-download"></i> Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Analysis Section (Expanded by Default) -->
+        <details class="report-analysis" open>
+            <summary>
+                <i class="fas fa-chart-line"></i> Analysis
+            </summary>
+            <div class="analysis-body">
+                <!-- Summary -->
+                <div class="analysis-summary-box">
+                    <h6><i class="fas fa-info-circle"></i> Summary</h6>
+                    <p>The 752-minute discrepancy between Daily_Logs (61,946) and Reader_Cumulative (62,698) consists of two issues:</p>
+                </div>
+
+                <!-- Breakdown -->
+                <div class="analysis-breakdown">
+                    <div class="breakdown-title">
+                        <i class="fas fa-chart-pie"></i> Breakdown
+                    </div>
+
+                    <!-- Issue 1: 120-Minute Cap -->
+                    <div class="breakdown-item">
+                        <div class="breakdown-item-header">
+                            <span>1. 120-Minute Daily Cap Issue</span>
+                            <span class="breakdown-minutes">242 minutes</span>
+                        </div>
+                        <p class="breakdown-explanation">
+                            9 students exceeded 120 minutes on specific days. Daily_Logs caps at 120/day when totaling,
+                            but Reader_Cumulative contains uncapped values.
+                        </p>
+                        <div class="top-contributors">
+                            <div class="top-contributors-title">
+                                <i class="fas fa-trophy"></i> Top Contributors:
+                            </div>
+                            <ul>
+                                <li>Noah Saldivar Hughes: 75 minutes</li>
+                                <li>Hansen Lawrence: 52 minutes</li>
+                                <li>Alice Knight: 45 minutes</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Issue 2: Data Mismatch -->
+                    <div class="breakdown-item">
+                        <div class="breakdown-item-header">
+                            <span>2. Data Mismatch Between Tables</span>
+                            <span class="breakdown-minutes">510 minutes</span>
+                        </div>
+                        <p class="breakdown-explanation">
+                            11 students have different values in the two tables, suggesting the download files contained
+                            different data (possibly downloaded at different times).
+                        </p>
+                        <div class="top-contributors">
+                            <div class="top-contributors-title">
+                                <i class="fas fa-trophy"></i> Top Contributors:
+                            </div>
+                            <ul>
+                                <li>Fenton Harper: +120 minutes</li>
+                                <li>Alex Terry: +120 minutes</li>
+                                <li>Loretta Harper: +120 minutes</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="breakdown-total">
+                        <i class="fas fa-equals"></i> TOTAL DISCREPANCY: 242 + 510 = 752 minutes ✓
+                    </div>
+                </div>
+
+                <!-- Key Insights -->
+                <div class="analysis-insights">
+                    <h6>
+                        <i class="fas fa-lightbulb"></i> Key Insights & Recommendations
+                    </h6>
+                    <ul>
+                        <li>9 students exceeded the 120-minute daily cap (affecting totals calculation)</li>
+                        <li>11 students have data mismatches between tables (data sync issue)</li>
+                        <li>Top discrepancy: Noah Saldivar Hughes (75 minutes over cap on single day)</li>
+                        <li><strong>Recommendation:</strong> Re-download Reader_Cumulative file to sync data</li>
+                        <li><strong>Recommendation:</strong> Ensure 120-minute cap is applied consistently to both tables</li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+
+        <!-- Report Information Section (Collapsed by Default) -->
+        <details class="report-metadata">
+            <summary>
+                <i class="fas fa-info-circle"></i> Report Information
+            </summary>
+            <div class="metadata-body">
+                <!-- Description -->
+                <div class="metadata-section">
+                    <h6>Description</h6>
+                    <p>
+                        Verify that the sum of daily minutes from Daily_Logs matches the cumulative minutes
+                        stored in Reader_Cumulative. This report identifies discrepancies and their root causes.
+                    </p>
+                </div>
+
+                <!-- Source Tables -->
+                <div class="metadata-section">
+                    <h6>Source Tables</h6>
+                    <p><strong>Primary:</strong> Daily_Logs, Reader_Cumulative</p>
+                    <p><strong>Reference:</strong> Roster</p>
+                    <p><em>Note: Compares SUM(Daily_Logs.minutes_read) vs Reader_Cumulative.cumulative_minutes for each student</em></p>
+                </div>
+
+                <!-- Column Descriptions -->
+                <div class="metadata-section">
+                    <h6>Column Descriptions</h6>
+                    <dl class="column-descriptions">
+                        <dt>student_name</dt>
+                        <dd>Student's full name from Roster table</dd>
+
+                        <dt>team_name</dt>
+                        <dd>Student's team assignment (Kitsko or Staub)</dd>
+
+                        <dt>class_name</dt>
+                        <dd>Student's class/teacher name</dd>
+
+                        <dt>daily_minutes_sum</dt>
+                        <dd>Total minutes from Daily_Logs table (uncapped actual values)</dd>
+
+                        <dt>cumulative_minutes</dt>
+                        <dd>Total minutes from Reader_Cumulative download file</dd>
+
+                        <dt>difference</dt>
+                        <dd>Cumulative minus Daily (positive = Cumulative is higher, negative = Daily is higher)</dd>
+
+                        <dt>cap_exceeded</dt>
+                        <dd>Minutes lost due to 120-minute daily cap (0 if student never exceeded cap)</dd>
+
+                        <dt>issue_type</dt>
+                        <dd>
+                            <strong>CAP_ONLY:</strong> Student exceeded 120-min cap (affects totals but data matches)<br>
+                            <strong>DATA_MISMATCH:</strong> Different values in the two tables (data sync issue)<br>
+                            <strong>BOTH:</strong> Student has both issues
+                        </dd>
+                    </dl>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="metadata-section">
+                    <h6>Sort Order</h6>
+                    <p>Results sorted by: <code>ABS(difference) DESC, student_name ASC</code></p>
+                    <p>This shows students with the largest discrepancies first.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- Results Section -->
+        <div class="results-header">
+            <span class="results-count">
+                <i class="fas fa-table"></i> Results: 20 students with discrepancies
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover results-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Team</th>
+                        <th>Class</th>
+                        <th>Daily Logs</th>
+                        <th>Cumulative</th>
+                        <th>Difference</th>
+                        <th>Cap Exceeded</th>
+                        <th>Issue Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Fenton Harper</td>
+                        <td>Kitsko</td>
+                        <td>Rice</td>
+                        <td>720</td>
+                        <td>840</td>
+                        <td class="difference-positive">+120</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">DATA_MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Alex Terry</td>
+                        <td>Staub</td>
+                        <td>Richards</td>
+                        <td>120</td>
+                        <td>240</td>
+                        <td class="difference-positive">+120</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">DATA_MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Loretta Harper</td>
+                        <td>Kitsko</td>
+                        <td>Price</td>
+                        <td>720</td>
+                        <td>840</td>
+                        <td class="difference-positive">+120</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">DATA_MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Asra Henry</td>
+                        <td>Kitsko</td>
+                        <td>Reed</td>
+                        <td>150</td>
+                        <td>240</td>
+                        <td class="difference-positive">+90</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">DATA_MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Noah Saldivar Hughes</td>
+                        <td>Staub</td>
+                        <td>Hansen</td>
+                        <td>655</td>
+                        <td>330</td>
+                        <td class="difference-negative">-325</td>
+                        <td>75</td>
+                        <td><span class="issue-badge badge-both">BOTH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Hansen Lawrence</td>
+                        <td>Kitsko</td>
+                        <td>Richardson</td>
+                        <td>462</td>
+                        <td>462</td>
+                        <td>0</td>
+                        <td>52</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Alice Knight</td>
+                        <td>Staub</td>
+                        <td>Pierce</td>
+                        <td>525</td>
+                        <td>525</td>
+                        <td>0</td>
+                        <td>45</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <tr>
+                        <td>Layla Lawrence</td>
+                        <td>Kitsko</td>
+                        <td>Spencer AM</td>
+                        <td>165</td>
+                        <td>225</td>
+                        <td class="difference-positive">+60</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">DATA_MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Chloe Hunter</td>
+                        <td>Staub</td>
+                        <td>Stone</td>
+                        <td>100</td>
+                        <td>140</td>
+                        <td class="difference-positive">+40</td>
+                        <td>0</td>
+                        <td><span class="issue-badge badge-mismatch">DATA_MISMATCH</span></td>
+                    </tr>
+                    <tr>
+                        <td>Peter Holmes</td>
+                        <td>Kitsko</td>
+                        <td>Porter</td>
+                        <td>435</td>
+                        <td>435</td>
+                        <td>0</td>
+                        <td>30</td>
+                        <td><span class="issue-badge badge-cap-only">CAP_ONLY</span></td>
+                    </tr>
+                    <!-- Additional rows would continue... -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Toast Container for notifications -->
+    <div class="toast-container"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Copy to Clipboard functionality
+        function copyToClipboard() {
+            const table = document.querySelector('.results-table');
+            let text = 'Student Name\tTeam\tClass\tDaily Logs\tCumulative\tDifference\tCap Exceeded\tIssue Type\n';
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim()).join('\t');
+                text += rowData + '\n';
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Success!', 'Table data copied to clipboard', 'success');
+            }).catch(err => {
+                showToast('Error', 'Failed to copy to clipboard', 'danger');
+            });
+        }
+
+        // Export CSV functionality
+        function exportCSV() {
+            const table = document.querySelector('.results-table');
+            let csv = 'Student Name,Team,Class,Daily Logs,Cumulative,Difference,Cap Exceeded,Issue Type\n';
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => {
+                    let text = cell.textContent.trim();
+                    // Escape quotes and wrap in quotes if contains comma
+                    if (text.includes(',') || text.includes('"')) {
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                    }
+                    return text;
+                }).join(',');
+                csv += rowData + '\n';
+            });
+
+            // Create download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'q21_minutes_integrity_check_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showToast('Success!', 'Report exported as CSV', 'success');
+        }
+
+        // Toast notification
+        function showToast(title, message, type) {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}</strong><br>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            toast.show();
+
+            // Remove after hiding
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+    </script>
+</body>
+</html>

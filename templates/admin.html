@@ -1,0 +1,1134 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Read-a-Thon System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-gear-fill"></i> Administration
+        </h1>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
+            <i class="bi bi-file-text"></i> Reports
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="actions-tab" data-bs-toggle="tab" data-bs-target="#actions" type="button" role="tab">
+            <i class="bi bi-lightning-fill"></i> Actions
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="database-tab" data-bs-toggle="tab" data-bs-target="#database" type="button" role="tab">
+            <i class="bi bi-database"></i> Database
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab">
+            <i class="bi bi-trash"></i> Data Management
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="adminTabContent">
+
+    <!-- ========== REPORTS TAB ========== -->
+    <div class="tab-pane fade show active" id="reports" role="tabpanel">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Admin Reports</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for report in reports %}
+                        <a href="#" class="list-group-item list-group-item-action report-link" data-report-id="{{ report.id }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ report.name }}</h6>
+                                <small class="badge bg-secondary">{{ report.type }}</small>
+                            </div>
+                            <small class="text-muted">{{ report.description }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div id="reportResults">
+                    <div class="card">
+                        <div class="card-body text-center text-muted py-5">
+                            <i class="bi bi-shield-lock" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Select an admin report from the list to get started</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== ACTIONS TAB ========== -->
+    <div class="tab-pane fade" id="actions" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Export All Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Export all database tables and reports to a ZIP file for backup or analysis.
+                        </p>
+                        <div class="d-grid">
+                            <button class="btn btn-lg btn-primary" onclick="exportAllData()">
+                                <i class="bi bi-file-earmark-zip"></i> Export All Data (ZIP)
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Upload_History, and all admin reports
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 bg-light">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Additional administrative actions</p>
+                        <div class="d-grid gap-2">
+                            <a href="/upload" class="btn btn-outline-success">
+                                <i class="bi bi-upload"></i> Upload Data
+                            </a>
+                            <a href="/reports" class="btn btn-outline-info">
+                                <i class="bi bi-graph-up"></i> View Reports
+                            </a>
+                            <a href="/workflows" class="btn btn-outline-primary">
+                                <i class="bi bi-diagram-3"></i> Run Workflows
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== DATABASE TAB ========== -->
+    <div class="tab-pane fade" id="database" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-database"></i> Database Management
+                    </h5>
+                    <button class="btn btn-sm btn-success" onclick="showRegisterForm()">
+                        <i class="bi bi-plus-circle"></i> Register New Database
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Manage multiple year databases for read-a-thon events. Register, activate, and maintain databases for different years or events.
+                </p>
+
+                <!-- Register Form (hidden by default) -->
+                <div id="registerForm" class="alert alert-light border" style="display: none;">
+                    <h6 class="mb-3"><i class="bi bi-plus-circle"></i> Register New Database</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small">Year *</label>
+                            <input type="number" class="form-control form-control-sm" id="newYear" placeholder="2024" min="2000" max="2100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Database Filename *</label>
+                            <input type="text" class="form-control form-control-sm" id="newFilename" placeholder="readathon_2024.db">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Description</label>
+                            <input type="text" class="form-control form-control-sm" id="newDescription" placeholder="2024 Read-a-Thon">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-success me-2" onclick="submitRegistration()">
+                            <i class="bi bi-check"></i> Register
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="hideRegisterForm()">
+                            <i class="bi bi-x"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Database List -->
+                <div id="databaseList">
+                    <div class="text-center text-muted py-5">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="small mb-0 mt-2">Loading databases...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== DATA MANAGEMENT TAB ========== -->
+    <div class="tab-pane fade" id="data" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-trash"></i> Clear Data Tables
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning border-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <strong>Warning:</strong> Clearing tables permanently deletes data. This action cannot be undone!
+                        </div>
+
+                        <p class="text-muted mb-4">
+                            Selectively clear records from transactional data tables. Use this to reset data for a new event or clean up test data.
+                        </p>
+
+                        <!-- Table Selection Cards -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearUploadHistory" value="Upload_History">
+                                            <label class="form-check-label" for="clearUploadHistory">
+                                                <h6 class="mb-1">Upload_History</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear all upload history audit records</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countUploadHistory">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearReaderCumulative" value="Reader_Cumulative">
+                                            <label class="form-check-label" for="clearReaderCumulative">
+                                                <h6 class="mb-1">Reader_Cumulative</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear all cumulative fundraising data</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countReaderCumulative">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearDailyLogs" value="Daily_Logs">
+                                            <label class="form-check-label" for="clearDailyLogs">
+                                                <h6 class="mb-1">Daily_Logs</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear all daily reading minutes data</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countDailyLogs">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-secondary" onclick="selectAllTables()">
+                                    <i class="bi bi-check-square"></i> Select All
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="deselectAllTables()">
+                                    <i class="bi bi-square"></i> Deselect All
+                                </button>
+                            </div>
+
+                            <button id="clearTablesBtn" class="btn btn-danger btn-lg" onclick="clearSelectedTables()" disabled>
+                                <i class="bi bi-trash"></i> Clear Selected Tables
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentReportId = null;
+
+// Report link click handler
+document.querySelectorAll('.report-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentReportId = this.dataset.reportId;
+
+        // Highlight selected report
+        document.querySelectorAll('.report-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+
+        // Run report immediately
+        runCurrentReport();
+    });
+});
+
+async function runCurrentReport() {
+    if (!currentReportId) return;
+
+    const url = `/api/report/${currentReportId}`;
+
+    // Show loading
+    document.getElementById('reportResults').innerHTML = `
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Generating report...</p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        displayReport(result);
+    } catch (error) {
+        document.getElementById('reportResults').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayReport(report) {
+    // Build Export/Copy buttons
+    const exportUrl = `/api/export/${currentReportId}`;
+
+    const headerButtons = `
+        <button class="btn btn-sm btn-light" onclick="copyTableToClipboard('reportTable')">
+            <i class="bi bi-clipboard"></i> Copy
+        </button>
+        <a href="${exportUrl}" class="btn btn-sm btn-success ms-2" download>
+            <i class="bi bi-download"></i> Export
+        </a>
+    `;
+
+    // Build description + last updated section
+    const lastUpdated = report.last_updated || 'Not available';
+    const descriptionHtml = `
+        <div class="report-description">
+            <div><strong>Description:</strong> ${report.description}</div>
+            <div class="last-updated">
+                <strong>Last Updated:</strong> ${lastUpdated}
+            </div>
+        </div>
+    `;
+
+    // Build Report Information section (metadata)
+    let metadataHtml = '';
+    if (report.metadata) {
+        const sourceTablesHtml = report.metadata.source_tables ?
+            `<div class="metadata-item">
+                <strong>Source Tables:</strong>
+                <span class="value">${report.metadata.source_tables}</span>
+            </div>` : '';
+
+        const sortHtml = report.sort ?
+            `<div class="metadata-item">
+                <strong>Sort Order:</strong>
+                <span class="value">${report.sort}</span>
+            </div>` : '';
+
+        const noteHtml = report.note ?
+            `<div class="metadata-item">
+                <strong>Note:</strong>
+                <span class="value">${report.note}</span>
+            </div>` : '';
+
+        // Build columns subsection
+        let columnsHtml = '';
+        if (report.metadata.columns && report.columns && report.columns.length > 0) {
+            const columnCount = report.columns.length;
+            // Use report.columns array to preserve order, convert to uppercase for display
+            const columnsBody = report.columns.map(col => {
+                const meta = report.metadata.columns[col];
+                if (!meta) return ''; // Skip if no metadata
+                const displayCol = col.toUpperCase().replace(/_/g, ' ');
+                const mapping = meta.source ? `${displayCol} ← ${meta.source}${meta.formula ? ' ' + meta.formula : ''}` : displayCol;
+                return `
+                    <div class="column-item">
+                        <span class="column-mapping">• ${mapping}:</span>
+                        <span class="column-description">${meta.description || 'No description available'}</span>
+                    </div>
+                `;
+            }).filter(html => html).join('');
+
+            columnsHtml = `
+                <details class="nested-subsection">
+                    <summary>
+                        <i class="bi bi-columns"></i> Columns & Data Sources <span class="text-muted">(${columnCount} columns)</span>
+                    </summary>
+                    <div class="subsection-body">
+                        ${columnsBody}
+                        <small class="text-muted" style="margin-top: 8px; display: block;">
+                            <i class="bi bi-info-circle"></i> Tip: Hover over column headers in the table below for quick reference
+                        </small>
+                    </div>
+                </details>
+            `;
+        }
+
+        // Build terms subsection
+        let termsHtml = '';
+        if (report.metadata.terms && Object.keys(report.metadata.terms).length > 0) {
+            const termCount = Object.keys(report.metadata.terms).length;
+            const termsBody = Object.entries(report.metadata.terms).map(([term, def]) => {
+                const seeAlso = def.see_also ? `<span class="see-also">See also: ${def.see_also.join(', ')}</span>` : '';
+                return `
+                    <div class="term-item">
+                        <span class="term-name">${term}:</span>
+                        <span class="term-definition">${def.definition || def}</span>
+                        ${seeAlso}
+                    </div>
+                `;
+            }).join('');
+
+            termsHtml = `
+                <details class="nested-subsection">
+                    <summary>
+                        <i class="bi bi-book"></i> Key Terms & Definitions <span class="text-muted">(${termCount} terms)</span>
+                    </summary>
+                    <div class="subsection-body">
+                        ${termsBody}
+                    </div>
+                </details>
+            `;
+        }
+
+        metadataHtml = `
+            <details class="report-section report-metadata">
+                <summary>
+                    <i class="bi bi-info-circle"></i> Report Information
+                </summary>
+                <div class="metadata-body">
+                    ${sourceTablesHtml}
+                    ${noteHtml}
+                    ${sortHtml}
+                    ${columnsHtml}
+                    ${termsHtml}
+                </div>
+            </details>
+        `;
+    }
+
+    // Build Analysis section
+    let analysisHtml = '';
+    if (report.analysis) {
+        const summaryHtml = report.analysis.summary ?
+            `<div class="analysis-summary-box">
+                <strong>Summary:</strong> ${report.analysis.summary}
+            </div>` : '';
+
+        const breakdownHtml = report.analysis.breakdown && report.analysis.breakdown.length > 0 ?
+            `<div class="breakdown-compact">
+                ${report.analysis.breakdown.map(item => `
+                    <div class="breakdown-card">
+                        <div class="breakdown-card-header">
+                            <span>${item.issue}</span>
+                            <span class="breakdown-minutes">${item.minutes || item.amount} ${item.unit || 'min'}</span>
+                        </div>
+                        <div class="breakdown-text">${item.explanation}</div>
+                        ${item.top_contributors ? `
+                            <div class="contributors-mini">
+                                <strong>Top:</strong>
+                                <ul>
+                                    ${item.top_contributors.slice(0, 3).map(c =>
+                                        `<li>${c.student || c.name}: ${c.amount} ${item.unit || 'min'}</li>`
+                                    ).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>` : '';
+
+        const totalHtml = report.analysis.metrics && report.analysis.metrics.total_discrepancy !== undefined ?
+            `<div class="breakdown-total">
+                <i class="bi bi-equals"></i> TOTAL: ${report.analysis.metrics.total_discrepancy} ${report.analysis.metrics.unit || 'minutes'} ✓
+            </div>` : '';
+
+        const insightsHtml = report.analysis.insights && report.analysis.insights.length > 0 ?
+            `<div class="insights-compact">
+                <strong><i class="bi bi-lightbulb"></i> Key Findings:</strong>
+                <ul>
+                    ${report.analysis.insights.map(insight => `<li>${insight}</li>`).join('')}
+                </ul>
+            </div>` : '';
+
+        analysisHtml = `
+            <details class="report-section report-analysis">
+                <summary>
+                    <i class="bi bi-pie-chart"></i> Analysis
+                </summary>
+                <div class="analysis-body">
+                    <div class="analysis-compact">
+                        ${summaryHtml}
+                        ${breakdownHtml}
+                        ${totalHtml}
+                        ${insightsHtml}
+                    </div>
+                </div>
+            </details>
+        `;
+    }
+
+    // Build table
+    let tableHtml = '';
+    if (report.data && report.data.length > 0) {
+        // Get tooltips from metadata if available
+        const getTooltip = (col) => {
+            if (report.metadata && report.metadata.columns && report.metadata.columns[col]) {
+                return report.metadata.columns[col].description || '';
+            }
+            return '';
+        };
+
+        tableHtml = `
+            <div class="table-responsive">
+                <table class="table table-striped table-hover report-table" id="reportTable">
+                    <thead class="table-dark">
+                        <tr>
+                            ${report.columns.map((col, idx) => {
+                                const tooltip = getTooltip(col);
+                                const titleAttr = tooltip ? `title="${tooltip.replace(/"/g, '&quot;')}"` : '';
+                                return `<th class="sortable-header" onclick="sortTable(${idx})" ${titleAttr}>
+                                    ${col.replace(/_/g, ' ').toUpperCase()}
+                                    ${tooltip ? '<i class="bi bi-info-circle tooltip-icon"></i>' : ''}
+                                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                                </th>`;
+                            }).join('')}
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        ${report.data.map(row => `
+                            <tr>
+                                ${report.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        tableHtml = '<div class="alert alert-info">No data or no issues found</div>';
+    }
+
+    // Results header
+    const resultCount = report.data ? report.data.length : 0;
+    const resultsHeader = `
+        <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #343a40; color: white; font-weight: 600;">
+            <span>
+                <i class="bi bi-table"></i> Results: ${resultCount} ${resultCount === 1 ? 'row' : 'rows'}
+            </span>
+        </div>
+    `;
+
+    // Render complete report
+    document.getElementById('reportResults').innerHTML = `
+        <div class="card" style="border-radius: 8px; overflow: hidden;">
+            <div class="card-header bg-danger text-white" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="mb-0"><i class="bi bi-shield-lock"></i> ${report.title}</h5>
+                <div>
+                    ${headerButtons}
+                </div>
+            </div>
+            ${descriptionHtml}
+            ${metadataHtml}
+            ${analysisHtml}
+            ${resultsHeader}
+            <div class="p-0">
+                ${tableHtml}
+            </div>
+        </div>
+    `;
+
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Show/hide floating analysis button
+    const floatingBtn = document.getElementById('floatingAnalysisBtn');
+    if (report.analysis) {
+        if (!floatingBtn) {
+            // Create button if it doesn't exist
+            const btn = document.createElement('button');
+            btn.id = 'floatingAnalysisBtn';
+            btn.className = 'floating-analysis-btn';
+            btn.innerHTML = '📊 Analysis';
+            btn.onclick = function() {
+                showAnalysisModal(report.analysis);
+            };
+            document.body.appendChild(btn);
+        }
+        document.getElementById('floatingAnalysisBtn').style.display = 'block';
+    } else {
+        if (floatingBtn) {
+            floatingBtn.style.display = 'none';
+        }
+    }
+}
+
+function showAnalysisModal(analysis) {
+    // Get modal elements
+    const modal = new bootstrap.Modal(document.getElementById('analysisModal'));
+    const summaryDiv = document.getElementById('analysisSummary');
+    const breakdownDiv = document.getElementById('analysisBreakdown');
+    const totalDiv = document.getElementById('analysisTotal');
+    const insightsDiv = document.getElementById('analysisInsights');
+    const loadingDiv = document.getElementById('analysisLoading');
+    const errorDiv = document.getElementById('analysisError');
+
+    // Hide loading and error states
+    loadingDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    // Populate summary
+    if (analysis.summary) {
+        summaryDiv.innerHTML = `<strong>Summary:</strong> ${analysis.summary}`;
+        summaryDiv.style.display = 'block';
+    } else {
+        summaryDiv.style.display = 'none';
+    }
+
+    // Populate breakdown cards
+    if (analysis.breakdown && analysis.breakdown.length > 0) {
+        breakdownDiv.innerHTML = analysis.breakdown.map(item => `
+            <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                    <span>${item.issue}</span>
+                    <span class="breakdown-minutes">${item.minutes || item.amount} ${item.unit || 'min'}</span>
+                </div>
+                <div class="breakdown-text">${item.explanation}</div>
+                ${item.top_contributors ? `
+                    <div class="contributors-mini">
+                        <strong>Top:</strong>
+                        <ul>
+                            ${item.top_contributors.slice(0, 3).map(c =>
+                                `<li>${c.student || c.name}: ${c.amount} ${item.unit || 'min'}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+        breakdownDiv.style.display = 'flex';
+    } else {
+        breakdownDiv.style.display = 'none';
+    }
+
+    // Populate total
+    if (analysis.metrics && analysis.metrics.total_discrepancy !== undefined) {
+        totalDiv.innerHTML = `<i class="bi bi-equals"></i> TOTAL: ${analysis.metrics.total_discrepancy} ${analysis.metrics.unit || 'minutes'} ✓`;
+        totalDiv.style.display = 'block';
+    } else {
+        totalDiv.style.display = 'none';
+    }
+
+    // Populate insights
+    if (analysis.insights && analysis.insights.length > 0) {
+        insightsDiv.innerHTML = `
+            <strong><i class="bi bi-lightbulb"></i> Key Findings:</strong>
+            <ul>
+                ${analysis.insights.map(insight => `<li>${insight}</li>`).join('')}
+            </ul>
+        `;
+        insightsDiv.style.display = 'block';
+    } else {
+        insightsDiv.style.display = 'none';
+    }
+
+    // Show the modal
+    modal.show();
+}
+
+let sortDirections = {}; // Track sort direction for each column
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('reportTable');
+    const tbody = document.getElementById('reportTableBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    // Toggle sort direction
+    if (sortDirections[columnIndex] === undefined || sortDirections[columnIndex] === 'desc') {
+        sortDirections[columnIndex] = 'asc';
+    } else {
+        sortDirections[columnIndex] = 'desc';
+    }
+
+    const isAscending = sortDirections[columnIndex] === 'asc';
+
+    // Sort rows
+    rows.sort((a, b) => {
+        const aValue = a.cells[columnIndex].textContent.trim();
+        const bValue = b.cells[columnIndex].textContent.trim();
+
+        // Try to parse as number
+        const aNum = parseFloat(aValue.replace(/[$,%]/g, ''));
+        const bNum = parseFloat(bValue.replace(/[$,%]/g, ''));
+
+        // If both are numbers, sort numerically
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return isAscending ? aNum - bNum : bNum - aNum;
+        }
+
+        // Otherwise sort as strings
+        return isAscending ?
+            aValue.localeCompare(bValue) :
+            bValue.localeCompare(aValue);
+    });
+
+    // Clear and re-append sorted rows
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update header icons
+    const headers = table.querySelectorAll('th.sortable-header');
+    headers.forEach((header, idx) => {
+        const icon = header.querySelector('i');
+        if (idx === columnIndex) {
+            icon.className = isAscending ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+        } else {
+            icon.className = 'bi bi-arrow-down-up';
+        }
+    });
+}
+
+async function exportAllData() {
+    // Show loading state
+    const btn = event.target;
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating ZIP...';
+
+    try {
+        const response = await fetch('/api/export_all');
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+
+        // Get the blob and download it
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        // Show success message
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show copy-success';
+        alert.innerHTML = `
+            <i class="bi bi-check-circle"></i> Export complete!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    } catch (error) {
+        alert('Export failed: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+}
+
+// ========== Database Management Functions ==========
+
+// Load databases and table counts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadDatabases();
+    loadTableCounts();
+});
+
+async function loadDatabases() {
+    try {
+        const response = await fetch('/api/databases');
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        displayDatabases(result.databases);
+    } catch (error) {
+        document.getElementById('databaseList').innerHTML = `
+            <div class="alert alert-danger alert-sm">
+                <i class="bi bi-exclamation-triangle"></i> Error loading databases: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayDatabases(databases) {
+    const container = document.getElementById('databaseList');
+
+    if (databases.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-database" style="font-size: 3rem;"></i>
+                <p class="mb-0 mt-3">No databases registered yet</p>
+                <p class="small text-muted">Click "Register New Database" to get started</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="row g-3">';
+
+    databases.forEach(db => {
+        const isActive = db.is_active === 1;
+        const borderClass = isActive ? 'border-success' : 'border-secondary';
+        const activeBadge = isActive ? '<span class="badge bg-success">ACTIVE</span>' : '<span class="badge bg-secondary">INACTIVE</span>';
+
+        html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 ${borderClass}" style="border-width: 2px;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar"></i> ${db.year}
+                            </h5>
+                            ${activeBadge}
+                        </div>
+                        <p class="small text-muted mb-2">${db.description || 'No description'}</p>
+                        <p class="small text-muted mb-3">
+                            <i class="bi bi-file-earmark-text"></i> ${db.db_filename}
+                        </p>
+                        <div class="row g-2 mb-3">
+                            <div class="col-4 text-center">
+                                <div class="small text-muted">Students</div>
+                                <strong>${db.student_count}</strong>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="small text-muted">Days</div>
+                                <strong>${db.total_days}</strong>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="small text-muted">Raised</div>
+                                <strong>$${db.total_donations.toFixed(0)}</strong>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-1">
+                            ${!isActive ? `<button class="btn btn-sm btn-success" onclick="activateDatabase(${db.year})">
+                                <i class="bi bi-check-circle"></i> Activate
+                            </button>` : ''}
+                            <button class="btn btn-sm btn-outline-primary" onclick="updateStats(${db.year})">
+                                <i class="bi bi-arrow-clockwise"></i> Update Stats
+                            </button>
+                            ${!isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteDatabase(${db.year})">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function showRegisterForm() {
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('newYear').value = '';
+    document.getElementById('newFilename').value = '';
+    document.getElementById('newDescription').value = '';
+    document.getElementById('newYear').focus();
+}
+
+function hideRegisterForm() {
+    document.getElementById('registerForm').style.display = 'none';
+}
+
+async function submitRegistration() {
+    const year = document.getElementById('newYear').value;
+    const filename = document.getElementById('newFilename').value;
+    const description = document.getElementById('newDescription').value;
+
+    if (!year || !filename) {
+        alert('Year and filename are required');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/databases/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                year: parseInt(year),
+                db_filename: filename,
+                description: description
+            })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        // Success - hide form and reload list
+        hideRegisterForm();
+        showSuccess(`Database for year ${year} registered successfully`);
+        loadDatabases();
+
+    } catch (error) {
+        alert('Registration failed: ' + error.message);
+    }
+}
+
+async function activateDatabase(year) {
+    if (!confirm(`Switch to database for year ${year}?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/databases/${year}/activate`, {
+            method: 'PUT'
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        showSuccess(`Database for year ${year} is now active`);
+        loadDatabases();
+
+    } catch (error) {
+        alert('Activation failed: ' + error.message);
+    }
+}
+
+async function updateStats(year) {
+    try {
+        const response = await fetch(`/api/databases/${year}/stats`, {
+            method: 'PUT'
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        showSuccess(`Stats updated for year ${year}: ${result.student_count} students, ${result.total_days} days, $${result.total_donations.toFixed(2)} donations`);
+        loadDatabases();
+
+    } catch (error) {
+        alert('Update failed: ' + error.message);
+    }
+}
+
+async function deleteDatabase(year) {
+    if (!confirm(`Delete database registration for year ${year}?\n\nThis will NOT delete the actual .db file, only the registration.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/databases/${year}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        showSuccess(`Database registration for year ${year} deleted`);
+        loadDatabases();
+
+    } catch (error) {
+        alert('Delete failed: ' + error.message);
+    }
+}
+
+function showSuccess(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show copy-success';
+    alert.innerHTML = `
+        <i class="bi bi-check-circle"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 3000);
+}
+
+// ========== Clear Data Tables Functions ==========
+
+// Load table record counts
+async function loadTableCounts() {
+    try {
+        const response = await fetch('/api/table_counts');
+        const result = await response.json();
+
+        if (result.success) {
+            document.getElementById('countUploadHistory').textContent = `${result.counts.Upload_History} records`;
+            document.getElementById('countReaderCumulative').textContent = `${result.counts.Reader_Cumulative} records`;
+            document.getElementById('countDailyLogs').textContent = `${result.counts.Daily_Logs} records`;
+        }
+    } catch (error) {
+        console.error('Error loading table counts:', error);
+    }
+}
+
+// Select all tables
+function selectAllTables() {
+    const checkboxes = document.querySelectorAll('.table-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    updateClearButton();
+}
+
+// Deselect all tables
+function deselectAllTables() {
+    const checkboxes = document.querySelectorAll('.table-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateClearButton();
+}
+
+// Update clear button state and text
+function updateClearButton() {
+    const checked = document.querySelectorAll('.table-checkbox:checked');
+    const btn = document.getElementById('clearTablesBtn');
+
+    if (checked.length > 0) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-trash"></i> Clear ${checked.length} Table${checked.length > 1 ? 's' : ''}`;
+    } else {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-trash"></i> Clear Selected Tables';
+    }
+}
+
+// Add event listeners to checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.table-checkbox');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateClearButton);
+    });
+});
+
+// Clear selected tables
+async function clearSelectedTables() {
+    const checkboxes = document.querySelectorAll('.table-checkbox:checked');
+    const tables = Array.from(checkboxes).map(cb => cb.value);
+
+    if (tables.length === 0) {
+        alert('Please select at least one table to clear.');
+        return;
+    }
+
+    // Get current counts for confirmation message
+    const counts = {};
+    for (const table of tables) {
+        const countSpan = document.getElementById(`count${table.replace('_', '')}`);
+        const match = countSpan.textContent.match(/(\d+) records?/);
+        counts[table] = match ? parseInt(match[1]) : 0;
+    }
+
+    // Build confirmation message
+    let confirmMsg = '⚠️ CLEAR DATA TABLES WARNING!\n\n';
+    confirmMsg += 'You are about to permanently delete:\n';
+    for (const table of tables) {
+        confirmMsg += `- ${table}: ${counts[table].toLocaleString()} records\n`;
+    }
+    confirmMsg += '\nThis action CANNOT be undone!\n\n';
+    confirmMsg += 'Are you sure you want to continue?';
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    // Disable button and show loading state
+    const btn = document.getElementById('clearTablesBtn');
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Clearing...';
+
+    try {
+        const response = await fetch('/api/clear_tables', {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tables: tables})
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Build success message
+            let successMsg = `✅ Successfully cleared ${tables.length} table${tables.length > 1 ? 's' : ''}!\n\n`;
+            for (const [table, count] of Object.entries(result.deleted)) {
+                successMsg += `${table}: ${count.toLocaleString()} records deleted\n`;
+            }
+            successMsg += `\nEnvironment: ${result.environment.toUpperCase()}`;
+
+            alert(successMsg);
+
+            // Reload table counts
+            loadTableCounts();
+
+            // Deselect all checkboxes
+            deselectAllTables();
+
+        } else {
+            alert(`❌ Clear Failed\n\n${result.error || 'Unknown error occurred'}`);
+        }
+    } catch (error) {
+        alert(`❌ Clear Failed\n\n${error.message}`);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+}
+</script>
+{% endblock %}

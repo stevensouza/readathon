@@ -1,0 +1,751 @@
+{% extends "base.html" %}
+
+{% block title %}School Overview - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* School Tab Specific Styles - Option J: Refined Zen */
+
+    /* Page Header with integrated filter */
+    .page-header-school {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 2rem;
+    }
+
+    .page-title-school {
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .filter-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .filter-inline label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .filter-inline select {
+        width: 240px;
+        font-size: 0.85rem;
+    }
+
+    .filter-note {
+        font-size: 0.7rem;
+        color: #6c757d;
+        font-style: italic;
+        white-space: nowrap;
+    }
+
+    /* Headline Banner */
+    .headline-banner {
+        background: #1e3a5f;
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .headline-metric {
+        text-align: center;
+        padding: 0.3rem 0.5rem;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .headline-metric:last-child {
+        border-right: none;
+    }
+
+    .headline-label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #17a2b8;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-subtitle {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.3;
+    }
+
+    /* Card Styles */
+    .zen-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-top: 4px solid #1e3a5f;
+        height: 100%;
+    }
+
+    .zen-card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #ecf0f1;
+    }
+
+    /* Team Cards */
+    .team-card {
+        padding: 1rem;
+        border-radius: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .team-card-staub {
+        background: #e3f2fd;
+        border-left: 4px solid #1e3a5f;
+    }
+
+    .team-card-kitsko {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .team-name {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .team-metric-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    .team-metric-label {
+        color: #7f8c8d;
+    }
+
+    .team-metric-value {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .team-lead {
+        text-align: center;
+        padding: 0.75rem;
+        margin-top: 1rem;
+        background: #d1ecf1;
+        border-radius: 0.3rem;
+        font-weight: 700;
+        color: #0c5460;
+    }
+
+    /* Top Performers */
+    .performer-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .performer-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .section-label {
+        font-size: 0.75rem;
+        color: #95a5a6;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+    }
+
+    .leader-card {
+        background: #e3f2fd;
+        border-left: 4px solid #1e3a5f;
+        padding: 0.75rem;
+        border-radius: 0.3rem;
+    }
+
+    .leader-name-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .leader-name {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .leader-meta {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+    }
+
+    .leader-value {
+        font-weight: 900;
+        color: #1e3a5f;
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    .tie-note {
+        font-size: 0.7rem;
+        color: #856404;
+        margin-top: 0.3rem;
+        font-style: italic;
+    }
+
+    /* Participation Table */
+    .participation-table {
+        font-size: 0.85rem;
+    }
+
+    .participation-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .participation-row:last-child {
+        border-bottom: none;
+        padding-top: 1rem;
+        border-top: 2px solid #bdc3c7;
+    }
+
+    .participation-label {
+        color: #7f8c8d;
+    }
+
+    .participation-value {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .participation-percent {
+        color: #95a5a6;
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+    }
+
+    /* Data Integrity Alert */
+    .alert-integrity {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-left: 6px solid #ff6b6b;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .alert-icon {
+        font-size: 1.5rem;
+    }
+
+    .alert-text h6 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .alert-text p {
+        font-size: 0.75rem;
+        color: #7f8c8d;
+        margin: 0.2rem 0 0 0;
+    }
+
+    /* Collapsible Footer */
+    .collapsible-footer {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .collapsible-header {
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .collapsible-header:hover {
+        background: #e9ecef;
+    }
+
+    .collapsible-content {
+        padding: 1rem;
+        display: none;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .collapsible-content.show {
+        display: block;
+    }
+
+    .data-source-item {
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    .data-source-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .data-source-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .data-source-value {
+        color: #6c757d;
+    }
+
+    /* Modal Styles */
+    .modal-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .data-info-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 0.3rem;
+        border: 1px solid #dee2e6;
+        background: white;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .data-info-btn:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
+    /* Filter Indicator Icon */
+    .filter-indicator {
+        font-size: 0.85rem;
+        color: #17a2b8;
+        cursor: help;
+        margin-left: 0.3rem;
+        transition: color 0.2s;
+        display: inline-block;
+    }
+
+    .filter-indicator:hover {
+        color: #138496;
+    }
+
+    /* In headline banner, use white for contrast */
+    .headline-banner .filter-indicator {
+        color: rgba(255,255,255,0.6);
+    }
+
+    .headline-banner .filter-indicator:hover {
+        color: rgba(255,255,255,0.95);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header with Integrated Filter -->
+<div class="page-header-school">
+    <h2 class="page-title-school">🏫 SCHOOL OVERVIEW</h2>
+
+    <div class="filter-inline">
+        <label for="dateFilter">📅 Filter Period:</label>
+        <select id="dateFilter" class="form-select form-select-sm" onchange="updateSchoolData()">
+            <option value="all" {% if request.args.get('date', 'all') == 'all' %}selected{% endif %}>Full Contest ({{ full_contest_range }})</option>
+            {% for date in dates|reverse %}
+            <option value="{{ date }}" {% if request.args.get('date', 'all') == date %}selected{% endif %}>{{ date }} (Day {{ loop.index }})</option>
+            {% endfor %}
+        </select>
+        <span class="filter-note">(auto-updates)</span>
+    </div>
+
+    <button class="data-info-btn" data-bs-toggle="modal" data-bs-target="#dataSourceModal">
+        <i class="bi bi-info-circle"></i> Data Info
+    </button>
+</div>
+
+<!-- Headline Banner -->
+<div class="headline-banner">
+    <div class="row align-items-center">
+        <div class="col headline-metric">
+            <div class="headline-label">📅 Campaign Day</div>
+            <div class="headline-value">{{ metrics.current_day }} of {{ metrics.total_days }}</div>
+            <div class="headline-subtitle">{{ metrics.campaign_date }}</div>
+        </div>
+        <div class="col headline-metric">
+            <div class="headline-label">💰 Fundraising</div>
+            <div class="headline-value">${{ "{:,.0f}".format(metrics.total_fundraising) }}</div>
+            <div class="headline-subtitle">{{ metrics.fundraising_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.0f}".format(metrics.fundraising_pct) }}%)</div>
+        </div>
+        <div class="col headline-metric">
+            <div class="headline-label">📚 Minutes Read{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
+            <div class="headline-value">{{ "{:,}".format(metrics.total_hours) }} hours</div>
+            <div class="headline-subtitle">({{ "{:,}".format(metrics.total_minutes) }} min)</div>
+        </div>
+        <div class="col headline-metric">
+            <div class="headline-label">👥 Participation{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
+            <div class="headline-value">{{ "{:.0f}".format(metrics.participation_pct) }}%</div>
+            <div class="headline-subtitle">{{ metrics.participating_students }} of {{ metrics.total_roster }}<br>Students</div>
+        </div>
+        <div class="col headline-metric">
+            <div class="headline-label">🎯 Goal Met (≥1 Day){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
+            <div class="headline-value">{{ "{:.0f}".format(metrics.goals_met_pct) }}%</div>
+            <div class="headline-subtitle">{{ metrics.goals_met_students }} of {{ metrics.total_roster }}<br>Students</div>
+        </div>
+    </div>
+</div>
+
+<!-- 3-Column Content Grid -->
+<div class="row g-3">
+
+    <!-- LEFT: Team Competition -->
+    <div class="col-md-4">
+        <div class="zen-card">
+            <h6 class="zen-card-title">⚔️ TEAM COMPETITION</h6>
+
+            <div class="team-card team-card-staub">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="team-name">🔵 TEAM STAUB</div>
+                    <span style="font-size: 0.75rem; color: #95a5a6;">{{ teams.staub.classes }} Classes</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Fundraising:</span>
+                    <span class="team-metric-value">${{ "{:,.0f}".format(teams.staub.fundraising) }}</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Reading (With Color):</span>
+                    <span class="team-metric-value">{{ teams.staub.hours_with_color }} hrs ({{ "{:,}".format(teams.staub.minutes_with_color) }} min)</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Avg. Participation (With Color):</span>
+                    <span class="team-metric-value">{{ "{:.1f}".format(teams.staub.participation_pct_with_color) }}% (+{{ teams.staub.color_bonus_points }} pts)</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Students:</span>
+                    <span class="team-metric-value">{{ teams.staub.students }}</span>
+                </div>
+            </div>
+
+            <div style="text-align: center; padding: 0.5rem 0; font-weight: 700; color: #95a5a6; font-size: 0.9rem;">
+                VS
+            </div>
+
+            <div class="team-card team-card-kitsko">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="team-name">🟡 TEAM KITSKO</div>
+                    <span style="font-size: 0.75rem; color: #95a5a6;">{{ teams.kitsko.classes }} Classes</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Fundraising:</span>
+                    <span class="team-metric-value">${{ "{:,.0f}".format(teams.kitsko.fundraising) }}</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Reading (With Color):</span>
+                    <span class="team-metric-value">{{ teams.kitsko.hours_with_color }} hrs ({{ "{:,}".format(teams.kitsko.minutes_with_color) }} min)</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Avg. Participation (With Color):</span>
+                    <span class="team-metric-value">{{ "{:.1f}".format(teams.kitsko.participation_pct_with_color) }}% (+{{ teams.kitsko.color_bonus_points }} pts)</span>
+                </div>
+                <div class="team-metric-row">
+                    <span class="team-metric-label">Students:</span>
+                    <span class="team-metric-value">{{ teams.kitsko.students }}</span>
+                </div>
+            </div>
+
+            <div class="team-lead">
+                <div style="font-weight: 700; margin-bottom: 0.5rem; text-align: center; font-size: 0.85rem;">🏆 CURRENT LEADERS</div>
+                <div style="margin-bottom: 0.3rem; font-size: 0.85rem;">
+                    <span style="color: rgba(0,0,0,0.6);">Fundraising:</span> <span style="font-weight: 700;">{{ teams.fundraising_leader }}</span> (+${{ "{:,.0f}".format(teams.fundraising_gap) }})
+                </div>
+                <div style="margin-bottom: 0.3rem; font-size: 0.85rem;">
+                    <span style="color: rgba(0,0,0,0.6);">Reading (With Color):</span> <span style="font-weight: 700;">{{ teams.reading_leader_with_color }}</span> (+{{ teams.reading_gap_with_color }} hrs)
+                </div>
+                <div style="font-size: 0.85rem;">
+                    <span style="color: rgba(0,0,0,0.6);">Participation (With Color):</span> <span style="font-weight: 700;">{{ teams.participation_leader_with_color }}</span> (+{{ "{:.1f}".format(teams.participation_gap_with_color) }}%)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: Top Performers -->
+    <div class="col-md-4">
+        <div class="zen-card">
+            <h6 class="zen-card-title">🏆 TOP PERFORMERS</h6>
+
+            <div class="performer-section">
+                <div class="section-label">💰 Fundraising Leader</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ performers.fundraising.names }}</span>
+                        <span class="leader-meta">{{ performers.fundraising.grade }}</span>
+                    </div>
+                    <div class="leader-value">${{ "{:,.0f}".format(performers.fundraising.amount) }}</div>
+                    {% if performers.fundraising.tie_count > 1 %}
+                    <div class="tie-note">* {{ performers.fundraising.tie_count }}-way tie for 1st place</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">📚 Reading Leader{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ performers.reading.names }}</span>
+                        <span class="leader-meta">{{ performers.reading.grade }}</span>
+                    </div>
+                    <div class="leader-value">{{ "{:,}".format(performers.reading.minutes) }} minutes</div>
+                    {% if performers.reading.tie_count > 1 %}
+                    <div class="tie-note">* {{ performers.reading.tie_count }}-way tie for 1st place</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">🎓 Top Class (Fundraising)</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ performers.class_fundraising.teacher }}'s Class</span>
+                        <span class="leader-meta">Grade {{ performers.class_fundraising.grade }}</span>
+                    </div>
+                    <div class="leader-value">${{ "{:,.0f}".format(performers.class_fundraising.amount) }}</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">🎓 Top Class (Reading){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ performers.class_reading.teacher }}'s Class</span>
+                        <span class="leader-meta">Grade {{ performers.class_reading.grade }}</span>
+                    </div>
+                    <div class="leader-value">{{ "{:,}".format(performers.class_reading.minutes) }} minutes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Student Participation -->
+    <div class="col-md-4">
+        <div class="zen-card">
+            <h6 class="zen-card-title">📊 STUDENT PARTICIPATION{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}
+                <span style="font-size: 0.7rem; font-weight: 500; color: #95a5a6; display: block; margin-top: 0.3rem;">
+                    ({{ participation.date_label }})
+                </span>
+            </h6>
+
+            <div class="participation-table">
+                <div class="participation-row">
+                    <span class="participation-label">Total Participating</span>
+                    <span>
+                        <span class="participation-value">{{ participation.total_participating }} of {{ participation.total_roster }}</span>
+                        <span class="participation-percent">({{ "{:.1f}".format(participation.total_participating_pct) }}%)</span>
+                    </span>
+                </div>
+                <div class="participation-row">
+                    <span class="participation-label">All {{ participation.day_count }} Day{% if participation.day_count != 1 %}s{% endif %} Active</span>
+                    <span>
+                        <span class="participation-value">{{ participation.all_days_active }} of {{ participation.total_roster }}</span>
+                        <span class="participation-percent">({{ "{:.1f}".format(participation.all_days_active_pct) }}%)</span>
+                    </span>
+                </div>
+                <div class="participation-row">
+                    <span class="participation-label">Met Goal ≥1 Day</span>
+                    <span>
+                        <span class="participation-value">{{ participation.met_goal_once }} of {{ participation.total_roster }}</span>
+                        <span class="participation-percent">({{ "{:.1f}".format(participation.met_goal_once_pct) }}%)</span>
+                    </span>
+                </div>
+                <div class="participation-row">
+                    <span class="participation-label">Met Goal All Days</span>
+                    <span>
+                        <span class="participation-value">{{ participation.met_goal_all }} of {{ participation.total_roster }}</span>
+                        <span class="participation-percent">({{ "{:.1f}".format(participation.met_goal_all_pct) }}%)</span>
+                    </span>
+                </div>
+                <div class="participation-row">
+                    <span class="participation-label">Total Roster</span>
+                    <span>
+                        <span class="participation-value">{{ participation.total_roster }} Students</span>
+                        <span class="participation-percent">(100%)</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Integrity Alert (Conditional) -->
+{% if integrity.has_issues %}
+<div class="alert-integrity">
+    <div class="alert-content">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">
+            <h6>Data Integrity Issues Detected</h6>
+            <p>{{ integrity.issue_count }} validation errors found - immediate attention required</p>
+        </div>
+    </div>
+    <a href="/admin" class="btn btn-sm" style="font-weight: 600; background: #ff6b6b; color: white; border: none; padding: 0.5rem 1.25rem;">
+        Review Issues
+    </a>
+</div>
+{% endif %}
+
+<!-- Collapsible Footer: Data Sources -->
+<div class="collapsible-footer">
+    <div class="collapsible-header" onclick="toggleFooter()">
+        <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+        <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+    </div>
+    <div class="collapsible-content" id="footerContent">
+        <div class="data-source-item">
+            <span class="data-source-label">• Reading minutes, Participation:</span>
+            <span class="data-source-value">Daily_Logs table (Updated: {{ metadata.daily_logs_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Fundraising, Sponsors:</span>
+            <span class="data-source-value">Reader_Cumulative table (Updated: {{ metadata.reader_cumulative_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Student counts:</span>
+            <span class="data-source-value">Roster table (Updated: {{ metadata.roster_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Team Color Bonus:</span>
+            <span class="data-source-value">Team_Color_Bonus table (Event: {{ metadata.team_color_bonus_updated }})</span>
+        </div>
+    </div>
+</div>
+
+<!-- Data Source Modal -->
+<div class="modal fade" id="dataSourceModal" tabindex="-1" aria-labelledby="dataSourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="dataSourceModalLabel">
+                    <i class="bi bi-database"></i> Data Sources & Last Updated
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="data-source-item mb-3">
+                    <div class="data-source-label mb-1">Reading Minutes & Participation:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Daily_Logs</strong> table<br>
+                        Last Updated: <strong>{{ metadata.daily_logs_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-3">
+                    <div class="data-source-label mb-1">Fundraising & Sponsors:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Reader_Cumulative</strong> table<br>
+                        Last Updated: <strong>{{ metadata.reader_cumulative_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item">
+                    <div class="data-source-label mb-1">Student Counts:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Roster</strong> table<br>
+                        Last Updated: <strong>{{ metadata.roster_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-3">
+                    <div class="data-source-label mb-1">Team Color Bonus:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Team_Color_Bonus</strong> table<br>
+                        Event Date: <strong>{{ metadata.team_color_bonus_updated }}</strong>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="data-source-item">
+                    <div class="data-source-label mb-2"><i class="bi bi-funnel"></i> Date Filter Behavior:</div>
+                    <div class="data-source-value ms-3" style="font-size: 0.8rem; line-height: 1.6;">
+                        <strong>Reading Metrics (Filtered by date):</strong><br>
+                        <span style="color: #6c757d;">• Minutes Read, Participation, Goals Met</span><br>
+                        <span style="color: #6c757d;">• Shows data <em>cumulative through</em> selected date</span><br>
+                        <span style="color: #6c757d;">• Example: Day 3 = Days 1+2+3 combined</span><br><br>
+
+                        <strong>Fundraising Metrics (Not filtered):</strong><br>
+                        <span style="color: #6c757d;">• Total Fundraising, Sponsors</span><br>
+                        <span style="color: #6c757d;">• Always shows <em>full contest</em> totals</span><br>
+                        <span style="color: #6c757d;">• Fundraising is cumulative by design</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Footer toggle
+    function toggleFooter() {
+        const content = document.getElementById('footerContent');
+        const icon = document.getElementById('footerIcon');
+        content.classList.toggle('show');
+        icon.classList.toggle('bi-chevron-right');
+        icon.classList.toggle('bi-chevron-down');
+    }
+
+    // Auto-update data on filter change
+    function updateSchoolData() {
+        const filter = document.getElementById('dateFilter').value;
+        // Reload page with new filter parameter
+        window.location.href = `/school?date=${filter}`;
+    }
+
+    // Initialize Bootstrap tooltips for filter indicators
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    });
+</script>
+{% endblock %}
