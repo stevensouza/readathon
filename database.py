@@ -16,6 +16,7 @@ from report_metadata import (
     generate_q22_analysis,
     generate_q23_analysis
 )
+from queries import *
 
 
 class ReadathonDB:
@@ -45,120 +46,41 @@ class ReadathonDB:
         cursor = conn.cursor()
 
         # Roster table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Roster (
-                student_name TEXT PRIMARY KEY,
-                class_name TEXT NOT NULL,
-                home_room TEXT NOT NULL,
-                teacher_name TEXT NOT NULL,
-                grade_level TEXT NOT NULL,
-                team_name TEXT NOT NULL
-            )
-        """)
+        cursor.execute(CREATE_TABLE_ROSTER)
 
         # Class_Info table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Class_Info (
-                class_name TEXT PRIMARY KEY,
-                home_room TEXT NOT NULL,
-                teacher_name TEXT NOT NULL,
-                grade_level TEXT NOT NULL,
-                team_name TEXT NOT NULL,
-                total_students INTEGER NOT NULL
-            )
-        """)
+        cursor.execute(CREATE_TABLE_CLASS_INFO)
 
         # Grade_Rules table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Grade_Rules (
-                grade_level TEXT PRIMARY KEY,
-                min_daily_minutes INTEGER NOT NULL,
-                max_daily_minutes_credit INTEGER NOT NULL
-            )
-        """)
+        cursor.execute(CREATE_TABLE_GRADE_RULES)
 
         # Daily_Logs table (simplified - minutes only)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Daily_Logs (
-                log_date TEXT NOT NULL,
-                student_name TEXT NOT NULL,
-                minutes_read INTEGER DEFAULT 0,
-                PRIMARY KEY (log_date, student_name),
-                FOREIGN KEY (student_name) REFERENCES Roster(student_name)
-            )
-        """)
+        cursor.execute(CREATE_TABLE_DAILY_LOGS)
 
         # Reader_Cumulative table - cumulative stats per student
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Reader_Cumulative (
-                student_name TEXT PRIMARY KEY,
-                teacher_name TEXT,
-                team_name TEXT,
-                donation_amount REAL DEFAULT 0.0,
-                sponsors INTEGER DEFAULT 0,
-                cumulative_minutes INTEGER DEFAULT 0,
-                upload_timestamp TEXT NOT NULL,
-                FOREIGN KEY (student_name) REFERENCES Roster(student_name)
-            )
-        """)
+        cursor.execute(CREATE_TABLE_READER_CUMULATIVE)
 
         # Upload_History table - tracks all uploads with audit trail
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Upload_History (
-                upload_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                log_date TEXT,
-                upload_timestamp TEXT NOT NULL,
-                filename TEXT,
-                row_count INTEGER,
-                total_students_affected INTEGER,
-                upload_type TEXT DEFAULT 'new',
-                status TEXT DEFAULT 'success',
-                action_taken TEXT DEFAULT 'inserted',
-                records_replaced INTEGER DEFAULT 0,
-                audit_details TEXT
-            )
-        """)
+        cursor.execute(CREATE_TABLE_UPLOAD_HISTORY)
 
         # Add audit columns to existing Upload_History table if they don't exist
-        cursor.execute("PRAGMA table_info(Upload_History)")
+        cursor.execute(SELECT_TABLE_INFO)
         columns = [row[1] for row in cursor.fetchall()]
 
         if 'action_taken' not in columns:
-            cursor.execute("ALTER TABLE Upload_History ADD COLUMN action_taken TEXT DEFAULT 'inserted'")
+            cursor.execute(ALTER_ADD_ACTION_TAKEN)
 
         if 'records_replaced' not in columns:
-            cursor.execute("ALTER TABLE Upload_History ADD COLUMN records_replaced INTEGER DEFAULT 0")
+            cursor.execute(ALTER_ADD_RECORDS_REPLACED)
 
         if 'audit_details' not in columns:
-            cursor.execute("ALTER TABLE Upload_History ADD COLUMN audit_details TEXT")
+            cursor.execute(ALTER_ADD_AUDIT_DETAILS)
 
         # Database_Metadata table - tracks year databases for multi-year support
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Database_Metadata (
-                db_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                year INTEGER NOT NULL UNIQUE,
-                db_filename TEXT NOT NULL,
-                description TEXT,
-                created_timestamp TEXT NOT NULL,
-                is_active INTEGER DEFAULT 0,
-                student_count INTEGER DEFAULT 0,
-                total_days INTEGER DEFAULT 0,
-                total_donations REAL DEFAULT 0.0
-            )
-        """)
+        cursor.execute(CREATE_TABLE_DATABASE_METADATA)
 
         # Team_Color_Bonus table - tracks special team color day bonuses
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Team_Color_Bonus (
-                event_date TEXT NOT NULL,
-                class_name TEXT NOT NULL,
-                students_wearing_colors INTEGER NOT NULL,
-                bonus_minutes INTEGER NOT NULL,
-                bonus_participation_points INTEGER NOT NULL,
-                PRIMARY KEY (event_date, class_name),
-                FOREIGN KEY (class_name) REFERENCES Class_Info(class_name)
-            )
-        """)
+        cursor.execute(CREATE_TABLE_TEAM_COLOR_BONUS)
 
         conn.commit()
 
@@ -168,16 +90,14 @@ class ReadathonDB:
         cursor = conn.cursor()
 
         # Clear existing data
-        cursor.execute("DELETE FROM Roster")
+        cursor.execute(DELETE_ALL_ROSTER)
 
         reader = csv.DictReader(io.StringIO(csv_data))
         count = 0
         for row in reader:
-            cursor.execute("""
-                INSERT INTO Roster (student_name, class_name, home_room, teacher_name, grade_level, team_name)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (row['student_name'], row['class_name'], row['home_room'],
-                  row['teacher_name'], row['grade_level'], row['team_name']))
+            cursor.execute(INSERT_ROSTER,
+                          (row['student_name'], row['class_name'], row['home_room'],
+                           row['teacher_name'], row['grade_level'], row['team_name']))
             count += 1
 
         conn.commit()
@@ -189,16 +109,14 @@ class ReadathonDB:
         cursor = conn.cursor()
 
         # Clear existing data
-        cursor.execute("DELETE FROM Class_Info")
+        cursor.execute(DELETE_ALL_CLASS_INFO)
 
         reader = csv.DictReader(io.StringIO(csv_data))
         count = 0
         for row in reader:
-            cursor.execute("""
-                INSERT INTO Class_Info (class_name, home_room, teacher_name, grade_level, team_name, total_students)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (row['class_name'], row['home_room'], row['teacher_name'],
-                  row['grade_level'], row['team_name'], int(row['total_students'])))
+            cursor.execute(INSERT_CLASS_INFO,
+                          (row['class_name'], row['home_room'], row['teacher_name'],
+                           row['grade_level'], row['team_name'], int(row['total_students'])))
             count += 1
 
         conn.commit()
@@ -210,16 +128,14 @@ class ReadathonDB:
         cursor = conn.cursor()
 
         # Clear existing data
-        cursor.execute("DELETE FROM Grade_Rules")
+        cursor.execute(DELETE_ALL_GRADE_RULES)
 
         reader = csv.DictReader(io.StringIO(csv_data))
         count = 0
         for row in reader:
-            cursor.execute("""
-                INSERT INTO Grade_Rules (grade_level, min_daily_minutes, max_daily_minutes_credit)
-                VALUES (?, ?, ?)
-            """, (row['grade_level'], int(row['min_daily_minutes']),
-                  int(row['max_daily_minutes_credit'])))
+            cursor.execute(INSERT_GRADE_RULES,
+                          (row['grade_level'], int(row['min_daily_minutes']),
+                           int(row['max_daily_minutes_credit'])))
             count += 1
 
         conn.commit()
@@ -267,11 +183,7 @@ class ReadathonDB:
                     continue
 
                 # Validate class_name exists in Class_Info (case-insensitive)
-                cursor.execute("""
-                    SELECT class_name, team_name
-                    FROM Class_Info
-                    WHERE UPPER(class_name) = UPPER(?)
-                """, (csv_class_name,))
+                cursor.execute(SELECT_CLASS_INFO_BY_NAME, (csv_class_name,))
 
                 result = cursor.fetchone()
                 if not result:
@@ -291,11 +203,8 @@ class ReadathonDB:
                 bonus_participation = students_count * 1
 
                 # Insert or replace the bonus data
-                cursor.execute("""
-                    INSERT OR REPLACE INTO Team_Color_Bonus
-                    (event_date, class_name, students_wearing_colors, bonus_minutes, bonus_participation_points)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (event_date, db_class_name, students_count, bonus_minutes, bonus_participation))
+                cursor.execute(INSERT_TEAM_COLOR_BONUS,
+                              (event_date, db_class_name, students_count, bonus_minutes, bonus_participation))
 
                 count += 1
             except ValueError as e:
@@ -318,13 +227,7 @@ class ReadathonDB:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT upload_timestamp, filename, total_students_affected
-            FROM Upload_History
-            WHERE log_date = ?
-            ORDER BY upload_timestamp DESC
-            LIMIT 1
-        """, (log_date,))
+        cursor.execute(SELECT_EXISTING_UPLOAD, (log_date,))
 
         row = cursor.fetchone()
         if row:
@@ -340,23 +243,7 @@ class ReadathonDB:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT
-                upload_id,
-                log_date,
-                upload_timestamp,
-                filename,
-                row_count,
-                total_students_affected,
-                upload_type,
-                status,
-                action_taken,
-                records_replaced,
-                audit_details
-            FROM Upload_History
-            ORDER BY upload_timestamp DESC
-            LIMIT ?
-        """, (limit,))
+        cursor.execute(SELECT_UPLOAD_HISTORY, (limit,))
 
         columns = [desc[0] for desc in cursor.description]
         results = []
@@ -372,7 +259,7 @@ class ReadathonDB:
 
         try:
             # Check if data exists
-            cursor.execute("SELECT COUNT(*) FROM Daily_Logs WHERE log_date = ?", (log_date,))
+            cursor.execute(SELECT_COUNT_DAILY_LOGS_BY_DATE, (log_date,))
             count = cursor.fetchone()[0]
 
             if count == 0:
@@ -382,14 +269,14 @@ class ReadathonDB:
                 }
 
             # Get affected student names for audit trail
-            cursor.execute("SELECT DISTINCT student_name FROM Daily_Logs WHERE log_date = ? ORDER BY student_name", (log_date,))
+            cursor.execute(SELECT_DISTINCT_STUDENTS_BY_DATE, (log_date,))
             affected_students = [row[0] for row in cursor.fetchall()]
 
             # Delete from Daily_Logs
-            cursor.execute("DELETE FROM Daily_Logs WHERE log_date = ?", (log_date,))
+            cursor.execute(DELETE_DAY_DATA, (log_date,))
 
             # Delete from Upload_History
-            cursor.execute("DELETE FROM Upload_History WHERE log_date = ?", (log_date,))
+            cursor.execute(DELETE_UPLOAD_HISTORY_BY_DATE, (log_date,))
 
             conn.commit()
 
@@ -413,7 +300,7 @@ class ReadathonDB:
 
         try:
             # Check if data exists
-            cursor.execute("SELECT COUNT(*) FROM Reader_Cumulative")
+            cursor.execute(SELECT_COUNT_READER_CUMULATIVE)
             count = cursor.fetchone()[0]
 
             if count == 0:
@@ -423,14 +310,14 @@ class ReadathonDB:
                 }
 
             # Get affected student names for audit trail
-            cursor.execute("SELECT student_name FROM Reader_Cumulative ORDER BY student_name")
+            cursor.execute(SELECT_ALL_STUDENTS_READER_CUMULATIVE)
             affected_students = [row[0] for row in cursor.fetchall()]
 
             # Delete all cumulative data
-            cursor.execute("DELETE FROM Reader_Cumulative")
+            cursor.execute(DELETE_ALL_READER_CUMULATIVE)
 
             # Delete cumulative upload history
-            cursor.execute("DELETE FROM Upload_History WHERE log_date IS NULL")
+            cursor.execute(DELETE_UPLOAD_HISTORY_CUMULATIVE)
 
             conn.commit()
 
@@ -459,8 +346,8 @@ class ReadathonDB:
                 }
 
             # Delete all specified upload history records
-            placeholders = ','.join('?' * len(upload_ids))
-            cursor.execute(f"DELETE FROM Upload_History WHERE upload_id IN ({placeholders})", tuple(upload_ids))
+            delete_query = get_delete_upload_history_batch_query(upload_ids)
+            cursor.execute(delete_query, tuple(upload_ids))
 
             deleted_count = cursor.rowcount
 
@@ -624,7 +511,7 @@ class ReadathonDB:
                     # Lookup team_name from Roster (only once per student)
                     if student_name not in roster_checked:
                         roster_checked.add(student_name)
-                        cursor.execute("SELECT team_name FROM Roster WHERE student_name = ?", (student_name,))
+                        cursor.execute(SELECT_TEAM_NAME_FROM_ROSTER, (student_name,))
                         roster_row = cursor.fetchone()
 
                         if roster_row:
@@ -655,24 +542,21 @@ class ReadathonDB:
                 )
 
             # Get existing data before deletion for audit trail
-            cursor.execute("SELECT COUNT(*) FROM Reader_Cumulative")
+            cursor.execute(SELECT_COUNT_READER_CUMULATIVE)
             existing_count = cursor.fetchone()[0]
 
-            cursor.execute("SELECT student_name FROM Reader_Cumulative ORDER BY student_name")
+            cursor.execute(SELECT_ALL_STUDENTS_READER_CUMULATIVE_SET)
             existing_students = set([row[0] for row in cursor.fetchall()])
 
             # Delete all existing data
-            cursor.execute("DELETE FROM Reader_Cumulative")
+            cursor.execute(DELETE_ALL_READER_CUMULATIVE)
 
             # Insert all new data
             upload_timestamp = datetime.now().isoformat()
             for student_name, data in cumulative_data.items():
-                cursor.execute("""
-                    INSERT INTO Reader_Cumulative
-                    (student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (student_name, data['teacher_name'], data['team_name'],
-                      data['donation_amount'], data['sponsors'], data['cumulative_minutes'], upload_timestamp))
+                cursor.execute(INSERT_READER_CUMULATIVE,
+                              (student_name, data['teacher_name'], data['team_name'],
+                               data['donation_amount'], data['sponsors'], data['cumulative_minutes'], upload_timestamp))
 
             conn.commit()
 
@@ -709,12 +593,9 @@ class ReadathonDB:
             cumulative_filename = cumulative_file.filename if cumulative_file else None
             action_taken = 'replaced' if existing_count > 0 else 'inserted'
 
-            cursor.execute("""
-                INSERT INTO Upload_History
-                (log_date, upload_timestamp, filename, row_count, total_students_affected, upload_type, status, action_taken, records_replaced, audit_details, file_type)
-                VALUES (NULL, datetime('now'), ?, ?, ?, 'cumulative_stats', ?, ?, ?, ?, 'cumulative')
-            """, (cumulative_filename, result['rows_processed'], result['students_matched'], status,
-                  action_taken, existing_count, json.dumps(audit_details)))
+            cursor.execute(INSERT_UPLOAD_HISTORY_CUMULATIVE,
+                          (cumulative_filename, result['rows_processed'], result['students_matched'], status,
+                           action_taken, existing_count, json.dumps(audit_details)))
 
             conn.commit()
 
@@ -746,7 +627,7 @@ class ReadathonDB:
 
         try:
             # Check for existing data to track what will be replaced
-            cursor.execute("SELECT COUNT(*), GROUP_CONCAT(student_name) FROM Daily_Logs WHERE log_date = ?", (log_date,))
+            cursor.execute(SELECT_STUDENT_COUNT_DAILY_LOGS_BY_DATE, (log_date,))
             existing_row = cursor.fetchone()
             existing_count = existing_row[0] if existing_row else 0
             existing_students = existing_row[1].split(',') if existing_row and existing_row[1] else []
@@ -835,7 +716,7 @@ class ReadathonDB:
                         # Check if student exists in roster (only check once per student)
                         if student_name not in roster_checked:
                             roster_checked.add(student_name)
-                            cursor.execute("SELECT student_name FROM Roster WHERE student_name = ?", (student_name,))
+                            cursor.execute(SELECT_STUDENT_EXISTS_IN_ROSTER, (student_name,))
                             if not cursor.fetchone():
                                 result['warnings'].append(f"Student not found in roster (imported anyway): {student_name}")
 
@@ -847,12 +728,8 @@ class ReadathonDB:
             # Insert data
             for student_name, minutes in minutes_data.items():
                 # Insert or update
-                cursor.execute("""
-                    INSERT INTO Daily_Logs (log_date, student_name, minutes_read)
-                    VALUES (?, ?, ?)
-                    ON CONFLICT(log_date, student_name)
-                    DO UPDATE SET minutes_read = ?
-                """, (log_date, student_name, minutes, minutes))
+                cursor.execute(INSERT_DAILY_LOGS_UPSERT,
+                              (log_date, student_name, minutes, minutes))
 
             conn.commit()
 
@@ -884,11 +761,8 @@ class ReadathonDB:
             total_students = len(minutes_data)
             action_taken = 'replaced' if existing_count > 0 else 'inserted'
 
-            cursor.execute("""
-                INSERT INTO Upload_History
-                (log_date, upload_timestamp, filename, row_count, total_students_affected, upload_type, status, action_taken, records_replaced, audit_details, file_type)
-                VALUES (?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, 'daily')
-            """, (log_date, minutes_filename, result['minutes_processed'], total_students, upload_type, status, action_taken, existing_count, json.dumps(audit_details)))
+            cursor.execute(INSERT_UPLOAD_HISTORY_DAILY,
+                          (log_date, minutes_filename, result['minutes_processed'], total_students, upload_type, status, action_taken, existing_count, json.dumps(audit_details)))
 
             conn.commit()
 
@@ -906,7 +780,7 @@ class ReadathonDB:
 
         counts = {}
         for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs', 'Reader_Cumulative', 'Team_Color_Bonus']:
-            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            cursor.execute(get_table_count_query(table))
             counts[table] = cursor.fetchone()[0]
 
         return counts
@@ -928,7 +802,7 @@ class ReadathonDB:
         """Get all unique dates from Daily_Logs"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT log_date FROM Daily_Logs ORDER BY log_date DESC")
+        cursor.execute(SELECT_ALL_DATES)
         return [row[0] for row in cursor.fetchall()]
 
     # ========== Database Metadata Management (Phase 2: Multi-Database) ==========
@@ -938,20 +812,7 @@ class ReadathonDB:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT
-                db_id,
-                year,
-                db_filename,
-                description,
-                created_timestamp,
-                is_active,
-                student_count,
-                total_days,
-                total_donations
-            FROM Database_Metadata
-            ORDER BY year DESC
-        """)
+        cursor.execute(SELECT_DB_METADATA_ALL)
 
         columns = [desc[0] for desc in cursor.description]
         results = []
@@ -1221,6 +1082,10 @@ class ReportGenerator:
 
         return ', '.join(parts) if parts else 'Not available'
 
+    def _get_report_timestamp(self) -> str:
+        """Get current timestamp for report generation"""
+        return f"Report generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
     def q1_table_counts(self) -> Dict[str, Any]:
         """Q1: Total Row Count - utility report"""
         counts = self.db.get_table_counts()
@@ -1234,7 +1099,8 @@ class ReportGenerator:
             'description': 'Utility report showing row counts in each table',
             'columns': ['table_name', 'row_count'],
             'data': results,
-            'sort': 'table_name (asc)'
+            'sort': 'table_name (asc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q2_daily_summary(self, log_date: Optional[str] = None, group_by: str = 'class') -> Dict[str, Any]:
@@ -1336,7 +1202,8 @@ class ReportGenerator:
             'description': f'Comprehensive daily summary grouped by {group_by}',
             'columns': list(results[0].keys()) if results else [],
             'data': results,
-            'sort': f'{group_by}_name (asc)'
+            'sort': f'{group_by}_name (asc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q3_reader_cumulative_enhanced(self) -> Dict[str, Any]:
@@ -1371,7 +1238,8 @@ class ReportGenerator:
             'columns': ['student_name', 'class_name', 'grade_level', 'teacher_name', 'team_name',
                        'days_participated', 'days_met_goal', 'cumulative_minutes', 'donation_amount', 'sponsors'],
             'data': results,
-            'sort': 'cumulative_minutes (desc)'
+            'sort': 'cumulative_minutes (desc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q4_prize_drawing(self, log_date: str) -> Dict[str, Any]:
@@ -1417,7 +1285,8 @@ class ReportGenerator:
             'columns': ['grade_level', 'student_name', 'class_name', 'teacher_name', 'minutes_read', 'min_daily_minutes', 'total_eligible'],
             'data': winners,
             'sort': 'grade_level (asc)',
-            'note': 'Winners are randomly selected each time this report runs'
+            'note': 'Winners are randomly selected each time this report runs',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q5_student_cumulative(self, sort_by: str = 'minutes', limit: int = None) -> Dict[str, Any]:
@@ -1466,7 +1335,8 @@ class ReportGenerator:
             'description': 'Cumulative student performance - participation from Daily_Logs, fundraising from Reader_Cumulative',
             'columns': list(results[0].keys()) if results else [],
             'data': results,
-            'sort': f'{sort_by} (desc)'
+            'sort': f'{sort_by} (desc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q6_class_participation(self) -> Dict[str, Any]:
@@ -1527,7 +1397,8 @@ class ReportGenerator:
             'data': results,
             'winners': winners,
             'sort': 'avg_participation_rate_with_color (desc)',
-            'note': 'Tie-breaking: All classes with the highest rate (with color bonus) are listed as winners'
+            'note': 'Tie-breaking: All classes with the highest rate (with color bonus) are listed as winners',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q7_complete_log(self, log_date: Optional[str] = None) -> Dict[str, Any]:
@@ -1564,7 +1435,8 @@ class ReportGenerator:
             'description': 'Fully denormalized daily minutes log for export (donations available in Reader_Cumulative table)',
             'columns': ['log_date', 'student_name', 'minutes_read', 'class_name', 'home_room', 'teacher_name', 'grade_level', 'team_name'],
             'data': results,
-            'sort': 'log_date (desc), team_name (asc), class_name (asc), student_name (asc)'
+            'sort': 'log_date (desc), team_name (asc), class_name (asc), student_name (asc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q14_team_participation(self) -> Dict[str, Any]:
@@ -1619,7 +1491,8 @@ class ReportGenerator:
             'columns': list(results[0].keys()) if results else [],
             'data': results,
             'winners': winners,
-            'sort': 'avg_participation_rate_with_color (desc)'
+            'sort': 'avg_participation_rate_with_color (desc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q18_lead_class_by_grade(self) -> Dict[str, Any]:
@@ -1690,7 +1563,8 @@ class ReportGenerator:
             'columns': list(results[0].keys()) if results else [],
             'data': results,
             'sort': 'grade_level (asc)',
-            'note': 'Ties are shown when multiple classes have the same max participation rate (with color bonus)'
+            'note': 'Ties are shown when multiple classes have the same max participation rate (with color bonus)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q19_team_minutes(self) -> Dict[str, Any]:
@@ -1766,7 +1640,8 @@ Calculation Rules:<br>
 • Note: Using Daily_Logs ensures grade-based caps are respected and data is limited to the contest period (Reader_Cumulative table includes all data)''',
             'columns': list(results[0].keys()) if results else [],
             'data': results,
-            'sort': 'total_minutes_with_color (desc), with TOTAL row at bottom'
+            'sort': 'total_minutes_with_color (desc), with TOTAL row at bottom',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q20_team_donations(self) -> Dict[str, Any]:
@@ -1792,7 +1667,8 @@ Calculation Rules:<br>
             'description': 'Total donations and sponsors by each team (from Reader_Cumulative)',
             'columns': ['team_name', 'total_donations', 'total_sponsors', 'total_students', 'avg_donation_per_student'],
             'data': results,
-            'sort': 'total_donations (desc)'
+            'sort': 'total_donations (desc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q21_minutes_integrity_check(self) -> Dict[str, Any]:
@@ -1901,7 +1777,8 @@ Calculation Rules:<br>
             'description': 'All students who have done any reading, with total minutes and days met goal',
             'columns': ['student_name', 'class_name', 'teacher_name', 'grade_level', 'team_name', 'total_minutes_read', 'days_met_goal', 'days_participated'],
             'data': results,
-            'sort': 'total_minutes_read (desc)'
+            'sort': 'total_minutes_read (desc)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q22_student_name_sync_check(self) -> Dict[str, Any]:
@@ -2058,7 +1935,8 @@ Calculation Rules:<br>
             'columns': ['grade_level', 'student_name', 'donation_amount', 'sponsors', 'team_name', 'class_name'],
             'data': results,
             'sort': 'grade_level (asc)',
-            'note': 'Prize: Book Store $25 Gift Card per grade level'
+            'note': 'Prize: Book Store $25 Gift Card per grade level',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q10_most_minutes_by_grade(self) -> Dict[str, Any]:
@@ -2106,7 +1984,8 @@ Calculation Rules:<br>
             'columns': ['grade_level', 'student_name', 'total_minutes_capped', 'days_participated', 'team_name', 'class_name'],
             'data': results,
             'sort': 'grade_level (asc)',
-            'note': 'Prize: Grandpa Joe\'s $25 Gift Card per grade level. Uses 120-minute daily cap.'
+            'note': 'Prize: Grandpa Joe\'s $25 Gift Card per grade level. Uses 120-minute daily cap.',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q11_most_sponsors_by_grade(self) -> Dict[str, Any]:
@@ -2144,7 +2023,8 @@ Calculation Rules:<br>
             'columns': ['grade_level', 'student_name', 'sponsor_count', 'donation_amount', 'team_name', 'class_name'],
             'data': results,
             'sort': 'grade_level (asc)',
-            'note': 'Prize: Learning Express $25 Gift Card per grade level'
+            'note': 'Prize: Learning Express $25 Gift Card per grade level',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q12_best_class_by_grade_simplified(self) -> Dict[str, Any]:
@@ -2211,7 +2091,8 @@ Calculation Rules:<br>
             'columns': list(results[0].keys()) if results else [],
             'data': results,
             'sort': 'grade_level (asc)',
-            'note': 'Prize: Classroom party/activity per grade level'
+            'note': 'Prize: Classroom party/activity per grade level',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q13_overall_best_class_simplified(self) -> Dict[str, Any]:
@@ -2268,7 +2149,8 @@ Calculation Rules:<br>
             'columns': list(winners[0].keys()) if winners else [],
             'data': winners,
             'sort': 'avg_participation_rate_with_color (desc)',
-            'note': 'Prize: $100 for the teacher'
+            'note': 'Prize: $100 for the teacher',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q15_goal_getters(self) -> Dict[str, Any]:
@@ -2320,7 +2202,8 @@ Calculation Rules:<br>
             'columns': ['student_name', 'grade_level', 'days_met_goal', 'total_days', 'team_name', 'class_name'],
             'data': results,
             'sort': 'grade_level (asc), student_name (asc)',
-            'note': 'Prize: Books (varies by grade level)'
+            'note': 'Prize: Books (varies by grade level)',
+            'last_updated': self._get_report_timestamp()
         }
 
     def q16_top_earner_per_team(self) -> Dict[str, Any]:
@@ -2358,5 +2241,6 @@ Calculation Rules:<br>
             'columns': ['team_name', 'student_name', 'donation_amount', 'sponsors', 'grade_level', 'class_name'],
             'data': results,
             'sort': 'team_name (asc)',
-            'note': 'Prize: Principal for a day / Librarian for a day'
+            'note': 'Prize: Principal for a day / Librarian for a day',
+            'last_updated': self._get_report_timestamp()
         }
