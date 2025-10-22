@@ -15,30 +15,95 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
     <style>
-        /* v2.0 - Updated styling */
-        .navbar {
-            padding: 0.5rem 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        /* v3.0 - Clean white navigation styling (from dashboard_school_tab_v2 prototype) */
+        .top-nav {
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
 
-        .navbar-brand {
+        .brand {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .brand:hover {
+            color: #1e3a5f;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-link-item {
+            padding: 0.5rem 1rem;
+            border-radius: 0.4rem;
             font-weight: 600;
-            font-size: 1.1rem;
-            padding: 0.5rem 1rem;
-        }
-
-        .nav-link {
-            padding: 0.5rem 1rem !important;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .navbar-nav .nav-item {
-            margin: 0;
-        }
-
-        .navbar-nav .dropdown-menu {
             font-size: 0.9rem;
+            color: #2c3e50;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .nav-link-item:hover {
+            background-color: #f8f9fa;
+            color: #1e3a5f;
+        }
+
+        .nav-link-item.active {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.4rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            min-width: 200px;
+            margin-top: 0.25rem;
+        }
+
+        .dropdown-menu-custom.show {
+            display: block;
+        }
+
+        .dropdown-item-custom {
+            padding: 0.6rem 1rem;
+            color: #2c3e50;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: #f8f9fa;
+            color: #1e3a5f;
+        }
+
+        .env-selector {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.3rem;
+            border: 1px solid #dee2e6;
         }
         .report-table {
             font-size: 0.9rem;
@@ -572,81 +637,55 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark {% if environment == 'sample' %}bg-danger{% else %}bg-primary{% endif %}">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-book"></i> Read-a-Thon System
+    <div class="top-nav">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="/" class="brand">
+                    <i class="bi bi-book"></i> Read-a-Thon System
+                </a>
                 {% if environment == 'sample' %}
                 <span class="badge bg-warning text-dark ms-2">SAMPLE MODE</span>
                 {% endif %}
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' or request.path == '/school' %}active{% endif %}" href="/school">
-                            🏫 School
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/teams' %}active{% endif %}" href="/teams">
-                            ⚔️ Teams
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/classes' %}active{% endif %}" href="/classes">
-                            🎓 Classes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/students' %}active{% endif %}" href="/students">
-                            👤 Students
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/upload' %}active{% endif %}" href="/upload">
-                            📤 Upload
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.path in ['/reports', '/workflows', '/tables'] %}active{% endif %}" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            📊 Reports & Data
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
-                            <li><a class="dropdown-item" href="/reports">📊 Reports (Q1-Q23)</a></li>
-                            <li><a class="dropdown-item" href="/workflows">🔄 Workflows</a></li>
-                            <li><a class="dropdown-item" href="/tables">📋 Tables (Raw Data)</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" href="/admin">
-                            ⚙️ Admin
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.path in ['/help', '/help/claude', '/help/requirements'] %}active{% endif %}" href="#" id="helpDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            ❓ Help
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="helpDropdown">
-                            <li><a class="dropdown-item" href="/help">📖 User Manual</a></li>
-                            <li><a class="dropdown-item" href="/help/claude">🤖 How I Used Claude Code to Develop this Application</a></li>
-                            <li><a class="dropdown-item" href="/help/requirements">📋 Application Requirements</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <select class="form-select form-select-sm" id="envSelector" onchange="switchEnvironment()" style="width: auto;">
-                            <option value="prod">Production</option>
-                            <option value="sample">Sample</option>
-                        </select>
-                    </li>
-                </ul>
+
+                <div class="nav-links ms-4">
+                    <a href="/school" class="nav-link-item {% if request.path == '/' or request.path == '/school' %}active{% endif %}">🏫 School</a>
+                    <a href="/teams" class="nav-link-item {% if request.path == '/teams' %}active{% endif %}">⚔️ Teams</a>
+                    <a href="/classes" class="nav-link-item {% if request.path == '/classes' %}active{% endif %}">🎓 Classes</a>
+                    <a href="/students" class="nav-link-item {% if request.path == '/students' %}active{% endif %}">👤 Students</a>
+                    <a href="/upload" class="nav-link-item {% if request.path == '/upload' %}active{% endif %}">📤 Upload</a>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link-item {% if request.path in ['/reports', '/workflows', '/tables'] %}active{% endif %}" onclick="toggleReportsDropdown()">
+                            📊 Reports & Data <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <div class="dropdown-menu-custom" id="reportsDropdown">
+                            <a href="/reports" class="dropdown-item-custom">📊 Reports (Q1-Q23)</a>
+                            <a href="/workflows" class="dropdown-item-custom">🔄 Workflows</a>
+                            <a href="/tables" class="dropdown-item-custom">📋 Tables (Raw Data)</a>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link-item {% if request.path in ['/help', '/help/claude', '/help/requirements'] %}active{% endif %}" onclick="toggleHelpDropdown()">
+                            ❓ Help <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <div class="dropdown-menu-custom" id="helpDropdown">
+                            <a href="/help" class="dropdown-item-custom">📖 User Manual</a>
+                            <a href="/help/claude" class="dropdown-item-custom">🤖 How I Used Claude Code to Develop this Application</a>
+                            <a href="/help/requirements" class="dropdown-item-custom">📋 Application Requirements</a>
+                        </div>
+                    </div>
+
+                    <a href="/admin" class="nav-link-item {% if request.path == '/admin' %}active{% endif %}">⚙️ Admin</a>
+                </div>
             </div>
+
+            <select class="env-selector" id="envSelector" onchange="switchEnvironment()">
+                <option value="prod">Production</option>
+                <option value="sample">Sample</option>
+            </select>
         </div>
-    </nav>
+    </div>
 
     <!-- Main Content -->
     <div class="container-fluid mt-4">
@@ -655,6 +694,32 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Navigation Dropdown Toggles -->
+    <script>
+        function toggleReportsDropdown() {
+            const dropdown = document.getElementById('reportsDropdown');
+            const helpDropdown = document.getElementById('helpDropdown');
+            helpDropdown.classList.remove('show');
+            dropdown.classList.toggle('show');
+        }
+
+        function toggleHelpDropdown() {
+            const dropdown = document.getElementById('helpDropdown');
+            const reportsDropdown = document.getElementById('reportsDropdown');
+            reportsDropdown.classList.remove('show');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.dropdown-menu-custom').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+    </script>
 
     <!-- Copy to Clipboard Helper -->
     <script>
