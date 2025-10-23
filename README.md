@@ -102,10 +102,23 @@ See the `sample_*.csv` files in the repository for examples.
 ### 3. Start the Application
 
 ```bash
+# Default: Uses last database choice (or sample if first run)
 python3 app.py
+
+# Explicitly use sample database
+python3 app.py --db sample
+# OR
+./run_sample.sh
+
+# Explicitly use production database
+python3 app.py --db prod
+# OR
+./run_prod.sh
 ```
 
-Open your browser to: **http://localhost:5000**
+Open your browser to: **http://localhost:5000** (or 5001 if configured)
+
+**Note:** The app remembers your last database choice in `.readathon_config`. You can also switch databases using the dropdown menu in the navigation bar.
 
 Press `CTRL+C` to stop the server.
 

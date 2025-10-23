@@ -33,6 +33,9 @@ __pycache__/
 venv/
 .env
 
+# User preferences (database selection, etc.)
+.readathon_config
+
 # OS files
 .DS_Store
 

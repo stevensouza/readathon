@@ -9,10 +9,49 @@ import csv
 import io
 from datetime import datetime
 import os
+import argparse
+import json
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.secret_key = 'readathon-secret-key-change-in-production'  # For session management
+
+# Configuration file for persistent database preference
+CONFIG_FILE = '.readathon_config'
+
+def read_config():
+    """Read configuration from file"""
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+                return config.get('default_database', 'sample')
+        except:
+            return 'sample'
+    return 'sample'
+
+def write_config(database):
+    """Write configuration to file"""
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump({'default_database': database}, f)
+    except:
+        pass  # Silently fail if can't write config
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Read-a-Thon Management System')
+parser.add_argument('--db', choices=['sample', 'prod'],
+                   help='Database to use (sample or prod). Overrides config file.')
+args, unknown = parser.parse_known_args()
+
+# Determine default database: CLI > Config File > 'sample'
+DEFAULT_DATABASE = args.db if args.db else read_config()
+
+print(f"🗄️  Starting with database: {DEFAULT_DATABASE}")
+if args.db:
+    print(f"   (Specified via command line: --db {args.db})")
+else:
+    print(f"   (Using remembered preference from {CONFIG_FILE})")
 
 # Initialize databases for both environments
 db_prod = ReadathonDB('readathon_prod.db')
@@ -20,7 +59,7 @@ db_sample = ReadathonDB('readathon_sample.db')
 
 def get_current_db():
     """Get the database based on current environment selection"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     return db_prod if env == 'prod' else db_sample
 
 def get_current_reports():
@@ -32,7 +71,7 @@ def get_current_reports():
 @app.route('/school')
 def school_tab():
     """School overview dashboard (landing page)"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     db = get_current_db()
     reports = get_current_reports()
 
@@ -598,7 +637,7 @@ def school_tab():
 @app.route('/index_old')
 def index():
     """Main dashboard (old version - kept for reference)"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     db = get_current_db()
     reports = get_current_reports()
 
@@ -873,16 +912,18 @@ def index():
 @app.route('/upload')
 def upload_page():
     """Data upload page"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     return render_template('upload.html', environment=env)
 
 
 @app.route('/api/set_environment', methods=['POST'])
 def set_environment():
     """Set the current environment (sample or prod)"""
-    env = request.json.get('environment', 'prod')
+    env = request.json.get('environment', DEFAULT_DATABASE)
     if env in ['sample', 'prod']:
         session['environment'] = env
+        # Save preference to config file for next startup
+        write_config(env)
         return jsonify({'success': True, 'environment': env})
     return jsonify({'success': False, 'error': 'Invalid environment'}), 400
 
@@ -906,7 +947,7 @@ def delete_day(log_date):
     """Delete all data for a specific date"""
     try:
         db = get_current_db()
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         # Delete from Daily_Logs
         result = db.delete_day_data(log_date)
@@ -922,7 +963,7 @@ def delete_cumulative():
     """Delete all cumulative data (donations, sponsors, cumulative minutes)"""
     try:
         db = get_current_db()
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         # Delete from Reader_Cumulative
         result = db.delete_cumulative_data()
@@ -950,7 +991,7 @@ def upload_daily():
         confirmed = request.form.get('confirmed', 'false').lower() == 'true'
 
         # Get current environment
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         # Safeguard: Check if sample data is being uploaded to production
         if env == 'prod' and not confirmed:
@@ -995,7 +1036,7 @@ def upload_cumulative():
         confirmed = request.form.get('confirmed', 'false').lower() == 'true'
 
         # Get current environment
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         # Safeguard: Check if sample data is being uploaded to production
         if env == 'prod' and not confirmed:
@@ -1044,7 +1085,7 @@ def upload_team_color_bonus():
         confirmed = request.form.get('confirmed', 'false').lower() == 'true'
 
         # Get current environment
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         # Safeguard: Check if sample data is being uploaded to production
         if env == 'prod' and not confirmed:
@@ -1093,7 +1134,7 @@ def delete_upload_history_batch():
             }), 400
 
         # Get current environment
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         db = get_current_db()
         result = db.delete_upload_history_batch(upload_ids)
@@ -1110,7 +1151,7 @@ def delete_upload_history_batch():
 @app.route('/reports')
 def reports_page():
     """Reports listing page"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     report_list = [
         {'id': 'q2', 'name': 'Q2: Daily Summary Report', 'description': 'Daily summary by class or team with participation rates', 'group': 'update', 'type': 'daily'},
         {'id': 'q3', 'name': 'Q3: Reader Cumulative Enhanced', 'description': 'Complete cumulative stats with class, teacher, team, and participation metrics', 'group': 'export', 'type': 'cumulative'},
@@ -1139,7 +1180,7 @@ def reports_page():
 @app.route('/admin')
 def admin_page():
     """Administration page"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     admin_report_list = [
         {'id': 'q1', 'name': 'Q1: Table Row Counts', 'description': 'Database table row counts (utility report)', 'type': 'utility'},
         {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'type': 'utility'},
@@ -1489,7 +1530,7 @@ def clear_tables():
         db = get_current_db()
         conn = db.get_connection()
         cursor = conn.cursor()
-        env = session.get('environment', 'prod')
+        env = session.get('environment', DEFAULT_DATABASE)
 
         deleted = {}
 
@@ -1534,7 +1575,7 @@ def clear_tables():
 @app.route('/workflows')
 def workflows_page():
     """Workflow execution page"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     db = get_current_db()
     dates = db.get_all_dates()
     return render_template('workflows.html', dates=dates, environment=env)
@@ -1543,7 +1584,7 @@ def workflows_page():
 @app.route('/tables')
 def tables_page():
     """Database tables viewer page"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     table_list = [
         {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams'},
         {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students'},
@@ -1622,19 +1663,19 @@ def view_table(table_id):
 @app.route('/help')
 def help_page():
     """User manual / help page"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     return render_template('help.html', environment=env)
 
 @app.route('/help/claude')
 def help_claude():
     """Claude Code development documentation"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     return render_template('claude_development.html', environment=env)
 
 @app.route('/help/requirements')
 def help_requirements():
     """Application requirements document (IMPLEMENTATION_PROMPT.md)"""
-    env = session.get('environment', 'prod')
+    env = session.get('environment', DEFAULT_DATABASE)
     # Read IMPLEMENTATION_PROMPT.md
     requirements_content = ""
     try:

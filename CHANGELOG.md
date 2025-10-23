@@ -5,6 +5,35 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.1.1] - 2025-10-22
+
+### Database Selection with Persistent Preference
+
+**New Features:**
+- **Persistent Database Preference**: App remembers your last database choice (sample/prod)
+- **Command-Line Selection**: Launch with `python3 app.py --db sample` or `--db prod`
+- **Launcher Scripts**: `run_sample.sh` and `run_prod.sh` for explicit database selection
+- **Safer Default**: Now defaults to sample database (was production)
+- **Priority System**: CLI argument > Config file > Default (sample)
+
+**Improvements:**
+- Sample database now includes Team_Color_Bonus sample data (5pts team1, 10pts team2)
+- UI database switcher now saves preference to `.readathon_config`
+- Startup message shows which database is active and why
+- Verified production and sample databases have identical schemas
+
+**Technical:**
+- Added argparse for command-line argument parsing
+- Config file: `.readathon_config` (gitignored, JSON format)
+- Updated all routes to use configurable default database
+
+**Benefits:**
+- Safer for development (sample by default)
+- Convenient for production use (remembers your choice)
+- Explicit control when needed (CLI flags override config)
+
+---
+
 ## [v2026.1.0] - 2025-10-22
 
 ### First Stable Release for 2025-2026 School Year

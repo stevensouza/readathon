@@ -16,10 +16,25 @@ python3 init_data.py              # Initialize DB with 411 student roster + clas
 
 ### Running the Application
 ```bash
-python3 app.py                    # Start server on http://127.0.0.1:5001
+# Default: Uses last database choice (or sample if first run)
+python3 app.py
+
+# Explicitly use sample database
+python3 app.py --db sample
 # OR
-python3 start_server_5001.py      # Alternative start script
+./run_sample.sh
+
+# Explicitly use production database
+python3 app.py --db prod
+# OR
+./run_prod.sh
 ```
+
+**Database Selection:**
+- App remembers last database choice in `.readathon_config` (gitignored)
+- Priority: CLI argument > Config file > Default (sample)
+- Can switch databases via UI dropdown (persists to config file)
+- Startup shows which database is active and why
 
 ### Testing
 ```bash
@@ -35,7 +50,7 @@ python3 clear_all_data.py         # Reset database tables (keeps schema)
 
 ### Technology Stack
 - **Backend:** Flask 3.0.0 (pure Python, no build tools)
-- **Database:** SQLite 3 (local file: `readathon_prod.db`)
+- **Database:** SQLite 3 (local files: `readathon_prod.db` and `readathon_sample.db`)
 - **Frontend:** Bootstrap 5.3.0 + Bootstrap Icons (CDN-loaded)
 - **No npm/webpack:** Static HTML templates with Jinja2
 
@@ -114,11 +129,14 @@ IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
 3. **Consult docs/00-INDEX.md** - Searchable feature index
 
 ### Current Version
-**v2026.1.0** - First stable release for 2025-2026 school year
+**v2026.1.1** - Database selection with persistent preference
 
 See `VERSION` file for current version and `CHANGELOG.md` for release history.
 
 ### Recent Completions
+- ✅ Database selection with persistent preference (v2026.1.1)
+- ✅ Command-line arguments for database selection (--db sample/prod)
+- ✅ Launcher scripts (run_sample.sh, run_prod.sh)
 - ✅ Enhanced metadata implemented for all 22 reports (Q1-Q23)
 - ✅ Analysis modal working with automated insights
 - ✅ SQL queries extracted to queries.py module
@@ -130,7 +148,12 @@ See `VERSION` file for current version and `CHANGELOG.md` for release history.
 - **Local-only application:** No server deployment, runs on user's Mac
 - **Offline-capable:** Works without internet (after Bootstrap CDN loads once)
 - **CSV-based data entry:** All data imported from PledgeReg system
-- **Multi-environment support:** `readathon_prod.db` (prod) vs `readathon_sample.db` (test)
+- **Multi-environment support:**
+  - `readathon_prod.db` (production - real student data)
+  - `readathon_sample.db` (sample - fictitious data for testing)
+  - Persistent database preference stored in `.readathon_config`
+  - Default: sample database (safer for development)
+  - Override via CLI: `--db prod` or `--db sample`
 
 ### Report Numbering (Non-Sequential)
 The system has 22 reports with non-sequential numbers:
