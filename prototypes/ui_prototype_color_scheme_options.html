@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Scheme Options - Read-a-Thon Prototypes</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+
+        /* Tab styling - make more compact */
+        .nav-tabs {
+            margin-bottom: 1rem !important;
+        }
+
+        .nav-tabs .nav-link {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .prototype-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .prototype-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #0d6efd;
+        }
+
+        .prototype-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 20px;
+            padding: 10px 12px;
+            background-color: #e7f3ff;
+            border-left: 3px solid #0d6efd;
+            border-radius: 4px;
+            line-height: 1.4;
+        }
+
+        /* Demo container */
+        .demo-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Common accordion styles */
+        .accordion-button {
+            font-weight: 600;
+        }
+
+        .accordion-button:not(.collapsed) {
+            box-shadow: none;
+        }
+
+        .accordion-body {
+            padding: 1.5rem;
+        }
+
+        /* Common table styles */
+        .demo-table {
+            font-size: 0.9rem;
+        }
+
+        .demo-table th {
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.75rem 0.5rem;
+        }
+
+        .demo-table td {
+            padding: 0.75rem 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* OPTION A: Neutral Monochrome */
+        .option-a .accordion-button {
+            background-color: #f8f9fa;
+            color: #1f2937;
+            border-left: 4px solid #6c757d;
+        }
+
+        .option-a .accordion-button:not(.collapsed) {
+            background-color: #e9ecef;
+            color: #1f2937;
+        }
+
+        .option-a .accordion-button.accent-1 {
+            border-left-color: #495057;
+        }
+
+        .option-a .accordion-button.accent-2 {
+            border-left-color: #6c757d;
+        }
+
+        .option-a .accordion-button.accent-3 {
+            border-left-color: #868e96;
+        }
+
+        .option-a .badge-replaced {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+
+        .option-a .badge-inserted {
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+
+        .option-a .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .option-a .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .option-a .badge-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .option-a th {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        /* OPTION B: Soft Pastels */
+        .option-b .accordion-button {
+            background-color: #f8f9fa;
+            color: #1f2937;
+            border-left: 4px solid #64748b;
+        }
+
+        .option-b .accordion-button:not(.collapsed) {
+            background-color: #f1f5f9;
+            color: #1f2937;
+        }
+
+        .option-b .accordion-button.accent-1 {
+            border-left-color: #3b82f6;
+            background: linear-gradient(90deg, #eff6ff 0%, #f8f9fa 20%);
+        }
+
+        .option-b .accordion-button.accent-2 {
+            border-left-color: #10b981;
+            background: linear-gradient(90deg, #f0fdf4 0%, #f8f9fa 20%);
+        }
+
+        .option-b .accordion-button.accent-3 {
+            border-left-color: #f59e0b;
+            background: linear-gradient(90deg, #fffbeb 0%, #f8f9fa 20%);
+        }
+
+        .option-b .accordion-button.accent-4 {
+            border-left-color: #64748b;
+            background: linear-gradient(90deg, #f1f5f9 0%, #f8f9fa 20%);
+        }
+
+        .option-b .badge-replaced {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .option-b .badge-inserted {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-b .badge-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fef08a;
+        }
+
+        .option-b .badge-success {
+            background-color: #d1fae5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-b .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .option-b th {
+            background-color: #64748b;
+            color: white;
+        }
+
+        /* OPTION C: Border Accents Only */
+        .option-c .accordion-button {
+            background-color: #ffffff;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #6c757d;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .option-c .accordion-button:not(.collapsed) {
+            background-color: #fafafa;
+            color: #1f2937;
+        }
+
+        .option-c .accordion-button.accent-1 {
+            border-left-color: #4a90e2;
+        }
+
+        .option-c .accordion-button.accent-2 {
+            border-left-color: #0f766e;
+        }
+
+        .option-c .accordion-button.accent-3 {
+            border-left-color: #b45309;
+        }
+
+        .option-c .accordion-button.accent-4 {
+            border-left-color: #475569;
+        }
+
+        .option-c .badge-replaced {
+            background-color: #ffffff;
+            color: #b45309;
+            border: 1px solid #f59e0b;
+        }
+
+        .option-c .badge-inserted {
+            background-color: #ffffff;
+            color: #047857;
+            border: 1px solid #10b981;
+        }
+
+        .option-c .badge-warning {
+            background-color: #ffffff;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        .option-c .badge-success {
+            background-color: #ffffff;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .option-c .badge-info {
+            background-color: #ffffff;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .option-c th {
+            background-color: #f8f9fa;
+            color: #1f2937;
+            border-bottom: 2px solid #475569;
+        }
+
+        /* OPTION D: Minimal Slate */
+        .option-d .accordion-button {
+            background-color: #f8fafc;
+            color: #334155;
+            border: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 8px;
+        }
+
+        .option-d .accordion-button:not(.collapsed) {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .option-d .accordion-button.accent-1::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #64748b;
+        }
+
+        .option-d .accordion-button.accent-2::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #475569;
+        }
+
+        .option-d .accordion-button.accent-3::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #94a3b8;
+        }
+
+        .option-d .accordion-button.accent-4::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #cbd5e1;
+        }
+
+        .option-d .accordion-button {
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .option-d .badge-replaced {
+            background-color: #fef3c7;
+            color: #78350f;
+            border: none;
+        }
+
+        .option-d .badge-inserted {
+            background-color: #d1fae5;
+            color: #064e3b;
+            border: none;
+        }
+
+        .option-d .badge-warning {
+            background-color: #fef9c3;
+            color: #713f12;
+            border: none;
+        }
+
+        .option-d .badge-success {
+            background-color: #dcfce7;
+            color: #14532d;
+            border: none;
+        }
+
+        .option-d .badge-info {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+            border: none;
+        }
+
+        .option-d th {
+            background-color: #334155;
+            color: white;
+        }
+
+        /* OPTION E: Tinted Gray (Warmth) */
+        .option-e .accordion-button {
+            background: linear-gradient(135deg, #fafaf9 0%, #f5f5f4 100%);
+            color: #292524;
+            border-left: 3px solid #a8a29e;
+        }
+
+        .option-e .accordion-button:not(.collapsed) {
+            background: linear-gradient(135deg, #f5f5f4 0%, #e7e5e4 100%);
+            color: #1c1917;
+        }
+
+        .option-e .accordion-button.accent-1 {
+            border-left-color: #6366f1;
+        }
+
+        .option-e .accordion-button.accent-2 {
+            border-left-color: #059669;
+        }
+
+        .option-e .accordion-button.accent-3 {
+            border-left-color: #d97706;
+        }
+
+        .option-e .accordion-button.accent-4 {
+            border-left-color: #78716c;
+        }
+
+        .option-e .badge-replaced {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .option-e .badge-inserted {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .option-e .badge-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fbbf24;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .option-e .badge-success {
+            background-color: #d1fae5;
+            color: #047857;
+            border: 1px solid #34d399;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .option-e .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #60a5fa;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .option-e th {
+            background: linear-gradient(135deg, #57534e 0%, #44403c 100%);
+            color: white;
+        }
+
+        /* OPTION F: Blue/Yellow Alternating (User's Choice) */
+        .option-f .accordion-button {
+            background-color: #f8f9fa;
+            color: #1f2937;
+            border-left: 4px solid #64748b;
+        }
+
+        .option-f .accordion-button:not(.collapsed) {
+            background-color: #f1f5f9;
+            color: #1f2937;
+        }
+
+        .option-f .accordion-button.accent-blue {
+            background: linear-gradient(90deg, #dbeafe 0%, #f8f9fa 30%);
+            border-left-color: #3b82f6;
+        }
+
+        .option-f .accordion-button.accent-yellow {
+            background: linear-gradient(90deg, #fef3c7 0%, #f8f9fa 30%);
+            border-left-color: #f59e0b;
+        }
+
+        .option-f .badge-replaced {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .option-f .badge-inserted {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-f .badge-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fef08a;
+        }
+
+        .option-f .badge-success {
+            background-color: #d1fae5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-f .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .option-f .badge-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .option-f th {
+            background-color: #1e3a5f;
+            color: white;
+        }
+
+        .option-f .card-header-blue {
+            background: linear-gradient(90deg, #dbeafe 0%, #f0f9ff 100%);
+            color: #1e3a8a;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .option-f .card-header-yellow {
+            background: linear-gradient(90deg, #fef3c7 0%, #fffbeb 100%);
+            color: #78350f;
+            border-left: 4px solid #f59e0b;
+        }
+
+        /* OPTION G: Sage/Lavender Alternating */
+        .option-g .accordion-button {
+            background-color: #f8f9fa;
+            color: #1f2937;
+            border-left: 4px solid #64748b;
+        }
+
+        .option-g .accordion-button:not(.collapsed) {
+            background-color: #f1f5f9;
+            color: #1f2937;
+        }
+
+        .option-g .accordion-button.accent-sage {
+            background: linear-gradient(90deg, #f0fdf4 0%, #f8f9fa 30%);
+            border-left-color: #10b981;
+        }
+
+        .option-g .accordion-button.accent-lavender {
+            background: linear-gradient(90deg, #f5f3ff 0%, #f8f9fa 30%);
+            border-left-color: #8b5cf6;
+        }
+
+        .option-g .badge-replaced {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .option-g .badge-inserted {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-g .badge-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fef08a;
+        }
+
+        .option-g .badge-success {
+            background-color: #d1fae5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-g .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .option-g .badge-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .option-g th {
+            background-color: #495057;
+            color: white;
+        }
+
+        .option-g .card-header-sage {
+            background: linear-gradient(90deg, #f0fdf4 0%, #f7fee7 100%);
+            color: #14532d;
+            border-left: 4px solid #10b981;
+        }
+
+        .option-g .card-header-lavender {
+            background: linear-gradient(90deg, #f5f3ff 0%, #faf5ff 100%);
+            color: #581c87;
+            border-left: 4px solid #8b5cf6;
+        }
+
+        /* OPTION H: Blue Only (Uniform) */
+        .option-h .accordion-button {
+            background: linear-gradient(90deg, #dbeafe 0%, #f8f9fa 30%);
+            color: #1f2937;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .option-h .accordion-button:not(.collapsed) {
+            background: linear-gradient(90deg, #bfdbfe 0%, #e0f2fe 30%);
+            color: #1e3a8a;
+        }
+
+        .option-h .badge-replaced {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .option-h .badge-inserted {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-h .badge-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fef08a;
+        }
+
+        .option-h .badge-success {
+            background-color: #d1fae5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .option-h .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .option-h .badge-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .option-h th {
+            background-color: #1e3a5f;
+            color: white;
+        }
+
+        .option-h .card-header-blue {
+            background: linear-gradient(90deg, #dbeafe 0%, #f0f9ff 100%);
+            color: #1e3a8a;
+            border-left: 4px solid #3b82f6;
+        }
+
+        /* Common badge styling */
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center mb-2" style="font-size: 1.75rem;">Color Scheme Options for Subdued Aesthetic</h1>
+        <p class="text-center text-muted mb-3" style="font-size: 0.9rem;">Compare eight different approaches to creating a more subdued, professional color scheme</p>
+
+        <!-- Tabs for switching between options -->
+        <ul class="nav nav-tabs mb-4" id="designTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="option-a-tab" data-bs-toggle="tab" data-bs-target="#option-a" type="button">
+                    Option A: Neutral Monochrome
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-b-tab" data-bs-toggle="tab" data-bs-target="#option-b" type="button">
+                    Option B: Soft Pastels
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-c-tab" data-bs-toggle="tab" data-bs-target="#option-c" type="button">
+                    Option C: Border Accents Only
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-d-tab" data-bs-toggle="tab" data-bs-target="#option-d" type="button">
+                    Option D: Minimal Slate
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-e-tab" data-bs-toggle="tab" data-bs-target="#option-e" type="button">
+                    Option E: Tinted Gray (Warm)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-f-tab" data-bs-toggle="tab" data-bs-target="#option-f" type="button">
+                    ⭐ Option F: Blue/Yellow Alternating
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-g-tab" data-bs-toggle="tab" data-bs-target="#option-g" type="button">
+                    Option G: Sage/Lavender Alternating
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="option-h-tab" data-bs-toggle="tab" data-bs-target="#option-h" type="button">
+                    🏆 Option H: Blue Only (Uniform)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="designTabsContent">
+            <!-- OPTION A: Neutral Monochrome -->
+            <div class="tab-pane fade show active" id="option-a" role="tabpanel">
+                <div class="prototype-section option-a">
+                    <div class="prototype-title">Option A: Neutral Monochrome</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Maximum subtlety using grayscale palette with minimal color. Very professional and minimalist.
+                        <br><strong>Best for:</strong> Users who want the most subdued, distraction-free interface. Color only appears when absolutely necessary (warnings, success states).
+                        <br><strong>Color Usage:</strong> Gray spectrum (white to charcoal), with subtle amber/green for critical status only.
+                    </div>
+
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;">Upload Data Page Preview</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionA">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseA1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseA1" class="accordion-collapse collapse show" data-bs-parent="#accordionA">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseA2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseA2" class="accordion-collapse collapse" data-bs-parent="#accordionA">
+                                    <div class="accordion-body">
+                                        Upload cumulative statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseA3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseA3" class="accordion-collapse collapse" data-bs-parent="#accordionA">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1f2937;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION B: Soft Pastels -->
+            <div class="tab-pane fade" id="option-b" role="tabpanel">
+                <div class="prototype-section option-b">
+                    <div class="prototype-title">Option B: Soft Pastels</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Desaturated colors with subtle gradient backgrounds. Maintains color coding but in a softer, more pleasant way.
+                        <br><strong>Best for:</strong> Users who want visual distinction between sections but with a calming, gentle aesthetic.
+                        <br><strong>Color Usage:</strong> Soft blues, greens, ambers with gradient washes. Pastel badge backgrounds with darker text.
+                    </div>
+
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;">Upload Data Page Preview</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionB">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseB1" class="accordion-collapse collapse show" data-bs-parent="#accordionB">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseB2" class="accordion-collapse collapse" data-bs-parent="#accordionB">
+                                    <div class="accordion-body">
+                                        Upload cumulative statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseB3" class="accordion-collapse collapse" data-bs-parent="#accordionB">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseB4" class="accordion-collapse collapse" data-bs-parent="#accordionB">
+                                    <div class="accordion-body">
+                                        View upload history...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1f2937;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION C: Border Accents Only -->
+            <div class="tab-pane fade" id="option-c" role="tabpanel">
+                <div class="prototype-section option-c">
+                    <div class="prototype-title">Option C: Border Accents Only</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Clean white backgrounds with colored left borders for distinction. Minimal use of background color.
+                        <br><strong>Best for:</strong> Users who want maximum clarity and whitespace with subtle visual cues.
+                        <br><strong>Color Usage:</strong> White/light gray backgrounds, thin colored borders, outline badges with colored borders.
+                    </div>
+
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;">Upload Data Page Preview</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionC">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseC1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseC1" class="accordion-collapse collapse show" data-bs-parent="#accordionC">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseC2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseC2" class="accordion-collapse collapse" data-bs-parent="#accordionC">
+                                    <div class="accordion-body">
+                                        Upload cumulative statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseC3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseC3" class="accordion-collapse collapse" data-bs-parent="#accordionC">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseC4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseC4" class="accordion-collapse collapse" data-bs-parent="#accordionC">
+                                    <div class="accordion-body">
+                                        View upload history...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1f2937;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION D: Minimal Slate -->
+            <div class="tab-pane fade" id="option-d" role="tabpanel">
+                <div class="prototype-section option-d">
+                    <div class="prototype-title">Option D: Minimal Slate</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Slate/blue-gray palette with subtle shadows. Modern, clean, with a slightly cooler tone.
+                        <br><strong>Best for:</strong> Users who want a contemporary, professional look with excellent readability.
+                        <br><strong>Color Usage:</strong> Slate grays for structure, subtle shadows for depth, minimal accent colors. Dark slate headers.
+                    </div>
+
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #334155;">Upload Data Page Preview</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionD">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseD1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseD1" class="accordion-collapse collapse show" data-bs-parent="#accordionD">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseD2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseD2" class="accordion-collapse collapse" data-bs-parent="#accordionD">
+                                    <div class="accordion-body">
+                                        Upload cumulative statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseD3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseD3" class="accordion-collapse collapse" data-bs-parent="#accordionD">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseD4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseD4" class="accordion-collapse collapse" data-bs-parent="#accordionD">
+                                    <div class="accordion-body">
+                                        View upload history...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #334155;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION E: Tinted Gray (Warm) -->
+            <div class="tab-pane fade" id="option-e" role="tabpanel">
+                <div class="prototype-section option-e">
+                    <div class="prototype-title">Option E: Tinted Gray (Warm)</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Warm gray tones with subtle gradients and shadows. Less clinical than pure gray, more inviting.
+                        <br><strong>Best for:</strong> Users who want a subdued aesthetic but with a warmer, more approachable feel.
+                        <br><strong>Color Usage:</strong> Stone/warm grays with subtle gradients, selective accent colors, soft shadows for depth.
+                    </div>
+
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #292524;">Upload Data Page Preview</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionE">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseE1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseE1" class="accordion-collapse collapse show" data-bs-parent="#accordionE">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseE2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseE2" class="accordion-collapse collapse" data-bs-parent="#accordionE">
+                                    <div class="accordion-body">
+                                        Upload cumulative statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseE3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseE3" class="accordion-collapse collapse" data-bs-parent="#accordionE">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseE4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseE4" class="accordion-collapse collapse" data-bs-parent="#accordionE">
+                                    <div class="accordion-body">
+                                        View upload history...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #292524;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION F: Blue/Yellow Alternating (User's Choice) -->
+            <div class="tab-pane fade" id="option-f" role="tabpanel">
+                <div class="prototype-section option-f">
+                    <div class="prototype-title">⭐ Option F: Blue/Yellow Alternating (Team Colors)</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Alternating light blue and yellow (matching team competition colors) with soft gradients and matching borders.
+                        <br><strong>Best for:</strong> Users who want subtle color distinction while maintaining team identity throughout the interface.
+                        <br><strong>Color Usage:</strong> Light blue (#dbeafe) and light yellow (#fef3c7) alternating, with pastel badges. Table headers in dark blue (#1e3a5f - matches school banner).
+                        <br><strong>Pattern:</strong> Blue → Yellow → Blue → Yellow (alternating for each section)
+                    </div>
+
+                    <!-- UPLOAD PAGE PREVIEW -->
+                    <div class="demo-container mb-4">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-upload me-2"></i>Upload Data Page</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionF">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-blue" type="button" data-bs-toggle="collapse" data-bs-target="#collapseF1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseF1" class="accordion-collapse collapse show" data-bs-parent="#accordionF">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export (supports multiple files)...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-yellow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseF2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseF2" class="accordion-collapse collapse" data-bs-parent="#accordionF">
+                                    <div class="accordion-body">
+                                        Upload cumulative fundraising and reading statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-blue" type="button" data-bs-toggle="collapse" data-bs-target="#collapseF3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseF3" class="accordion-collapse collapse" data-bs-parent="#accordionF">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data for special event days...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-yellow" type="button" data-bs-toggle="collapse" data-bs-target="#collapseF4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseF4" class="accordion-collapse collapse" data-bs-parent="#accordionF">
+                                    <div class="accordion-body">
+                                        View complete audit trail of all data uploads...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1f2937;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- REPORTS PAGE PREVIEW -->
+                    <div class="demo-container mb-4">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-graph-up me-2"></i>Reports & Data Page</h3>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-blue">
+                                        <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Available Reports</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Select from 22 pre-configured reports (Q1-Q23)...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-yellow">
+                                        <h5 class="mb-0"><i class="bi bi-layout-text-sidebar me-2"></i>Workflows</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Run multiple reports in sequence...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN PAGE PREVIEW -->
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-gear-fill me-2"></i>Admin Page</h3>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-blue">
+                                        <h5 class="mb-0"><i class="bi bi-file-earmark-zip me-2"></i>Export All Data</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Export database tables and reports to ZIP file...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-yellow">
+                                        <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Admin Reports</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Access data integrity and reconciliation reports...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION G: Sage/Lavender Alternating -->
+            <div class="tab-pane fade" id="option-g" role="tabpanel">
+                <div class="prototype-section option-g">
+                    <div class="prototype-title">Option G: Sage/Lavender Alternating</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Calming nature-inspired palette with soft sage green and gentle lavender alternating.
+                        <br><strong>Best for:</strong> Users who want a soothing, professional aesthetic with subtle color variety.
+                        <br><strong>Color Usage:</strong> Light sage (#f0fdf4) and light lavender (#f5f3ff) alternating, with pastel badges. Table headers in dark gray (#495057).
+                        <br><strong>Pattern:</strong> Sage → Lavender → Sage → Lavender (alternating for each section)
+                    </div>
+
+                    <!-- UPLOAD PAGE PREVIEW -->
+                    <div class="demo-container mb-4">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-upload me-2"></i>Upload Data Page</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionG">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button accent-sage" type="button" data-bs-toggle="collapse" data-bs-target="#collapseG1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseG1" class="accordion-collapse collapse show" data-bs-parent="#accordionG">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export (supports multiple files)...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-lavender" type="button" data-bs-toggle="collapse" data-bs-target="#collapseG2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseG2" class="accordion-collapse collapse" data-bs-parent="#accordionG">
+                                    <div class="accordion-body">
+                                        Upload cumulative fundraising and reading statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-sage" type="button" data-bs-toggle="collapse" data-bs-target="#collapseG3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseG3" class="accordion-collapse collapse" data-bs-parent="#accordionG">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data for special event days...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed accent-lavender" type="button" data-bs-toggle="collapse" data-bs-target="#collapseG4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseG4" class="accordion-collapse collapse" data-bs-parent="#accordionG">
+                                    <div class="accordion-body">
+                                        View complete audit trail of all data uploads...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1f2937;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- REPORTS PAGE PREVIEW -->
+                    <div class="demo-container mb-4">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-graph-up me-2"></i>Reports & Data Page</h3>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-sage">
+                                        <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Available Reports</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Select from 22 pre-configured reports (Q1-Q23)...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-lavender">
+                                        <h5 class="mb-0"><i class="bi bi-layout-text-sidebar me-2"></i>Workflows</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Run multiple reports in sequence...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN PAGE PREVIEW -->
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-gear-fill me-2"></i>Admin Page</h3>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-sage">
+                                        <h5 class="mb-0"><i class="bi bi-file-earmark-zip me-2"></i>Export All Data</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Export database tables and reports to ZIP file...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-lavender">
+                                        <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Admin Reports</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Access data integrity and reconciliation reports...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OPTION H: Blue Only (Uniform) -->
+            <div class="tab-pane fade" id="option-h" role="tabpanel">
+                <div class="prototype-section option-h">
+                    <div class="prototype-title">🏆 Option H: Blue Only (Uniform)</div>
+                    <div class="prototype-description">
+                        <strong>Philosophy:</strong> Cohesive, professional look using soft blue throughout all sections. No alternating colors - consistent visual language.
+                        <br><strong>Best for:</strong> Users who want the subtle blue aesthetic from Option F but applied uniformly across all sections.
+                        <br><strong>Color Usage:</strong> Light blue (#dbeafe) with gradient for all accordion sections and cards, blue border (#3b82f6), same pastel badges. Table headers in dark blue (#1e3a5f - matches school banner).
+                        <br><strong>Advantage:</strong> Creates a calm, unified look that reinforces the team blue identity without visual alternation.
+                    </div>
+
+                    <!-- UPLOAD PAGE PREVIEW -->
+                    <div class="demo-container mb-4">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-upload me-2"></i>Upload Data Page</h3>
+
+                        <!-- Accordion Sections -->
+                        <div class="accordion mb-4" id="accordionH">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseH1">
+                                        <i class="bi bi-calendar3 me-2"></i> Daily Minutes Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseH1" class="accordion-collapse collapse show" data-bs-parent="#accordionH">
+                                    <div class="accordion-body">
+                                        Upload daily reading minutes from CSV export (supports multiple files)...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseH2">
+                                        <i class="bi bi-bar-chart me-2"></i> Cumulative Stats Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseH2" class="accordion-collapse collapse" data-bs-parent="#accordionH">
+                                    <div class="accordion-body">
+                                        Upload cumulative fundraising and reading statistics...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseH3">
+                                        <i class="bi bi-star me-2"></i> Team Color Bonus Upload
+                                    </button>
+                                </h2>
+                                <div id="collapseH3" class="accordion-collapse collapse" data-bs-parent="#accordionH">
+                                    <div class="accordion-body">
+                                        Upload team color bonus data for special event days...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseH4">
+                                        <i class="bi bi-clock-history me-2"></i> Upload History
+                                    </button>
+                                </h2>
+                                <div id="collapseH4" class="accordion-collapse collapse" data-bs-parent="#accordionH">
+                                    <div class="accordion-body">
+                                        View complete audit trail of all data uploads...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Table -->
+                        <h4 style="font-size: 1rem; margin-bottom: 15px; color: #1f2937;">Upload History</h4>
+                        <table class="table table-sm demo-table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File</th>
+                                    <th>Rows</th>
+                                    <th>Action</th>
+                                    <th>Type</th>
+                                    <th>Audit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2025-10-19</td>
+                                    <td>comprehensive_readers_report.csv</td>
+                                    <td>419</td>
+                                    <td><span class="badge badge-replaced">replaced</span></td>
+                                    <td><span class="badge badge-warning">warning</span> <span class="badge badge-info">cumulative_stats</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-exclamation-triangle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-18</td>
+                                    <td>daily_minutes_2025-10-18.csv</td>
+                                    <td>201</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-circle"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>2025-10-17</td>
+                                    <td>daily_minutes_2025-10-17.csv</td>
+                                    <td>228</td>
+                                    <td><span class="badge badge-inserted">inserted</span></td>
+                                    <td><span class="badge badge-success">success</span> <span class="badge badge-info">update</span></td>
+                                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-info-circle"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- REPORTS PAGE PREVIEW -->
+                    <div class="demo-container mb-4">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-graph-up me-2"></i>Reports & Data Page</h3>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-blue">
+                                        <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Available Reports</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Select from 22 pre-configured reports (Q1-Q23)...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-blue">
+                                        <h5 class="mb-0"><i class="bi bi-layout-text-sidebar me-2"></i>Workflows</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Run multiple reports in sequence...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN PAGE PREVIEW -->
+                    <div class="demo-container">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #1f2937;"><i class="bi bi-gear-fill me-2"></i>Admin Page</h3>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-blue">
+                                        <h5 class="mb-0"><i class="bi bi-file-earmark-zip me-2"></i>Export All Data</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Export database tables and reports to ZIP file...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header card-header-blue">
+                                        <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Admin Reports</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-0">Access data integrity and reconciliation reports...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -705,6 +705,125 @@
             overflow-y: auto;
             max-height: calc(85vh - 80px);
         }
+
+        /* ========== OPTION H COLOR SCHEME (Subdued Blue) ========== */
+
+        /* Soft Blue Card/Accordion Headers */
+        .card-header-blue, .bg-primary-soft {
+            background: linear-gradient(90deg, #dbeafe 0%, #f0f9ff 100%) !important;
+            color: #1e3a8a !important;
+            border-left: 4px solid #3b82f6 !important;
+        }
+
+        /* Accordion buttons with soft blue */
+        .accordion-button:not(.collapsed) {
+            background: linear-gradient(90deg, #bfdbfe 0%, #e0f2fe 30%) !important;
+            color: #1e3a8a !important;
+        }
+
+        .accordion-button {
+            background: linear-gradient(90deg, #dbeafe 0%, #f8f9fa 30%) !important;
+            color: #1f2937 !important;
+            border-left: 4px solid #3b82f6 !important;
+        }
+
+        /* Table Headers - Dark Blue */
+        .table thead th, .report-table thead th {
+            background-color: #1e3a5f !important;
+            color: white !important;
+        }
+
+        /* Soft Pastel Badges */
+        .badge.bg-warning, .badge-warning {
+            background-color: #fef9c3 !important;
+            color: #854d0e !important;
+            border: 1px solid #fef08a !important;
+        }
+
+        .badge.bg-success, .badge-success {
+            background-color: #d1fae5 !important;
+            color: #047857 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+
+        .badge.bg-danger, .badge-danger {
+            background-color: #fee2e2 !important;
+            color: #991b1b !important;
+            border: 1px solid #fecaca !important;
+        }
+
+        .badge.bg-info, .badge-info {
+            background-color: #dbeafe !important;
+            color: #1e40af !important;
+            border: 1px solid #bfdbfe !important;
+        }
+
+        .badge.bg-secondary, .badge-secondary {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        .badge.bg-primary, .badge-primary {
+            background-color: #dbeafe !important;
+            color: #1e40af !important;
+            border: 1px solid #bfdbfe !important;
+        }
+
+        /* List group items with soft colors */
+        .list-group-item.active {
+            background-color: #dbeafe !important;
+            border-color: #93c5fd !important;
+            color: #1e3a8a !important;
+        }
+
+        /* Alert boxes with soft colors */
+        .alert-warning {
+            background-color: #fef9c3 !important;
+            border-color: #fef08a !important;
+            color: #854d0e !important;
+        }
+
+        .alert-success {
+            background-color: #d1fae5 !important;
+            border-color: #a7f3d0 !important;
+            color: #047857 !important;
+        }
+
+        .alert-danger {
+            background-color: #fee2e2 !important;
+            border-color: #fecaca !important;
+            color: #991b1b !important;
+        }
+
+        .alert-info {
+            background-color: #dbeafe !important;
+            border-color: #bfdbfe !important;
+            color: #1e40af !important;
+        }
+
+        /* Soft Blue Buttons (replacing bright primary/success/info/warning) */
+        .btn-primary, .btn-success, .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            border-color: #2563eb !important;
+            color: white !important;
+        }
+
+        .btn-primary:hover, .btn-success:hover, .btn-info:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: #1d4ed8 !important;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            border-color: #d97706 !important;
+            color: white !important;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+            border-color: #b45309 !important;
+        }
     </style>
 
     {% block extra_css %}{% endblock %}

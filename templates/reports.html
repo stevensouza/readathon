@@ -15,7 +15,7 @@
     <!-- Report List -->
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header card-header-blue">
                 <h5 class="mb-0">Available Reports</h5>
             </div>
             <div class="list-group list-group-flush">
@@ -33,7 +33,7 @@
 
         <!-- Report Options -->
         <div class="card mt-3" id="reportOptions" style="display: none;">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header card-header-blue">
                 <h6 class="mb-0">Report Options</h6>
             </div>
             <div class="card-body">
@@ -438,7 +438,7 @@ function displayReport(report) {
     // Render complete report
     document.getElementById('reportResults').innerHTML = `
         <div class="card" style="border-radius: 8px; overflow: hidden;">
-            <div class="card-header bg-primary text-white" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-header card-header-blue" style="display: flex; justify-content: space-between; align-items: center;">
                 <h5 class="mb-0"><i class="bi bi-graph-up"></i> ${report.title}</h5>
                 <div>
                     ${headerButtons}

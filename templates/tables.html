@@ -15,7 +15,7 @@
     <!-- Table List -->
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header {% if environment == 'sample' %}bg-danger{% else %}bg-primary{% endif %} text-white">
+            <div class="card-header card-header-blue">
                 <h5 class="mb-0">Available Tables</h5>
             </div>
             <div class="list-group list-group-flush">
@@ -129,7 +129,7 @@ function displayTable(table) {
 
     document.getElementById('tableResults').innerHTML = `
         <div class="card">
-            <div class="card-header {% if environment == 'sample' %}bg-danger{% else %}bg-primary{% endif %} text-white">
+            <div class="card-header card-header-blue">
                 <h5 class="mb-0">${table.title}</h5>
             </div>
             <div class="card-body">

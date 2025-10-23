@@ -14,7 +14,7 @@
 <div class="row">
     <div class="col-md-4">
         <div class="card mb-3">
-            <div class="card-header bg-success text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQD">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQD">
                 <h5 class="mb-0">
                     QD: Daily Slide Update
                     <i class="bi bi-chevron-down float-end"></i>
@@ -48,7 +48,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header bg-info text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQC">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQC">
                 <h5 class="mb-0">
                     QC: Cumulative Workflow
                     <i class="bi bi-chevron-down float-end"></i>
@@ -74,7 +74,7 @@
         </div>
 
         <div class="card mt-3">
-            <div class="card-header bg-primary text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQF">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQF">
                 <h5 class="mb-0">
                     QF: Final Prize Winners
                     <i class="bi bi-chevron-down float-end"></i>
@@ -113,7 +113,7 @@
         </div>
 
         <div class="card mt-3">
-            <div class="card-header bg-warning text-dark" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQA">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseQA">
                 <h5 class="mb-0">
                     QA: All Main Reports
                     <i class="bi bi-chevron-down float-end"></i>
@@ -312,7 +312,7 @@ function displayWorkflowResults(workflow) {
 
         reportsHtml += `
             <div class="card mb-3">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header card-header-blue">
                     <h6 class="mb-0">${index + 1}. ${report.title}</h6>
                 </div>
                 <div class="card-body">
@@ -330,7 +330,7 @@ function displayWorkflowResults(workflow) {
 
     document.getElementById('workflowResults').innerHTML = `
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header card-header-blue">
                 <h5 class="mb-0">${workflow.workflow_name}</h5>
             </div>
             <div class="card-body">
