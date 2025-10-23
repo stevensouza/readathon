@@ -47,6 +47,9 @@ args, unknown = parser.parse_known_args()
 # Determine default database: CLI > Config File > 'sample'
 DEFAULT_DATABASE = args.db if args.db else read_config()
 
+# Persist the database choice for next startup
+write_config(DEFAULT_DATABASE)
+
 print(f"🗄️  Starting with database: {DEFAULT_DATABASE}")
 if args.db:
     print(f"   (Specified via command line: --db {args.db})")
@@ -197,6 +200,19 @@ def school_tab():
 
     # Team 1 (cumulative through selected date)
     team1_where = f"AND dl.log_date <= '{date_filter}'" if date_filter != 'all' and date_filter in dates else ""
+
+    # Separate query for fundraising to avoid row multiplication from Daily_Logs join
+    team1_fundraising_query = f"""
+        SELECT
+            COALESCE(SUM(rc.donation_amount), 0) as fundraising
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        WHERE LOWER(r.team_name) = LOWER('{team1_name}')
+    """
+    team1_fundraising_result = db.execute_query(team1_fundraising_query)
+    team1_fundraising = team1_fundraising_result[0]['fundraising'] if team1_fundraising_result and team1_fundraising_result[0] else 0
+
+    # Query for minutes and other stats
     team1_query = f"""
         WITH TeamBonus AS (
             SELECT SUM(tcb.bonus_minutes) as total_bonus
@@ -206,12 +222,10 @@ def school_tab():
         )
         SELECT
             COUNT(DISTINCT r.class_name) as classes,
-            COALESCE(SUM(rc.donation_amount), 0) as fundraising,
             COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_minutes_base,
             COALESCE((SELECT total_bonus FROM TeamBonus), 0) as bonus_minutes,
             COUNT(DISTINCT r.student_name) as students
         FROM Roster r
-        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
         WHERE LOWER(r.team_name) = LOWER('{team1_name}') {team1_where}
     """
@@ -223,7 +237,7 @@ def school_tab():
         teams[team1_name] = {
             'display_name': team1_name.upper(),
             'classes': team1_result[0]['classes'] or 0,
-            'fundraising': team1_result[0]['fundraising'] or 0,
+            'fundraising': team1_fundraising,
             'minutes_base': minutes_base,
             'bonus_minutes': bonus_min,
             'minutes_with_color': minutes_with_color,
@@ -232,9 +246,21 @@ def school_tab():
             'students': team1_result[0]['students'] or 0
         }
     else:
-        teams[team1_name] = {'display_name': team1_name.upper(), 'classes': 0, 'fundraising': 0, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
+        teams[team1_name] = {'display_name': team1_name.upper(), 'classes': 0, 'fundraising': team1_fundraising, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
 
     # Team 2
+    # Separate query for fundraising to avoid row multiplication from Daily_Logs join
+    team2_fundraising_query = f"""
+        SELECT
+            COALESCE(SUM(rc.donation_amount), 0) as fundraising
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        WHERE LOWER(r.team_name) = LOWER('{team2_name}')
+    """
+    team2_fundraising_result = db.execute_query(team2_fundraising_query)
+    team2_fundraising = team2_fundraising_result[0]['fundraising'] if team2_fundraising_result and team2_fundraising_result[0] else 0
+
+    # Query for minutes and other stats
     team2_query = f"""
         WITH TeamBonus AS (
             SELECT SUM(tcb.bonus_minutes) as total_bonus
@@ -244,12 +270,10 @@ def school_tab():
         )
         SELECT
             COUNT(DISTINCT r.class_name) as classes,
-            COALESCE(SUM(rc.donation_amount), 0) as fundraising,
             COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_minutes_base,
             COALESCE((SELECT total_bonus FROM TeamBonus), 0) as bonus_minutes,
             COUNT(DISTINCT r.student_name) as students
         FROM Roster r
-        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
         WHERE LOWER(r.team_name) = LOWER('{team2_name}') {team1_where}
     """
@@ -261,7 +285,7 @@ def school_tab():
         teams[team2_name] = {
             'display_name': team2_name.upper(),
             'classes': team2_result[0]['classes'] or 0,
-            'fundraising': team2_result[0]['fundraising'] or 0,
+            'fundraising': team2_fundraising,
             'minutes_base': minutes_base,
             'bonus_minutes': bonus_min,
             'minutes_with_color': minutes_with_color,
@@ -270,7 +294,7 @@ def school_tab():
             'students': team2_result[0]['students'] or 0
         }
     else:
-        teams[team2_name] = {'display_name': team2_name.upper(), 'classes': 0, 'fundraising': 0, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
+        teams[team2_name] = {'display_name': team2_name.upper(), 'classes': 0, 'fundraising': team2_fundraising, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
 
     # Team 1 - Average Daily Participation Percentage (with and without color bonus)
     # Get total days and team size for calculations

@@ -5,6 +5,33 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.1.3] - 2025-10-22
+
+### Critical Bug Fixes
+
+**Bug 1: Team Fundraising Amounts Doubled**
+- **Problem:** Team fundraising totals were showing 2x the correct amount
+  - Sample DB: Showing $110/$440 instead of $60/$220
+  - Root cause: `Daily_Logs` join caused row multiplication in SUM aggregation
+- **Fix:** Separated fundraising query from minutes query to avoid join conflicts
+- **Impact:** All team fundraising amounts now calculate correctly
+
+**Bug 2: Database Preference Not Persisting from CLI**
+- **Problem:** Config file only saved when using UI dropdown, not CLI flags
+- **Fix:** Added `write_config()` call at startup to persist any database selection
+- **Impact:** Database preference now remembered from all sources:
+  - ✅ CLI flags (`--db sample` or `--db prod`)
+  - ✅ Launcher scripts (`run_sample.sh`, `run_prod.sh`)
+  - ✅ Default startup (`python3 app.py`)
+  - ✅ UI dropdown (already worked)
+
+**Technical:**
+- Refactored team fundraising to use dedicated query without Daily_Logs join
+- Moved config persistence to startup (app.py:51) for universal coverage
+- Verified fix with both sample and production databases
+
+---
+
 ## [v2026.1.2] - 2025-10-22
 
 ### Dynamic Team Names (Generic Team Support)
