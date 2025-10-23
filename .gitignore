@@ -36,6 +36,9 @@ venv/
 # User preferences (database selection, etc.)
 .readathon_config
 
+# Claude Code personal settings (allow shared settings.json to be committed)
+.claude/settings.local.json
+
 # OS files
 .DS_Store
 

@@ -1,0 +1,32 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": ["sudo", "rm -rf /", "chmod 777"],
+    "network": {
+      "allowLocalBinding": true
+    }
+  },
+  "permissions": {
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/secrets/**)",
+      "Read(**/credentials*)",
+      "Read(~/.gitconfig)",
+      "Read(~/.netrc)",
+      "Read(~/.npmrc)",
+      "Write(/usr/**)",
+      "Write(/bin/**)",
+      "Write(/sbin/**)",
+      "Write(/etc/**)",
+      "Write(/System/**)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Write(/Users/stevesouza/my/data/!(readathon)/**)"
+    ]
+  }
+}
