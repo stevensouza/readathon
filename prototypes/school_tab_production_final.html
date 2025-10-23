@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⭐ School Tab - Production Final Version</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1400px;
+            padding: 2rem 1rem;
+        }
+
+        /* Page Header */
+        .page-header-school {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 2rem;
+        }
+
+        .page-title-school {
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .filter-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .filter-inline label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85rem;
+        }
+
+        .filter-note {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .data-info-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.9rem;
+            border-radius: 0.35rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Headline Banner */
+        .headline-banner {
+            background: #1e3a5f;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        .headline-metric {
+            text-align: center;
+            padding: 0.3rem 0.5rem;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .headline-metric:last-child {
+            border-right: none;
+        }
+
+        .headline-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #17a2b8;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-subtitle {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.3;
+        }
+
+        /* Cards */
+        .zen-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid #1e3a5f;
+            height: 100%;
+        }
+
+        .zen-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        /* Team Competition */
+        .team-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .team-card-phoenix {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            border-left: 4px solid #2196F3;
+        }
+
+        .team-card-dragons {
+            background: linear-gradient(135deg, #fff9c4 0%, #f5f5f5 100%);
+            border-left: 4px solid #FFC107;
+        }
+
+        .team-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .team-metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.35rem 0;
+            font-size: 0.8rem;
+        }
+
+        .team-metric-label {
+            color: #7f8c8d;
+        }
+
+        .team-metric-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        /* Top Students */
+        .leader-card {
+            background: #e8f4f8;
+            padding: 0.9rem;
+            border-radius: 0.4rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .leader-header {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        .leader-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .leader-subtitle {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .leader-value {
+            font-weight: 900;
+            color: #1e3a5f;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        /* Participation Table */
+        .participation-table {
+            font-size: 0.85rem;
+        }
+
+        .participation-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .participation-row:last-child {
+            border-bottom: none;
+            padding-top: 1rem;
+            border-top: 2px solid #bdc3c7;
+        }
+
+        .participation-label {
+            color: #7f8c8d;
+        }
+
+        .participation-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .participation-percent {
+            color: #95a5a6;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header-school">
+            <h2 class="page-title-school">🏫 SCHOOL OVERVIEW</h2>
+            
+            <div class="filter-inline">
+                <label for="dateFilter">📅 Filter Period:</label>
+                <select id="dateFilter" class="form-select form-select-sm">
+                    <option value="all" selected>Full Contest (Oct 10 - Oct 15, 2025)</option>
+                    <option value="2025-10-10">2025-10-10 (Day 1)</option>
+                    <option value="2025-10-11">2025-10-11 (Day 2)</option>
+                    <option value="2025-10-12">2025-10-12 (Day 3)</option>
+                    <option value="2025-10-13">2025-10-13 (Day 4)</option>
+                    <option value="2025-10-14">2025-10-14 (Day 5)</option>
+                    <option value="2025-10-15">2025-10-15 (Day 6)</option>
+                </select>
+                <span class="filter-note">(auto-updates)</span>
+            </div>
+
+            <button class="data-info-btn">
+                <i class="bi bi-info-circle"></i> Data Info
+            </button>
+        </div>
+
+        <!-- Headline Banner -->
+        <div class="headline-banner">
+            <div class="row align-items-center">
+                <div class="col headline-metric">
+                    <div class="headline-label">📅 CAMPAIGN DAY</div>
+                    <div class="headline-value">10 of 10</div>
+                    <div class="headline-subtitle">Oct 10-Oct 19, 2025</div>
+                </div>
+                <div class="col headline-metric">
+                    <div class="headline-label">💰 FUNDRAISING</div>
+                    <div class="headline-value">$28,450</div>
+                    <div class="headline-subtitle">215 of 411<br>Students (52%)</div>
+                </div>
+                <div class="col headline-metric">
+                    <div class="headline-label">📚 MINUTES READ</div>
+                    <div class="headline-value">1,725 hours</div>
+                    <div class="headline-subtitle">(103,500 min)</div>
+                </div>
+                <div class="col headline-metric">
+                    <div class="headline-label">👥 PARTICIPATION</div>
+                    <div class="headline-value">82%</div>
+                    <div class="headline-subtitle">337 of 411<br>Students</div>
+                </div>
+                <div class="col headline-metric">
+                    <div class="headline-label">🎯 GOAL MET (≥1 DAY)</div>
+                    <div class="headline-value">77%</div>
+                    <div class="headline-subtitle">316 of 411<br>Students</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3-Column Grid -->
+        <div class="row g-3">
+
+            <!-- LEFT: Team Competition -->
+            <div class="col-md-4">
+                <div class="zen-card">
+                    <h6 class="zen-card-title">⚔️ TEAM COMPETITION</h6>
+
+                    <div class="team-card team-card-phoenix">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="team-name">🔵 TEAM PHOENIX</div>
+                            <span style="font-size: 0.75rem; color: #95a5a6;">9 Classes</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Fundraising:</span>
+                            <span class="team-metric-value">$105,250</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Reading (With Color):</span>
+                            <span class="team-metric-value">780 hrs (46,800 min)</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Avg. Participation (With Color):</span>
+                            <span class="team-metric-value">65.8% (+142 pts)</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Students:</span>
+                            <span class="team-metric-value">193</span>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; padding: 0.5rem 0; font-weight: 700; color: #95a5a6; font-size: 0.9rem;">VS</div>
+
+                    <div class="team-card team-card-dragons">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="team-name">🟡 TEAM DRAGONS</div>
+                            <span style="font-size: 0.75rem; color: #95a5a6;">10 Classes</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Fundraising:</span>
+                            <span class="team-metric-value">$138,900</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Reading (With Color):</span>
+                            <span class="team-metric-value">945 hrs (56,700 min)</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Avg. Participation (With Color):</span>
+                            <span class="team-metric-value">68.2% (+148 pts)</span>
+                        </div>
+                        <div class="team-metric-row">
+                            <span class="team-metric-label">Students:</span>
+                            <span class="team-metric-value">218</span>
+                        </div>
+                    </div>
+
+                    <!-- Current Leaders Section -->
+                    <div style="background: #d1ecf1; padding: 1rem; border-radius: 0.4rem; margin-top: 0.75rem; border-left: 4px solid #0c5460;">
+                        <div style="font-size: 0.8rem; font-weight: 700; color: #0c5460; text-transform: uppercase; margin-bottom: 0.5rem;">🏆 CURRENT LEADERS</div>
+                        <div style="font-size: 0.75rem; line-height: 1.6;">
+                            <div><strong>Fundraising:</strong> DRAGONS (+$33,650)</div>
+                            <div><strong>Reading (With Color):</strong> DRAGONS (+165 hrs)</div>
+                            <div><strong>Participation (With Color):</strong> DRAGONS (+2.4%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER: Top Performers -->
+            <div class="col-md-4">
+                <div class="zen-card">
+                    <h6 class="zen-card-title">🏆 TOP PERFORMERS</h6>
+
+                    <div class="leader-card">
+                        <div class="leader-header">💰 FUNDRAISING LEADER</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="flex: 1;">
+                                <div class="leader-name">Emma Harrison</div>
+                                <div class="leader-subtitle">Grade 4</div>
+                            </div>
+                            <div class="leader-value">$685</div>
+                        </div>
+                    </div>
+
+                    <div class="leader-card">
+                        <div class="leader-header">📚 READING LEADER</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="flex: 1;">
+                                <div class="leader-name">Alice Palmer, Ambrose Dunn, Artur Logan and 9 others</div>
+                                <div class="leader-subtitle">Various</div>
+                            </div>
+                            <div class="leader-value">1,200<span style="font-size: 0.7rem; display: block; margin-top: 0.2rem;">minutes</span></div>
+                        </div>
+                        <div style="font-size: 0.65rem; color: #856404; margin-top: 0.4rem; font-style: italic;">* 12-way tie for 1st place</div>
+                    </div>
+
+                    <div class="leader-card">
+                        <div class="leader-header">🏫 TOP CLASS (FUNDRAISING)</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="flex: 1;">
+                                <div class="leader-name">Russell's Class</div>
+                                <div class="leader-subtitle">Grade K</div>
+                            </div>
+                            <div class="leader-value">$2,320</div>
+                        </div>
+                    </div>
+
+                    <div class="leader-card">
+                        <div class="leader-header">📖 TOP CLASS (READING)</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="flex: 1;">
+                                <div class="leader-name">Reynolds's Class</div>
+                                <div class="leader-subtitle">Grade 5</div>
+                            </div>
+                            <div class="leader-value">9,840<span style="font-size: 0.7rem; display: block; margin-top: 0.2rem;">minutes</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Student Participation -->
+            <div class="col-md-4">
+                <div class="zen-card">
+                    <h6 class="zen-card-title">📊 STUDENT PARTICIPATION</h6>
+                    <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 1rem;">(Full Contest)</div>
+
+                    <div class="participation-table">
+                        <div class="participation-row">
+                            <span class="participation-label">Total Participating</span>
+                            <span class="participation-value">328 of 411<span class="participation-percent">79.8%</span></span>
+                        </div>
+                        <div class="participation-row">
+                            <span class="participation-label">All 10 Days Active</span>
+                            <span class="participation-value">123 of 411<span class="participation-percent">29.9%</span></span>
+                        </div>
+                        <div class="participation-row">
+                            <span class="participation-label">Met Goal ≥1 Day</span>
+                            <span class="participation-value">324 of 411<span class="participation-percent">78.8%</span></span>
+                        </div>
+                        <div class="participation-row">
+                            <span class="participation-label">Met Goal All Days</span>
+                            <span class="participation-value">99 of 411<span class="participation-percent">24.1%</span></span>
+                        </div>
+                        <div class="participation-row">
+                            <span class="participation-label">Total Roster</span>
+                            <span class="participation-value">411 Students<span class="participation-percent">100%</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Production Version Note -->
+        <div class="alert alert-info mt-4" role="alert">
+            <strong>⭐ Production Final Version</strong> - This is the actual school tab design used in production (Option J: Refined Zen). All student, teacher, and class names have been replaced with generic names for privacy.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
