@@ -23,6 +23,12 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
 
+        /* Sample mode styling - soft amber background */
+        .top-nav.sample-mode {
+            background: #fff9e6;
+            border-bottom: 2px solid #ffe4a3;
+        }
+
         .brand {
             font-size: 1.3rem;
             font-weight: 700;
@@ -104,6 +110,16 @@
             padding: 0.4rem 0.8rem;
             border-radius: 0.3rem;
             border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        /* Highlight selector when in sample mode */
+        .sample-mode .env-selector {
+            background: #ffc107;
+            border: 3px solid #ff9800;
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
         }
         .report-table {
             font-size: 0.9rem;
@@ -830,15 +846,12 @@
 </head>
 <body>
     <!-- Navigation -->
-    <div class="top-nav">
+    <div class="top-nav {% if environment == 'sample' %}sample-mode{% endif %}">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <a href="/" class="brand">
                     <i class="bi bi-book"></i> Read-a-Thon System
                 </a>
-                {% if environment == 'sample' %}
-                <span class="badge bg-warning text-dark ms-2">SAMPLE MODE</span>
-                {% endif %}
 
                 <div class="nav-links ms-4">
                     <a href="/school" class="nav-link-item {% if request.path == '/' or request.path == '/school' %}active{% endif %}">🏫 School</a>
