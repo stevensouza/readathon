@@ -5,6 +5,38 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.1.2] - 2025-10-22
+
+### Dynamic Team Names (Generic Team Support)
+
+**Problem Resolved:**
+- Team names "STAUB" and "KITSKO" were hardcoded throughout the application
+- Sample database couldn't display its generic team names ("team1", "team2")
+- Made the app specific to one school instead of being reusable
+
+**Changes:**
+- **Dynamic Team Name Loading**: App now queries actual team names from database at runtime
+- **Template Updates**: School tab displays team names from database instead of hardcoded values
+- **Backend Refactoring**: All team queries and comparisons use dynamic team names
+- **Universal Compatibility**: Works with any team names in the database
+
+**Impact:**
+- Sample database now correctly shows "TEAM1" and "TEAM2"
+- Production database still shows "STAUB" and "KITSKO"
+- Application is now truly generic and reusable for any school
+
+**Technical:**
+- Query team names from Roster table on each page load (~0.1ms performance impact)
+- Updated 6 SQL queries in `/school` endpoint to use dynamic names
+- Updated team competition template to use `teams[team_name].display_name`
+- Maintains backward compatibility with existing databases
+
+**Files Modified:**
+- `app.py`: Added dynamic team name query and refactored all team logic
+- `templates/school.html`: Updated team competition display to use dynamic names
+
+---
+
 ## [v2026.1.1] - 2025-10-22
 
 ### Database Selection with Persistent Preference

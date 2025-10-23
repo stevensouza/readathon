@@ -181,16 +181,28 @@ def school_tab():
     metrics['goals_met_pct'] = (metrics['goals_met_students'] / total_roster * 100) if total_roster > 0 else 0
 
     # === TEAM COMPETITION ===
+    # Get actual team names from database (sorted alphabetically for consistency)
+    team_names_query = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
+    team_names_result = db.execute_query(team_names_query)
+    team_names = [row['team_name'] for row in team_names_result] if team_names_result else []
+
+    # Ensure we have exactly 2 teams
+    if len(team_names) != 2:
+        return jsonify({'error': f'Expected 2 teams, found {len(team_names)}'}), 500
+
+    team1_name = team_names[0]  # First team alphabetically
+    team2_name = team_names[1]  # Second team alphabetically
+
     teams = {}
 
-    # Team Staub (cumulative through selected date)
-    staub_where = f"AND dl.log_date <= '{date_filter}'" if date_filter != 'all' and date_filter in dates else ""
-    staub_query = f"""
+    # Team 1 (cumulative through selected date)
+    team1_where = f"AND dl.log_date <= '{date_filter}'" if date_filter != 'all' and date_filter in dates else ""
+    team1_query = f"""
         WITH TeamBonus AS (
             SELECT SUM(tcb.bonus_minutes) as total_bonus
             FROM Team_Color_Bonus tcb
             INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-            WHERE LOWER(ci.team_name) = 'staub'
+            WHERE LOWER(ci.team_name) = LOWER('{team1_name}')
         )
         SELECT
             COUNT(DISTINCT r.class_name) as classes,
@@ -201,33 +213,34 @@ def school_tab():
         FROM Roster r
         LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-        WHERE LOWER(r.team_name) = 'staub' {staub_where}
+        WHERE LOWER(r.team_name) = LOWER('{team1_name}') {team1_where}
     """
-    staub_result = db.execute_query(staub_query)
-    if staub_result and staub_result[0]:
-        minutes_base = int(staub_result[0]['total_minutes_base'] or 0)
-        bonus_min = int(staub_result[0]['bonus_minutes'] or 0)
+    team1_result = db.execute_query(team1_query)
+    if team1_result and team1_result[0]:
+        minutes_base = int(team1_result[0]['total_minutes_base'] or 0)
+        bonus_min = int(team1_result[0]['bonus_minutes'] or 0)
         minutes_with_color = minutes_base + bonus_min
-        teams['staub'] = {
-            'classes': staub_result[0]['classes'] or 0,
-            'fundraising': staub_result[0]['fundraising'] or 0,
+        teams[team1_name] = {
+            'display_name': team1_name.upper(),
+            'classes': team1_result[0]['classes'] or 0,
+            'fundraising': team1_result[0]['fundraising'] or 0,
             'minutes_base': minutes_base,
             'bonus_minutes': bonus_min,
             'minutes_with_color': minutes_with_color,
             'hours_base': minutes_base // 60,
             'hours_with_color': minutes_with_color // 60,
-            'students': staub_result[0]['students'] or 0
+            'students': team1_result[0]['students'] or 0
         }
     else:
-        teams['staub'] = {'classes': 0, 'fundraising': 0, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
+        teams[team1_name] = {'display_name': team1_name.upper(), 'classes': 0, 'fundraising': 0, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
 
-    # Team Kitsko
-    kitsko_query = f"""
+    # Team 2
+    team2_query = f"""
         WITH TeamBonus AS (
             SELECT SUM(tcb.bonus_minutes) as total_bonus
             FROM Team_Color_Bonus tcb
             INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-            WHERE LOWER(ci.team_name) = 'kitsko'
+            WHERE LOWER(ci.team_name) = LOWER('{team2_name}')
         )
         SELECT
             COUNT(DISTINCT r.class_name) as classes,
@@ -238,139 +251,140 @@ def school_tab():
         FROM Roster r
         LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-        WHERE LOWER(r.team_name) = 'kitsko' {staub_where}
+        WHERE LOWER(r.team_name) = LOWER('{team2_name}') {team1_where}
     """
-    kitsko_result = db.execute_query(kitsko_query)
-    if kitsko_result and kitsko_result[0]:
-        minutes_base = int(kitsko_result[0]['total_minutes_base'] or 0)
-        bonus_min = int(kitsko_result[0]['bonus_minutes'] or 0)
+    team2_result = db.execute_query(team2_query)
+    if team2_result and team2_result[0]:
+        minutes_base = int(team2_result[0]['total_minutes_base'] or 0)
+        bonus_min = int(team2_result[0]['bonus_minutes'] or 0)
         minutes_with_color = minutes_base + bonus_min
-        teams['kitsko'] = {
-            'classes': kitsko_result[0]['classes'] or 0,
-            'fundraising': kitsko_result[0]['fundraising'] or 0,
+        teams[team2_name] = {
+            'display_name': team2_name.upper(),
+            'classes': team2_result[0]['classes'] or 0,
+            'fundraising': team2_result[0]['fundraising'] or 0,
             'minutes_base': minutes_base,
             'bonus_minutes': bonus_min,
             'minutes_with_color': minutes_with_color,
             'hours_base': minutes_base // 60,
             'hours_with_color': minutes_with_color // 60,
-            'students': kitsko_result[0]['students'] or 0
+            'students': team2_result[0]['students'] or 0
         }
     else:
-        teams['kitsko'] = {'classes': 0, 'fundraising': 0, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
+        teams[team2_name] = {'display_name': team2_name.upper(), 'classes': 0, 'fundraising': 0, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
 
-    # Team Staub - Average Daily Participation Percentage (with and without color bonus)
+    # Team 1 - Average Daily Participation Percentage (with and without color bonus)
     # Get total days and team size for calculations
     total_days_query = f"""
         SELECT COUNT(DISTINCT log_date) as total_days
         FROM Daily_Logs
-        WHERE 1=1 {staub_where.replace('dl.', '')}
+        WHERE 1=1 {team1_where.replace('dl.', '')}
     """
     total_days_result = db.execute_query(total_days_query)
     total_days = total_days_result[0]['total_days'] if total_days_result and total_days_result[0] else 1
 
-    staub_size = teams['staub']['students']
-    staub_participation_query = f"""
+    team1_size = teams[team1_name]['students']
+    team1_participation_query = f"""
         SELECT
             AVG(daily_pct) as avg_participation
         FROM (
             SELECT
                 dl.log_date,
                 (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 /
-                 (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = 'staub')) as daily_pct
+                 (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team1_name}'))) as daily_pct
             FROM Daily_Logs dl
             JOIN Roster r ON dl.student_name = r.student_name
-            WHERE LOWER(r.team_name) = 'staub' {staub_where}
+            WHERE LOWER(r.team_name) = LOWER('{team1_name}') {team1_where}
             GROUP BY dl.log_date
         )
     """
-    staub_participation_result = db.execute_query(staub_participation_query)
-    teams['staub']['participation_pct'] = staub_participation_result[0]['avg_participation'] or 0 if staub_participation_result and staub_participation_result[0] else 0
+    team1_participation_result = db.execute_query(team1_participation_query)
+    teams[team1_name]['participation_pct'] = team1_participation_result[0]['avg_participation'] or 0 if team1_participation_result and team1_participation_result[0] else 0
 
-    # Calculate participation with color bonus for Staub
-    staub_bonus_query = """
+    # Calculate participation with color bonus for Team 1
+    team1_bonus_query = f"""
         SELECT SUM(tcb.bonus_participation_points) as total_bonus
         FROM Team_Color_Bonus tcb
         INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-        WHERE LOWER(ci.team_name) = 'staub'
+        WHERE LOWER(ci.team_name) = LOWER('{team1_name}')
     """
-    staub_bonus_result = db.execute_query(staub_bonus_query)
-    staub_color_bonus = staub_bonus_result[0]['total_bonus'] if staub_bonus_result and staub_bonus_result[0] and staub_bonus_result[0]['total_bonus'] else 0
-    teams['staub']['color_bonus_points'] = staub_color_bonus
-    teams['staub']['participation_pct_with_color'] = teams['staub']['participation_pct'] + (staub_color_bonus * 100.0 / (staub_size * total_days)) if staub_size > 0 and total_days > 0 else teams['staub']['participation_pct']
+    team1_bonus_result = db.execute_query(team1_bonus_query)
+    team1_color_bonus = team1_bonus_result[0]['total_bonus'] if team1_bonus_result and team1_bonus_result[0] and team1_bonus_result[0]['total_bonus'] else 0
+    teams[team1_name]['color_bonus_points'] = team1_color_bonus
+    teams[team1_name]['participation_pct_with_color'] = teams[team1_name]['participation_pct'] + (team1_color_bonus * 100.0 / (team1_size * total_days)) if team1_size > 0 and total_days > 0 else teams[team1_name]['participation_pct']
 
-    # Team Kitsko - Average Daily Participation Percentage (with and without color bonus)
-    kitsko_size = teams['kitsko']['students']
-    kitsko_participation_query = f"""
+    # Team 2 - Average Daily Participation Percentage (with and without color bonus)
+    team2_size = teams[team2_name]['students']
+    team2_participation_query = f"""
         SELECT
             AVG(daily_pct) as avg_participation
         FROM (
             SELECT
                 dl.log_date,
                 (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 /
-                 (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = 'kitsko')) as daily_pct
+                 (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team2_name}'))) as daily_pct
             FROM Daily_Logs dl
             JOIN Roster r ON dl.student_name = r.student_name
-            WHERE LOWER(r.team_name) = 'kitsko' {staub_where}
+            WHERE LOWER(r.team_name) = LOWER('{team2_name}') {team1_where}
             GROUP BY dl.log_date
         )
     """
-    kitsko_participation_result = db.execute_query(kitsko_participation_query)
-    teams['kitsko']['participation_pct'] = kitsko_participation_result[0]['avg_participation'] or 0 if kitsko_participation_result and kitsko_participation_result[0] else 0
+    team2_participation_result = db.execute_query(team2_participation_query)
+    teams[team2_name]['participation_pct'] = team2_participation_result[0]['avg_participation'] or 0 if team2_participation_result and team2_participation_result[0] else 0
 
-    # Calculate participation with color bonus for Kitsko
-    kitsko_bonus_query = """
+    # Calculate participation with color bonus for Team 2
+    team2_bonus_query = f"""
         SELECT SUM(tcb.bonus_participation_points) as total_bonus
         FROM Team_Color_Bonus tcb
         INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-        WHERE LOWER(ci.team_name) = 'kitsko'
+        WHERE LOWER(ci.team_name) = LOWER('{team2_name}')
     """
-    kitsko_bonus_result = db.execute_query(kitsko_bonus_query)
-    kitsko_color_bonus = kitsko_bonus_result[0]['total_bonus'] if kitsko_bonus_result and kitsko_bonus_result[0] and kitsko_bonus_result[0]['total_bonus'] else 0
-    teams['kitsko']['color_bonus_points'] = kitsko_color_bonus
-    teams['kitsko']['participation_pct_with_color'] = teams['kitsko']['participation_pct'] + (kitsko_color_bonus * 100.0 / (kitsko_size * total_days)) if kitsko_size > 0 and total_days > 0 else teams['kitsko']['participation_pct']
+    team2_bonus_result = db.execute_query(team2_bonus_query)
+    team2_color_bonus = team2_bonus_result[0]['total_bonus'] if team2_bonus_result and team2_bonus_result[0] and team2_bonus_result[0]['total_bonus'] else 0
+    teams[team2_name]['color_bonus_points'] = team2_color_bonus
+    teams[team2_name]['participation_pct_with_color'] = teams[team2_name]['participation_pct'] + (team2_color_bonus * 100.0 / (team2_size * total_days)) if team2_size > 0 and total_days > 0 else teams[team2_name]['participation_pct']
 
     # Determine leader and calculate gaps for each metric
     # Note: Different teams may lead different metrics - gaps show which team is ahead in each category
-    if teams['staub']['fundraising'] > teams['kitsko']['fundraising']:
-        teams['leader'] = 'STAUB'
-        teams['fundraising_gap'] = teams['staub']['fundraising'] - teams['kitsko']['fundraising']
-        teams['fundraising_leader'] = 'STAUB'
+    if teams[team1_name]['fundraising'] > teams[team2_name]['fundraising']:
+        teams['leader'] = team1_name.upper()
+        teams['fundraising_gap'] = teams[team1_name]['fundraising'] - teams[team2_name]['fundraising']
+        teams['fundraising_leader'] = team1_name.upper()
     else:
-        teams['leader'] = 'KITSKO'
-        teams['fundraising_gap'] = teams['kitsko']['fundraising'] - teams['staub']['fundraising']
-        teams['fundraising_leader'] = 'KITSKO'
+        teams['leader'] = team2_name.upper()
+        teams['fundraising_gap'] = teams[team2_name]['fundraising'] - teams[team1_name]['fundraising']
+        teams['fundraising_leader'] = team2_name.upper()
 
     # Reading gap - base version
-    if teams['staub']['hours_base'] > teams['kitsko']['hours_base']:
-        teams['reading_gap'] = teams['staub']['hours_base'] - teams['kitsko']['hours_base']
-        teams['reading_leader'] = 'STAUB'
+    if teams[team1_name]['hours_base'] > teams[team2_name]['hours_base']:
+        teams['reading_gap'] = teams[team1_name]['hours_base'] - teams[team2_name]['hours_base']
+        teams['reading_leader'] = team1_name.upper()
     else:
-        teams['reading_gap'] = teams['kitsko']['hours_base'] - teams['staub']['hours_base']
-        teams['reading_leader'] = 'KITSKO'
+        teams['reading_gap'] = teams[team2_name]['hours_base'] - teams[team1_name]['hours_base']
+        teams['reading_leader'] = team2_name.upper()
 
     # Reading gap - with color version
-    if teams['staub']['hours_with_color'] > teams['kitsko']['hours_with_color']:
-        teams['reading_gap_with_color'] = teams['staub']['hours_with_color'] - teams['kitsko']['hours_with_color']
-        teams['reading_leader_with_color'] = 'STAUB'
+    if teams[team1_name]['hours_with_color'] > teams[team2_name]['hours_with_color']:
+        teams['reading_gap_with_color'] = teams[team1_name]['hours_with_color'] - teams[team2_name]['hours_with_color']
+        teams['reading_leader_with_color'] = team1_name.upper()
     else:
-        teams['reading_gap_with_color'] = teams['kitsko']['hours_with_color'] - teams['staub']['hours_with_color']
-        teams['reading_leader_with_color'] = 'KITSKO'
+        teams['reading_gap_with_color'] = teams[team2_name]['hours_with_color'] - teams[team1_name]['hours_with_color']
+        teams['reading_leader_with_color'] = team2_name.upper()
 
     # Participation gap - base version
-    if teams['staub']['participation_pct'] > teams['kitsko']['participation_pct']:
-        teams['participation_gap'] = teams['staub']['participation_pct'] - teams['kitsko']['participation_pct']
-        teams['participation_leader'] = 'STAUB'
+    if teams[team1_name]['participation_pct'] > teams[team2_name]['participation_pct']:
+        teams['participation_gap'] = teams[team1_name]['participation_pct'] - teams[team2_name]['participation_pct']
+        teams['participation_leader'] = team1_name.upper()
     else:
-        teams['participation_gap'] = teams['kitsko']['participation_pct'] - teams['staub']['participation_pct']
-        teams['participation_leader'] = 'KITSKO'
+        teams['participation_gap'] = teams[team2_name]['participation_pct'] - teams[team1_name]['participation_pct']
+        teams['participation_leader'] = team2_name.upper()
 
     # Participation gap - with color version
-    if teams['staub']['participation_pct_with_color'] > teams['kitsko']['participation_pct_with_color']:
-        teams['participation_gap_with_color'] = teams['staub']['participation_pct_with_color'] - teams['kitsko']['participation_pct_with_color']
-        teams['participation_leader_with_color'] = 'STAUB'
+    if teams[team1_name]['participation_pct_with_color'] > teams[team2_name]['participation_pct_with_color']:
+        teams['participation_gap_with_color'] = teams[team1_name]['participation_pct_with_color'] - teams[team2_name]['participation_pct_with_color']
+        teams['participation_leader_with_color'] = team1_name.upper()
     else:
-        teams['participation_gap_with_color'] = teams['kitsko']['participation_pct_with_color'] - teams['staub']['participation_pct_with_color']
-        teams['participation_leader_with_color'] = 'KITSKO'
+        teams['participation_gap_with_color'] = teams[team2_name]['participation_pct_with_color'] - teams[team1_name]['participation_pct_with_color']
+        teams['participation_leader_with_color'] = team2_name.upper()
 
     # === TOP PERFORMERS ===
     performers = {}
@@ -627,6 +641,8 @@ def school_tab():
                          full_contest_range=full_contest_range,
                          metrics=metrics,
                          teams=teams,
+                         team1_name=team1_name,
+                         team2_name=team2_name,
                          performers=performers,
                          participation=participation,
                          integrity=integrity,

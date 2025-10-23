@@ -450,24 +450,24 @@
 
             <div class="team-card team-card-staub">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="team-name">🔵 TEAM STAUB</div>
-                    <span style="font-size: 0.75rem; color: #95a5a6;">{{ teams.staub.classes }} Classes</span>
+                    <div class="team-name">🔵 TEAM {{ teams[team1_name].display_name }}</div>
+                    <span style="font-size: 0.75rem; color: #95a5a6;">{{ teams[team1_name].classes }} Classes</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Fundraising:</span>
-                    <span class="team-metric-value">${{ "{:,.0f}".format(teams.staub.fundraising) }}</span>
+                    <span class="team-metric-value">${{ "{:,.0f}".format(teams[team1_name].fundraising) }}</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Reading (With Color):</span>
-                    <span class="team-metric-value">{{ teams.staub.hours_with_color }} hrs ({{ "{:,}".format(teams.staub.minutes_with_color) }} min)</span>
+                    <span class="team-metric-value">{{ teams[team1_name].hours_with_color }} hrs ({{ "{:,}".format(teams[team1_name].minutes_with_color) }} min)</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Avg. Participation (With Color):</span>
-                    <span class="team-metric-value">{{ "{:.1f}".format(teams.staub.participation_pct_with_color) }}% (+{{ teams.staub.color_bonus_points }} pts)</span>
+                    <span class="team-metric-value">{{ "{:.1f}".format(teams[team1_name].participation_pct_with_color) }}% (+{{ teams[team1_name].color_bonus_points }} pts)</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Students:</span>
-                    <span class="team-metric-value">{{ teams.staub.students }}</span>
+                    <span class="team-metric-value">{{ teams[team1_name].students }}</span>
                 </div>
             </div>
 
@@ -477,24 +477,24 @@
 
             <div class="team-card team-card-kitsko">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="team-name">🟡 TEAM KITSKO</div>
-                    <span style="font-size: 0.75rem; color: #95a5a6;">{{ teams.kitsko.classes }} Classes</span>
+                    <div class="team-name">🟡 TEAM {{ teams[team2_name].display_name }}</div>
+                    <span style="font-size: 0.75rem; color: #95a5a6;">{{ teams[team2_name].classes }} Classes</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Fundraising:</span>
-                    <span class="team-metric-value">${{ "{:,.0f}".format(teams.kitsko.fundraising) }}</span>
+                    <span class="team-metric-value">${{ "{:,.0f}".format(teams[team2_name].fundraising) }}</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Reading (With Color):</span>
-                    <span class="team-metric-value">{{ teams.kitsko.hours_with_color }} hrs ({{ "{:,}".format(teams.kitsko.minutes_with_color) }} min)</span>
+                    <span class="team-metric-value">{{ teams[team2_name].hours_with_color }} hrs ({{ "{:,}".format(teams[team2_name].minutes_with_color) }} min)</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Avg. Participation (With Color):</span>
-                    <span class="team-metric-value">{{ "{:.1f}".format(teams.kitsko.participation_pct_with_color) }}% (+{{ teams.kitsko.color_bonus_points }} pts)</span>
+                    <span class="team-metric-value">{{ "{:.1f}".format(teams[team2_name].participation_pct_with_color) }}% (+{{ teams[team2_name].color_bonus_points }} pts)</span>
                 </div>
                 <div class="team-metric-row">
                     <span class="team-metric-label">Students:</span>
-                    <span class="team-metric-value">{{ teams.kitsko.students }}</span>
+                    <span class="team-metric-value">{{ teams[team2_name].students }}</span>
                 </div>
             </div>
 
