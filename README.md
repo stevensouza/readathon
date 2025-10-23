@@ -252,6 +252,24 @@ For issues or questions about this system, check:
 - Minutes read outside the official contest period are tracked but don't count toward the competition
 - Contest dates are configurable per school year
 
+## 📋 Versioning
+
+This project uses **School Year Calendar Versioning**: `vYYYY.MINOR.PATCH`
+
+**Current Version:** v2026.1.0 (see [VERSION](VERSION) file)
+
+### Versioning Format
+- **YYYY**: School year (e.g., 2026 = 2025-2026 school year)
+- **MINOR**: Feature additions and improvements
+- **PATCH**: Bug fixes and minor updates
+
+### Examples
+- `v2026.1.0` → `v2026.1.1`: Bug fix or small update
+- `v2026.1.0` → `v2026.2.0`: New feature or major update
+- `v2026.1.0` → `v2027.1.0`: Next school year
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
+
 ---
 
 ## 🤖 Built with Claude Code
