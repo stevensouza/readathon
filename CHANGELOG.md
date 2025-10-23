@@ -5,6 +5,46 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.2.0] - 2025-10-23
+
+### Subdued Color Scheme (Option H)
+
+**New Design:**
+- Professional subdued blue color palette replacing bright Bootstrap colors
+- Cohesive visual identity across entire application
+- Improved readability and reduced visual fatigue
+
+**Color Scheme:**
+- **Card/Accordion Headers**: Soft blue gradient (#dbeafe → #f0f9ff) with blue left border (#3b82f6)
+- **Action Buttons**: Medium blue gradient (#3b82f6 → #2563eb) replacing bright green/cyan/yellow
+- **Table Headers**: Dark navy blue (#1e3a5f) matching school banner
+- **Status Badges**: Soft pastels - yellow (warning), green (success), red (danger), blue (info)
+- **Team 2 Preserved**: Light yellow (#fffbeb) with amber border (#f59e0b) on School page
+
+**Implementation:**
+- Added global CSS in `base.html` for consistent styling
+- Updated 10 template files to use new color classes
+- Created prototype with 8 design options for user selection
+- All bright colors (bg-primary, bg-success, bg-warning, bg-info, bg-danger) replaced
+
+**Pages Updated:**
+- Upload, Reports, Admin, Workflows, Tables, Help, Home/Dashboard
+- Claude Development, Application Requirements
+- All pages now have consistent subdued blue aesthetic
+
+**Technical:**
+- New CSS classes: `.card-header-blue`, soft button styles
+- Global !important overrides for Bootstrap default colors
+- Maintains accessibility with proper contrast ratios
+- Team-specific colors preserved where meaningful (School page)
+
+**Files Modified:**
+- `templates/base.html`: +119 lines of new CSS
+- `templates/*.html`: 10 templates updated
+- `prototypes/ui_prototype_color_scheme_options.html`: New prototype file (1,783 lines)
+
+---
+
 ## [v2026.1.3] - 2025-10-22
 
 ### Critical Bug Fixes
