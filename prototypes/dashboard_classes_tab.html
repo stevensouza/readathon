@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classes Tab - Read-a-Thon Prototype</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .grade-filter-btn {
+            margin: 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .grade-filter-btn:hover {
+            background: #f8f9fa;
+            border-color: #1e3a5f;
+        }
+
+        .grade-filter-btn.active {
+            background: #1e3a5f;
+            color: white;
+            border-color: #1e3a5f;
+        }
+
+        .leaderboard-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .rank-medal {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .rank-number {
+            font-weight: 700;
+            color: #6c757d;
+            width: 40px;
+            text-align: center;
+        }
+
+        .class-row {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+
+        .class-row:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .class-row:last-child {
+            border-bottom: none;
+        }
+
+        .team-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .team-phoenix {
+            background-color: rgba(80, 191, 236, 0.2);
+            color: #0d6efd;
+        }
+
+        .team-dragons {
+            background-color: rgba(199, 125, 211, 0.2);
+            color: #9333ea;
+        }
+
+        .bonus-indicator {
+            font-size: 0.75rem;
+            color: #ffc107;
+            font-weight: 600;
+        }
+
+        .expandable-details {
+            background-color: #f8f9fa;
+            border-top: 3px solid #1e3a5f;
+            padding: 1.5rem;
+            display: none;
+        }
+
+        .expandable-details.show {
+            display: block;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #1e3a5f;
+        }
+
+        .grade-summary-table {
+            font-size: 0.9rem;
+        }
+
+        .expand-icon {
+            transition: transform 0.2s;
+        }
+
+        .expand-icon.rotated {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="header-section">
+            <h1 class="mb-2"><i class="bi bi-mortarboard-fill"></i> CLASS LEADERBOARD</h1>
+            <p class="mb-0 opacity-75">All classes ranked by performance</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="filter-label">Filter by Grade:</div>
+                    <div>
+                        <button class="grade-filter-btn active">All Grades</button>
+                        <button class="grade-filter-btn">K</button>
+                        <button class="grade-filter-btn">1st</button>
+                        <button class="grade-filter-btn">2nd</button>
+                        <button class="grade-filter-btn">3rd</button>
+                        <button class="grade-filter-btn">4th</button>
+                        <button class="grade-filter-btn">5th</button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="filter-label">Sort by:</div>
+                    <select class="form-select">
+                        <option selected>Participation Rate (with color bonus)</option>
+                        <option>Total Minutes</option>
+                        <option>Total Donations</option>
+                        <option>Students Met Goal</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="leaderboard-card">
+            <table class="table table-hover mb-0">
+                <thead style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <tr>
+                        <th style="width: 50px;">Rank</th>
+                        <th>Class</th>
+                        <th>Teacher</th>
+                        <th class="text-center">Grade</th>
+                        <th class="text-center">Team</th>
+                        <th class="text-center">Participation<br><small class="text-muted">(w/Color)</small></th>
+                        <th class="text-center">Minutes</th>
+                        <th class="text-center">Donations</th>
+                        <th style="width: 30px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="classTableBody">
+                    <!-- Row 1 -->
+                    <tr class="class-row" onclick="toggleDetails('class1')">
+                        <td class="rank-medal">🥇</td>
+                        <td><strong>Room 105</strong></td>
+                        <td>Mrs. Smith</td>
+                        <td class="text-center">3rd</td>
+                        <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                        <td class="text-center">
+                            <strong>98.5%</strong>
+                            <div class="bonus-indicator">+120 pts</div>
+                        </td>
+                        <td class="text-center">6,890</td>
+                        <td class="text-center">$3,450</td>
+                        <td><i class="bi bi-chevron-right expand-icon" id="icon-class1"></i></td>
+                    </tr>
+                    <tr class="expandable-details" id="details-class1">
+                        <td colspan="9">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Students in Class</div>
+                                        <div class="detail-value">22</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Participating</div>
+                                        <div class="detail-value">21 <small class="text-muted">(95.5%)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Days with Data</div>
+                                        <div class="detail-value">6</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Avg Minutes/Student</div>
+                                        <div class="detail-value">313</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Base Participations</div>
+                                        <div class="detail-value">126 / 132 <small class="text-muted">(95.5%)</small></div>
+                                        <div class="detail-label mt-2">Color Bonus Points</div>
+                                        <div class="detail-value text-warning">+120</div>
+                                        <div class="detail-label mt-2">Total Participations (w/color)</div>
+                                        <div class="detail-value">246 <small class="text-muted">(98.5%)</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Students Met Goal (All Days)</div>
+                                        <div class="detail-value">18 / 22 <small class="text-muted">(81.8%)</small></div>
+                                        <div class="detail-label mt-2">Students Met Goal (Any Day)</div>
+                                        <div class="detail-value">20 / 22 <small class="text-muted">(90.9%)</small></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Top Reader</div>
+                                        <div class="detail-value" style="font-size: 1rem;">Emma S. (720 min)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="detail-card">
+                                        <div class="detail-label">Top Fundraiser</div>
+                                        <div class="detail-value" style="font-size: 1rem;">Sophia L. ($425)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Row 2 -->
+                    <tr class="class-row" onclick="toggleDetails('class2')">
+                        <td class="rank-medal">🥈</td>
+                        <td><strong>Room 203</strong></td>
+                        <td>Mr. Johnson</td>
+                        <td class="text-center">5th</td>
+                        <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                        <td class="text-center">
+                            <strong>95.2%</strong>
+                            <div class="bonus-indicator">+90 pts</div>
+                        </td>
+                        <td class="text-center">7,200</td>
+                        <td class="text-center">$4,100</td>
+                        <td><i class="bi bi-chevron-right expand-icon" id="icon-class2"></i></td>
+                    </tr>
+                    <tr class="expandable-details" id="details-class2">
+                        <td colspan="9">
+                            <div class="alert alert-secondary mb-0">
+                                <i class="bi bi-info-circle"></i> Click to expand for detailed statistics
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Row 3 -->
+                    <tr class="class-row" onclick="toggleDetails('class3')">
+                        <td class="rank-medal">🥉</td>
+                        <td><strong>Room 108</strong></td>
+                        <td>Mrs. Williams</td>
+                        <td class="text-center">1st</td>
+                        <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                        <td class="text-center">
+                            <strong>94.8%</strong>
+                            <div class="bonus-indicator">+130 pts</div>
+                        </td>
+                        <td class="text-center">5,340</td>
+                        <td class="text-center">$2,890</td>
+                        <td><i class="bi bi-chevron-right expand-icon" id="icon-class3"></i></td>
+                    </tr>
+                    <tr class="expandable-details" id="details-class3">
+                        <td colspan="9">
+                            <div class="alert alert-secondary mb-0">
+                                <i class="bi bi-info-circle"></i> Click to expand for detailed statistics
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Row 4 -->
+                    <tr class="class-row" onclick="toggleDetails('class4')">
+                        <td class="rank-number">4</td>
+                        <td><strong>Room 201</strong></td>
+                        <td>Mr. Brown</td>
+                        <td class="text-center">4th</td>
+                        <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                        <td class="text-center">
+                            <strong>92.3%</strong>
+                            <div class="bonus-indicator">+80 pts</div>
+                        </td>
+                        <td class="text-center">6,450</td>
+                        <td class="text-center">$3,120</td>
+                        <td><i class="bi bi-chevron-right expand-icon" id="icon-class4"></i></td>
+                    </tr>
+                    <tr class="expandable-details" id="details-class4">
+                        <td colspan="9">
+                            <div class="alert alert-secondary mb-0">
+                                <i class="bi bi-info-circle"></i> Click to expand for detailed statistics
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Row 5 -->
+                    <tr class="class-row" onclick="toggleDetails('class5')">
+                        <td class="rank-number">5</td>
+                        <td><strong>Room 301</strong></td>
+                        <td>Mrs. Garcia</td>
+                        <td class="text-center">2nd</td>
+                        <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                        <td class="text-center">
+                            <strong>91.7%</strong>
+                            <div class="bonus-indicator">+95 pts</div>
+                        </td>
+                        <td class="text-center">5,890</td>
+                        <td class="text-center">$2,750</td>
+                        <td><i class="bi bi-chevron-right expand-icon" id="icon-class5"></i></td>
+                    </tr>
+                    <tr class="expandable-details" id="details-class5">
+                        <td colspan="9">
+                            <div class="alert alert-secondary mb-0">
+                                <i class="bi bi-info-circle"></i> Click to expand for detailed statistics
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Row 6 -->
+                    <tr class="class-row" onclick="toggleDetails('class6')">
+                        <td class="rank-number">6</td>
+                        <td><strong>Room 102</strong></td>
+                        <td>Mr. Martinez</td>
+                        <td class="text-center">K</td>
+                        <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                        <td class="text-center">
+                            <strong>89.4%</strong>
+                            <div class="bonus-indicator">+85 pts</div>
+                        </td>
+                        <td class="text-center">4,320</td>
+                        <td class="text-center">$2,100</td>
+                        <td><i class="bi bi-chevron-right expand-icon" id="icon-class6"></i></td>
+                    </tr>
+                    <tr class="expandable-details" id="details-class6">
+                        <td colspan="9">
+                            <div class="alert alert-secondary mb-0">
+                                <i class="bi bi-info-circle"></i> Click to expand for detailed statistics
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mb-4">
+            <button class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-arrow-down-circle"></i> View More Classes
+            </button>
+        </div>
+
+        <!-- Grade Level Summary -->
+        <div class="mb-4">
+            <h3 class="section-title">
+                <i class="bi bi-bar-chart-line"></i> Grade Level Summary
+            </h3>
+            <div class="leaderboard-card">
+                <table class="table table-hover grade-summary-table mb-0">
+                    <thead style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                        <tr>
+                            <th>Grade</th>
+                            <th class="text-center">Classes</th>
+                            <th class="text-center">Students</th>
+                            <th class="text-center">Avg Participation Rate</th>
+                            <th class="text-center">Avg Minutes/Student</th>
+                            <th class="text-center">Avg Donation/Student</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Kindergarten</strong></td>
+                            <td class="text-center">2</td>
+                            <td class="text-center">44</td>
+                            <td class="text-center">89.5%</td>
+                            <td class="text-center">98</td>
+                            <td class="text-center">$102</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1st Grade</strong></td>
+                            <td class="text-center">3</td>
+                            <td class="text-center">66</td>
+                            <td class="text-center">91.2%</td>
+                            <td class="text-center">105</td>
+                            <td class="text-center">$115</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2nd Grade</strong></td>
+                            <td class="text-center">3</td>
+                            <td class="text-center">68</td>
+                            <td class="text-center">93.8%</td>
+                            <td class="text-center">118</td>
+                            <td class="text-center">$128</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3rd Grade</strong></td>
+                            <td class="text-center">4</td>
+                            <td class="text-center">88</td>
+                            <td class="text-center">94.5%</td>
+                            <td class="text-center">125</td>
+                            <td class="text-center">$135</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4th Grade</strong></td>
+                            <td class="text-center">3</td>
+                            <td class="text-center">67</td>
+                            <td class="text-center">92.1%</td>
+                            <td class="text-center">122</td>
+                            <td class="text-center">$141</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5th Grade</strong></td>
+                            <td class="text-center">3</td>
+                            <td class="text-center">78</td>
+                            <td class="text-center">90.3%</td>
+                            <td class="text-center">119</td>
+                            <td class="text-center">$148</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Prototype Note:</strong> This is a visual prototype using fictitious data. All names, numbers, and team names are for demonstration purposes only.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function toggleDetails(classId) {
+            const details = document.getElementById('details-' + classId);
+            const icon = document.getElementById('icon-' + classId);
+
+            details.classList.toggle('show');
+            icon.classList.toggle('rotated');
+        }
+
+        // Grade filter buttons
+        document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.grade-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

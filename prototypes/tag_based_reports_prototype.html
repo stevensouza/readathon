@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag-Based Reports - Read-a-Thon Prototype</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .top-nav {
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .brand {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .filter-panel {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 20px;
+        }
+
+        .tag-category {
+            margin-bottom: 1.5rem;
+        }
+
+        .tag-category-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1e3a5f;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .tag-category-title:hover {
+            color: #3b82f6;
+        }
+
+        .tag-category-title i {
+            margin-right: 0.5rem;
+            transition: transform 0.2s;
+        }
+
+        .tag-category-title.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .tag-checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag-checkbox {
+            display: none;
+        }
+
+        .tag-label {
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.4rem;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #495057;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .tag-label:hover {
+            border-color: #3b82f6;
+            background: #f8f9fa;
+        }
+
+        .tag-checkbox:checked + .tag-label {
+            background: #3b82f6;
+            border-color: #2563eb;
+            color: white;
+            font-weight: 600;
+        }
+
+        .active-filters {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .active-filters.show {
+            display: block;
+        }
+
+        .filter-pill {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.4rem;
+            margin: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .filter-pill .remove {
+            margin-left: 0.5rem;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .filter-pill .remove:hover {
+            opacity: 1;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.2s;
+        }
+
+        .report-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .report-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-description {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .report-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .report-tag {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .report-features {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .report-features i {
+            margin-right: 0.25rem;
+        }
+
+        .saved-filters {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 0.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .saved-filter-item {
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.3rem;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .saved-filter-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .recent-reports {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 0.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .recent-report-item {
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.3rem;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recent-report-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .recommendations {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 1rem;
+            border-radius: 0.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .recommendation-tag {
+            background: white;
+            color: #0369a1;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.3rem;
+            border: 1px solid #bae6fd;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recommendation-tag:hover {
+            background: #0369a1;
+            color: white;
+        }
+
+        .search-bar {
+            margin-bottom: 1.5rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .results-count {
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="top-nav">
+        <a href="#" class="brand">
+            <i class="bi bi-book"></i> Read-a-Thon System
+        </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Left Sidebar: Filters -->
+            <div class="col-md-3">
+                <div class="filter-panel">
+                    <h5 class="mb-3"><i class="bi bi-funnel"></i> Filter Reports by Tags</h5>
+
+                    <!-- Saved Filters -->
+                    <div class="saved-filters">
+                        <strong><i class="bi bi-bookmark-star"></i> Quick Filters</strong>
+                        <div class="saved-filter-item" onclick="loadSavedFilter('final-prize')">
+                            <i class="bi bi-trophy"></i> Final Prize Workflow
+                        </div>
+                        <div class="saved-filter-item" onclick="loadSavedFilter('daily-slides')">
+                            <i class="bi bi-easel"></i> Daily Slide Update
+                        </div>
+                        <div class="saved-filter-item" onclick="loadSavedFilter('team-competition')">
+                            <i class="bi bi-people"></i> Team Competition
+                        </div>
+                    </div>
+
+                    <!-- Recently Used -->
+                    <div class="recent-reports">
+                        <strong><i class="bi bi-clock-history"></i> Recently Used</strong>
+                        <div class="recent-report-item">Q5 - Student Cumulative</div>
+                        <div class="recent-report-item">Q14 - Team Participation</div>
+                        <div class="recent-report-item">Q21 - Minutes Integrity</div>
+                    </div>
+
+                    <!-- Purpose Tags -->
+                    <div class="tag-category">
+                        <div class="tag-category-title" onclick="toggleCategory('purpose')">
+                            <i class="bi bi-chevron-down"></i> Purpose
+                        </div>
+                        <div id="category-purpose" class="tag-checkbox-group">
+                            <input type="checkbox" id="tag-verification" class="tag-checkbox" value="verification" onchange="updateFilters()">
+                            <label for="tag-verification" class="tag-label">#verification</label>
+
+                            <input type="checkbox" id="tag-leaderboard" class="tag-checkbox" value="leaderboard" onchange="updateFilters()">
+                            <label for="tag-leaderboard" class="tag-label">#leaderboard</label>
+
+                            <input type="checkbox" id="tag-prize" class="tag-checkbox" value="prize-drawing" onchange="updateFilters()">
+                            <label for="tag-prize" class="tag-label">#prize-drawing</label>
+
+                            <input type="checkbox" id="tag-summary" class="tag-checkbox" value="summary" onchange="updateFilters()">
+                            <label for="tag-summary" class="tag-label">#summary</label>
+
+                            <input type="checkbox" id="tag-integrity" class="tag-checkbox" value="data-integrity" onchange="updateFilters()">
+                            <label for="tag-integrity" class="tag-label">#data-integrity</label>
+
+                            <input type="checkbox" id="tag-admin" class="tag-checkbox" value="admin" onchange="updateFilters()">
+                            <label for="tag-admin" class="tag-label">#admin</label>
+                        </div>
+                    </div>
+
+                    <!-- Metric Tags -->
+                    <div class="tag-category">
+                        <div class="tag-category-title" onclick="toggleCategory('metric')">
+                            <i class="bi bi-chevron-down"></i> Metric
+                        </div>
+                        <div id="category-metric" class="tag-checkbox-group">
+                            <input type="checkbox" id="tag-minutes" class="tag-checkbox" value="minutes" onchange="updateFilters()">
+                            <label for="tag-minutes" class="tag-label">#minutes</label>
+
+                            <input type="checkbox" id="tag-donations" class="tag-checkbox" value="donations" onchange="updateFilters()">
+                            <label for="tag-donations" class="tag-label">#donations</label>
+
+                            <input type="checkbox" id="tag-sponsors" class="tag-checkbox" value="sponsors" onchange="updateFilters()">
+                            <label for="tag-sponsors" class="tag-label">#sponsors</label>
+
+                            <input type="checkbox" id="tag-participation" class="tag-checkbox" value="participation" onchange="updateFilters()">
+                            <label for="tag-participation" class="tag-label">#participation</label>
+
+                            <input type="checkbox" id="tag-goals" class="tag-checkbox" value="goals" onchange="updateFilters()">
+                            <label for="tag-goals" class="tag-label">#goals</label>
+                        </div>
+                    </div>
+
+                    <!-- Entity Tags -->
+                    <div class="tag-category">
+                        <div class="tag-category-title" onclick="toggleCategory('entity')">
+                            <i class="bi bi-chevron-down"></i> Entity
+                        </div>
+                        <div id="category-entity" class="tag-checkbox-group">
+                            <input type="checkbox" id="tag-school" class="tag-checkbox" value="school" onchange="updateFilters()">
+                            <label for="tag-school" class="tag-label">#school</label>
+
+                            <input type="checkbox" id="tag-team" class="tag-checkbox" value="team" onchange="updateFilters()">
+                            <label for="tag-team" class="tag-label">#team</label>
+
+                            <input type="checkbox" id="tag-class" class="tag-checkbox" value="class" onchange="updateFilters()">
+                            <label for="tag-class" class="tag-label">#class</label>
+
+                            <input type="checkbox" id="tag-student" class="tag-checkbox" value="student" onchange="updateFilters()">
+                            <label for="tag-student" class="tag-label">#student</label>
+
+                            <input type="checkbox" id="tag-grade" class="tag-checkbox" value="grade" onchange="updateFilters()">
+                            <label for="tag-grade" class="tag-label">#grade</label>
+                        </div>
+                    </div>
+
+                    <!-- Feature Tags -->
+                    <div class="tag-category">
+                        <div class="tag-category-title" onclick="toggleCategory('features')">
+                            <i class="bi bi-chevron-down"></i> Features
+                        </div>
+                        <div id="category-features" class="tag-checkbox-group">
+                            <input type="checkbox" id="tag-analysis" class="tag-checkbox" value="analysis" onchange="updateFilters()">
+                            <label for="tag-analysis" class="tag-label">#analysis</label>
+
+                            <input type="checkbox" id="tag-sortable" class="tag-checkbox" value="sortable" onchange="updateFilters()">
+                            <label for="tag-sortable" class="tag-label">#sortable</label>
+
+                            <input type="checkbox" id="tag-by-date" class="tag-checkbox" value="by-date" onchange="updateFilters()">
+                            <label for="tag-by-date" class="tag-label">#by-date</label>
+
+                            <input type="checkbox" id="tag-top-n" class="tag-checkbox" value="top-n" onchange="updateFilters()">
+                            <label for="tag-top-n" class="tag-label">#top-n</label>
+
+                            <input type="checkbox" id="tag-comparison" class="tag-checkbox" value="comparison" onchange="updateFilters()">
+                            <label for="tag-comparison" class="tag-label">#comparison</label>
+                        </div>
+                    </div>
+
+                    <!-- Clear All Button -->
+                    <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="clearAllFilters()">
+                        <i class="bi bi-x-circle"></i> Clear All Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content: Results -->
+            <div class="col-md-9">
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search reports by name or description..." id="searchBox" oninput="updateFilters()">
+                    </div>
+                </div>
+
+                <!-- Active Filters -->
+                <div id="activeFilters" class="active-filters">
+                    <strong>Active Filters:</strong>
+                    <div id="activeFiltersList"></div>
+                </div>
+
+                <!-- Tag Recommendations -->
+                <div id="recommendations" class="recommendations" style="display: none;">
+                    <strong><i class="bi bi-lightbulb"></i> Try adding:</strong>
+                    <div id="recommendationsList"></div>
+                </div>
+
+                <!-- Results Header -->
+                <div class="results-header">
+                    <h2 id="resultsCount" class="results-count">Showing 22 reports</h2>
+                    <select class="form-select" style="width: auto;" onchange="sortReports(this.value)">
+                        <option value="name">Sort by: Name</option>
+                        <option value="recent">Sort by: Recently Used</option>
+                        <option value="popular">Sort by: Most Popular</option>
+                    </select>
+                </div>
+
+                <!-- Report Results -->
+                <div id="reportResults">
+                    <!-- Sample Reports -->
+                    <div class="report-card" data-tags="leaderboard student minutes donations goals sortable top-n analysis">
+                        <div class="report-title">Q5 - Student Cumulative</div>
+                        <div class="report-description">
+                            All students ranked by reading minutes, donations, or days met goal
+                        </div>
+                        <div class="report-tags">
+                            <span class="report-tag">#leaderboard</span>
+                            <span class="report-tag">#student</span>
+                            <span class="report-tag">#minutes</span>
+                            <span class="report-tag">#donations</span>
+                            <span class="report-tag">#goals</span>
+                            <span class="report-tag">#sortable</span>
+                            <span class="report-tag">#top-n</span>
+                            <span class="report-tag">#analysis</span>
+                        </div>
+                        <div class="report-features">
+                            <span><i class="bi bi-sort-down"></i> Sortable</span>
+                            <span><i class="bi bi-graph-up"></i> Has Analysis</span>
+                            <span><i class="bi bi-trophy"></i> Top N Support</span>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-play-fill"></i> Run Report
+                        </button>
+                    </div>
+
+                    <div class="report-card" data-tags="summary team participation goals comparison analysis">
+                        <div class="report-title">Q14 - Team Participation</div>
+                        <div class="report-description">
+                            Team participation rates with color bonus and goal achievement
+                        </div>
+                        <div class="report-tags">
+                            <span class="report-tag">#summary</span>
+                            <span class="report-tag">#team</span>
+                            <span class="report-tag">#participation</span>
+                            <span class="report-tag">#goals</span>
+                            <span class="report-tag">#comparison</span>
+                            <span class="report-tag">#analysis</span>
+                        </div>
+                        <div class="report-features">
+                            <span><i class="bi bi-arrow-left-right"></i> Comparison</span>
+                            <span><i class="bi bi-graph-up"></i> Has Analysis</span>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-play-fill"></i> Run Report
+                        </button>
+                    </div>
+
+                    <div class="report-card" data-tags="prize-drawing student goals by-date">
+                        <div class="report-title">Q4 - Prize Drawing</div>
+                        <div class="report-description">
+                            Students eligible for daily prize drawing (met goal on specific date)
+                        </div>
+                        <div class="report-tags">
+                            <span class="report-tag">#prize-drawing</span>
+                            <span class="report-tag">#student</span>
+                            <span class="report-tag">#goals</span>
+                            <span class="report-tag">#by-date</span>
+                        </div>
+                        <div class="report-features">
+                            <span><i class="bi bi-calendar"></i> By Date</span>
+                            <span><i class="bi bi-trophy"></i> Prize Eligible</span>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-play-fill"></i> Run Report
+                        </button>
+                    </div>
+
+                    <div class="report-card" data-tags="data-integrity student minutes analysis">
+                        <div class="report-title">Q21 - Minutes Integrity Check</div>
+                        <div class="report-description">
+                            Verify daily minutes sum matches cumulative minutes
+                        </div>
+                        <div class="report-tags">
+                            <span class="report-tag">#data-integrity</span>
+                            <span class="report-tag">#student</span>
+                            <span class="report-tag">#minutes</span>
+                            <span class="report-tag">#analysis</span>
+                        </div>
+                        <div class="report-features">
+                            <span><i class="bi bi-shield-check"></i> Integrity</span>
+                            <span><i class="bi bi-graph-up"></i> Has Analysis</span>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-play-fill"></i> Run Report
+                        </button>
+                    </div>
+
+                    <div class="report-card" data-tags="summary class participation minutes by-date comparison">
+                        <div class="report-title">Q2 - Daily Summary</div>
+                        <div class="report-description">
+                            Class or team summary by date with participation and minutes
+                        </div>
+                        <div class="report-tags">
+                            <span class="report-tag">#summary</span>
+                            <span class="report-tag">#class</span>
+                            <span class="report-tag">#team</span>
+                            <span class="report-tag">#participation</span>
+                            <span class="report-tag">#minutes</span>
+                            <span class="report-tag">#by-date</span>
+                            <span class="report-tag">#comparison</span>
+                        </div>
+                        <div class="report-features">
+                            <span><i class="bi bi-calendar"></i> By Date</span>
+                            <span><i class="bi bi-arrow-left-right"></i> Comparison</span>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="bi bi-play-fill"></i> Run Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="alert alert-info mt-4">
+            <i class="bi bi-info-circle"></i>
+            <strong>Prototype Note:</strong> This is a visual prototype demonstrating the tag-based reporting interface. Interactive filtering works with sample data.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleCategory(categoryId) {
+            const element = document.getElementById('category-' + categoryId);
+            const title = event.target.closest('.tag-category-title');
+
+            if (element.style.display === 'none') {
+                element.style.display = 'flex';
+                title.classList.remove('collapsed');
+            } else {
+                element.style.display = 'none';
+                title.classList.add('collapsed');
+            }
+        }
+
+        function updateFilters() {
+            const checkboxes = document.querySelectorAll('.tag-checkbox:checked');
+            const selectedTags = Array.from(checkboxes).map(cb => cb.value);
+            const searchText = document.getElementById('searchBox').value.toLowerCase();
+
+            // Show/hide active filters
+            const activeFiltersDiv = document.getElementById('activeFilters');
+            const activeFiltersList = document.getElementById('activeFiltersList');
+
+            if (selectedTags.length > 0) {
+                activeFiltersDiv.classList.add('show');
+                activeFiltersList.innerHTML = selectedTags.map(tag =>
+                    `<span class="filter-pill">#${tag} <span class="remove" onclick="removeFilter('${tag}')">×</span></span>`
+                ).join('');
+            } else {
+                activeFiltersDiv.classList.remove('show');
+            }
+
+            // Filter report cards
+            const reports = document.querySelectorAll('.report-card');
+            let visibleCount = 0;
+
+            reports.forEach(report => {
+                const reportTags = report.dataset.tags.split(' ');
+                const reportText = report.textContent.toLowerCase();
+
+                // Check if matches all selected tags AND search text
+                const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => reportTags.includes(tag));
+                const matchesSearch = searchText === '' || reportText.includes(searchText);
+
+                if (matchesTags && matchesSearch) {
+                    report.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    report.style.display = 'none';
+                }
+            });
+
+            // Update count
+            document.getElementById('resultsCount').textContent = `Showing ${visibleCount} report${visibleCount !== 1 ? 's' : ''}`;
+
+            // Show recommendations
+            if (selectedTags.length > 0 && selectedTags.length < 3) {
+                showRecommendations(selectedTags);
+            } else {
+                document.getElementById('recommendations').style.display = 'none';
+            }
+        }
+
+        function removeFilter(tag) {
+            const checkbox = document.querySelector(`.tag-checkbox[value="${tag}"]`);
+            if (checkbox) {
+                checkbox.checked = false;
+                updateFilters();
+            }
+        }
+
+        function clearAllFilters() {
+            document.querySelectorAll('.tag-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('searchBox').value = '';
+            updateFilters();
+        }
+
+        function showRecommendations(selectedTags) {
+            const recommendationsDiv = document.getElementById('recommendations');
+            const recommendationsList = document.getElementById('recommendationsList');
+
+            // Simple recommendation logic
+            let suggestions = [];
+
+            if (selectedTags.includes('student')) {
+                if (!selectedTags.includes('top-n')) suggestions.push('top-n');
+                if (!selectedTags.includes('analysis')) suggestions.push('analysis');
+            }
+
+            if (selectedTags.includes('donations') || selectedTags.includes('minutes')) {
+                if (!selectedTags.includes('leaderboard')) suggestions.push('leaderboard');
+            }
+
+            if (selectedTags.includes('team') || selectedTags.includes('class')) {
+                if (!selectedTags.includes('comparison')) suggestions.push('comparison');
+            }
+
+            if (suggestions.length > 0) {
+                recommendationsDiv.style.display = 'block';
+                recommendationsList.innerHTML = suggestions.map(tag =>
+                    `<span class="recommendation-tag" onclick="addRecommendation('${tag}')">#${tag}</span>`
+                ).join('');
+            } else {
+                recommendationsDiv.style.display = 'none';
+            }
+        }
+
+        function addRecommendation(tag) {
+            const checkbox = document.querySelector(`.tag-checkbox[value="${tag}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                updateFilters();
+            }
+        }
+
+        function loadSavedFilter(filterName) {
+            clearAllFilters();
+
+            if (filterName === 'final-prize') {
+                document.getElementById('tag-prize').checked = true;
+                document.getElementById('tag-student').checked = true;
+                document.getElementById('tag-goals').checked = true;
+            } else if (filterName === 'daily-slides') {
+                document.getElementById('tag-summary').checked = true;
+                document.getElementById('tag-by-date').checked = true;
+            } else if (filterName === 'team-competition') {
+                document.getElementById('tag-team').checked = true;
+                document.getElementById('tag-comparison').checked = true;
+            }
+
+            updateFilters();
+        }
+
+        function sortReports(sortBy) {
+            // Placeholder for sorting logic
+            console.log('Sorting by:', sortBy);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFilters();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read-a-Thon Reporting Matrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .matrix-table {
+            font-size: 0.85rem;
+        }
+        .matrix-table th {
+            background-color: #1e3a5f;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .has-report {
+            background-color: #d1fae5;
+            color: #047857;
+        }
+        .has-gap {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .gap-badge {
+            background: #ef4444;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .exists-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .summary-card {
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 1rem;
+        }
+        .metric-section {
+            margin-bottom: 3rem;
+        }
+        .coverage-bar {
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+        .coverage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+        .tab-section {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .recommended-report {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1><i class="bi bi-table"></i> Read-a-Thon Reporting Matrix & Gap Analysis</h1>
+            <p class="mb-0">Comprehensive view of all reporting possibilities</p>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <!-- Overall Coverage -->
+        <div class="tab-section">
+            <h2 class="mb-4">Overall Reporting Coverage</h2>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h3 class="text-success mb-0">73%</h3>
+                            <small class="text-muted">Overall Coverage</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary mb-0">22</h3>
+                            <small class="text-muted">Existing Reports</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h3 class="text-warning mb-0">6</h3>
+                            <small class="text-muted">Recommended New</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h3 class="text-danger mb-0">24</h3>
+                            <small class="text-muted">Total Gaps</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coverage by Metric -->
+        <div class="tab-section">
+            <h2 class="mb-4">Coverage by Metric Category</h2>
+
+            <div class="mb-3">
+                <h6>Donations</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 70%;">70%</div>
+                </div>
+                <small class="text-muted">Missing: Daily breakdowns, Class donations detail</small>
+            </div>
+
+            <div class="mb-3">
+                <h6>Sponsors</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 80%;">80%</div>
+                </div>
+                <small class="text-muted">Missing: Class-level detail</small>
+            </div>
+
+            <div class="mb-3">
+                <h6>Participation</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 85%;">85%</div>
+                </div>
+                <small class="text-muted">Missing: Grade summaries, Daily trends</small>
+            </div>
+
+            <div class="mb-3">
+                <h6>Minutes (Goals Met)</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 75%;">75%</div>
+                </div>
+                <small class="text-muted">Missing: School/Grade summaries</small>
+            </div>
+
+            <div class="mb-3">
+                <h6>Minutes (Capped)</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 90%;">90%</div>
+                </div>
+                <small class="text-muted">Missing: Daily school totals, Grade summaries</small>
+            </div>
+
+            <div class="mb-3">
+                <h6>Minutes (Uncapped)</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 40%;">40%</div>
+                </div>
+                <small class="text-muted">Missing: Team/Class comparisons</small>
+            </div>
+
+            <div class="mb-3">
+                <h6>Minutes (Max Single Day)</h6>
+                <div class="coverage-bar">
+                    <div class="coverage-fill" style="width: 20%;">20%</div>
+                </div>
+                <small class="text-muted">Missing: All top-performance reports</small>
+            </div>
+        </div>
+
+        <!-- High Priority Gaps -->
+        <div class="tab-section">
+            <h2 class="mb-4"><i class="bi bi-exclamation-triangle-fill text-warning"></i> High Priority Gaps</h2>
+
+            <h5 class="mt-4">1. Daily Trend Reports</h5>
+            <ul>
+                <li>School totals by day (donations, minutes, participation)</li>
+                <li>Team comparison by day</li>
+                <li>Daily progress tracking</li>
+            </ul>
+
+            <h5 class="mt-4">2. Grade-Level Summaries</h5>
+            <ul>
+                <li>All grades participation summary</li>
+                <li>All grades minutes summary</li>
+                <li>All grades donations summary</li>
+                <li>Goal achievement by grade</li>
+            </ul>
+
+            <h5 class="mt-4">3. Class-Level Donations</h5>
+            <ul>
+                <li>All classes ranked by donations</li>
+                <li>Daily class donations</li>
+            </ul>
+
+            <h5 class="mt-4">4. Max Single Day Performance</h5>
+            <ul>
+                <li>Best single-day performance reports (all entities)</li>
+            </ul>
+        </div>
+
+        <!-- Recommended New Reports -->
+        <div class="tab-section">
+            <h2 class="mb-4"><i class="bi bi-plus-circle-fill text-success"></i> Recommended New Reports</h2>
+
+            <div class="recommended-report">
+                <h5><strong>Q24 - Daily Progress Dashboard</strong></h5>
+                <p class="mb-1"><strong>Purpose:</strong> Track day-by-day totals for school</p>
+                <p class="mb-0"><strong>Columns:</strong> Date | Total Minutes | Total Donations | Students Participated | New Readers | New Donors</p>
+            </div>
+
+            <div class="recommended-report">
+                <h5><strong>Q25 - Grade Level Summary</strong></h5>
+                <p class="mb-1"><strong>Purpose:</strong> Complete grade-level breakdown</p>
+                <p class="mb-0"><strong>Columns:</strong> Grade | Students | Avg Participation | Avg Minutes/Student | Avg Donation/Student | Goal Getters</p>
+            </div>
+
+            <div class="recommended-report">
+                <h5><strong>Q26 - Class Donations Leaderboard</strong></h5>
+                <p class="mb-1"><strong>Purpose:</strong> Rank all classes by fundraising</p>
+                <p class="mb-0"><strong>Columns:</strong> Rank | Class | Teacher | Grade | Team | Total Donations | Avg/Student | Total Sponsors</p>
+            </div>
+
+            <div class="recommended-report">
+                <h5><strong>Q27 - Best Single Day Performance</strong></h5>
+                <p class="mb-1"><strong>Purpose:</strong> Identify peak performance days</p>
+                <p class="mb-0"><strong>Columns:</strong> Entity Type | Entity Name | Date | Minutes Read | Students Participated</p>
+            </div>
+
+            <div class="recommended-report">
+                <h5><strong>Q28 - Team Daily Comparison</strong></h5>
+                <p class="mb-1"><strong>Purpose:</strong> Day-by-day team competition</p>
+                <p class="mb-0"><strong>Columns:</strong> Date | Phoenix Minutes | Dragons Minutes | Phoenix Participation | Dragons Participation | Daily Winner</p>
+            </div>
+
+            <div class="recommended-report">
+                <h5><strong>Q29 - Uncapped Minutes Analysis</strong></h5>
+                <p class="mb-1"><strong>Purpose:</strong> See impact of 120-min cap by entity</p>
+                <p class="mb-0"><strong>Columns:</strong> Entity | Capped Minutes | Uncapped Minutes | Difference | Students Affected</p>
+            </div>
+        </div>
+
+        <!-- Donations Matrix -->
+        <div class="metric-section">
+            <h2 class="mb-4">1. DONATIONS Reporting Matrix</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Entity</th>
+                            <th>Period</th>
+                            <th>Result Type</th>
+                            <th>Status</th>
+                            <th>Query ID</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="has-report">
+                            <td>School</td>
+                            <td>Full Contest</td>
+                            <td>Single Number</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Dashboard</td>
+                            <td>Total donations school-wide</td>
+                        </tr>
+                        <tr class="has-gap">
+                            <td>School</td>
+                            <td>By Day</td>
+                            <td>Single Number</td>
+                            <td><span class="gap-badge">⚠️ GAP</span></td>
+                            <td>-</td>
+                            <td>Daily donation total</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Team</td>
+                            <td>Full Contest</td>
+                            <td>All Data</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q20</td>
+                            <td>Team donations breakdown</td>
+                        </tr>
+                        <tr class="has-gap">
+                            <td>Team</td>
+                            <td>By Day</td>
+                            <td>Single Number</td>
+                            <td><span class="gap-badge">⚠️ GAP</span></td>
+                            <td>-</td>
+                            <td>Daily donations by team</td>
+                        </tr>
+                        <tr class="has-gap">
+                            <td>Class</td>
+                            <td>Full Contest</td>
+                            <td>All Data</td>
+                            <td><span class="gap-badge">⚠️ GAP</span></td>
+                            <td>-</td>
+                            <td>All classes with donations</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Class</td>
+                            <td>Full Contest</td>
+                            <td>Top N</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q12/Q13</td>
+                            <td>Top fundraising classes (indirect)</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Student</td>
+                            <td>Full Contest</td>
+                            <td>All Data</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q3/Q5</td>
+                            <td>All students with donations</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Student</td>
+                            <td>Full Contest</td>
+                            <td>Top N</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q5</td>
+                            <td>Top fundraisers</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Grade</td>
+                            <td>Full Contest</td>
+                            <td>Top N</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q9</td>
+                            <td>Most donations by grade</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Minutes (Capped) Matrix -->
+        <div class="metric-section">
+            <h2 class="mb-4">2. MINUTES (Capped 120/day) Reporting Matrix</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Entity</th>
+                            <th>Period</th>
+                            <th>Result Type</th>
+                            <th>Status</th>
+                            <th>Query ID</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="has-report">
+                            <td>School</td>
+                            <td>Full Contest</td>
+                            <td>Single Number</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Dashboard</td>
+                            <td>Total capped minutes</td>
+                        </tr>
+                        <tr class="has-gap">
+                            <td>School</td>
+                            <td>By Day</td>
+                            <td>Single Number</td>
+                            <td><span class="gap-badge">⚠️ GAP</span></td>
+                            <td>-</td>
+                            <td>Daily capped minutes total</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Team</td>
+                            <td>Full Contest</td>
+                            <td>Breakdown</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q19</td>
+                            <td>Team minutes (capped)</td>
+                        </tr>
+                        <tr class="has-gap">
+                            <td>Team</td>
+                            <td>By Day</td>
+                            <td>Breakdown</td>
+                            <td><span class="gap-badge">⚠️ GAP</span></td>
+                            <td>-</td>
+                            <td>Daily team minutes</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Class</td>
+                            <td>Full Contest</td>
+                            <td>All Data</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q2</td>
+                            <td>All classes total minutes</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Class</td>
+                            <td>Full Contest</td>
+                            <td>Top N</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q13</td>
+                            <td>Top reading classes</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Student</td>
+                            <td>Full Contest</td>
+                            <td>All Data</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q5/Q8</td>
+                            <td>All student minutes</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Student</td>
+                            <td>Full Contest</td>
+                            <td>Top N</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q5</td>
+                            <td>Top readers</td>
+                        </tr>
+                        <tr class="has-report">
+                            <td>Grade</td>
+                            <td>Full Contest</td>
+                            <td>Top N</td>
+                            <td><span class="exists-badge">✅ EXISTS</span></td>
+                            <td>Q10</td>
+                            <td>Most minutes by grade</td>
+                        </tr>
+                        <tr class="has-gap">
+                            <td>Grade</td>
+                            <td>Full Contest</td>
+                            <td>All Data</td>
+                            <td><span class="gap-badge">⚠️ GAP</span></td>
+                            <td>-</td>
+                            <td>All grades minutes summary</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Implementation Priority -->
+        <div class="tab-section">
+            <h2 class="mb-4"><i class="bi bi-list-ol"></i> Implementation Priority Order</h2>
+            <ol>
+                <li><strong>Q25 - Grade Level Summary</strong> - Fills major gap in grade-level reporting</li>
+                <li><strong>Q24 - Daily Progress Dashboard</strong> - Trending and momentum tracking</li>
+                <li><strong>Q26 - Class Donations Leaderboard</strong> - Completes class-level reporting</li>
+                <li><strong>Q28 - Team Daily Comparison</strong> - Enhances team competition visibility</li>
+                <li><strong>Q27 - Best Single Day Performance</strong> - Interesting statistics</li>
+                <li><strong>Q29 - Uncapped Minutes Analysis</strong> - Data integrity enhancement</li>
+            </ol>
+        </div>
+
+        <!-- For Dashboard Tabs -->
+        <div class="tab-section">
+            <h2 class="mb-4"><i class="bi bi-layout-three-columns"></i> Recommended Reports for Dashboard Tabs</h2>
+
+            <h5 class="mt-4">Teams Tab Should Include:</h5>
+            <ul>
+                <li>✅ Q14 (Team Participation)</li>
+                <li>✅ Q19 (Team Minutes)</li>
+                <li>✅ Q20 (Team Donations)</li>
+                <li>⚠️ <strong>NEW: Q28 (Team Daily Comparison)</strong></li>
+            </ul>
+
+            <h5 class="mt-4">Classes Tab Should Include:</h5>
+            <ul>
+                <li>✅ Q6 (Class Participation)</li>
+                <li>✅ Q12/Q13 (Best Classes)</li>
+                <li>⚠️ <strong>NEW: Q26 (Class Donations Leaderboard)</strong></li>
+                <li>⚠️ <strong>NEW: Q25 (Grade Summary)</strong></li>
+            </ul>
+
+            <h5 class="mt-4">Students Tab Should Include:</h5>
+            <ul>
+                <li>✅ Q5 (Student Cumulative - Top Readers/Fundraisers)</li>
+                <li>✅ Q15 (Goal Getters)</li>
+                <li>✅ Q8 (Student Reading Details)</li>
+                <li>✅ Individual student lookup with Q3/Q5 data</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-muted mt-5 mb-3">
+            <p>Read-a-Thon Reporting Matrix • Generated for Gap Analysis</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

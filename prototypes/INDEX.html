@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read-a-Thon Prototypes - Master Index</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .prototype-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.2s;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .prototype-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+
+        .prototype-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 0.5rem;
+        }
+
+        .prototype-description {
+            color: #6c757d;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .prototype-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .prototype-meta i {
+            margin-right: 0.25rem;
+        }
+
+        .badge-category {
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .category-dashboard {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .category-reports {
+            background-color: #fef3c7;
+            color: #854d0e;
+        }
+
+        .category-design {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .category-future {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin: 2rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #3b82f6;
+        }
+
+        .stats-label {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .filter-buttons {
+            margin-bottom: 2rem;
+        }
+
+        .filter-btn {
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <h1 class="mb-2"><i class="bi bi-palette"></i> Read-a-Thon Prototypes</h1>
+            <p class="mb-0 opacity-75">Master index of all design prototypes and mockups</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mb-5">
+        <!-- Stats Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">18</div>
+                    <div class="stats-label">Total Prototypes</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">5</div>
+                    <div class="stats-label">Dashboard Designs</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">5</div>
+                    <div class="stats-label">Report Enhancements</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">8</div>
+                    <div class="stats-label">UI/Color Options</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="filter-buttons">
+            <button class="btn btn-outline-primary filter-btn" onclick="filterCategory('all')">All</button>
+            <button class="btn btn-outline-primary filter-btn" onclick="filterCategory('dashboard')">Dashboard Designs</button>
+            <button class="btn btn-outline-primary filter-btn" onclick="filterCategory('reports')">Report Enhancements</button>
+            <button class="btn btn-outline-primary filter-btn" onclick="filterCategory('design')">UI/Color Options</button>
+            <button class="btn btn-outline-primary filter-btn" onclick="filterCategory('future')">Future Features</button>
+        </div>
+
+        <!-- ===== CURRENT/ACTIVE PROTOTYPES ===== -->
+        <h2 class="section-title">📱 Current Dashboard Tabs</h2>
+        <p class="text-muted">Unified prototype with all four tabs accessible from navigation menu</p>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-layout-three-columns"></i> Dashboard with Tabs - Unified Prototype
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> HTML/Bootstrap 5.3</span>
+                <span><i class="bi bi-check-circle text-success"></i> Current Design</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Complete unified prototype with clickable navigation tabs for all four dashboard views: School, Teams, Classes, and Students. Uses exact styling from the actual application (Option H subdued color scheme). Features team color coding (Phoenix vs Dragons), report-style tables with dark headers, and full Bootstrap 5.3 design system. This is the recommended prototype for reviewing all dashboard tabs in one place.
+            </div>
+            <a href="dashboard_with_tabs_unified.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <!-- ===== INDIVIDUAL TAB PROTOTYPES ===== -->
+        <h2 class="section-title">📊 Individual Dashboard Tab Prototypes</h2>
+        <p class="text-muted">Standalone prototypes for each individual tab (before unified version)</p>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-trophy"></i> Teams Tab - Head-to-Head Competition
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Standalone</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Standalone Teams tab showing head-to-head competition between Phoenix and Dragons. Features side-by-side comparison cards, detailed statistics table comparing 6 metrics, top performers by team (readers & fundraisers), and team color bonus breakdown by date. Demonstrates team-level reporting not available on School tab.
+            </div>
+            <a href="dashboard_teams_tab.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Classes Tab - Class Leaderboard
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Standalone</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Standalone Classes tab featuring sortable/filterable leaderboard of ALL classes. Includes grade-level filters, multiple sort options (participation, minutes, donations), expandable class details with full statistics (demonstrated with Room 105), and grade-level summary rollup table. Shows all classes ranked, not just top performers.
+            </div>
+            <a href="dashboard_classes_tab.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-person-circle"></i> Students Tab - Lookup & Leaderboards
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Standalone</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Standalone Students tab with search functionality, category tabs (Top Readers, Top Fundraisers, Most Sponsors, Goal Getters, Perfect Participation), interactive leaderboards with clickable students, and detailed individual student view (demonstrated with Emma S.) showing reading performance, fundraising, daily breakdown, and prize eligibility. Provides comprehensive student-level reporting.
+            </div>
+            <a href="dashboard_students_tab.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <!-- ===== SCHOOL TAB DESIGN ITERATIONS ===== -->
+        <h2 class="section-title">🏫 School Tab Design Evolution</h2>
+        <p class="text-muted">Earlier prototypes showing School tab design iterations</p>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-house-door"></i> School Tab V2 (Current Production)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-check-circle text-success"></i> In Production</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                The current production version of the School tab. Features verification boxes (donations, minutes, top performers, top classes, data integrity), participation stats, database counts, quick actions, recent dates, and recent uploads. This design was selected and implemented in the live application.
+            </div>
+            <a href="dashboard_school_tab_v2.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-filter"></i> School Tab - Filter Indicators
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Early School tab prototype exploring filter indicators and alternative layouts. Shows experimentation with data filtering and visual indicators for active filters.
+            </div>
+            <a href="school_tab_filter_indicators.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-house-door"></i> School Tab - Production Final
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Another iteration of the School tab design exploring production-ready layouts and refinements.
+            </div>
+            <a href="school_tab_production_final.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <!-- ===== ENHANCED REPORT PROTOTYPES ===== -->
+        <h2 class="section-title">📈 Enhanced Report Designs</h2>
+        <p class="text-muted">Prototypes exploring report metadata, analysis, and presentation improvements</p>
+
+        <div class="prototype-card" data-category="reports">
+            <div class="prototype-title">
+                <i class="bi bi-file-earmark-text"></i> Enhanced Report Prototype V4 (Latest)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-check-circle text-success"></i> Latest Version</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-reports">Reports</span>
+            </div>
+            <div class="prototype-description">
+                Latest and most comprehensive report enhancement prototype. Features collapsible metadata sections (report information, column descriptions, source tables, terms glossary), automated analysis modal with intelligent insights, enhanced table styling, and complete Bootstrap 5.3 design system. This design informed Feature 30 (Enhanced Report Metadata) and Feature 31 (Dynamic Report Analysis).
+            </div>
+            <a href="enhanced_report_prototype_v4.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="reports">
+            <div class="prototype-title">
+                <i class="bi bi-file-earmark-text"></i> Enhanced Report Prototype V3 Final
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-reports">Reports</span>
+            </div>
+            <div class="prototype-description">
+                Third iteration of enhanced report design exploring metadata organization, collapsible sections, and analysis presentation.
+            </div>
+            <a href="enhanced_report_prototype_v3_final.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="reports">
+            <div class="prototype-title">
+                <i class="bi bi-file-earmark-text"></i> Enhanced Report Prototype V2
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-reports">Reports</span>
+            </div>
+            <div class="prototype-description">
+                Second iteration exploring report enhancements, metadata display, and user interface improvements.
+            </div>
+            <a href="enhanced_report_prototype_v2.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="reports">
+            <div class="prototype-title">
+                <i class="bi bi-file-earmark-text"></i> Enhanced Report Prototype V1
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Initial Concept</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-reports">Reports</span>
+            </div>
+            <div class="prototype-description">
+                Initial prototype exploring enhanced report capabilities, metadata inclusion, and improved table presentation.
+            </div>
+            <a href="enhanced_report_prototype.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <!-- ===== UI/COLOR SCHEME PROTOTYPES ===== -->
+        <h2 class="section-title">🎨 UI Design & Color Scheme Options</h2>
+        <p class="text-muted">Prototypes exploring different visual designs, color schemes, and layout options</p>
+
+        <div class="prototype-card" data-category="design">
+            <div class="prototype-title">
+                <i class="bi bi-palette-fill"></i> Color Scheme Options (A-J)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-award text-warning"></i> Winner: Option H</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-design">UI/Color</span>
+            </div>
+            <div class="prototype-description">
+                Interactive prototype presenting 10 different color scheme options (Options A through J) for the entire application. Each option demonstrates different color palettes for navigation, cards, tables, badges, and alerts. Option H (Subdued Blue) was selected and implemented as the production color scheme. Allows side-by-side comparison of all options.
+            </div>
+            <a href="ui_prototype_color_scheme_options.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="design">
+            <div class="prototype-title">
+                <i class="bi bi-house-heart"></i> Home/Dashboard Layout Options
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Layout Exploration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-design">UI/Color</span>
+            </div>
+            <div class="prototype-description">
+                Extensive prototype (248KB) exploring multiple home/dashboard layout options. Features various approaches to organizing verification boxes, statistics cards, quick actions, and data presentation. Demonstrates alternative layouts for the main dashboard/home screen.
+            </div>
+            <a href="ui_prototype_home_options.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="design">
+            <div class="prototype-title">
+                <i class="bi bi-kanban"></i> Dashboard Tabs - Refined Zen
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Concept</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-design">UI/Color</span>
+            </div>
+            <div class="prototype-description">
+                Alternative "refined zen" design approach for dashboard tabs. Explores minimalist, clean design patterns with emphasis on whitespace and simplified visual hierarchy.
+            </div>
+            <a href="dashboard_tabs_refined_zen.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="design">
+            <div class="prototype-title">
+                <i class="bi bi-people-fill"></i> Participation Metrics UI
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Component Design</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-design">UI/Color</span>
+            </div>
+            <div class="prototype-description">
+                Focused prototype exploring different ways to display participation metrics. Demonstrates various visualization approaches for showing student participation rates, trends, and statistics.
+            </div>
+            <a href="ui_prototype_participation.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="design">
+            <div class="prototype-title">
+                <i class="bi bi-check-square"></i> Verification Boxes Design
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Component Design</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-design">UI/Color</span>
+            </div>
+            <div class="prototype-description">
+                Prototype specifically focused on verification box design - the prominent colored gradient cards at the top of the dashboard showing key metrics. Explores different styling approaches for these important UI components.
+            </div>
+            <a href="ui_prototype_verification_boxes.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <!-- ===== ANALYSIS & FUTURE FEATURES ===== -->
+        <h2 class="section-title">🔮 Analysis & Future Features</h2>
+        <p class="text-muted">Prototypes for gap analysis and future enhancement proposals</p>
+
+        <div class="prototype-card" data-category="future">
+            <div class="prototype-title">
+                <i class="bi bi-table"></i> Reporting Matrix & Gap Analysis
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-lightbulb"></i> Analysis Tool</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-future">Future</span>
+            </div>
+            <div class="prototype-description">
+                Interactive visual dashboard analyzing current reporting capabilities and identifying gaps. Shows 73% overall reporting coverage with detailed breakdowns by metric category (Donations, Sponsors, Participation, Minutes). Includes comprehensive matrix of all possible reporting combinations, identifies 24 total gaps, recommends 6 new reports (Q24-Q29), and provides implementation priority order. Essential tool for planning future report development.
+            </div>
+            <a href="reporting_matrix_visual.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Analysis
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="future">
+            <div class="prototype-title">
+                <i class="bi bi-tags-fill"></i> Tag-Based Reporting System (Future)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-rocket"></i> Feature 38 - Not Yet Implemented</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-future">Future</span>
+            </div>
+            <div class="prototype-description">
+                Comprehensive prototype demonstrating proposed tag-based reporting system that would replace the current 4-section navigation (Reports, Workflows, Tables, Admin) with a unified interface. Features multi-select tag filtering across 5 categories (Purpose, Metric, Entity, Source, Features) with 34 total tags, saved tag combinations for quick filters, tag recommendations engine, recently used reports, and intelligent search combining text + tags. Enables powerful multi-dimensional report discovery like "student-level donation leaderboards with analysis". See Feature 38 for full technical specification.
+            </div>
+            <a href="tag_based_reports_prototype.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+            <a href="../docs/features/feature-38-tag-based-reporting-system.md" class="btn btn-outline-secondary" target="_blank">
+                <i class="bi bi-file-earmark-text"></i> Read Feature Doc
+            </a>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div class="alert alert-info mt-5">
+            <h5><i class="bi bi-info-circle"></i> About These Prototypes</h5>
+            <p class="mb-2">
+                These HTML prototypes were created during the design and development process of the Read-a-Thon system.
+                They use fictitious data and serve as visual mockups to explore design options, demonstrate features, and
+                facilitate decision-making before implementation.
+            </p>
+            <p class="mb-0">
+                <strong>Note:</strong> All student names, donation amounts, and other data shown in prototypes are completely
+                fictitious and used for demonstration purposes only.
+            </p>
+        </div>
+
+        <div class="text-center text-muted mt-4">
+            <p>Read-a-Thon Prototypes • Last Updated: October 2025</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function filterCategory(category) {
+            const cards = document.querySelectorAll('.prototype-card');
+
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

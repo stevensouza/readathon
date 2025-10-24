@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams Tab - Read-a-Thon Prototype</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+
+        .vs-divider {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffc107;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+            height: 100%;
+        }
+
+        .team1-card {
+            border-left: 5px solid #50bfec;
+        }
+
+        .team2-card {
+            border-left: 5px solid #c77dd3;
+        }
+
+        .team-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .stat-row {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .leader-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 0.25rem;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .team1-highlight {
+            background-color: rgba(80, 191, 236, 0.1);
+        }
+
+        .team2-highlight {
+            background-color: rgba(199, 125, 211, 0.1);
+        }
+
+        .top-performers-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .performer-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .performer-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .performer-item:last-child {
+            border-bottom: none;
+        }
+
+        .medal {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        .bonus-table {
+            font-size: 0.9rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="header-section text-center">
+            <h1 class="mb-3"><i class="bi bi-trophy"></i> TEAM COMPETITION</h1>
+            <h2 class="fw-bold">
+                <span style="color: #50bfec;">Phoenix</span>
+                <span class="vs-divider mx-3">VS</span>
+                <span style="color: #c77dd3;">Dragons</span>
+            </h2>
+        </div>
+
+        <!-- Head-to-Head Scoreboard -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="team-card team1-card">
+                    <h3 class="team-name" style="color: #50bfec;">
+                        <i class="bi bi-people-fill"></i> TEAM PHOENIX
+                    </h3>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Total Minutes</div>
+                        <div class="stat-value">25,430</div>
+                        <div class="leader-badge">🏆 LEADING by 1,540 min</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Participation Rate</div>
+                        <div class="stat-value">92.5%</div>
+                        <div class="leader-badge">🏆 LEADING by 4.2%</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Total Raised</div>
+                        <div class="stat-value">$12,450</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Team Color Bonus</div>
+                        <div class="stat-value">450 pts</div>
+                        <div class="leader-badge">🏆 LEADING by 70 pts</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Students</div>
+                        <div class="stat-value">206</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Avg Minutes/Student</div>
+                        <div class="stat-value">123</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="team-card team2-card">
+                    <h3 class="team-name" style="color: #c77dd3;">
+                        <i class="bi bi-people-fill"></i> TEAM DRAGONS
+                    </h3>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Total Minutes</div>
+                        <div class="stat-value">23,890</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Participation Rate</div>
+                        <div class="stat-value">88.3%</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Total Raised</div>
+                        <div class="stat-value">$14,200</div>
+                        <div class="leader-badge">🏆 LEADING by $1,750</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Team Color Bonus</div>
+                        <div class="stat-value">380 pts</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Students</div>
+                        <div class="stat-value">205</div>
+                    </div>
+
+                    <div class="stat-row">
+                        <div class="stat-label">Avg Minutes/Student</div>
+                        <div class="stat-value">117</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Statistics Table -->
+        <div class="mb-4">
+            <h3 class="section-title">
+                <i class="bi bi-bar-chart-fill"></i> Detailed Team Statistics
+            </h3>
+            <div class="comparison-table">
+                <table class="table table-hover mb-0">
+                    <thead class="table-header">
+                        <tr>
+                            <th>Metric</th>
+                            <th class="text-center">Phoenix</th>
+                            <th class="text-center">Dragons</th>
+                            <th class="text-center">Difference</th>
+                            <th class="text-center">Leader</th>
+                            <th class="text-center">% Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="team1-highlight">
+                            <td><strong>Minutes</strong></td>
+                            <td class="text-center">25,430</td>
+                            <td class="text-center">23,890</td>
+                            <td class="text-center">+1,540</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">6.4%</td>
+                        </tr>
+                        <tr class="team1-highlight">
+                            <td><strong>Participation</strong></td>
+                            <td class="text-center">92.5%</td>
+                            <td class="text-center">88.3%</td>
+                            <td class="text-center">+4.2%</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">4.8%</td>
+                        </tr>
+                        <tr class="team2-highlight">
+                            <td><strong>Donations</strong></td>
+                            <td class="text-center">$12,450</td>
+                            <td class="text-center">$14,200</td>
+                            <td class="text-center">-$1,750</td>
+                            <td class="text-center"><span class="badge" style="background-color: #c77dd3;">Dragons</span></td>
+                            <td class="text-center">14.1%</td>
+                        </tr>
+                        <tr class="team2-highlight">
+                            <td><strong>Sponsors</strong></td>
+                            <td class="text-center">245</td>
+                            <td class="text-center">278</td>
+                            <td class="text-center">-33</td>
+                            <td class="text-center"><span class="badge" style="background-color: #c77dd3;">Dragons</span></td>
+                            <td class="text-center">13.5%</td>
+                        </tr>
+                        <tr class="team1-highlight">
+                            <td><strong>Color Bonus</strong></td>
+                            <td class="text-center">450</td>
+                            <td class="text-center">380</td>
+                            <td class="text-center">+70</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">18.4%</td>
+                        </tr>
+                        <tr class="team2-highlight">
+                            <td><strong>Goal Getters</strong></td>
+                            <td class="text-center">89</td>
+                            <td class="text-center">94</td>
+                            <td class="text-center">-5</td>
+                            <td class="text-center"><span class="badge" style="background-color: #c77dd3;">Dragons</span></td>
+                            <td class="text-center">5.6%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Performers by Team -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="top-performers-card">
+                    <h4 style="color: #50bfec; font-weight: 700; margin-bottom: 1rem;">
+                        <i class="bi bi-book"></i> Phoenix - Top Readers
+                    </h4>
+                    <ul class="performer-list">
+                        <li class="performer-item">
+                            <span class="medal">🥇</span>
+                            <strong>Emma S.</strong> - 720 min
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥈</span>
+                            <strong>Noah T.</strong> - 680 min
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥉</span>
+                            <strong>Olivia K.</strong> - 650 min
+                        </li>
+                    </ul>
+
+                    <h4 style="color: #50bfec; font-weight: 700; margin-top: 1.5rem; margin-bottom: 1rem;">
+                        <i class="bi bi-piggy-bank"></i> Phoenix - Top Fundraisers
+                    </h4>
+                    <ul class="performer-list">
+                        <li class="performer-item">
+                            <span class="medal">🥇</span>
+                            <strong>Sophia L.</strong> - $425
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥈</span>
+                            <strong>Jackson W.</strong> - $380
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥉</span>
+                            <strong>Amelia B.</strong> - $360
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="top-performers-card">
+                    <h4 style="color: #c77dd3; font-weight: 700; margin-bottom: 1rem;">
+                        <i class="bi bi-book"></i> Dragons - Top Readers
+                    </h4>
+                    <ul class="performer-list">
+                        <li class="performer-item">
+                            <span class="medal">🥇</span>
+                            <strong>Liam J.</strong> - 690 min
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥈</span>
+                            <strong>Ava M.</strong> - 675 min
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥉</span>
+                            <strong>Mason P.</strong> - 660 min
+                        </li>
+                    </ul>
+
+                    <h4 style="color: #c77dd3; font-weight: 700; margin-top: 1.5rem; margin-bottom: 1rem;">
+                        <i class="bi bi-piggy-bank"></i> Dragons - Top Fundraisers
+                    </h4>
+                    <ul class="performer-list">
+                        <li class="performer-item">
+                            <span class="medal">🥇</span>
+                            <strong>Ethan R.</strong> - $580
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥈</span>
+                            <strong>Isabella C.</strong> - $510
+                        </li>
+                        <li class="performer-item">
+                            <span class="medal">🥉</span>
+                            <strong>Lucas H.</strong> - $475
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Color Bonus Breakdown -->
+        <div class="mb-4">
+            <h3 class="section-title">
+                <i class="bi bi-palette-fill"></i> Team Color Bonus Breakdown
+            </h3>
+            <div class="comparison-table">
+                <table class="table table-hover bonus-table mb-0">
+                    <thead class="table-header">
+                        <tr>
+                            <th>Date</th>
+                            <th class="text-center">Phoenix</th>
+                            <th class="text-center">Dragons</th>
+                            <th class="text-center">Daily Winner</th>
+                            <th class="text-center">Total Bonus</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="team1-highlight">
+                            <td><strong>10/13/2025</strong></td>
+                            <td class="text-center">150 pts</td>
+                            <td class="text-center">120 pts</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">270 pts</td>
+                        </tr>
+                        <tr class="team1-highlight">
+                            <td><strong>10/14/2025</strong></td>
+                            <td class="text-center">140 pts</td>
+                            <td class="text-center">130 pts</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">270 pts</td>
+                        </tr>
+                        <tr class="team1-highlight">
+                            <td><strong>10/15/2025</strong></td>
+                            <td class="text-center">160 pts</td>
+                            <td class="text-center">130 pts</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">290 pts</td>
+                        </tr>
+                        <tr style="background-color: #f8f9fa; font-weight: 700;">
+                            <td><strong>TOTAL</strong></td>
+                            <td class="text-center">450 pts</td>
+                            <td class="text-center">380 pts</td>
+                            <td class="text-center"><span class="badge bg-primary">Phoenix</span></td>
+                            <td class="text-center">830 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Prototype Note:</strong> This is a visual prototype using fictitious data. All names, numbers, and team names are for demonstration purposes only.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Tab - Read-a-Thon Prototype</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+
+        .search-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            font-size: 1.1rem;
+            padding: 0.75rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #1e3a5f;
+            box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15);
+        }
+
+        .leaderboard-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .category-tabs {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .category-btn {
+            margin: 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .category-btn:hover {
+            background: #f8f9fa;
+            border-color: #1e3a5f;
+        }
+
+        .category-btn.active {
+            background: #1e3a5f;
+            color: white;
+            border-color: #1e3a5f;
+        }
+
+        .rank-medal {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .rank-number {
+            font-weight: 700;
+            color: #6c757d;
+            width: 40px;
+            text-align: center;
+        }
+
+        .student-row {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .student-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .student-row:last-child {
+            border-bottom: none;
+        }
+
+        .team-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .team-phoenix {
+            background-color: rgba(80, 191, 236, 0.2);
+            color: #0d6efd;
+        }
+
+        .team-dragons {
+            background-color: rgba(199, 125, 211, 0.2);
+            color: #9333ea;
+        }
+
+        .goal-badge {
+            background-color: rgba(125, 206, 111, 0.2);
+            color: #198754;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .student-detail-modal {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-section {
+            border-left: 4px solid #1e3a5f;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 0.75rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .daily-log-item {
+            padding: 0.5rem;
+            border-radius: 0.4rem;
+            background: #f8f9fa;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #1e3a5f;
+        }
+
+        .trophy-icon {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="header-section">
+            <h1 class="mb-2"><i class="bi bi-person-circle"></i> STUDENT LOOKUP & LEADERBOARDS</h1>
+            <p class="mb-0 opacity-75">Search for individual students or browse category leaderboards</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-search"></i> Search Student by Name:
+                    </label>
+                    <input type="text" class="form-control search-input" placeholder="Type student name..." id="studentSearch">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Filter by:</label>
+                    <select class="form-select search-input">
+                        <option selected>All Students</option>
+                        <option>Team Phoenix Only</option>
+                        <option>Team Dragons Only</option>
+                        <option>By Grade Level</option>
+                        <option>By Class</option>
+                        <option>Has Donations</option>
+                        <option>Goal Getters Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs text-center">
+            <button class="category-btn active" onclick="showLeaderboard('readers')">
+                <i class="bi bi-book"></i> Top Readers
+            </button>
+            <button class="category-btn" onclick="showLeaderboard('fundraisers')">
+                <i class="bi bi-piggy-bank"></i> Top Fundraisers
+            </button>
+            <button class="category-btn" onclick="showLeaderboard('sponsors')">
+                <i class="bi bi-people"></i> Most Sponsors
+            </button>
+            <button class="category-btn" onclick="showLeaderboard('goalgetters')">
+                <i class="bi bi-trophy"></i> Goal Getters
+            </button>
+            <button class="category-btn" onclick="showLeaderboard('perfect')">
+                <i class="bi bi-star-fill"></i> Perfect Participation
+            </button>
+        </div>
+
+        <!-- Top Readers Leaderboard -->
+        <div id="leaderboard-readers" class="leaderboard-section">
+            <h3 class="section-title">
+                <i class="bi bi-book-fill"></i> Top Readers by Minutes
+            </h3>
+            <div class="leaderboard-card">
+                <table class="table table-hover mb-0">
+                    <thead style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                        <tr>
+                            <th style="width: 50px;">Rank</th>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th class="text-center">Grade</th>
+                            <th class="text-center">Team</th>
+                            <th class="text-center">Minutes</th>
+                            <th class="text-center">Days Met Goal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="student-row" onclick="showStudentDetail('emma')">
+                            <td class="rank-medal">🥇</td>
+                            <td><strong>Emma S.</strong></td>
+                            <td>Room 105</td>
+                            <td class="text-center">3rd</td>
+                            <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                            <td class="text-center"><strong>720</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row" onclick="showStudentDetail('liam')">
+                            <td class="rank-medal">🥈</td>
+                            <td><strong>Liam J.</strong></td>
+                            <td>Room 203</td>
+                            <td class="text-center">5th</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>690</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-medal">🥉</td>
+                            <td><strong>Noah T.</strong></td>
+                            <td>Room 105</td>
+                            <td class="text-center">3rd</td>
+                            <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                            <td class="text-center"><strong>680</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">4</td>
+                            <td><strong>Ava M.</strong></td>
+                            <td>Room 201</td>
+                            <td class="text-center">4th</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>675</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">5</td>
+                            <td><strong>Mason P.</strong></td>
+                            <td>Room 108</td>
+                            <td class="text-center">1st</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>660</strong></td>
+                            <td class="text-center">5/6</td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">6</td>
+                            <td><strong>Olivia K.</strong></td>
+                            <td>Room 203</td>
+                            <td class="text-center">5th</td>
+                            <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                            <td class="text-center"><strong>650</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">7</td>
+                            <td><strong>Isabella C.</strong></td>
+                            <td>Room 108</td>
+                            <td class="text-center">1st</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>645</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">8</td>
+                            <td><strong>Ethan R.</strong></td>
+                            <td>Room 201</td>
+                            <td class="text-center">4th</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>640</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">9</td>
+                            <td><strong>Sophia L.</strong></td>
+                            <td>Room 105</td>
+                            <td class="text-center">3rd</td>
+                            <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                            <td class="text-center"><strong>635</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">10</td>
+                            <td><strong>Lucas H.</strong></td>
+                            <td>Room 203</td>
+                            <td class="text-center">5th</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>630</strong></td>
+                            <td class="text-center"><span class="goal-badge">6/6</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center mt-3">
+                <button class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-down-circle"></i> View Top 50 Readers
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Fundraisers Leaderboard (Hidden by default) -->
+        <div id="leaderboard-fundraisers" class="leaderboard-section" style="display: none;">
+            <h3 class="section-title">
+                <i class="bi bi-piggy-bank-fill"></i> Top Fundraisers by Donations
+            </h3>
+            <div class="leaderboard-card">
+                <table class="table table-hover mb-0">
+                    <thead style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                        <tr>
+                            <th style="width: 50px;">Rank</th>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th class="text-center">Grade</th>
+                            <th class="text-center">Team</th>
+                            <th class="text-center">Donations</th>
+                            <th class="text-center">Sponsors</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="student-row">
+                            <td class="rank-medal">🥇</td>
+                            <td><strong>Ethan R.</strong></td>
+                            <td>Room 201</td>
+                            <td class="text-center">4th</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>$580</strong></td>
+                            <td class="text-center">12</td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-medal">🥈</td>
+                            <td><strong>Isabella C.</strong></td>
+                            <td>Room 108</td>
+                            <td class="text-center">1st</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>$510</strong></td>
+                            <td class="text-center">15</td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-medal">🥉</td>
+                            <td><strong>Lucas H.</strong></td>
+                            <td>Room 203</td>
+                            <td class="text-center">5th</td>
+                            <td class="text-center"><span class="team-badge team-dragons">Dragons</span></td>
+                            <td class="text-center"><strong>$475</strong></td>
+                            <td class="text-center">9</td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">4</td>
+                            <td><strong>Sophia L.</strong></td>
+                            <td>Room 105</td>
+                            <td class="text-center">3rd</td>
+                            <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                            <td class="text-center"><strong>$425</strong></td>
+                            <td class="text-center">11</td>
+                        </tr>
+                        <tr class="student-row">
+                            <td class="rank-number">5</td>
+                            <td><strong>Jackson W.</strong></td>
+                            <td>Room 105</td>
+                            <td class="text-center">3rd</td>
+                            <td class="text-center"><span class="team-badge team-phoenix">Phoenix</span></td>
+                            <td class="text-center"><strong>$380</strong></td>
+                            <td class="text-center">8</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center mt-3">
+                <button class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-down-circle"></i> View Top 50 Fundraisers
+                </button>
+            </div>
+        </div>
+
+        <!-- Student Detail View (Hidden by default) -->
+        <div id="student-detail" class="student-detail-modal" style="display: none;">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h2 class="mb-1"><i class="bi bi-person-circle"></i> Emma S.</h2>
+                    <p class="text-muted mb-0">
+                        Class: <strong>Room 105 (Mrs. Smith)</strong> |
+                        Grade: <strong>3rd</strong> |
+                        Team: <strong><span class="team-badge team-phoenix">Phoenix</span></strong>
+                    </p>
+                </div>
+                <button class="btn btn-outline-secondary" onclick="hideStudentDetail()">
+                    <i class="bi bi-x-lg"></i> Close
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Reading Performance -->
+                    <div class="detail-section">
+                        <div class="detail-section-title">
+                            <i class="bi bi-book-fill"></i> READING PERFORMANCE
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Minutes:</span>
+                            <span class="detail-value">720 <small class="text-muted">(Rank: #1 of 411)</small></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Days Participated:</span>
+                            <span class="detail-value">6 / 6 days</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Days Met Goal:</span>
+                            <span class="detail-value text-success">6 / 6 days (Goal: 30 min/day)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Average per Day:</span>
+                            <span class="detail-value">120 minutes</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value">
+                                <span class="trophy-icon">🏆</span> GOAL GETTER (All Days)
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Fundraising -->
+                    <div class="detail-section">
+                        <div class="detail-section-title">
+                            <i class="bi bi-piggy-bank-fill"></i> FUNDRAISING
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Raised:</span>
+                            <span class="detail-value">$425</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Sponsors:</span>
+                            <span class="detail-value">11</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Rank (Donations):</span>
+                            <span class="detail-value">#4 of 411 students</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Rank (Sponsors):</span>
+                            <span class="detail-value">#7 of 411 students</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <!-- Daily Breakdown -->
+                    <div class="detail-section">
+                        <div class="detail-section-title">
+                            <i class="bi bi-calendar-check-fill"></i> DAILY BREAKDOWN
+                        </div>
+                        <div class="daily-log-item">
+                            <span><strong>10/10/2025:</strong> 120 min</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Met goal</span>
+                        </div>
+                        <div class="daily-log-item">
+                            <span><strong>10/11/2025:</strong> 120 min</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Met goal</span>
+                        </div>
+                        <div class="daily-log-item">
+                            <span><strong>10/12/2025:</strong> 120 min</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Met goal</span>
+                        </div>
+                        <div class="daily-log-item">
+                            <span><strong>10/13/2025:</strong> 120 min</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Met goal</span>
+                        </div>
+                        <div class="daily-log-item">
+                            <span><strong>10/14/2025:</strong> 120 min</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Met goal</span>
+                        </div>
+                        <div class="daily-log-item">
+                            <span><strong>10/15/2025:</strong> 120 min</span>
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Met goal</span>
+                        </div>
+                    </div>
+
+                    <!-- Prize Eligibility -->
+                    <div class="detail-section">
+                        <div class="detail-section-title">
+                            <i class="bi bi-gift-fill"></i> PRIZE ELIGIBILITY
+                        </div>
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <strong>Eligible for ALL daily prize drawings (6/6 days)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Prototype Note:</strong> This is a visual prototype using fictitious data. All names, numbers, and team names are for demonstration purposes only.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function showLeaderboard(category) {
+            // Hide all leaderboards
+            document.querySelectorAll('.leaderboard-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Hide student detail
+            document.getElementById('student-detail').style.display = 'none';
+
+            // Show selected leaderboard
+            const targetId = 'leaderboard-' + category;
+            const target = document.getElementById(targetId);
+            if (target) {
+                target.style.display = 'block';
+            } else {
+                // If category not implemented, show readers
+                document.getElementById('leaderboard-readers').style.display = 'block';
+            }
+
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function showStudentDetail(studentId) {
+            // Hide all leaderboards
+            document.querySelectorAll('.leaderboard-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show student detail
+            document.getElementById('student-detail').style.display = 'block';
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function hideStudentDetail() {
+            document.getElementById('student-detail').style.display = 'none';
+            document.getElementById('leaderboard-readers').style.display = 'block';
+        }
+
+        // Search functionality (basic demo)
+        document.getElementById('studentSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 2) {
+                // Demo: Show a suggestion or filter table
+                console.log('Searching for:', searchTerm);
+            }
+        });
+    </script>
+</body>
+</html>
