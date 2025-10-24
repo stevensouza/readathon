@@ -13,58 +13,58 @@ This index helps you find features by **what they do**, not by feature number. U
 ## 🎯 Quick Links by Category
 
 ### 📤 Upload & Data Import
-- **[File Upload Validation](features/feature-26-validation.md)** - ✅ Prevent wrong file types from being uploaded (daily vs cumulative detection)
-- **[Multi-File Daily Upload](features/feature-27-multi-file.md)** - ✅ Upload multiple daily report files simultaneously with date extraction
-- **[Upload Audit Trail](features/feature-28-audit-trail.md)** - ✅ Track all uploads with detailed audit information
+- **[File Upload Validation](features/feature-26-file-upload-validation-high-priority.md)** - ✅ Prevent wrong file types from being uploaded (daily vs cumulative detection)
+- **[Multi-File Daily Upload](features/feature-27-multi-file-daily-upload-high-priority.md)** - ✅ Upload multiple daily report files simultaneously with date extraction
+- **[Upload Audit Trail](features/feature-28-upload-audit-trail-system-completed.md)** - ✅ Track all uploads with detailed audit information
 
 ### 🎨 UI/UX & Design
-- **[Upload Screen Redesign](features/feature-05-upload-redesign.md)** - Improved layout and user experience for upload page
-- **[Design Consistency](features/feature-24-design-consistency.md)** - Consistent styling across all pages
-- **[Dashboard Design](features/feature-23-dashboard.md)** - Option J winner dashboard layout
+- **[Upload Screen Redesign](features/feature-05-upload-screen-redesign.md)** - Improved layout and user experience for upload page
+- **[Design Consistency](features/feature-24-design-consistency-across-all-pages-important.md)** - Consistent styling across all pages
+- **[Dashboard Design](features/feature-23-dashboard-design-option-j-winner-.md)** - Option J winner dashboard layout
 
 ### 📊 Reports & Analytics
-- **[Combined Reader Report](features/feature-04-combined-reader.md)** - Comprehensive student reading report
-- **[Enhanced Participation Metrics](features/feature-08-participation-metrics.md)** - Better participation tracking and display
-- **[Run All Reports](features/feature-10-run-all-reports.md)** - Generate all reports at once
+- **[Combined Reader Report](features/feature-04-combined-reader-report.md)** - Comprehensive student reading report
+- **[Enhanced Participation Metrics](features/feature-08-enhanced-participation-metrics.md)** - Better participation tracking and display
+- **[Run All Reports](features/feature-10-run-all-reports-feature.md)** - Generate all reports at once
 - **[Enhanced Report Metadata](features/feature-30-enhanced-report-metadata.md)** - Column descriptions, source tables, collapsible sections
 - **[Dynamic Report Analysis](features/feature-31-dynamic-report-analysis.md)** - Intelligent insights and breakdowns with actual numbers
 - **[Tag-Based Reporting System](features/feature-38-tag-based-reporting-system.md)** - Future: Multi-dimensional filtering with tags
 
 ### 🗄️ Database & Admin
-- **[Flexible Multi-Database System](features/feature-16-multi-database.md)** - Support for multiple year databases
-- **[Admin Tab](features/feature-17-admin-tab.md)** - Administrative functions and controls
+- **[Flexible Multi-Database System](features/feature-16-flexible-multi-purpose-database-system-enhanced.md)** - Support for multiple year databases
+- **[Admin Tab](features/feature-17-admin-tab-enhanced.md)** - Administrative functions and controls
 - **[Selective Table Clearing](features/feature-29-selective-table-clearing.md)** - Web UI for clearing specific data tables
 - **[Grades Tab](features/feature-32-grades-tab.md)** - Dashboard tab for grade-level metrics and comparison
 - **[Database Comparison Tool](features/feature-34-database-comparison-tool.md)** - Compare metrics between databases (year-over-year, prod vs demo)
 - **[Database Creation Tool](features/feature-35-database-creation-tool.md)** - Web UI to create new databases (empty, clone, or sample data)
 
 ### 📱 Slides & Presentations
-- **[Slides Tab](features/feature-21-slides-tab.md)** - Presentation mode for read-a-thon slides
-- **[Slide Column Indicators](features/feature-11-slide-indicators.md)** - Visual indicators for slide columns
+- **[Slides Tab](features/feature-21-slides-tab-new.md)** - Presentation mode for read-a-thon slides
+- **[Slide Column Indicators](features/feature-11-slide-column-indicators.md)** - Visual indicators for slide columns
 
 ### 📚 Documentation & Help
-- **[Help/User Manual](features/feature-01-help-manual.md)** - Comprehensive user documentation
-- **[Help Tab & System Docs](features/feature-25-help-tab.md)** - In-app help system
-- **[Video Tutorial Link](features/feature-03-video-tutorial.md)** - Link to video tutorials
-- **[ReadAThon Website Links](features/feature-02-website-links.md)** - Links and images for official site
+- **[Help/User Manual](features/feature-01-improve-helpuser-manual.md)** - Comprehensive user documentation
+- **[Help Tab & System Docs](features/feature-25-help-tab-system-documentation-tbd.md)** - In-app help system
+- **[Video Tutorial Link](features/feature-03-video-tutorial-link.md)** - Link to video tutorials
+- **[ReadAThon Website Links](features/feature-02-add-readathon-website-imageslinks.md)** - Links and images for official site
 - **[Claude Development Documentation](features/feature-33-claude-development-documentation.md)** - ✅ How Claude Code was used to build this app
 
 ### 🛠️ System & Technical
-- **[Automated Installation Script](features/feature-20-installation.md)** - Automated setup process
+- **[Automated Installation Script](features/feature-20-automated-installation-script.md)** - Automated setup process
 - **[Automated Testing](features/feature-37-automated-testing.md)** - Test framework for core functionality
 - **[Configurable Team Names](features/feature-36-configurable-team-names.md)** - Replace hardcoded team names with configuration
-- **[Save Error/Warning Messages](features/feature-18-save-messages.md)** - Persist error messages for troubleshooting
-- **[Delete Confirmations](features/feature-19-delete-confirmations.md)** - Improved delete confirmation dialogs
+- **[Save Error/Warning Messages](features/feature-18-save-errorwarning-messages.md)** - Persist error messages for troubleshooting
+- **[Delete Confirmations](features/feature-19-improve-delete-confirmations.md)** - Improved delete confirmation dialogs
 
 ### 🎯 Workflows & Processes
-- **[Workflows Tab](features/feature-22-workflows-tab.md)** - Step-by-step guided workflows
-- **[Multiple Report Selection](features/feature-14-multi-report-select.md)** - Select and run multiple reports
-- **[Table Selection Capability](features/feature-15-table-selection.md)** - Select data within tables
+- **[Workflows Tab](features/feature-22-workflows-tab-keep-separate-confirmed.md)** - Step-by-step guided workflows
+- **[Multiple Report Selection](features/feature-14-multiple-report-selection.md)** - Select and run multiple reports
+- **[Table Selection Capability](features/feature-15-table-selection-capability.md)** - Select data within tables
 
 ### ✨ UI Improvements
-- **[Report Options Improvements](features/feature-13-report-options.md)** - Better report filtering and options
-- **[Move Export/Copy to Top](features/feature-12-export-buttons.md)** - Better button placement
-- **[Verification Box Font](features/feature-07-font-consistency.md)** - Consistent font styling
+- **[Report Options Improvements](features/feature-13-report-options-improvements.md)** - Better report filtering and options
+- **[Move Export/Copy to Top](features/feature-12-move-exportcopy-buttons-to-top.md)** - Better button placement
+- **[Verification Box Font](features/feature-07-verification-box-font-consistency.md)** - Consistent font styling
 
 ---
 
@@ -72,37 +72,37 @@ This index helps you find features by **what they do**, not by feature number. U
 
 | Description | File | Status | Priority |
 |-------------|------|--------|----------|
-| Admin Tab & Functions | [feature-17-admin-tab.md](features/feature-17-admin-tab.md) | ENHANCED | Medium |
-| Automated Installation Script | [feature-20-installation.md](features/feature-20-installation.md) | TBD | Medium |
-| Combined Reader Report | [feature-04-combined-reader.md](features/feature-04-combined-reader.md) | TBD | Medium |
-| Dashboard Design (Option J) | [feature-23-dashboard.md](features/feature-23-dashboard.md) | Confirmed | Medium |
-| Delete Confirmations | [feature-19-delete-confirmations.md](features/feature-19-delete-confirmations.md) | TBD | Low |
-| Design Consistency | [feature-24-design-consistency.md](features/feature-24-design-consistency.md) | Important | High |
+| Admin Tab & Functions | [feature-17-admin-tab-enhanced.md](features/feature-17-admin-tab-enhanced.md) | ENHANCED | Medium |
+| Automated Installation Script | [feature-20-automated-installation-script.md](features/feature-20-automated-installation-script.md) | TBD | Medium |
+| Combined Reader Report | [feature-04-combined-reader-report.md](features/feature-04-combined-reader-report.md) | TBD | Medium |
+| Dashboard Design (Option J) | [feature-23-dashboard-design-option-j-winner-.md](features/feature-23-dashboard-design-option-j-winner-.md) | Confirmed | Medium |
+| Delete Confirmations | [feature-19-improve-delete-confirmations.md](features/feature-19-improve-delete-confirmations.md) | TBD | Low |
+| Design Consistency | [feature-24-design-consistency-across-all-pages-important.md](features/feature-24-design-consistency-across-all-pages-important.md) | Important | High |
 | Dynamic Report Analysis | [feature-31-dynamic-report-analysis.md](features/feature-31-dynamic-report-analysis.md) | In Progress | 🔴 HIGH |
-| Enhanced Participation Metrics | [feature-08-participation-metrics.md](features/feature-08-participation-metrics.md) | TBD | Medium |
+| Enhanced Participation Metrics | [feature-08-enhanced-participation-metrics.md](features/feature-08-enhanced-participation-metrics.md) | TBD | Medium |
 | Enhanced Report Metadata | [feature-30-enhanced-report-metadata.md](features/feature-30-enhanced-report-metadata.md) | In Progress | 🔴 HIGH |
-| File Upload Validation | [feature-26-validation.md](features/feature-26-validation.md) | ✅ CORE COMPLETE | High |
+| File Upload Validation | [feature-26-file-upload-validation-high-priority.md](features/feature-26-file-upload-validation-high-priority.md) | ✅ CORE COMPLETE | High |
 | Grades Tab | [feature-32-grades-tab.md](features/feature-32-grades-tab.md) | NEW | Medium |
-| Flexible Multi-Database System | [feature-16-multi-database.md](features/feature-16-multi-database.md) | Enhanced | High |
-| Help Tab & System Documentation | [feature-25-help-tab.md](features/feature-25-help-tab.md) | TBD | Medium |
-| Help/User Manual Improvements | [feature-01-help-manual.md](features/feature-01-help-manual.md) | TBD | Low |
-| Move Export/Copy Buttons to Top | [feature-12-export-buttons.md](features/feature-12-export-buttons.md) | TBD | Low |
-| Multi-File Daily Upload | [feature-27-multi-file.md](features/feature-27-multi-file.md) | ✅ COMPLETED | High |
-| Multiple Report Selection | [feature-14-multi-report-select.md](features/feature-14-multi-report-select.md) | TBD | Medium |
-| Reader_Cumulative to Home Stats | [feature-09-reader-cumulative.md](features/feature-09-reader-cumulative.md) | ✅ OBSOLETE | Low |
-| ReadAThon Website Images/Links | [feature-02-website-links.md](features/feature-02-website-links.md) | TBD | Low |
-| Report Options Improvements | [feature-13-report-options.md](features/feature-13-report-options.md) | TBD | Medium |
-| Run All Reports Feature | [feature-10-run-all-reports.md](features/feature-10-run-all-reports.md) | TBD | Medium |
-| Save Error/Warning Messages | [feature-18-save-messages.md](features/feature-18-save-messages.md) | TBD | Medium |
+| Flexible Multi-Database System | [feature-16-flexible-multi-purpose-database-system-enhanced.md](features/feature-16-flexible-multi-purpose-database-system-enhanced.md) | Enhanced | High |
+| Help Tab & System Documentation | [feature-25-help-tab-system-documentation-tbd.md](features/feature-25-help-tab-system-documentation-tbd.md) | TBD | Medium |
+| Help/User Manual Improvements | [feature-01-improve-helpuser-manual.md](features/feature-01-improve-helpuser-manual.md) | TBD | Low |
+| Move Export/Copy Buttons to Top | [feature-12-move-exportcopy-buttons-to-top.md](features/feature-12-move-exportcopy-buttons-to-top.md) | TBD | Low |
+| Multi-File Daily Upload | [feature-27-multi-file-daily-upload-high-priority.md](features/feature-27-multi-file-daily-upload-high-priority.md) | ✅ COMPLETED | High |
+| Multiple Report Selection | [feature-14-multiple-report-selection.md](features/feature-14-multiple-report-selection.md) | TBD | Medium |
+| Reader_Cumulative to Home Stats | [feature-09-add-reader_cumulative-to-home-stats.md](features/feature-09-add-reader_cumulative-to-home-stats.md) | ✅ OBSOLETE | Low |
+| ReadAThon Website Images/Links | [feature-02-add-readathon-website-imageslinks.md](features/feature-02-add-readathon-website-imageslinks.md) | TBD | Low |
+| Report Options Improvements | [feature-13-report-options-improvements.md](features/feature-13-report-options-improvements.md) | TBD | Medium |
+| Run All Reports Feature | [feature-10-run-all-reports-feature.md](features/feature-10-run-all-reports-feature.md) | TBD | Medium |
+| Save Error/Warning Messages | [feature-18-save-errorwarning-messages.md](features/feature-18-save-errorwarning-messages.md) | TBD | Medium |
 | Selective Table Clearing | [feature-29-selective-table-clearing.md](features/feature-29-selective-table-clearing.md) | NEW | Medium |
-| Slide Column Indicators | [feature-11-slide-indicators.md](features/feature-11-slide-indicators.md) | TBD | Low |
-| Slides Tab | [feature-21-slides-tab.md](features/feature-21-slides-tab.md) | New | Medium |
-| Table Selection Capability | [feature-15-table-selection.md](features/feature-15-table-selection.md) | TBD | Low |
-| Upload Audit Trail System | [feature-28-audit-trail.md](features/feature-28-audit-trail.md) | ✅ COMPLETED | High |
-| Upload Screen Redesign | [feature-05-upload-redesign.md](features/feature-05-upload-redesign.md) | TBD | Medium |
-| Verification Box Font Consistency | [feature-07-font-consistency.md](features/feature-07-font-consistency.md) | TBD | Low |
-| Video Tutorial Link | [feature-03-video-tutorial.md](features/feature-03-video-tutorial.md) | TBD | Low |
-| Workflows Tab | [feature-22-workflows-tab.md](features/feature-22-workflows-tab.md) | Confirmed | Medium |
+| Slide Column Indicators | [feature-11-slide-column-indicators.md](features/feature-11-slide-column-indicators.md) | TBD | Low |
+| Slides Tab | [feature-21-slides-tab-new.md](features/feature-21-slides-tab-new.md) | New | Medium |
+| Table Selection Capability | [feature-15-table-selection-capability.md](features/feature-15-table-selection-capability.md) | TBD | Low |
+| Upload Audit Trail System | [feature-28-upload-audit-trail-system-completed.md](features/feature-28-upload-audit-trail-system-completed.md) | ✅ COMPLETED | High |
+| Upload Screen Redesign | [feature-05-upload-screen-redesign.md](features/feature-05-upload-screen-redesign.md) | TBD | Medium |
+| Verification Box Font Consistency | [feature-07-verification-box-font-consistency.md](features/feature-07-verification-box-font-consistency.md) | TBD | Low |
+| Video Tutorial Link | [feature-03-video-tutorial-link.md](features/feature-03-video-tutorial-link.md) | TBD | Low |
+| Workflows Tab | [feature-22-workflows-tab-keep-separate-confirmed.md](features/feature-22-workflows-tab-keep-separate-confirmed.md) | Confirmed | Medium |
 | Automated Testing | [feature-37-automated-testing.md](features/feature-37-automated-testing.md) | IMPLEMENTED | High |
 | Claude Development Documentation | [feature-33-claude-development-documentation.md](features/feature-33-claude-development-documentation.md) | ✅ COMPLETED | Medium |
 | Configurable Team Names | [feature-36-configurable-team-names.md](features/feature-36-configurable-team-names.md) | NEW | Medium |
