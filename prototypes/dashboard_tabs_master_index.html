@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Tabs - Master Index (All Iterations)</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .tab-section {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 5px solid #3b82f6;
+        }
+
+        .tab-section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .version-card {
+            background: #f8f9fa;
+            border-radius: 0.4rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #6c757d;
+            transition: all 0.2s;
+        }
+
+        .version-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(4px);
+        }
+
+        .version-card.current {
+            border-left-color: #28a745;
+            background: #f1f9f3;
+        }
+
+        .version-card.current .version-title::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: 900;
+        }
+
+        .version-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .version-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+        }
+
+        .version-description {
+            color: #495057;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .badge-status {
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .status-current {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-iteration {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-planned {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .btn-view {
+            margin-right: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .quick-nav {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .quick-nav h5 {
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 1rem;
+        }
+
+        .quick-nav a {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            background: #e9ecef;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 0.3rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .quick-nav a:hover {
+            background: #1e3a5f;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <h1 class="mb-2"><i class="bi bi-layout-three-columns"></i> Dashboard Tabs - Master Index</h1>
+            <p class="mb-0 opacity-75">One-stop location for all dashboard tab iterations (School, Teams, Classes, Students)</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mb-5">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Dashboard Tabs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Total Iterations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Current Versions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">In Development</div>
+            </div>
+        </div>
+
+        <!-- Quick Navigation -->
+        <div class="quick-nav">
+            <h5><i class="bi bi-compass"></i> Quick Navigation</h5>
+            <a href="#school">🏫 School Tab</a>
+            <a href="#teams">⚔️ Teams Tab</a>
+            <a href="#classes">🎓 Classes Tab</a>
+            <a href="#students">👤 Students Tab</a>
+            <a href="INDEX.html">← Back to Full Prototype Index</a>
+        </div>
+
+        <!-- ===== SCHOOL TAB ===== -->
+        <div id="school" class="tab-section">
+            <h2 class="tab-section-title">🏫 School Tab Iterations</h2>
+
+            <div class="version-card current">
+                <div class="version-title">School Tab V2 (Current Production)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> October 2025</span>
+                    <span><i class="bi bi-check-circle text-success"></i> In Production</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-current">Current Version</span>
+                </div>
+                <div class="version-description">
+                    The current production version of the School tab. Features headline banner with 5 school-wide metrics (Campaign Day, Fundraising, Minutes, Participation, Goals Met), three-column layout with Team Competition, Top Performers, and Student Participation sections. Uses Option H subdued color scheme with verification boxes and filter period support.
+                </div>
+                <a href="dashboard_school_tab_v2.html" class="btn btn-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Prototype
+                </a>
+            </div>
+
+            <div class="version-card">
+                <div class="version-title">School Tab V1 (Earlier Iterations)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> October 2025</span>
+                    <span><i class="bi bi-code-square"></i> Design Iteration</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-iteration">Earlier Design</span>
+                </div>
+                <div class="version-description">
+                    Earlier design iterations exploring filter indicators and alternative layouts. Shows experimentation with data filtering and visual indicators for active filters.
+                </div>
+                <a href="school_tab_filter_indicators.html" class="btn btn-outline-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Filter Indicators
+                </a>
+                <a href="school_tab_production_final.html" class="btn btn-outline-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Production Final
+                </a>
+            </div>
+        </div>
+
+        <!-- ===== TEAMS TAB ===== -->
+        <div id="teams" class="tab-section">
+            <h2 class="tab-section-title">⚔️ Teams Tab Iterations</h2>
+
+            <div class="version-card current">
+                <div class="version-title">Teams Tab V2 (Current Design)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> October 2025</span>
+                    <span><i class="bi bi-check-circle text-success"></i> Latest Version</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-current">Current Version</span>
+                </div>
+                <div class="version-description">
+                    Latest Teams tab design matching School tab styling (Option H colors). Features headline banner with 5 team head-to-head metrics (Fundraising, Minutes Read, Participation, Goal Met ≥1 Day, Sponsors) showing winning team with colored badges. Includes side-by-side top performers sections for both teams (fundraising/reading leaders and top classes) and comprehensive grouped comparison table with 9 metrics organized by category (Fundraising Metrics, Reading Metrics, Team Stats). Sortable columns, colored leader badges (Staub blue/Kitsko yellow), and filter period support with cumulative data indicators.
+                </div>
+                <a href="dashboard_teams_tab_v2.html" class="btn btn-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Prototype
+                </a>
+            </div>
+
+            <div class="version-card">
+                <div class="version-title">Teams Tab V1 (Earlier Design)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> October 2025</span>
+                    <span><i class="bi bi-code-square"></i> Design Iteration</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-iteration">Earlier Design</span>
+                </div>
+                <div class="version-description">
+                    Earlier Teams tab design exploring head-to-head competition between Phoenix and Dragons. Features side-by-side comparison cards, detailed statistics table comparing 6 metrics, top performers by team (readers & fundraisers), and team color bonus breakdown by date. Different color scheme and layout approach than V2.
+                </div>
+                <a href="dashboard_teams_tab.html" class="btn btn-outline-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Prototype
+                </a>
+            </div>
+        </div>
+
+        <!-- ===== CLASSES TAB ===== -->
+        <div id="classes" class="tab-section">
+            <h2 class="tab-section-title">🎓 Classes Tab Iterations</h2>
+
+            <div class="version-card current">
+                <div class="version-title">Classes Tab V1 (Current Design)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> October 2025</span>
+                    <span><i class="bi bi-code-square"></i> Standalone</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-current">Current Version</span>
+                </div>
+                <div class="version-description">
+                    Standalone Classes tab featuring sortable/filterable leaderboard of ALL classes. Includes grade-level filters, multiple sort options (participation, minutes, donations), expandable class details with full statistics (demonstrated with Room 105), and grade-level summary rollup table. Shows all classes ranked, not just top performers.
+                </div>
+                <a href="dashboard_classes_tab.html" class="btn btn-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Prototype
+                </a>
+            </div>
+
+            <div class="version-card">
+                <div class="version-title">Classes Tab V2 (Planned)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> Future</span>
+                    <span><i class="bi bi-hourglass-split"></i> Not Yet Implemented</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-planned">Planned</span>
+                </div>
+                <div class="version-description">
+                    Future iteration to match School/Teams tab styling with Option H colors, headline banner, and unified design system.
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STUDENTS TAB ===== -->
+        <div id="students" class="tab-section">
+            <h2 class="tab-section-title">👤 Students Tab Iterations</h2>
+
+            <div class="version-card current">
+                <div class="version-title">Students Tab V1 (Current Design)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> October 2025</span>
+                    <span><i class="bi bi-code-square"></i> Standalone</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-current">Current Version</span>
+                </div>
+                <div class="version-description">
+                    Standalone Students tab with search functionality, category tabs (Top Readers, Top Fundraisers, Most Sponsors, Goal Getters, Perfect Participation), interactive leaderboards with clickable students, and detailed individual student view (demonstrated with Emma S.) showing reading performance, fundraising, daily breakdown, and prize eligibility. Provides comprehensive student-level reporting.
+                </div>
+                <a href="dashboard_students_tab.html" class="btn btn-primary btn-sm btn-view" target="_blank">
+                    <i class="bi bi-eye"></i> View Prototype
+                </a>
+            </div>
+
+            <div class="version-card">
+                <div class="version-title">Students Tab V2 (Planned)</div>
+                <div class="version-meta">
+                    <span><i class="bi bi-calendar"></i> Future</span>
+                    <span><i class="bi bi-hourglass-split"></i> Not Yet Implemented</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge-status status-planned">Planned</span>
+                </div>
+                <div class="version-description">
+                    Future iteration to match School/Teams tab styling with Option H colors, headline banner, and unified design system.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="alert alert-info mt-5">
+            <h5><i class="bi bi-info-circle"></i> About This Master Index</h5>
+            <p class="mb-2">
+                This page serves as a centralized location to view all iterations of dashboard tab designs. As new versions
+                are created, they will be added here for easy comparison and reference.
+            </p>
+            <p class="mb-0">
+                <strong>Note:</strong> "Current Version" indicates the latest design iteration for that tab. "In Production"
+                indicates the design has been implemented in the actual application.
+            </p>
+        </div>
+
+        <div class="text-center text-muted mt-4">
+            <p>Dashboard Tabs Master Index • Last Updated: October 2025</p>
+            <p><a href="INDEX.html">← Return to Full Prototype Index</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
