@@ -673,6 +673,579 @@ def school_tab():
                          metadata=metadata)
 
 
+@app.route('/teams')
+def teams_tab():
+    """Teams head-to-head competition dashboard"""
+    env = session.get('environment', DEFAULT_DATABASE)
+    db = get_current_db()
+
+    # Get filter parameter (optional)
+    date_filter = request.args.get('date', 'all')
+
+    # Get all available dates
+    dates = db.get_all_dates()
+
+    # Build WHERE clause based on filter (cumulative through selected date)
+    date_where = ""
+    date_where_no_alias = ""
+    if date_filter != 'all' and date_filter in dates:
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+        date_where_no_alias = f"AND log_date <= '{date_filter}'"
+
+    # Get team names (sorted alphabetically for consistency)
+    team_names_query = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
+    team_names_result = db.execute_query(team_names_query)
+    team_names = [row['team_name'] for row in team_names_result] if team_names_result else []
+
+    # Ensure we have exactly 2 teams
+    if len(team_names) != 2:
+        return jsonify({'error': f'Expected 2 teams, found {len(team_names)}'}), 500
+
+    team1_name = team_names[0]  # Kitsko (alphabetically first)
+    team2_name = team_names[1]  # Staub (alphabetically second)
+
+    # Calculate full contest date range
+    sorted_dates = sorted(dates)
+    total_days = len(sorted_dates)
+
+    # === BANNER METRICS (5 metrics showing team winners) ===
+    banner = {}
+
+    # Helper function to get team data
+    def get_team_metrics(team_name):
+        metrics = {}
+
+        # 1. Fundraising
+        fundraising_query = f"""
+            SELECT COALESCE(SUM(rc.donation_amount), 0) as total_fundraising,
+                   COUNT(DISTINCT CASE WHEN rc.donation_amount > 0 THEN rc.student_name END) as students_with_donations
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}')
+        """
+        fundraising_result = db.execute_query(fundraising_query)
+        if fundraising_result and fundraising_result[0]:
+            metrics['fundraising'] = fundraising_result[0]['total_fundraising'] or 0
+            metrics['fundraising_students'] = fundraising_result[0]['students_with_donations'] or 0
+        else:
+            metrics['fundraising'] = 0
+            metrics['fundraising_students'] = 0
+
+        # 2. Minutes Read (with color bonus)
+        minutes_query = f"""
+            WITH TeamBonus AS (
+                SELECT SUM(tcb.bonus_minutes) as total_bonus
+                FROM Team_Color_Bonus tcb
+                INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+                WHERE LOWER(ci.team_name) = LOWER('{team_name}')
+            )
+            SELECT
+                COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_minutes_base,
+                COALESCE((SELECT total_bonus FROM TeamBonus), 0) as bonus_minutes
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
+        """
+        minutes_result = db.execute_query(minutes_query)
+        if minutes_result and minutes_result[0]:
+            base = int(minutes_result[0]['total_minutes_base'] or 0)
+            bonus = int(minutes_result[0]['bonus_minutes'] or 0)
+            metrics['minutes_with_color'] = base + bonus
+        else:
+            metrics['minutes_with_color'] = 0
+
+        # 3. Participation % (average daily with color bonus)
+        # Get total days being measured
+        total_days_query = f"""
+            SELECT COUNT(DISTINCT log_date) as total_days
+            FROM Daily_Logs
+            WHERE 1=1 {date_where_no_alias}
+        """
+        total_days_result = db.execute_query(total_days_query)
+        days_count = total_days_result[0]['total_days'] if total_days_result and total_days_result[0] else 1
+
+        # Get team size
+        team_size_query = f"""
+            SELECT COUNT(*) as team_size
+            FROM Roster
+            WHERE LOWER(team_name) = LOWER('{team_name}')
+        """
+        team_size_result = db.execute_query(team_size_query)
+        team_size = team_size_result[0]['team_size'] if team_size_result and team_size_result[0] else 1
+
+        # Calculate average daily participation
+        participation_query = f"""
+            SELECT AVG(daily_pct) as avg_participation
+            FROM (
+                SELECT
+                    dl.log_date,
+                    (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 /
+                     (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team_name}'))) as daily_pct
+                FROM Daily_Logs dl
+                JOIN Roster r ON dl.student_name = r.student_name
+                WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
+                GROUP BY dl.log_date
+            )
+        """
+        participation_result = db.execute_query(participation_query)
+        base_participation = participation_result[0]['avg_participation'] or 0 if participation_result and participation_result[0] else 0
+
+        # Add color bonus to participation
+        color_bonus_query = f"""
+            SELECT SUM(tcb.bonus_participation_points) as total_bonus
+            FROM Team_Color_Bonus tcb
+            INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+            WHERE LOWER(ci.team_name) = LOWER('{team_name}')
+        """
+        color_bonus_result = db.execute_query(color_bonus_query)
+        color_bonus_points = color_bonus_result[0]['total_bonus'] if color_bonus_result and color_bonus_result[0] and color_bonus_result[0]['total_bonus'] else 0
+
+        metrics['participation_pct'] = base_participation + (color_bonus_points * 100.0 / (team_size * days_count)) if team_size > 0 and days_count > 0 else base_participation
+        metrics['participation_students'] = team_size  # Total students on team
+
+        # 4. Goal Met ≥1 Day (students who met their grade's goal at least once)
+        goal_met_query = f"""
+            SELECT COUNT(DISTINCT dl.student_name) as students_met_goal
+            FROM Daily_Logs dl
+            JOIN Roster r ON dl.student_name = r.student_name
+            JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE LOWER(r.team_name) = LOWER('{team_name}')
+              AND dl.minutes_read >= gr.min_daily_minutes {date_where}
+        """
+        goal_met_result = db.execute_query(goal_met_query)
+        if goal_met_result and goal_met_result[0]:
+            metrics['goal_met_students'] = goal_met_result[0]['students_met_goal'] or 0
+        else:
+            metrics['goal_met_students'] = 0
+
+        # 5. Sponsors (total sponsors for team)
+        sponsors_query = f"""
+            SELECT
+                COALESCE(SUM(rc.sponsors), 0) as total_sponsors,
+                COUNT(DISTINCT CASE WHEN rc.sponsors > 0 THEN rc.student_name END) as students_with_sponsors
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}')
+        """
+        sponsors_result = db.execute_query(sponsors_query)
+        if sponsors_result and sponsors_result[0]:
+            metrics['sponsors'] = int(sponsors_result[0]['total_sponsors'] or 0)
+            metrics['sponsors_students'] = int(sponsors_result[0]['students_with_sponsors'] or 0)
+        else:
+            metrics['sponsors'] = 0
+            metrics['sponsors_students'] = 0
+
+        return metrics
+
+    # Get metrics for both teams
+    team1_metrics = get_team_metrics(team1_name)
+    team2_metrics = get_team_metrics(team2_name)
+
+    # Determine winners for each banner metric
+    banner_metrics = [
+        {
+            'name': 'Fundraising',
+            'icon': '💰',
+            'key': 'fundraising',
+            'format': 'currency',
+            'honors_filter': False
+        },
+        {
+            'name': 'Minutes Read',
+            'icon': '📚',
+            'key': 'minutes_with_color',
+            'format': 'number',
+            'honors_filter': True
+        },
+        {
+            'name': 'Participation',
+            'icon': '👥',
+            'key': 'participation_pct',
+            'format': 'percentage',
+            'honors_filter': True
+        },
+        {
+            'name': 'Goal Met ≥1 Day',
+            'icon': '🎯',
+            'key': 'goal_met_students',
+            'format': 'number',
+            'honors_filter': True
+        },
+        {
+            'name': 'Sponsors',
+            'icon': '🤝',
+            'key': 'sponsors',
+            'format': 'number',
+            'honors_filter': False
+        }
+    ]
+
+    for metric in banner_metrics:
+        key = metric['key']
+        team1_value = team1_metrics[key]
+        team2_value = team2_metrics[key]
+
+        if team1_value > team2_value:
+            metric['winner'] = team1_name
+            metric['winner_value'] = team1_value
+        elif team2_value > team1_value:
+            metric['winner'] = team2_name
+            metric['winner_value'] = team2_value
+        else:
+            metric['winner'] = 'TIE'
+            metric['winner_value'] = team1_value
+
+        # Store individual team values and student counts for all metrics
+        metric['team1_value'] = team1_value
+        metric['team2_value'] = team2_value
+        metric['team1_students'] = team1_metrics['participation_students']
+        metric['team2_students'] = team2_metrics['participation_students']
+
+        # Store metric-specific counts for subtitle
+        if key == 'fundraising':
+            metric['team1_count'] = team1_metrics['fundraising_students']
+            metric['team2_count'] = team2_metrics['fundraising_students']
+        elif key == 'goal_met_students':
+            metric['team1_count'] = team1_metrics['goal_met_students']
+            metric['team2_count'] = team2_metrics['goal_met_students']
+        elif key == 'participation_pct':
+            # Calculate participating count from percentage
+            metric['team1_count'] = int(team1_metrics['participation_students'] * team1_metrics['participation_pct'] / 100)
+            metric['team2_count'] = int(team2_metrics['participation_students'] * team2_metrics['participation_pct'] / 100)
+        elif key == 'sponsors':
+            metric['team1_count'] = team1_metrics['sponsors_students']
+            metric['team2_count'] = team2_metrics['sponsors_students']
+
+    banner['metrics'] = banner_metrics
+
+    # === TOP PERFORMERS BY TEAM ===
+    top_performers = {}
+
+    # Helper function to get top performers for a team
+    def get_top_performers_for_team(team_name):
+        performers = {}
+
+        # Fundraising Leader (student)
+        fundraising_leader_query = f"""
+            SELECT rc.student_name, r.grade_level, r.class_name, rc.donation_amount
+            FROM Reader_Cumulative rc
+            JOIN Roster r ON rc.student_name = r.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}')
+            ORDER BY rc.donation_amount DESC
+            LIMIT 1
+        """
+        fundraising_result = db.execute_query(fundraising_leader_query)
+        if fundraising_result and fundraising_result[0]:
+            performers['fundraising_leader'] = fundraising_result[0]
+        else:
+            performers['fundraising_leader'] = {'student_name': 'N/A', 'grade_level': '', 'class_name': '', 'donation_amount': 0}
+
+        # Reading Leader (student)
+        reading_leader_query = f"""
+            SELECT dl.student_name, r.grade_level, r.class_name, SUM(MIN(dl.minutes_read, 120)) as total_minutes
+            FROM Daily_Logs dl
+            JOIN Roster r ON dl.student_name = r.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
+            GROUP BY dl.student_name, r.grade_level, r.class_name
+            ORDER BY total_minutes DESC
+            LIMIT 1
+        """
+        reading_result = db.execute_query(reading_leader_query)
+        if reading_result and reading_result[0]:
+            performers['reading_leader'] = reading_result[0]
+        else:
+            performers['reading_leader'] = {'student_name': 'N/A', 'grade_level': '', 'class_name': '', 'total_minutes': 0}
+
+        # Top Class (Fundraising)
+        class_fundraising_query = f"""
+            SELECT r.teacher_name, r.class_name, r.grade_level, SUM(rc.donation_amount) as total_fundraising
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}')
+            GROUP BY r.teacher_name, r.class_name, r.grade_level
+            ORDER BY total_fundraising DESC
+            LIMIT 1
+        """
+        class_fundraising_result = db.execute_query(class_fundraising_query)
+        if class_fundraising_result and class_fundraising_result[0]:
+            performers['top_class_fundraising'] = class_fundraising_result[0]
+        else:
+            performers['top_class_fundraising'] = {'teacher_name': 'N/A', 'class_name': '', 'grade_level': '', 'total_fundraising': 0}
+
+        # Top Class (Reading)
+        class_reading_query = f"""
+            SELECT r.teacher_name, r.class_name, r.grade_level, SUM(MIN(dl.minutes_read, 120)) as total_minutes
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
+            GROUP BY r.teacher_name, r.class_name, r.grade_level
+            ORDER BY total_minutes DESC
+            LIMIT 1
+        """
+        class_reading_result = db.execute_query(class_reading_query)
+        if class_reading_result and class_reading_result[0]:
+            performers['top_class_reading'] = class_reading_result[0]
+        else:
+            performers['top_class_reading'] = {'teacher_name': 'N/A', 'class_name': '', 'grade_level': '', 'total_minutes': 0}
+
+        return performers
+
+    top_performers[team1_name] = get_top_performers_for_team(team1_name)
+    top_performers[team2_name] = get_top_performers_for_team(team2_name)
+
+    # === COMPARISON TABLE (9 metrics) ===
+    comparison_table = []
+
+    # Helper function to add table row
+    def add_comparison_row(metric_name, metric_type, team1_value, team2_value, format_type='number'):
+        leader = None
+        gap = 0
+
+        if team1_value > team2_value:
+            leader = team1_name
+            gap = team1_value - team2_value
+        elif team2_value > team1_value:
+            leader = team2_name
+            gap = team2_value - team1_value
+        else:
+            leader = 'TIE'
+            gap = 0
+
+        comparison_table.append({
+            'metric': metric_name,
+            'type': metric_type,
+            'team1_value': team1_value,
+            'team2_value': team2_value,
+            'leader': leader,
+            'gap': gap,
+            'format': format_type
+        })
+
+    # === FUNDRAISING METRICS ===
+    add_comparison_row('Fundraising', 'Fundraising', team1_metrics['fundraising'], team2_metrics['fundraising'], 'currency')
+    add_comparison_row('Sponsors', 'Fundraising', team1_metrics['sponsors'], team2_metrics['sponsors'], 'number')
+
+    # === READING METRICS ===
+    # 1. Minutes Read (in hours)
+    team1_minutes_hours = team1_metrics['minutes_with_color'] / 60
+    team2_minutes_hours = team2_metrics['minutes_with_color'] / 60
+    add_comparison_row('Minutes Read', 'Reading', team1_minutes_hours, team2_minutes_hours, 'hours')
+
+    # 2. Participation % (students who participated at least once / total students)
+    team1_participated_query = f"""
+        SELECT COUNT(DISTINCT dl.student_name) as participated_count
+        FROM Daily_Logs dl
+        JOIN Roster r ON dl.student_name = r.student_name
+        WHERE LOWER(r.team_name) = LOWER('{team1_name}')
+          AND dl.minutes_read > 0 {date_where}
+    """
+    team1_participated_result = db.execute_query(team1_participated_query)
+    team1_participated_count = team1_participated_result[0]['participated_count'] if team1_participated_result and team1_participated_result[0] else 0
+    team1_participation_pct = (team1_participated_count / team1_metrics['participation_students'] * 100) if team1_metrics['participation_students'] > 0 else 0
+
+    team2_participated_query = f"""
+        SELECT COUNT(DISTINCT dl.student_name) as participated_count
+        FROM Daily_Logs dl
+        JOIN Roster r ON dl.student_name = r.student_name
+        WHERE LOWER(r.team_name) = LOWER('{team2_name}')
+          AND dl.minutes_read > 0 {date_where}
+    """
+    team2_participated_result = db.execute_query(team2_participated_query)
+    team2_participated_count = team2_participated_result[0]['participated_count'] if team2_participated_result and team2_participated_result[0] else 0
+    team2_participation_pct = (team2_participated_count / team2_metrics['participation_students'] * 100) if team2_metrics['participation_students'] > 0 else 0
+
+    add_comparison_row('Participation %', 'Reading', team1_participation_pct, team2_participation_pct, 'percentage')
+
+    # 3. All 4 Days Active % (students who read all days / total students)
+    # First, get count of days in filter period
+    days_count_query = f"""
+        SELECT COUNT(DISTINCT log_date) as total_days
+        FROM Daily_Logs
+        WHERE 1=1 {date_where_no_alias}
+    """
+    days_count_result = db.execute_query(days_count_query)
+    filter_days_count = days_count_result[0]['total_days'] if days_count_result and days_count_result[0] else 0
+
+    team1_all_days_query = f"""
+        SELECT COUNT(DISTINCT student_name) as all_days_count
+        FROM (
+            SELECT dl.student_name, COUNT(DISTINCT dl.log_date) as days_active
+            FROM Daily_Logs dl
+            JOIN Roster r ON dl.student_name = r.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team1_name}')
+              AND dl.minutes_read > 0 {date_where}
+            GROUP BY dl.student_name
+            HAVING COUNT(DISTINCT dl.log_date) = {filter_days_count}
+        )
+    """
+    team1_all_days_result = db.execute_query(team1_all_days_query)
+    team1_all_days_count = team1_all_days_result[0]['all_days_count'] if team1_all_days_result and team1_all_days_result[0] else 0
+    team1_all_days_pct = (team1_all_days_count / team1_metrics['participation_students'] * 100) if team1_metrics['participation_students'] > 0 else 0
+
+    team2_all_days_query = f"""
+        SELECT COUNT(DISTINCT student_name) as all_days_count
+        FROM (
+            SELECT dl.student_name, COUNT(DISTINCT dl.log_date) as days_active
+            FROM Daily_Logs dl
+            JOIN Roster r ON dl.student_name = r.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team2_name}')
+              AND dl.minutes_read > 0 {date_where}
+            GROUP BY dl.student_name
+            HAVING COUNT(DISTINCT dl.log_date) = {filter_days_count}
+        )
+    """
+    team2_all_days_result = db.execute_query(team2_all_days_query)
+    team2_all_days_count = team2_all_days_result[0]['all_days_count'] if team2_all_days_result and team2_all_days_result[0] else 0
+    team2_all_days_pct = (team2_all_days_count / team2_metrics['participation_students'] * 100) if team2_metrics['participation_students'] > 0 else 0
+
+    add_comparison_row('All 4 Days Active %', 'Reading', team1_all_days_pct, team2_all_days_pct, 'percentage')
+
+    # 4. Met Goal ≥1 Day % (already have count, just need percentage)
+    team1_goal_met_pct = (team1_metrics['goal_met_students'] / team1_metrics['participation_students'] * 100) if team1_metrics['participation_students'] > 0 else 0
+    team2_goal_met_pct = (team2_metrics['goal_met_students'] / team2_metrics['participation_students'] * 100) if team2_metrics['participation_students'] > 0 else 0
+    add_comparison_row('Met Goal ≥1 Day %', 'Reading', team1_goal_met_pct, team2_goal_met_pct, 'percentage')
+
+    # 5. Met Goal All Days % (students who met goal every day / total students)
+    team1_goal_all_days_query = f"""
+        SELECT COUNT(DISTINCT student_name) as goal_all_days_count
+        FROM (
+            SELECT dl.student_name,
+                   COUNT(DISTINCT CASE
+                       WHEN dl.minutes_read >= gr.min_daily_minutes THEN dl.log_date
+                   END) as days_met_goal
+            FROM Daily_Logs dl
+            JOIN Roster r ON dl.student_name = r.student_name
+            JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE LOWER(r.team_name) = LOWER('{team1_name}') {date_where}
+            GROUP BY dl.student_name
+            HAVING COUNT(DISTINCT CASE
+                       WHEN dl.minutes_read >= gr.min_daily_minutes THEN dl.log_date
+                   END) = {filter_days_count}
+        )
+    """
+    team1_goal_all_days_result = db.execute_query(team1_goal_all_days_query)
+    team1_goal_all_days_count = team1_goal_all_days_result[0]['goal_all_days_count'] if team1_goal_all_days_result and team1_goal_all_days_result[0] else 0
+    team1_goal_all_days_pct = (team1_goal_all_days_count / team1_metrics['participation_students'] * 100) if team1_metrics['participation_students'] > 0 else 0
+
+    team2_goal_all_days_query = f"""
+        SELECT COUNT(DISTINCT student_name) as goal_all_days_count
+        FROM (
+            SELECT dl.student_name,
+                   COUNT(DISTINCT CASE
+                       WHEN dl.minutes_read >= gr.min_daily_minutes THEN dl.log_date
+                   END) as days_met_goal
+            FROM Daily_Logs dl
+            JOIN Roster r ON dl.student_name = r.student_name
+            JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE LOWER(r.team_name) = LOWER('{team2_name}') {date_where}
+            GROUP BY dl.student_name
+            HAVING COUNT(DISTINCT CASE
+                       WHEN dl.minutes_read >= gr.min_daily_minutes THEN dl.log_date
+                   END) = {filter_days_count}
+        )
+    """
+    team2_goal_all_days_result = db.execute_query(team2_goal_all_days_query)
+    team2_goal_all_days_count = team2_goal_all_days_result[0]['goal_all_days_count'] if team2_goal_all_days_result and team2_goal_all_days_result[0] else 0
+    team2_goal_all_days_pct = (team2_goal_all_days_count / team2_metrics['participation_students'] * 100) if team2_metrics['participation_students'] > 0 else 0
+
+    add_comparison_row('Met Goal All Days %', 'Reading', team1_goal_all_days_pct, team2_goal_all_days_pct, 'percentage')
+
+    # === TEAM STATS ===
+    # 1. Color War Points (bonus points from Team_Color_Bonus table)
+    team1_color_points_query = f"""
+        SELECT
+            COALESCE(SUM(tcb.bonus_participation_points), 0) as total_points
+        FROM Team_Color_Bonus tcb
+        INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+        WHERE LOWER(ci.team_name) = LOWER('{team1_name}')
+    """
+    team1_color_points_result = db.execute_query(team1_color_points_query)
+    team1_color_points = team1_color_points_result[0]['total_points'] if team1_color_points_result and team1_color_points_result[0] else 0
+
+    team2_color_points_query = f"""
+        SELECT
+            COALESCE(SUM(tcb.bonus_participation_points), 0) as total_points
+        FROM Team_Color_Bonus tcb
+        INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+        WHERE LOWER(ci.team_name) = LOWER('{team2_name}')
+    """
+    team2_color_points_result = db.execute_query(team2_color_points_query)
+    team2_color_points = team2_color_points_result[0]['total_points'] if team2_color_points_result and team2_color_points_result[0] else 0
+
+    add_comparison_row('Color War Points', 'Team Stats', team1_color_points, team2_color_points, 'number')
+
+    # 2. Students (Team Size)
+    add_comparison_row('Students (Team Size)', 'Team Stats', team1_metrics['participation_students'], team2_metrics['participation_students'], 'number')
+
+    # === FULL CONTEST RANGE ===
+    sorted_dates = sorted(dates)
+    if sorted_dates:
+        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
+        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
+        full_contest_range = f"{start_date}-{end_date}"
+    else:
+        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+
+    # === METADATA (Last Updated) ===
+    metadata = {}
+
+    # Daily_Logs timestamp
+    daily_logs_ts_query = """
+        SELECT MAX(upload_timestamp) as last_updated
+        FROM Upload_History
+        WHERE file_type = 'daily'
+    """
+    daily_logs_ts = db.execute_query(daily_logs_ts_query)
+    if daily_logs_ts and daily_logs_ts[0] and daily_logs_ts[0]['last_updated']:
+        metadata['daily_logs_updated'] = daily_logs_ts[0]['last_updated']
+    else:
+        metadata['daily_logs_updated'] = 'Never'
+
+    # Reader_Cumulative timestamp
+    reader_cumulative_ts_query = """
+        SELECT MAX(upload_timestamp) as last_updated
+        FROM Upload_History
+        WHERE file_type = 'cumulative'
+    """
+    reader_cumulative_ts = db.execute_query(reader_cumulative_ts_query)
+    if reader_cumulative_ts and reader_cumulative_ts[0] and reader_cumulative_ts[0]['last_updated']:
+        metadata['reader_cumulative_updated'] = reader_cumulative_ts[0]['last_updated']
+    else:
+        metadata['reader_cumulative_updated'] = 'Never'
+
+    # Roster timestamp (static - set during init)
+    metadata['roster_updated'] = '09/15/2025 8:00 AM'
+
+    # Team_Color_Bonus timestamp (event date)
+    team_color_bonus_query = """
+        SELECT event_date, COUNT(*) as class_count
+        FROM Team_Color_Bonus
+        GROUP BY event_date
+        ORDER BY event_date DESC
+        LIMIT 1
+    """
+    team_color_bonus_ts = db.execute_query(team_color_bonus_query)
+    if team_color_bonus_ts and team_color_bonus_ts[0] and team_color_bonus_ts[0]['event_date']:
+        event_date = team_color_bonus_ts[0]['event_date']
+        class_count = team_color_bonus_ts[0]['class_count']
+        metadata['team_color_bonus_updated'] = f"{event_date} ({class_count} classes)"
+    else:
+        metadata['team_color_bonus_updated'] = 'No data'
+
+    return render_template('teams.html',
+                         environment=env,
+                         dates=dates,
+                         date_filter=date_filter,
+                         total_days=total_days,
+                         full_contest_range=full_contest_range,
+                         team1_name=team1_name,
+                         team2_name=team2_name,
+                         banner=banner,
+                         top_performers=top_performers,
+                         comparison_table=comparison_table,
+                         metadata=metadata)
+
+
 # Keep old index route for backward compatibility during transition
 @app.route('/index_old')
 def index():

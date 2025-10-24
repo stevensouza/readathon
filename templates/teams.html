@@ -1,0 +1,806 @@
+{% extends "base.html" %}
+
+{% block title %}Teams Overview - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Teams Tab Specific Styles - Matching School Tab (Option H colors) */
+
+    /* Page Header with integrated filter */
+    .page-header-teams {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 2rem;
+    }
+
+    .page-title-teams {
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .filter-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .filter-inline label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .filter-inline select {
+        width: 240px;
+        font-size: 0.85rem;
+    }
+
+    .filter-note {
+        font-size: 0.7rem;
+        color: #6c757d;
+        font-style: italic;
+        white-space: nowrap;
+    }
+
+    /* Headline Banner */
+    .headline-banner {
+        background: #1e3a5f;
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .headline-metric {
+        text-align: center;
+        padding: 0.3rem 0.5rem;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .headline-metric:last-child {
+        border-right: none;
+    }
+
+    .headline-label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-winner {
+        margin-bottom: 0.3rem;
+    }
+
+    .team-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .team-badge-staub {
+        background: #1e3a5f;
+        color: white;
+        border-color: rgba(255,255,255,0.4);
+    }
+
+    .team-badge-kitsko {
+        background: #f59e0b;
+        color: #1e3a5f;
+        border-color: rgba(30,58,95,0.3);
+    }
+
+    .headline-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #17a2b8;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-subtitle {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.3;
+    }
+
+    /* Card Styles */
+    .zen-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-top: 4px solid #1e3a5f;
+        height: 100%;
+    }
+
+    .zen-card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #ecf0f1;
+    }
+
+    /* Top Performers - Match School Tab */
+    .performer-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .performer-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .section-label {
+        font-size: 0.75rem;
+        color: #95a5a6;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+    }
+
+    .leader-card {
+        background: #e3f2fd;
+        border-left: 4px solid #1e3a5f;
+        padding: 0.75rem;
+        border-radius: 0.3rem;
+    }
+
+    .leader-name-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .leader-name {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .leader-meta {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+    }
+
+    .leader-value {
+        font-weight: 900;
+        color: #1e3a5f;
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    .team-column {
+        padding: 0 1rem;
+    }
+
+    .team-column-header {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #ecf0f1;
+        text-align: center;
+    }
+
+    .team-column-staub .team-column-header {
+        border-bottom-color: #1e3a5f;
+    }
+
+    .team-column-kitsko .team-column-header {
+        border-bottom-color: #f59e0b;
+    }
+
+    /* Comparison Table */
+    .comparison-table {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-top: 4px solid #1e3a5f;
+    }
+
+    .comparison-table .table {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    .comparison-table .table thead th {
+        background: #2c3e50 !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.65rem 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #1e3a5f;
+        border-top: none;
+        position: relative;
+    }
+
+    .comparison-table .table thead th::after {
+        content: ' ↕';
+        opacity: 0.3;
+        font-size: 0.8rem;
+    }
+
+    .comparison-table .table thead th.sorted-asc::after {
+        content: ' ↑';
+        opacity: 1;
+    }
+
+    .comparison-table .table thead th.sorted-desc::after {
+        content: ' ↓';
+        opacity: 1;
+    }
+
+    .comparison-table .table tbody td {
+        padding: 0.65rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+        background-color: white !important;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(even) {
+        background-color: #f1f3f5 !important;
+    }
+
+    .leader-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 0.8rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .leader-badge-staub {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .leader-badge-kitsko {
+        background: #f59e0b;
+        color: #1e3a5f;
+    }
+
+    .leader-badge-tie {
+        background: #6c757d;
+        color: white;
+    }
+
+    /* Data Info Button */
+    .data-info-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 0.3rem;
+        border: 1px solid #dee2e6;
+        background: white;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .data-info-btn:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
+    /* Collapsible Footer */
+    .collapsible-footer {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .collapsible-header {
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .collapsible-header:hover {
+        background: #e9ecef;
+    }
+
+    .collapsible-content {
+        padding: 1rem;
+        display: none;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .collapsible-content.show {
+        display: block;
+    }
+
+    .data-source-item {
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    .data-source-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .data-source-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .data-source-value {
+        color: #6c757d;
+    }
+
+    /* Filter Indicator Icon */
+    .filter-indicator {
+        font-size: 0.85rem;
+        color: #17a2b8;
+        cursor: help;
+        margin-left: 0.3rem;
+        transition: color 0.2s;
+        display: inline-block;
+    }
+
+    .filter-indicator:hover {
+        color: #138496;
+    }
+
+    /* In headline banner, use white for contrast */
+    .headline-banner .filter-indicator {
+        color: rgba(255,255,255,0.6);
+    }
+
+    .headline-banner .filter-indicator:hover {
+        color: rgba(255,255,255,0.95);
+    }
+
+    /* Modal Styles */
+    .modal-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header with Filter -->
+<div class="page-header-teams">
+    <h2 class="page-title-teams">⚔️ Teams Competition</h2>
+
+    <div class="filter-inline">
+        <label for="dateFilter">📅 Filter Period:</label>
+        <select id="dateFilter" class="form-select form-select-sm" onchange="applyDateFilter()">
+            <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Full Contest ({{ full_contest_range }})</option>
+            {% for date in dates|reverse %}
+            <option value="{{ date }}" {% if date_filter == date %}selected{% endif %}>{{ date }} (Day {{ loop.index }})</option>
+            {% endfor %}
+        </select>
+        <span class="filter-note">(ⓘ = honors filter)</span>
+    </div>
+
+    <button class="data-info-btn" data-bs-toggle="modal" data-bs-target="#dataSourceModal">
+        <i class="bi bi-info-circle"></i> Data Info
+    </button>
+</div>
+
+<!-- Banner: 5 Head-to-Head Metrics -->
+<div class="headline-banner">
+    <div class="row g-0">
+        {% for metric in banner.metrics %}
+        <div class="col headline-metric">
+            <div class="headline-label">{{ metric.icon }} {{ metric.name }}{% if metric.honors_filter and date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
+            <div class="headline-winner">
+                {% if metric.winner == team1_name %}
+                <span class="team-badge team-badge-kitsko">{{ team1_name.upper() }}</span>
+                {% elif metric.winner == team2_name %}
+                <span class="team-badge team-badge-staub">{{ team2_name.upper() }}</span>
+                {% else %}
+                <span class="team-badge leader-badge-tie">TIE</span>
+                {% endif %}
+            </div>
+            <div class="headline-value">
+                {% if metric.format == 'currency' %}
+                    ${{ "{:,.0f}".format(metric.winner_value) }}
+                {% elif metric.format == 'percentage' %}
+                    {{ "{:.1f}".format(metric.winner_value) }}%
+                {% else %}
+                    {{ "{:,}".format(metric.winner_value|int) }}
+                {% endif %}
+            </div>
+            <div class="headline-subtitle">
+                {% if metric.winner == team1_name %}
+                    {% set count = metric.get('team1_count', metric.team1_value|int) %}
+                    {% set total = metric.team1_students %}
+                    {% set pct = (count / total * 100) if total > 0 else 0 %}
+                    {% if metric.key == 'minutes_with_color' %}
+                        ({{ "{:,.0f}".format(metric.team1_value / 60) }} hours)
+                    {% else %}
+                        {{ count }} of {{ total }} {{ team1_name }} students<br>({{ "{:.1f}".format(pct) }}%)
+                    {% endif %}
+                {% elif metric.winner == team2_name %}
+                    {% set count = metric.get('team2_count', metric.team2_value|int) %}
+                    {% set total = metric.team2_students %}
+                    {% set pct = (count / total * 100) if total > 0 else 0 %}
+                    {% if metric.key == 'minutes_with_color' %}
+                        ({{ "{:,.0f}".format(metric.team2_value / 60) }} hours)
+                    {% else %}
+                        {{ count }} of {{ total }} {{ team2_name }} students<br>({{ "{:.1f}".format(pct) }}%)
+                    {% endif %}
+                {% else %}
+                    Tied
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Top Performers by Team -->
+<div class="row g-3 mb-3">
+    <!-- Team Staub Column -->
+    <div class="col-md-6">
+        <div class="zen-card">
+            <div class="team-column-header" style="border-bottom-color: #1e3a5f;">🔵 TEAM {{ team2_name.upper() }}</div>
+
+            <div class="performer-section">
+                <div class="section-label">💰 Fundraising Leader</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team2_name].fundraising_leader.student_name }}</span>
+                        <span class="leader-meta">Grade {{ top_performers[team2_name].fundraising_leader.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team2_name].fundraising_leader.donation_amount) }}</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">📚 Reading Leader{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team2_name].reading_leader.student_name }}</span>
+                        <span class="leader-meta">Grade {{ top_performers[team2_name].reading_leader.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">{{ "{:,}".format(top_performers[team2_name].reading_leader.total_minutes|int) }} minutes</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">🎓 Top Class (Fundraising)</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team2_name].top_class_fundraising.teacher_name }}'s Class</span>
+                        <span class="leader-meta">Grade {{ top_performers[team2_name].top_class_fundraising.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team2_name].top_class_fundraising.total_fundraising) }}</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">🎓 Top Class (Reading){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team2_name].top_class_reading.teacher_name }}'s Class</span>
+                        <span class="leader-meta">Grade {{ top_performers[team2_name].top_class_reading.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">{{ "{:,}".format(top_performers[team2_name].top_class_reading.total_minutes|int) }} minutes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Kitsko Column -->
+    <div class="col-md-6">
+        <div class="zen-card">
+            <div class="team-column-header" style="border-bottom-color: #f59e0b;">🟡 TEAM {{ team1_name.upper() }}</div>
+
+            <div class="performer-section">
+                <div class="section-label">💰 Fundraising Leader</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team1_name].fundraising_leader.student_name }}</span>
+                        <span class="leader-meta">Grade {{ top_performers[team1_name].fundraising_leader.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team1_name].fundraising_leader.donation_amount) }}</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">📚 Reading Leader{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team1_name].reading_leader.student_name }}</span>
+                        <span class="leader-meta">Grade {{ top_performers[team1_name].reading_leader.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">{{ "{:,}".format(top_performers[team1_name].reading_leader.total_minutes|int) }} minutes</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">🎓 Top Class (Fundraising)</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team1_name].top_class_fundraising.teacher_name }}'s Class</span>
+                        <span class="leader-meta">Grade {{ top_performers[team1_name].top_class_fundraising.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team1_name].top_class_fundraising.total_fundraising) }}</div>
+                </div>
+            </div>
+
+            <div class="performer-section">
+                <div class="section-label">🎓 Top Class (Reading){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
+                <div class="leader-card">
+                    <div class="leader-name-row">
+                        <span class="leader-name">{{ top_performers[team1_name].top_class_reading.teacher_name }}'s Class</span>
+                        <span class="leader-meta">Grade {{ top_performers[team1_name].top_class_reading.grade_level }}</span>
+                    </div>
+                    <div class="leader-value">{{ "{:,}".format(top_performers[team1_name].top_class_reading.total_minutes|int) }} minutes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Table -->
+<div class="comparison-table">
+    <h3 class="zen-card-title">📊 Head-to-Head Comparison</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Type</th>
+                <th class="text-center">Team {{ team2_name.upper() }}</th>
+                <th class="text-center">Team {{ team1_name.upper() }}</th>
+                <th class="text-center">Leader</th>
+                <th class="text-center">Gap</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in comparison_table %}
+            <tr>
+                <td>
+                    <strong>{{ row.metric }}</strong>
+                    {% if row.metric in ['Minutes Read', 'Participation %', 'All 4 Days Active %', 'Met Goal ≥1 Day %', 'Met Goal All Days %'] and date_filter != 'all' %}
+                    <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>
+                    {% endif %}
+                </td>
+                <td>{{ row.type }}</td>
+                <td class="text-center">
+                    {% if row.format == 'currency' %}
+                        ${{ "{:,.2f}".format(row.team2_value) }}
+                    {% elif row.format == 'percentage' %}
+                        {{ "{:.1f}".format(row.team2_value) }}%
+                    {% elif row.format == 'hours' %}
+                        {{ "{:,.0f}".format(row.team2_value) }} hrs
+                    {% elif row.format == 'number' %}
+                        {{ "{:,}".format(row.team2_value|int) }}
+                    {% else %}
+                        {{ row.team2_value }}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if row.format == 'currency' %}
+                        ${{ "{:,.2f}".format(row.team1_value) }}
+                    {% elif row.format == 'percentage' %}
+                        {{ "{:.1f}".format(row.team1_value) }}%
+                    {% elif row.format == 'hours' %}
+                        {{ "{:,.0f}".format(row.team1_value) }} hrs
+                    {% elif row.format == 'number' %}
+                        {{ "{:,}".format(row.team1_value|int) }}
+                    {% else %}
+                        {{ row.team1_value }}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if row.leader == team1_name %}
+                        <span class="leader-badge leader-badge-kitsko">{{ team1_name.upper() }}</span>
+                    {% elif row.leader == team2_name %}
+                        <span class="leader-badge leader-badge-staub">{{ team2_name.upper() }}</span>
+                    {% else %}
+                        <span class="leader-badge leader-badge-tie">TIE</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if row.format == 'currency' %}
+                        ${{ "{:,.2f}".format(row.gap) }}
+                    {% elif row.format == 'percentage' %}
+                        {{ "{:.1f}".format(row.gap) }} pts
+                    {% elif row.format == 'hours' %}
+                        {{ "{:,.0f}".format(row.gap) }} hrs
+                    {% elif row.format == 'number' %}
+                        {{ "{:,}".format(row.gap|int) }}
+                    {% else %}
+                        {{ row.gap }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Collapsible Footer: Data Sources -->
+<div class="collapsible-footer">
+    <div class="collapsible-header" onclick="toggleFooter()">
+        <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+        <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+    </div>
+    <div class="collapsible-content" id="footerContent">
+        <div class="data-source-item">
+            <span class="data-source-label">• Reading minutes, Participation:</span>
+            <span class="data-source-value">Daily_Logs table (Updated: {{ metadata.daily_logs_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Fundraising, Sponsors:</span>
+            <span class="data-source-value">Reader_Cumulative table (Updated: {{ metadata.reader_cumulative_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Student counts:</span>
+            <span class="data-source-value">Roster table (Updated: {{ metadata.roster_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Team Color Bonus:</span>
+            <span class="data-source-value">Team_Color_Bonus table (Event: {{ metadata.team_color_bonus_updated }})</span>
+        </div>
+    </div>
+</div>
+
+<!-- Data Source Modal -->
+<div class="modal fade" id="dataSourceModal" tabindex="-1" aria-labelledby="dataSourceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="dataSourceModalLabel">
+                    <i class="bi bi-database"></i> Data Sources & Last Updated
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="data-source-item mb-3">
+                    <div class="data-source-label mb-1">Reading Minutes & Participation:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Daily_Logs</strong> table<br>
+                        Last Updated: <strong>{{ metadata.daily_logs_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-3">
+                    <div class="data-source-label mb-1">Fundraising & Sponsors:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Reader_Cumulative</strong> table<br>
+                        Last Updated: <strong>{{ metadata.reader_cumulative_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item">
+                    <div class="data-source-label mb-1">Student Counts:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Roster</strong> table<br>
+                        Last Updated: <strong>{{ metadata.roster_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-3">
+                    <div class="data-source-label mb-1">Team Color Bonus:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Team_Color_Bonus</strong> table<br>
+                        Event Date: <strong>{{ metadata.team_color_bonus_updated }}</strong>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="data-source-item">
+                    <div class="data-source-label mb-2"><i class="bi bi-funnel"></i> Date Filter Behavior:</div>
+                    <div class="data-source-value ms-3" style="font-size: 0.8rem; line-height: 1.6;">
+                        <strong>Reading Metrics (Filtered by date):</strong><br>
+                        <span style="color: #6c757d;">• Minutes Read, Participation, Goals Met</span><br>
+                        <span style="color: #6c757d;">• Shows data <em>cumulative through</em> selected date</span><br>
+                        <span style="color: #6c757d;">• Example: Day 3 = Days 1+2+3 combined</span><br><br>
+
+                        <strong>Fundraising Metrics (Not filtered):</strong><br>
+                        <span style="color: #6c757d;">• Total Fundraising, Sponsors</span><br>
+                        <span style="color: #6c757d;">• Always shows <em>full contest</em> totals</span><br>
+                        <span style="color: #6c757d;">• Fundraising is cumulative by design</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyDateFilter() {
+    const dateFilter = document.getElementById('dateFilter').value;
+    const currentUrl = new URL(window.location.href);
+
+    if (dateFilter === 'all') {
+        currentUrl.searchParams.delete('date');
+    } else {
+        currentUrl.searchParams.set('date', dateFilter);
+    }
+
+    window.location.href = currentUrl.toString();
+}
+
+function toggleFooter() {
+    const content = document.getElementById('footerContent');
+    const icon = document.getElementById('footerIcon');
+    content.classList.toggle('show');
+    icon.classList.toggle('bi-chevron-right');
+    icon.classList.toggle('bi-chevron-down');
+}
+
+// Table Sorting
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.comparison-table table');
+    if (!table) return;
+
+    const headers = table.querySelectorAll('thead th');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    let currentSort = { column: -1, ascending: true };
+
+    headers.forEach((header, index) => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', () => {
+            // Determine sort direction
+            const ascending = currentSort.column === index ? !currentSort.ascending : true;
+            currentSort = { column: index, ascending };
+
+            // Sort rows
+            const sortedRows = rows.slice().sort((a, b) => {
+                const aCell = a.cells[index].textContent.trim();
+                const bCell = b.cells[index].textContent.trim();
+
+                // Extract numeric values for comparison
+                const aNum = parseFloat(aCell.replace(/[^0-9.-]/g, ''));
+                const bNum = parseFloat(bCell.replace(/[^0-9.-]/g, ''));
+
+                // If both are numbers, compare numerically
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return ascending ? aNum - bNum : bNum - aNum;
+                }
+
+                // Otherwise compare as strings
+                return ascending
+                    ? aCell.localeCompare(bCell)
+                    : bCell.localeCompare(aCell);
+            });
+
+            // Clear and re-append sorted rows
+            tbody.innerHTML = '';
+            sortedRows.forEach(row => tbody.appendChild(row));
+
+            // Update header indicators
+            headers.forEach(h => {
+                h.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            header.classList.add(ascending ? 'sorted-asc' : 'sorted-desc');
+        });
+    });
+});
+</script>
+{% endblock %}
