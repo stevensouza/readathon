@@ -167,6 +167,198 @@ The system has 22 reports with non-sequential numbers:
 - Can use feature branches for larger experimental work
 - Tag releases when ready with appropriate version number
 
+## Prototype Development & Links
+
+**IMPORTANT: Whenever creating or referencing HTML prototypes, ALWAYS provide BOTH link formats:**
+
+### 1. Terminal Command Format (for `open` command)
+```bash
+open prototypes/prototype_name.html
+```
+
+### 2. File URL Format (for direct browser paste)
+```
+file:///Users/stevesouza/my/data/readathon/v2026_development/prototypes/prototype_name.html
+```
+
+### Example:
+When creating or referencing `prototypes/dashboard_teams_tab.html`, provide:
+
+**Terminal command:**
+```bash
+open prototypes/dashboard_teams_tab.html
+```
+
+**Direct browser URL:**
+```
+file:///Users/stevesouza/my/data/readathon/v2026_development/prototypes/dashboard_teams_tab.html
+```
+
+This applies to:
+- Newly created prototypes
+- References to existing prototypes
+- Documentation mentioning prototype files
+- Any HTML file in the prototypes/ directory
+
+## Post-Implementation Checklist
+
+**CRITICAL: Claude must automatically perform these steps after ANY feature implementation without being asked.**
+
+This checklist ensures quality, security, and completeness for every feature. User only needs to approve final commit.
+
+### 1. Testing ✅
+**Automatically Create or Update Tests:**
+- Create test file (e.g., `test_students_page.py`) using pytest framework
+- Include tests for:
+  - Page loading successfully (HTTP 200, no errors)
+  - Data structure verification (tables, sections, headings present)
+  - Sample data integrity (calculations match database)
+  - UI elements present (buttons, filters, navigation)
+- Run existing test suite to check for regressions
+- Report test results: "✅ X tests created, all passing" or "⚠️ Y tests failing"
+- Suggest adding to pre-commit hook if critical feature
+
+### 2. Security Review ⚠️ WARN ONLY
+**Automatically Check for Security Issues:**
+
+**SQL Injection:**
+- ✅ Verify parameterized queries: `cursor.execute(query, params)`
+- ❌ Flag string formatting: `f"SELECT * FROM {table}"`
+
+**XSS (Cross-Site Scripting):**
+- ✅ Verify Jinja2 auto-escaping: `{{ variable }}`
+- ⚠️ Flag unsafe HTML: `{{ variable | safe }}` (warn user)
+
+**Input Validation:**
+- ✅ Check length limits (e.g., `if len(input) > 100`)
+- ✅ Check format validation (regex patterns)
+- ✅ Check sanitization (strip, validate)
+
+**File Operations:**
+- ✅ Check path traversal prevention
+- ✅ Check file type validation
+- ✅ Check size limits
+
+**Error Handling:**
+- ❌ Flag exposing system details: `return f"Database error: {str(e)}"`
+- ✅ Verify generic user messages: `return "Operation failed. Please try again"`
+
+**If issues found:**
+- ⚠️ **WARN user but don't block implementation**
+- Explain issue clearly
+- Provide recommended fix
+- Ask: "I can fix this now. Proceed with fix?"
+
+**If no issues found:**
+- ✅ Report: "Security review: No issues found ✅"
+
+### 3. Documentation 📝
+**Automatically Update Documentation:**
+- Update relevant feature documentation (`docs/features/feature-XX.md`)
+- Add code comments for complex logic (algorithms, security-critical sections)
+- Update `docs/QUICK_START_NEXT_SESSION.md` if major change
+- Update `docs/00-INDEX.md` if new feature
+- Document any new dependencies in `requirements.txt` and CLAUDE.md
+- Add prototype to `prototypes/INDEX.html` if applicable
+
+### 4. Version Control 🤚 ASK FIRST
+**Automatically Prepare Commit (But Ask for Approval):**
+
+**Step 1: Review Changes**
+- Run `git status` to see modified/new files
+- Run `git diff` to see actual changes
+- Summarize what changed
+
+**Step 2: Generate Commit Message**
+Follow project style (from CHANGELOG.md):
+```
+<Short descriptive title>
+
+- Bullet point of change 1
+- Bullet point of change 2
+- Bullet point of change 3
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Step 3: Present to User and ASK**
+```
+"✅ [Feature name] implementation complete!
+
+What I did:
+- [Summary of implementation]
+- Added X automated tests (Y passing ✅ / Z failing ⚠️)
+- Security review: [No issues found ✅ / Found N issues ⚠️]
+- Updated X documentation files
+
+Proposed commit message:
+
+'[Generated commit message]'
+
+Approve this commit? (yes/no)"
+```
+
+**Step 4: After Approval**
+- Commit with generated message
+- Show `git log -1` to verify
+- Suggest version increment if significant: "This is a [minor/patch] feature, increment to vYYYY.X.0?"
+
+**NEVER auto-commit without asking first!**
+
+### 5. User Communication 📢
+**Automatically Provide:**
+
+**For Prototypes:**
+- Terminal command: `open prototypes/file.html`
+- Browser URL: `file:///Users/stevesouza/my/data/readathon/v2026_development/prototypes/file.html`
+
+**Summary:**
+- What was implemented
+- Test results
+- Security review results
+- Documentation updated
+- Commit ready for approval
+
+**Next Steps:**
+- Suggest version increment
+- Note any breaking changes or migrations needed
+- Recommend follow-up work if applicable
+
+---
+
+## When Claude Should Ask vs. Act
+
+**Act Automatically (No User Permission Needed):**
+- ✅ Creating or updating automated tests
+- ✅ Running existing test suite
+- ✅ Security review (with warnings for issues)
+- ✅ Updating documentation
+- ✅ Adding code comments
+- ✅ Providing prototype links (both formats)
+- ✅ Running read-only git commands (`git status`, `git diff`, `git log`)
+- ✅ Analyzing code for issues
+- ✅ Generating commit messages (but not committing)
+
+**Ask First (Always Require User Approval):**
+- 🤚 Git commits (prepare message, then ASK)
+- 🤚 Git pushes (local to remote)
+- 🤚 Version tagging (creating release tags)
+- 🤚 Deleting files or data
+- 🤚 Destructive git operations (filter-branch, reset --hard, etc.)
+- 🤚 Modifying configuration files
+- 🤚 Installing dependencies
+- ❓ **When uncertain about user's intent** - Always ask for clarification
+
+**Key Principle:**
+- **Automate quality checks** (tests, security, docs)
+- **Ask for destructive operations** (commits, pushes, deletes)
+- **Ask when uncertain** (ambiguous requirements, multiple approaches)
+
+This ensures Claude is proactive about quality while maintaining user control over git history and critical operations.
+
+---
+
 ## Versioning Scheme
 
 **School Year Calendar Versioning**: `vYYYY.MINOR.PATCH`

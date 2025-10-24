@@ -28,6 +28,7 @@ This index helps you find features by **what they do**, not by feature number. U
 - **[Run All Reports](features/feature-10-run-all-reports.md)** - Generate all reports at once
 - **[Enhanced Report Metadata](features/feature-30-enhanced-report-metadata.md)** - Column descriptions, source tables, collapsible sections
 - **[Dynamic Report Analysis](features/feature-31-dynamic-report-analysis.md)** - Intelligent insights and breakdowns with actual numbers
+- **[Tag-Based Reporting System](features/feature-38-tag-based-reporting-system.md)** - Future: Multi-dimensional filtering with tags
 
 ### 🗄️ Database & Admin
 - **[Flexible Multi-Database System](features/feature-16-multi-database.md)** - Support for multiple year databases
@@ -46,10 +47,12 @@ This index helps you find features by **what they do**, not by feature number. U
 - **[Help Tab & System Docs](features/feature-25-help-tab.md)** - In-app help system
 - **[Video Tutorial Link](features/feature-03-video-tutorial.md)** - Link to video tutorials
 - **[ReadAThon Website Links](features/feature-02-website-links.md)** - Links and images for official site
-- **[Claude Development Documentation](features/feature-33-claude-development-documentation.md)** - How Claude Code was used to build this app
+- **[Claude Development Documentation](features/feature-33-claude-development-documentation.md)** - ✅ How Claude Code was used to build this app
 
 ### 🛠️ System & Technical
 - **[Automated Installation Script](features/feature-20-installation.md)** - Automated setup process
+- **[Automated Testing](features/feature-37-automated-testing.md)** - Test framework for core functionality
+- **[Configurable Team Names](features/feature-36-configurable-team-names.md)** - Replace hardcoded team names with configuration
 - **[Save Error/Warning Messages](features/feature-18-save-messages.md)** - Persist error messages for troubleshooting
 - **[Delete Confirmations](features/feature-19-delete-confirmations.md)** - Improved delete confirmation dialogs
 
@@ -100,9 +103,12 @@ This index helps you find features by **what they do**, not by feature number. U
 | Verification Box Font Consistency | [feature-07-font-consistency.md](features/feature-07-font-consistency.md) | TBD | Low |
 | Video Tutorial Link | [feature-03-video-tutorial.md](features/feature-03-video-tutorial.md) | TBD | Low |
 | Workflows Tab | [feature-22-workflows-tab.md](features/feature-22-workflows-tab.md) | Confirmed | Medium |
-| Claude Development Documentation | [feature-33-claude-development-documentation.md](features/feature-33-claude-development-documentation.md) | NEW | Medium |
+| Automated Testing | [feature-37-automated-testing.md](features/feature-37-automated-testing.md) | IMPLEMENTED | High |
+| Claude Development Documentation | [feature-33-claude-development-documentation.md](features/feature-33-claude-development-documentation.md) | ✅ COMPLETED | Medium |
+| Configurable Team Names | [feature-36-configurable-team-names.md](features/feature-36-configurable-team-names.md) | NEW | Medium |
 | Database Comparison Tool | [feature-34-database-comparison-tool.md](features/feature-34-database-comparison-tool.md) | NEW | Medium-High |
 | Database Creation Tool | [feature-35-database-creation-tool.md](features/feature-35-database-creation-tool.md) | NEW | Medium-High |
+| Tag-Based Reporting System | [feature-38-tag-based-reporting-system.md](features/feature-38-tag-based-reporting-system.md) | FUTURE | High |
 
 ---
 
@@ -138,4 +144,4 @@ This index helps you find features by **what they do**, not by feature number. U
 
 ---
 
-**Last Updated:** 2025-10-16
+**Last Updated:** 2025-10-24
