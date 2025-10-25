@@ -458,11 +458,11 @@
                     <span class="team-metric-value">${{ "{:,.0f}".format(teams[team1_name].fundraising) }}</span>
                 </div>
                 <div class="team-metric-row">
-                    <span class="team-metric-label">Reading (With Color):</span>
+                    <span class="team-metric-label">Reading (With Color){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}:</span>
                     <span class="team-metric-value">{{ teams[team1_name].hours_with_color }} hrs ({{ "{:,}".format(teams[team1_name].minutes_with_color) }} min)</span>
                 </div>
                 <div class="team-metric-row">
-                    <span class="team-metric-label">Avg. Participation (With Color):</span>
+                    <span class="team-metric-label">Avg. Participation (With Color){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}:</span>
                     <span class="team-metric-value">{{ "{:.1f}".format(teams[team1_name].participation_pct_with_color) }}% (+{{ teams[team1_name].color_bonus_points }} pts)</span>
                 </div>
                 <div class="team-metric-row">
@@ -485,11 +485,11 @@
                     <span class="team-metric-value">${{ "{:,.0f}".format(teams[team2_name].fundraising) }}</span>
                 </div>
                 <div class="team-metric-row">
-                    <span class="team-metric-label">Reading (With Color):</span>
+                    <span class="team-metric-label">Reading (With Color){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}:</span>
                     <span class="team-metric-value">{{ teams[team2_name].hours_with_color }} hrs ({{ "{:,}".format(teams[team2_name].minutes_with_color) }} min)</span>
                 </div>
                 <div class="team-metric-row">
-                    <span class="team-metric-label">Avg. Participation (With Color):</span>
+                    <span class="team-metric-label">Avg. Participation (With Color){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}:</span>
                     <span class="team-metric-value">{{ "{:.1f}".format(teams[team2_name].participation_pct_with_color) }}% (+{{ teams[team2_name].color_bonus_points }} pts)</span>
                 </div>
                 <div class="team-metric-row">
@@ -738,14 +738,31 @@
     // Auto-update data on filter change
     function updateSchoolData() {
         const filter = document.getElementById('dateFilter').value;
+        // Save filter to sessionStorage for cross-page persistence
+        sessionStorage.setItem('readathonDateFilter', filter);
         // Reload page with new filter parameter
         window.location.href = `/school?date=${filter}`;
     }
 
-    // Initialize Bootstrap tooltips for filter indicators
+    // Initialize Bootstrap tooltips and apply saved filter on page load
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Bootstrap tooltips for filter indicators
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+        // Apply saved filter from sessionStorage if no URL parameter exists
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlDate = urlParams.get('date');
+        const savedFilter = sessionStorage.getItem('readathonDateFilter');
+
+        // If no URL parameter but we have a saved filter, apply it
+        if (!urlDate && savedFilter && savedFilter !== 'all') {
+            window.location.href = `/school?date=${savedFilter}`;
+        }
+        // If we have a URL parameter, save it to sessionStorage
+        else if (urlDate) {
+            sessionStorage.setItem('readathonDateFilter', urlDate);
+        }
     });
 </script>
 {% endblock %}

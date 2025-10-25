@@ -568,7 +568,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="zen-card zen-card-kitsko">
             <h6 class="zen-card-title">
-                📚 READING LEADER
+                📚 READING LEADER{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}
             </h6>
             <div class="leader-card leader-card-kitsko">
                 <div class="leader-name-row">
@@ -584,7 +584,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="zen-card zen-card-kitsko">
             <h6 class="zen-card-title">
-                📚 TOP CLASS (READING)
+                📚 TOP CLASS (READING){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}
             </h6>
             <div class="leader-card leader-card-kitsko">
                 <div class="leader-name-row">
@@ -636,7 +636,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="zen-card zen-card-staub">
             <h6 class="zen-card-title">
-                📚 READING LEADER
+                📚 READING LEADER{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}
             </h6>
             <div class="leader-card leader-card-staub">
                 <div class="leader-name-row">
@@ -652,7 +652,7 @@
     <div class="col-lg-3 col-md-6">
         <div class="zen-card zen-card-staub">
             <h6 class="zen-card-title">
-                📚 TOP CLASS (READING)
+                📚 TOP CLASS (READING){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}
             </h6>
             <div class="leader-card leader-card-staub">
                 <div class="leader-name-row">
@@ -845,6 +845,9 @@
 <script>
 function applyDateFilter() {
     const dateFilter = document.getElementById('dateFilter').value;
+    // Save filter to sessionStorage for cross-page persistence
+    sessionStorage.setItem('readathonDateFilter', dateFilter);
+
     const currentUrl = new URL(window.location.href);
 
     if (dateFilter === 'all') {
@@ -864,8 +867,30 @@ function toggleFooter() {
     icon.classList.toggle('bi-chevron-down');
 }
 
-// Table Sorting
+// Table Sorting and Filter Persistence
 document.addEventListener('DOMContentLoaded', function() {
+    // Apply saved filter from sessionStorage if no URL parameter exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlDate = urlParams.get('date');
+    const savedFilter = sessionStorage.getItem('readathonDateFilter');
+
+    // If no URL parameter but we have a saved filter, apply it
+    if (!urlDate && savedFilter && savedFilter !== 'all') {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('date', savedFilter);
+        window.location.href = currentUrl.toString();
+        return; // Exit early since we're redirecting
+    }
+    // If we have a URL parameter, save it to sessionStorage
+    else if (urlDate) {
+        sessionStorage.setItem('readathonDateFilter', urlDate);
+    }
+
+    // Initialize Bootstrap tooltips for filter indicators
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    // Table sorting functionality
     const table = document.querySelector('.comparison-table table');
     if (!table) return;
 
