@@ -5,6 +5,60 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.3.0] - 2025-10-25
+
+### Teams Competition Page Redesign
+
+**Major Feature: 4-Column Layout**
+- Redesigned Teams page from 2-column to 4-column layout (2 rows x 4 cards)
+- Reduced vertical space usage for better screen real estate
+- Row 1: All Team Kitsko metrics (Fundraising Leader, Top Class Fundraising, Reading Leader, Top Class Reading)
+- Row 2: All Team Staub metrics (same structure)
+- Team-specific card styling with colored borders and backgrounds
+- Blue (#1e3a5f) for Team Kitsko, Yellow (#f59e0b) for Team Staub
+
+**Visual Enhancements:**
+- Colored oval highlights around winning values in comparison table
+- Team-specific winning value colors (blue ovals for Kitsko, yellow ovals for Staub)
+- Section row headers with team-specific colors
+- Removed redundant team color indicator dots
+- Improved card spacing and padding consistency
+
+**Filter Indicators (◐) - Bug Fixes:**
+- Added ◐ symbol to Teams page "READING LEADER" cards (both teams)
+- Added ◐ symbol to Teams page "TOP CLASS (READING)" cards (both teams)
+- Added ◐ symbol to School page team cards for "Reading (With Color)" metric
+- Added ◐ symbol to School page team cards for "Avg. Participation (With Color)" metric
+- Symbol appears with tooltip: "Cumulative through [date]"
+
+**Global Filter Persistence:**
+- Implemented sessionStorage-based filter persistence across pages
+- Date filter selection now persists when navigating School ↔ Teams
+- Automatic filter application on page load if previously selected
+- Maintains backward compatibility with direct URL access
+
+**Testing:**
+- Created comprehensive test suite: `test_teams_page.py` with 13 tests
+- Tests cover layout structure, team presence, metrics, highlights, and data integrity
+- All 22 tests passing (9 School + 13 Teams)
+
+**Files Modified:**
+- `templates/teams.html`: 4-column layout, colored highlights, filter persistence
+- `templates/school.html`: Filter indicators added to team cards, filter persistence
+- `test_teams_page.py`: New comprehensive test suite (13 tests)
+- `prototypes/dashboard_teams_tab_v3.html`: HTML prototype for 4-column design
+
+**Commits:**
+- `93f3127`: Add comprehensive dashboard tab implementation checklist
+- `916a583`: Implement Teams Competition tab with head-to-head team metrics
+- `fde0efc`: Add Teams Tab V2 prototype with unified table structure
+- `8d50386`: Update Teams page with 4-column layout and team color consistency
+- `3f9bd5d`: Add colored oval highlights to winning values in comparison table
+- `260b2cf`: Add comprehensive test suite for Teams Competition page
+- `101b8ed`: Fix filter indicators and implement global filter persistence
+
+---
+
 ## [v2026.2.0] - 2025-10-23
 
 ### Subdued Color Scheme (Option H)
