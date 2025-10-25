@@ -332,6 +332,24 @@
         color: white;
     }
 
+    /* Winning value highlights */
+    .winning-value {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 1.2rem;
+        font-weight: 700;
+    }
+
+    .winning-value-kitsko {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .winning-value-staub {
+        background: #f59e0b;
+        color: #1e3a5f;
+    }
+
     /* Data Info Button */
     .data-info-btn {
         padding: 0.4rem 0.8rem;
@@ -672,6 +690,9 @@
                 </td>
                 <td>{{ row.type }}</td>
                 <td class="text-center">
+                    {% if row.leader == team1_name %}
+                        <span class="winning-value winning-value-kitsko">
+                    {% endif %}
                     {% if row.format == 'currency' %}
                         ${{ "{:,.2f}".format(row.team1_value) }}
                     {% elif row.format == 'percentage' %}
@@ -683,8 +704,14 @@
                     {% else %}
                         {{ row.team1_value }}
                     {% endif %}
+                    {% if row.leader == team1_name %}
+                        </span>
+                    {% endif %}
                 </td>
                 <td class="text-center">
+                    {% if row.leader == team2_name %}
+                        <span class="winning-value winning-value-staub">
+                    {% endif %}
                     {% if row.format == 'currency' %}
                         ${{ "{:,.2f}".format(row.team2_value) }}
                     {% elif row.format == 'percentage' %}
@@ -695,6 +722,9 @@
                         {{ "{:,}".format(row.team2_value|int) }}
                     {% else %}
                         {{ row.team2_value }}
+                    {% endif %}
+                    {% if row.leader == team2_name %}
+                        </span>
                     {% endif %}
                 </td>
                 <td class="text-center">
