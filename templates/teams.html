@@ -88,13 +88,13 @@
         border: 2px solid rgba(255,255,255,0.3);
     }
 
-    .team-badge-staub {
+    .team-badge-kitsko {
         background: #1e3a5f;
         color: white;
         border-color: rgba(255,255,255,0.4);
     }
 
-    .team-badge-kitsko {
+    .team-badge-staub {
         background: #f59e0b;
         color: #1e3a5f;
         border-color: rgba(30,58,95,0.3);
@@ -118,19 +118,56 @@
     .zen-card {
         background: white;
         border-radius: 0.5rem;
-        padding: 1.25rem;
+        padding: 1rem;
         box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         border-top: 4px solid #1e3a5f;
         height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .zen-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .zen-card-kitsko {
+        border-top-color: #1e3a5f;
+    }
+
+    .zen-card-staub {
+        border-top-color: #f59e0b;
     }
 
     .zen-card-title {
-        font-size: 1.1rem;
+        font-size: 0.8rem;
         font-weight: 700;
         color: #2c3e50;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
         border-bottom: 2px solid #ecf0f1;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* Section Headers for Rows */
+    .section-row-header {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        background: white;
+        border-radius: 0.4rem;
+        border-left: 4px solid #3b82f6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .section-row-header-kitsko {
+        border-left-color: #1e3a5f;
+    }
+
+    .section-row-header-staub {
+        border-left-color: #f59e0b;
     }
 
     /* Top Performers - Match School Tab */
@@ -151,11 +188,23 @@
         letter-spacing: 0.5px;
     }
 
+    /* Base leader card - for backward compatibility */
     .leader-card {
         background: #e3f2fd;
         border-left: 4px solid #1e3a5f;
         padding: 0.75rem;
         border-radius: 0.3rem;
+    }
+
+    /* Team-specific overrides */
+    .leader-card-kitsko {
+        background: #e3f2fd;
+        border-left: 4px solid #1e3a5f;
+    }
+
+    .leader-card-staub {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
     }
 
     .leader-name-row {
@@ -268,12 +317,12 @@
         font-weight: 700;
     }
 
-    .leader-badge-staub {
+    .leader-badge-kitsko {
         background: #1e3a5f;
         color: white;
     }
 
-    .leader-badge-kitsko {
+    .leader-badge-staub {
         background: #f59e0b;
         color: #1e3a5f;
     }
@@ -460,106 +509,139 @@
     </div>
 </div>
 
-<!-- Top Performers by Team -->
+<!-- Top Performers (4-Column Layout) -->
+
+<!-- Row 1: Team Kitsko - All Metrics -->
+<div class="section-row-header section-row-header-kitsko">🔵 TEAM {{ team1_name.upper() }} TOP PERFORMERS</div>
 <div class="row g-3 mb-3">
-    <!-- Team Staub Column -->
-    <div class="col-md-6">
-        <div class="zen-card">
-            <div class="team-column-header" style="border-bottom-color: #1e3a5f;">🔵 TEAM {{ team2_name.upper() }}</div>
-
-            <div class="performer-section">
-                <div class="section-label">💰 Fundraising Leader</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team2_name].fundraising_leader.student_name }}</span>
-                        <span class="leader-meta">Grade {{ top_performers[team2_name].fundraising_leader.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team2_name].fundraising_leader.donation_amount) }}</div>
+    <!-- Team Kitsko - Fundraising Leader -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-kitsko">
+            <h6 class="zen-card-title">
+                💰 FUNDRAISING LEADER
+            </h6>
+            <div class="leader-card leader-card-kitsko">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team1_name].fundraising_leader.student_name }}</span>
+                    <span class="leader-meta">Grade {{ top_performers[team1_name].fundraising_leader.grade_level }}</span>
                 </div>
-            </div>
-
-            <div class="performer-section">
-                <div class="section-label">📚 Reading Leader{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team2_name].reading_leader.student_name }}</span>
-                        <span class="leader-meta">Grade {{ top_performers[team2_name].reading_leader.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">{{ "{:,}".format(top_performers[team2_name].reading_leader.total_minutes|int) }} minutes</div>
-                </div>
-            </div>
-
-            <div class="performer-section">
-                <div class="section-label">🎓 Top Class (Fundraising)</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team2_name].top_class_fundraising.teacher_name }}'s Class</span>
-                        <span class="leader-meta">Grade {{ top_performers[team2_name].top_class_fundraising.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team2_name].top_class_fundraising.total_fundraising) }}</div>
-                </div>
-            </div>
-
-            <div class="performer-section">
-                <div class="section-label">🎓 Top Class (Reading){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team2_name].top_class_reading.teacher_name }}'s Class</span>
-                        <span class="leader-meta">Grade {{ top_performers[team2_name].top_class_reading.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">{{ "{:,}".format(top_performers[team2_name].top_class_reading.total_minutes|int) }} minutes</div>
-                </div>
+                <div class="leader-value">${{ "{:,.0f}".format(top_performers[team1_name].fundraising_leader.donation_amount) }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Team Kitsko Column -->
-    <div class="col-md-6">
-        <div class="zen-card">
-            <div class="team-column-header" style="border-bottom-color: #f59e0b;">🟡 TEAM {{ team1_name.upper() }}</div>
-
-            <div class="performer-section">
-                <div class="section-label">💰 Fundraising Leader</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team1_name].fundraising_leader.student_name }}</span>
-                        <span class="leader-meta">Grade {{ top_performers[team1_name].fundraising_leader.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team1_name].fundraising_leader.donation_amount) }}</div>
+    <!-- Team Kitsko - Top Class (Fundraising) -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-kitsko">
+            <h6 class="zen-card-title">
+                💰 TOP CLASS (FUNDRAISING)
+            </h6>
+            <div class="leader-card leader-card-kitsko">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team1_name].top_class_fundraising.teacher_name }}'s Class</span>
+                    <span class="leader-meta">Grade {{ top_performers[team1_name].top_class_fundraising.grade_level }}</span>
                 </div>
+                <div class="leader-value">${{ "{:,.0f}".format(top_performers[team1_name].top_class_fundraising.total_fundraising) }}</div>
             </div>
+        </div>
+    </div>
 
-            <div class="performer-section">
-                <div class="section-label">📚 Reading Leader{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team1_name].reading_leader.student_name }}</span>
-                        <span class="leader-meta">Grade {{ top_performers[team1_name].reading_leader.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">{{ "{:,}".format(top_performers[team1_name].reading_leader.total_minutes|int) }} minutes</div>
+    <!-- Team Kitsko - Reading Leader -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-kitsko">
+            <h6 class="zen-card-title">
+                📚 READING LEADER
+            </h6>
+            <div class="leader-card leader-card-kitsko">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team1_name].reading_leader.student_name }}</span>
+                    <span class="leader-meta">Grade {{ top_performers[team1_name].reading_leader.grade_level }}</span>
                 </div>
+                <div class="leader-value">{{ "{:,}".format(top_performers[team1_name].reading_leader.total_minutes|int) }} minutes</div>
             </div>
+        </div>
+    </div>
 
-            <div class="performer-section">
-                <div class="section-label">🎓 Top Class (Fundraising)</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team1_name].top_class_fundraising.teacher_name }}'s Class</span>
-                        <span class="leader-meta">Grade {{ top_performers[team1_name].top_class_fundraising.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">${{ "{:,.0f}".format(top_performers[team1_name].top_class_fundraising.total_fundraising) }}</div>
+    <!-- Team Kitsko - Top Class (Reading) -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-kitsko">
+            <h6 class="zen-card-title">
+                📚 TOP CLASS (READING)
+            </h6>
+            <div class="leader-card leader-card-kitsko">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team1_name].top_class_reading.teacher_name }}'s Class</span>
+                    <span class="leader-meta">Grade {{ top_performers[team1_name].top_class_reading.grade_level }}</span>
                 </div>
+                <div class="leader-value">{{ "{:,}".format(top_performers[team1_name].top_class_reading.total_minutes|int) }} minutes</div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <div class="performer-section">
-                <div class="section-label">🎓 Top Class (Reading){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
-                <div class="leader-card">
-                    <div class="leader-name-row">
-                        <span class="leader-name">{{ top_performers[team1_name].top_class_reading.teacher_name }}'s Class</span>
-                        <span class="leader-meta">Grade {{ top_performers[team1_name].top_class_reading.grade_level }}</span>
-                    </div>
-                    <div class="leader-value">{{ "{:,}".format(top_performers[team1_name].top_class_reading.total_minutes|int) }} minutes</div>
+<!-- Row 2: Team Staub - All Metrics -->
+<div class="section-row-header section-row-header-staub">🟡 TEAM {{ team2_name.upper() }} TOP PERFORMERS</div>
+<div class="row g-3 mb-3">
+    <!-- Team Staub - Fundraising Leader -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-staub">
+            <h6 class="zen-card-title">
+                💰 FUNDRAISING LEADER
+            </h6>
+            <div class="leader-card leader-card-staub">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team2_name].fundraising_leader.student_name }}</span>
+                    <span class="leader-meta">Grade {{ top_performers[team2_name].fundraising_leader.grade_level }}</span>
                 </div>
+                <div class="leader-value">${{ "{:,.0f}".format(top_performers[team2_name].fundraising_leader.donation_amount) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Staub - Top Class (Fundraising) -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-staub">
+            <h6 class="zen-card-title">
+                💰 TOP CLASS (FUNDRAISING)
+            </h6>
+            <div class="leader-card leader-card-staub">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team2_name].top_class_fundraising.teacher_name }}'s Class</span>
+                    <span class="leader-meta">Grade {{ top_performers[team2_name].top_class_fundraising.grade_level }}</span>
+                </div>
+                <div class="leader-value">${{ "{:,.0f}".format(top_performers[team2_name].top_class_fundraising.total_fundraising) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Staub - Reading Leader -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-staub">
+            <h6 class="zen-card-title">
+                📚 READING LEADER
+            </h6>
+            <div class="leader-card leader-card-staub">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team2_name].reading_leader.student_name }}</span>
+                    <span class="leader-meta">Grade {{ top_performers[team2_name].reading_leader.grade_level }}</span>
+                </div>
+                <div class="leader-value">{{ "{:,}".format(top_performers[team2_name].reading_leader.total_minutes|int) }} minutes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Staub - Top Class (Reading) -->
+    <div class="col-lg-3 col-md-6">
+        <div class="zen-card zen-card-staub">
+            <h6 class="zen-card-title">
+                📚 TOP CLASS (READING)
+            </h6>
+            <div class="leader-card leader-card-staub">
+                <div class="leader-name-row">
+                    <span class="leader-name">{{ top_performers[team2_name].top_class_reading.teacher_name }}'s Class</span>
+                    <span class="leader-meta">Grade {{ top_performers[team2_name].top_class_reading.grade_level }}</span>
+                </div>
+                <div class="leader-value">{{ "{:,}".format(top_performers[team2_name].top_class_reading.total_minutes|int) }} minutes</div>
             </div>
         </div>
     </div>
@@ -573,8 +655,8 @@
             <tr>
                 <th>Metric</th>
                 <th>Type</th>
-                <th class="text-center">Team {{ team2_name.upper() }}</th>
                 <th class="text-center">Team {{ team1_name.upper() }}</th>
+                <th class="text-center">Team {{ team2_name.upper() }}</th>
                 <th class="text-center">Leader</th>
                 <th class="text-center">Gap</th>
             </tr>
@@ -591,19 +673,6 @@
                 <td>{{ row.type }}</td>
                 <td class="text-center">
                     {% if row.format == 'currency' %}
-                        ${{ "{:,.2f}".format(row.team2_value) }}
-                    {% elif row.format == 'percentage' %}
-                        {{ "{:.1f}".format(row.team2_value) }}%
-                    {% elif row.format == 'hours' %}
-                        {{ "{:,.0f}".format(row.team2_value) }} hrs
-                    {% elif row.format == 'number' %}
-                        {{ "{:,}".format(row.team2_value|int) }}
-                    {% else %}
-                        {{ row.team2_value }}
-                    {% endif %}
-                </td>
-                <td class="text-center">
-                    {% if row.format == 'currency' %}
                         ${{ "{:,.2f}".format(row.team1_value) }}
                     {% elif row.format == 'percentage' %}
                         {{ "{:.1f}".format(row.team1_value) }}%
@@ -613,6 +682,19 @@
                         {{ "{:,}".format(row.team1_value|int) }}
                     {% else %}
                         {{ row.team1_value }}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if row.format == 'currency' %}
+                        ${{ "{:,.2f}".format(row.team2_value) }}
+                    {% elif row.format == 'percentage' %}
+                        {{ "{:.1f}".format(row.team2_value) }}%
+                    {% elif row.format == 'hours' %}
+                        {{ "{:,.0f}".format(row.team2_value) }} hrs
+                    {% elif row.format == 'number' %}
+                        {{ "{:,}".format(row.team2_value|int) }}
+                    {% else %}
+                        {{ row.team2_value }}
                     {% endif %}
                 </td>
                 <td class="text-center">
