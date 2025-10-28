@@ -14,7 +14,31 @@ python3 -m pytest test_school_page.py -v
 # If tests fail, prevent commit
 if [ $? -ne 0 ]; then
     echo ""
-    echo "❌ Tests failed! Commit aborted."
+    echo "❌ School page tests failed! Commit aborted."
+    echo "Fix the failing tests before committing, or use 'git commit --no-verify' to skip tests."
+    exit 1
+fi
+
+echo ""
+echo "🧪 Running grade level page tests..."
+python3 test_grade_level_page.py
+
+# If tests fail, prevent commit
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Grade level tests failed! Commit aborted."
+    echo "Fix the failing tests before committing, or use 'git commit --no-verify' to skip tests."
+    exit 1
+fi
+
+echo ""
+echo "🧪 Running teams page tests..."
+python3 -m pytest test_teams_page.py -v
+
+# If tests fail, prevent commit
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Teams page tests failed! Commit aborted."
     echo "Fix the failing tests before committing, or use 'git commit --no-verify' to skip tests."
     exit 1
 fi
