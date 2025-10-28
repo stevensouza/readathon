@@ -5,6 +5,7 @@ Flask-based browser interface for managing and reporting on read-a-thon data
 
 from flask import Flask, render_template, request, jsonify, send_file, Response, session
 from database import ReadathonDB, ReportGenerator
+from queries import get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query
 import csv
 import io
 from datetime import datetime
@@ -1243,6 +1244,201 @@ def teams_tab():
                          banner=banner,
                          top_performers=top_performers,
                          comparison_table=comparison_table,
+                         metadata=metadata)
+
+
+@app.route('/classes')
+def grade_level_tab():
+    """Grade Level dashboard - class and grade-level competition view"""
+    env = session.get('environment', DEFAULT_DATABASE)
+    db = get_current_db()
+
+    # Get filter parameters (optional)
+    date_filter = request.args.get('date', 'all')
+    grade_filter = request.args.get('grade', 'all')
+
+    # Get all available dates
+    dates = db.get_all_dates()
+
+    # Build WHERE clause based on filter (cumulative through selected date)
+    date_where = ""
+    if date_filter != 'all' and date_filter in dates:
+        date_where = f" AND dl.log_date <= '{date_filter}'"
+
+    # Build grade WHERE clause
+    grade_where = ""
+    if grade_filter != 'all':
+        grade_where = f"WHERE ci.grade_level = '{grade_filter}'"
+
+    # DEBUG: Log filter state
+    print(f"\n=== GRADE LEVEL ROUTE DEBUG ===")
+    print(f"  date_filter: {date_filter}")
+    print(f"  grade_filter: {grade_filter}")
+    print(f"  date_where: {repr(date_where)}")
+    print(f"  grade_where: {repr(grade_where)}")
+
+    # Calculate full contest date range
+    sorted_dates = sorted(dates)
+    full_contest_range = f"{sorted_dates[0]} - {sorted_dates[-1]}" if len(sorted_dates) > 1 else sorted_dates[0] if sorted_dates else "No dates"
+
+    # === GET ALL CLASSES (unfiltered) TO CALCULATE TRUE SCHOOL-WIDE WINNERS ===
+    # IMPORTANT: School-wide winners must be calculated across ALL grades, not just filtered grades
+    all_classes_query = get_grade_level_classes_query(date_where, "")  # No grade filter
+    all_classes_result = db.execute_query(all_classes_query)
+    all_classes = [dict(row) for row in all_classes_result] if all_classes_result else []
+
+    # Find TRUE school-wide winners (gold highlights) across ALL grades
+    if all_classes:
+        school_winners = {
+            'fundraising': max(all_classes, key=lambda x: x['total_fundraising'])['total_fundraising'],
+            'minutes': max(all_classes, key=lambda x: x['total_minutes'])['total_minutes'],
+            'avg_minutes': max(all_classes, key=lambda x: x['avg_minutes_per_student'])['avg_minutes_per_student'],
+            'participation': max(all_classes, key=lambda x: x['participation_pct'])['participation_pct'],
+            'goal_met': max(all_classes, key=lambda x: x['students_met_goal'])['students_met_goal'],
+            'sponsors': max(all_classes, key=lambda x: x['total_sponsors'])['total_sponsors']
+        }
+    else:
+        school_winners = {
+            'fundraising': 0,
+            'minutes': 0,
+            'avg_minutes': 0,
+            'participation': 0,
+            'goal_met': 0,
+            'sponsors': 0
+        }
+
+    # === GET FILTERED CLASSES FOR DISPLAY ===
+    classes_query = get_grade_level_classes_query(date_where, grade_where)
+    classes_result = db.execute_query(classes_query)
+
+    # DEBUG: Log result count
+    row_count = len(classes_result) if classes_result else 0
+    print(f"  Query returned {row_count} classes")
+    if row_count > 0 and classes_result:
+        grades_in_results = set(row['grade_level'] for row in classes_result)
+        print(f"  Grades in results: {grades_in_results}")
+    print(f"=================================\n")
+
+    # Find grade-level winners (silver highlights) for each metric - use ALL classes
+    grade_winners = {}
+    for grade in ['K', '1', '2', '3', '4', '5']:
+        grade_classes = [c for c in all_classes if c['grade_level'] == grade]
+        if grade_classes:
+            grade_winners[grade] = {
+                'fundraising': max(grade_classes, key=lambda x: x['total_fundraising'])['total_fundraising'],
+                'minutes': max(grade_classes, key=lambda x: x['total_minutes'])['total_minutes'],
+                'avg_minutes': max(grade_classes, key=lambda x: x['avg_minutes_per_student'])['avg_minutes_per_student'],
+                'participation': max(grade_classes, key=lambda x: x['participation_pct'])['participation_pct'],
+                'goal_met': max(grade_classes, key=lambda x: x['students_met_goal'])['students_met_goal'],
+                'sponsors': max(grade_classes, key=lambda x: x['total_sponsors'])['total_sponsors']
+            }
+
+    # Convert filtered results to list of dicts
+    classes = []
+    if classes_result:
+        classes = [dict(row) for row in classes_result]
+
+        # Add winner flags to each class
+        for cls in classes:
+            cls['is_school_winner'] = {}
+            cls['is_grade_winner'] = {}
+
+            # Check if this class is a school-wide winner
+            cls['is_school_winner']['fundraising'] = (cls['total_fundraising'] == school_winners['fundraising'] and cls['total_fundraising'] > 0)
+            cls['is_school_winner']['minutes'] = (cls['total_minutes'] == school_winners['minutes'] and cls['total_minutes'] > 0)
+            cls['is_school_winner']['avg_minutes'] = (cls['avg_minutes_per_student'] == school_winners['avg_minutes'] and cls['avg_minutes_per_student'] > 0)
+            cls['is_school_winner']['participation'] = (cls['participation_pct'] == school_winners['participation'] and cls['participation_pct'] > 0)
+            cls['is_school_winner']['goal_met'] = (cls['students_met_goal'] == school_winners['goal_met'] and cls['students_met_goal'] > 0)
+            cls['is_school_winner']['sponsors'] = (cls['total_sponsors'] == school_winners['sponsors'] and cls['total_sponsors'] > 0)
+
+            # Check if this class is a grade-level winner
+            if cls['grade_level'] in grade_winners:
+                gw = grade_winners[cls['grade_level']]
+                cls['is_grade_winner']['fundraising'] = (cls['total_fundraising'] == gw['fundraising'] and cls['total_fundraising'] > 0)
+                cls['is_grade_winner']['minutes'] = (cls['total_minutes'] == gw['minutes'] and cls['total_minutes'] > 0)
+                cls['is_grade_winner']['avg_minutes'] = (cls['avg_minutes_per_student'] == gw['avg_minutes'] and cls['avg_minutes_per_student'] > 0)
+                cls['is_grade_winner']['participation'] = (cls['participation_pct'] == gw['participation'] and cls['participation_pct'] > 0)
+                cls['is_grade_winner']['goal_met'] = (cls['students_met_goal'] == gw['goal_met'] and cls['students_met_goal'] > 0)
+                cls['is_grade_winner']['sponsors'] = (cls['total_sponsors'] == gw['sponsors'] and cls['total_sponsors'] > 0)
+
+    # === GET GRADE AGGREGATIONS FOR CARDS ===
+    grade_agg_query = get_grade_aggregations_query(date_where)
+    grade_summaries_result = db.execute_query(grade_agg_query)
+    grade_summaries = [dict(row) for row in grade_summaries_result] if grade_summaries_result else []
+
+    # === GET LEADERS FOR HEADLINE BANNER (All grades + each individual grade) ===
+    def parse_banner_leaders(leaders_result):
+        """Helper to parse leader query results into dict"""
+        leaders = {}
+        if leaders_result:
+            for row in leaders_result:
+                leaders[row['metric']] = {
+                    'class_name': row['class_name'],
+                    'teacher': row['teacher_name'],
+                    'grade': row['grade_level'],
+                    'team': row['team_name'],
+                    'value': row['value']
+                }
+        return leaders
+
+    # Get school-wide leaders (all grades)
+    leaders_query_all = get_school_wide_leaders_query(date_where, grade=None)
+    leaders_result_all = db.execute_query(leaders_query_all)
+    banner_leaders_all = parse_banner_leaders(leaders_result_all)
+
+    # Get grade-specific leaders (now using consistent format)
+    banner_leaders_by_grade = {}
+    grades = ['K', '1', '2', '3', '4', '5']
+
+    for grade in grades:
+        leaders_query_grade = get_school_wide_leaders_query(date_where, grade=grade)
+        leaders_result_grade = db.execute_query(leaders_query_grade)
+        banner_leaders_by_grade[grade] = parse_banner_leaders(leaders_result_grade)
+
+    # For backward compatibility, keep banner_leaders as the "all grades" version
+    banner_leaders = banner_leaders_all
+
+    # === METADATA (Last Updated) ===
+    metadata = {}
+
+    # Daily_Logs timestamp
+    daily_logs_ts_query = """
+        SELECT MAX(upload_timestamp) as last_updated
+        FROM Upload_History
+        WHERE file_type = 'daily'
+    """
+    daily_logs_ts = db.execute_query(daily_logs_ts_query)
+    metadata['daily_logs_updated'] = daily_logs_ts[0]['last_updated'] if daily_logs_ts and daily_logs_ts[0] and daily_logs_ts[0]['last_updated'] else 'Never'
+
+    # Reader_Cumulative timestamp
+    reader_cumulative_ts_query = """
+        SELECT MAX(upload_timestamp) as last_updated
+        FROM Upload_History
+        WHERE file_type = 'cumulative'
+    """
+    reader_cumulative_ts = db.execute_query(reader_cumulative_ts_query)
+    metadata['reader_cumulative_updated'] = reader_cumulative_ts[0]['last_updated'] if reader_cumulative_ts and reader_cumulative_ts[0] and reader_cumulative_ts[0]['last_updated'] else 'Never'
+
+    # Roster timestamp
+    roster_ts_query = "SELECT datetime('now', 'localtime') as last_updated"
+    roster_ts = db.execute_query(roster_ts_query)
+    metadata['roster_updated'] = roster_ts[0]['last_updated'] if roster_ts and roster_ts[0] else 'Never'
+
+    # Team Color Bonus
+    metadata['team_color_bonus_updated'] = '2025-10-13 (Spirit Day)'
+
+    return render_template('grade_level.html',
+                         environment=env,
+                         date_filter=date_filter,
+                         grade_filter=grade_filter,
+                         dates=dates,
+                         full_contest_range=full_contest_range,
+                         classes=classes,
+                         grade_summaries=grade_summaries,
+                         banner_leaders=banner_leaders,
+                         banner_leaders_by_grade=banner_leaders_by_grade,
+                         school_winners=school_winners if classes else {},
+                         grade_winners=grade_winners if classes else {},
                          metadata=metadata)
 
 

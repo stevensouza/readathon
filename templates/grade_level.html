@@ -1,0 +1,1418 @@
+{% extends "base.html" %}
+
+{% block title %}Grade Level - Read-a-Thon System{% endblock %}
+
+{# Macro to format grade labels properly #}
+{% macro format_grade(grade) -%}
+    {%- if grade == 'K' -%}
+        Kindergarten
+    {%- elif grade == '1' -%}
+        1st Grade
+    {%- elif grade == '2' -%}
+        2nd Grade
+    {%- elif grade == '3' -%}
+        3rd Grade
+    {%- elif grade == '4' -%}
+        4th Grade
+    {%- elif grade == '5' -%}
+        5th Grade
+    {%- else -%}
+        {{ grade }} Grade
+    {%- endif -%}
+{%- endmacro %}
+
+{% block extra_css %}
+<style>
+    /* Grade Level Tab Specific Styles - Matching Teams/School Tab patterns */
+
+    /* Page Header */
+    .page-header-grade-level {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .filter-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .filter-inline label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .filter-inline select {
+        width: 240px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .header-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    /* Headline Banner */
+    .headline-banner {
+        background: #1e3a5f;
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .headline-metric {
+        text-align: center;
+        padding: 0.3rem 0.5rem;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .headline-metric:last-child {
+        border-right: none;
+    }
+
+    .headline-label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-winner {
+        margin-bottom: 0.3rem;
+    }
+
+    .team-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .team-badge-kitsko,
+    .team-badge-team1 {
+        background: #1e3a5f;
+        color: white;
+        border-color: rgba(255,255,255,0.4);
+    }
+
+    .team-badge-staub,
+    .team-badge-team2 {
+        background: #f59e0b;
+        color: #1e3a5f;
+        border-color: rgba(30,58,95,0.3);
+    }
+
+    .headline-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #17a2b8;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-subtitle {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.3;
+    }
+
+    .headline-extra {
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.6);
+        font-style: italic;
+        margin-top: 0.2rem;
+    }
+
+    /* Filter Indicator */
+    .filter-indicator {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.6);
+        cursor: help;
+        margin-left: 0.3rem;
+        transition: color 0.2s;
+    }
+
+    .filter-indicator:hover {
+        color: rgba(255,255,255,0.95);
+    }
+
+    /* Grade Filter Section */
+    .grade-filter-section {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.75rem;
+    }
+
+    .grade-filter-btn {
+        padding: 0.5rem 1.25rem;
+        margin: 0.25rem;
+        border-radius: 0.5rem;
+        border: 2px solid #dee2e6;
+        background: white;
+        color: #2c3e50;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .grade-filter-btn:hover {
+        background: #f8f9fa;
+        border-color: #1e3a5f;
+    }
+
+    .grade-filter-btn.active {
+        background: #1e3a5f;
+        color: white;
+        border-color: #1e3a5f;
+    }
+
+    /* Grade Cards Section */
+    .grade-cards-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #1e3a5f;
+    }
+
+    /* Grade Summary Cards (when All Grades selected) - ALL BLUE */
+    .grade-card {
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-left: 4px solid #1e3a5f;
+        height: 100%;
+        background: #e3f2fd;
+    }
+
+    .grade-card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 0.5rem;
+    }
+
+    .grade-card-stats {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .grade-card-stat {
+        color: #6c757d;
+    }
+
+    .grade-card-stat strong {
+        color: #2c3e50;
+    }
+
+    .grade-card-team-split {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+
+    .grade-card-section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+
+    .grade-card-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .grade-card-section-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        background: rgba(30, 58, 95, 0.1);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.3rem;
+    }
+
+    .grade-card-content {
+        padding-left: 1rem;
+    }
+
+    .grade-card-metric {
+        margin-bottom: 0.75rem;
+    }
+
+    .metric-header {
+        color: #495057;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-value-line {
+        padding-left: 1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.85rem;
+    }
+
+    /* Individual Class Detail Cards (when specific grade selected) */
+    .class-detail-card {
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-left: 4px solid #1e3a5f;
+        height: 100%;
+    }
+
+    .class-detail-card-kitsko,
+    .class-detail-card-team1 {
+        background: #e3f2fd;
+        border-left-color: #1e3a5f;
+    }
+
+    .class-detail-card-staub,
+    .class-detail-card-team2 {
+        background: #fffbeb;
+        border-left-color: #f59e0b;
+    }
+
+    .class-detail-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .class-detail-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    .class-detail-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .class-detail-metric {
+        font-size: 0.85rem;
+        color: #495057;
+    }
+
+    .class-detail-metric strong {
+        color: #2c3e50;
+    }
+
+    /* Table Styles - Matching Teams Page */
+    .comparison-table {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-top: 4px solid #1e3a5f;
+        margin-bottom: 2rem;
+    }
+
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .table-info {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    .comparison-table .table {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    .comparison-table .table thead th {
+        background: #2c3e50 !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.65rem 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #1e3a5f;
+        border-top: none;
+    }
+
+    .comparison-table .table thead th::after {
+        content: ' ↕';
+        opacity: 0.3;
+        font-size: 0.8rem;
+    }
+
+    .comparison-table .table thead th.sorted-asc::after {
+        content: ' ↑';
+        opacity: 1;
+    }
+
+    .comparison-table .table thead th.sorted-desc::after {
+        content: ' ↓';
+        opacity: 1;
+    }
+
+    .comparison-table .table tbody td {
+        padding: 0.65rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+        background-color: white !important;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(even) {
+        background-color: #f1f3f5 !important;
+    }
+
+    /* Row visibility for filtering */
+    .comparison-table .table tbody tr {
+        display: table-row;
+    }
+
+    .comparison-table .table tbody tr.hidden {
+        display: none;
+    }
+
+    /* Leader Badge (for team column in table) */
+    .leader-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 0.8rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .leader-badge-kitsko,
+    .leader-badge-team1 {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .leader-badge-staub,
+    .leader-badge-team2 {
+        background: #f59e0b;
+        color: #1e3a5f;
+    }
+
+    /* Winning value highlights */
+    .winning-value {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 1.2rem;
+        font-weight: 700;
+    }
+
+    .winning-value-school {
+        background: #ffd700;
+        color: #000000;
+    }
+
+    .winning-value-grade {
+        background: #c0c0c0;
+        color: #000000;
+    }
+
+    /* Collapsible Footer */
+    .collapsible-footer {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .collapsible-header {
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .collapsible-header:hover {
+        background: #e9ecef;
+    }
+
+    .collapsible-content {
+        padding: 1rem;
+        display: none;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .collapsible-content.show {
+        display: block;
+    }
+
+    .data-source-item {
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    .data-source-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .data-source-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .data-source-value {
+        color: #6c757d;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .headline-metric {
+            min-width: 100%;
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .headline-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header-grade-level">
+    <h1 class="page-title">🎓 Grade Level</h1>
+
+    <div class="filter-inline">
+        <label for="dateFilter">📅 Filter Period:</label>
+        <select id="dateFilter" class="form-select form-select-sm" onchange="applyDateFilter()">
+            <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Full Contest ({{ full_contest_range }})</option>
+            {% for date in dates|reverse %}
+            <option value="{{ date }}" {% if date_filter == date %}selected{% endif %}>{{ date }} (Day {{ loop.index }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#dataInfoModal">
+        <i class="bi bi-info-circle"></i> Data Info
+    </button>
+</div>
+
+<!-- Headline Banner -->
+<div class="headline-banner">
+    <div class="row g-0">
+        <!-- Fundraising Leader -->
+        <div class="col headline-metric">
+            <div class="headline-label">💰 Fundraising</div>
+            <div class="headline-winner">
+                {% if banner_leaders.fundraising %}
+                <span class="team-badge team-badge-{{ banner_leaders.fundraising.team|lower }}">{{ banner_leaders.fundraising.team|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="headline-value">
+                {% if banner_leaders.fundraising %}${{ "{:,.0f}".format(banner_leaders.fundraising.value) }}{% else %}$0{% endif %}
+            </div>
+            <div class="headline-subtitle">
+                {% if banner_leaders.fundraising %}
+                {{ banner_leaders.fundraising.class_name }}
+                {% else %}
+                N/A
+                {% endif %}
+            </div>
+            <div class="headline-extra">
+                {% if banner_leaders.fundraising %}
+                🏆 Winner: {{ format_grade(banner_leaders.fundraising.grade) }} • {{ banner_leaders.fundraising.class_name }}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Minutes Read Leader -->
+        <div class="col headline-metric">
+            <div class="headline-label">
+                📖 Minutes Read
+                {% if date_filter != 'all' %}
+                <span class="filter-indicator" data-bs-toggle="tooltip" title="Cumulative through {{ date_filter }}">◐</span>
+                {% endif %}
+            </div>
+            <div class="headline-winner">
+                {% if banner_leaders.minutes %}
+                <span class="team-badge team-badge-{{ banner_leaders.minutes.team|lower }}">{{ banner_leaders.minutes.team|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="headline-value">
+                {% if banner_leaders.minutes %}{{ "{:,.0f}".format(banner_leaders.minutes.value) }} min{% else %}0 min{% endif %}
+            </div>
+            <div class="headline-subtitle">
+                {% if banner_leaders.minutes %}
+                ({{ "{:,.0f}".format(banner_leaders.minutes.value / 60) }} hours)
+                {% endif %}
+            </div>
+            <div class="headline-extra">
+                {% if banner_leaders.minutes %}
+                🏆 Winner: {{ format_grade(banner_leaders.minutes.grade) }} • {{ banner_leaders.minutes.class_name }}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sponsors Leader -->
+        <div class="col headline-metric">
+            <div class="headline-label">🎁 Sponsors</div>
+            <div class="headline-winner">
+                {% if banner_leaders.sponsors %}
+                <span class="team-badge team-badge-{{ banner_leaders.sponsors.team|lower }}">{{ banner_leaders.sponsors.team|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="headline-value">
+                {% if banner_leaders.sponsors %}{{ "{:,.0f}".format(banner_leaders.sponsors.value) }}{% else %}0{% endif %}
+            </div>
+            <div class="headline-subtitle">
+                {% if banner_leaders.sponsors %}
+                {{ banner_leaders.sponsors.class_name }}
+                {% endif %}
+            </div>
+            <div class="headline-extra">
+                {% if banner_leaders.sponsors %}
+                🏆 Winner: {{ format_grade(banner_leaders.sponsors.grade) }} • {{ banner_leaders.sponsors.class_name }}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Participation Leader -->
+        <div class="col headline-metric">
+            <div class="headline-label">
+                👥 Participation
+                {% if date_filter != 'all' %}
+                <span class="filter-indicator" data-bs-toggle="tooltip" title="Average daily participation through {{ date_filter }}">◐</span>
+                {% endif %}
+            </div>
+            <div class="headline-winner">
+                {% if banner_leaders.participation %}
+                <span class="team-badge team-badge-{{ banner_leaders.participation.team|lower }}">{{ banner_leaders.participation.team|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="headline-value">
+                {% if banner_leaders.participation %}{{ "{:.1f}".format(banner_leaders.participation.value) }}%{% else %}0%{% endif %}
+            </div>
+            <div class="headline-subtitle">
+                {% if banner_leaders.participation %}
+                {{ banner_leaders.participation.class_name }}
+                {% endif %}
+            </div>
+            <div class="headline-extra">
+                {% if banner_leaders.participation %}
+                🏆 Winner: {{ format_grade(banner_leaders.participation.grade) }} • {{ banner_leaders.participation.class_name }}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Goals Met Leader -->
+        <div class="col headline-metric">
+            <div class="headline-label">
+                ✅ Goals Met
+                {% if date_filter != 'all' %}
+                <span class="filter-indicator" data-bs-toggle="tooltip" title="Students who met 120 min goal through {{ date_filter }}">◐</span>
+                {% endif %}
+            </div>
+            <div class="headline-winner">
+                {% if banner_leaders.goals_met %}
+                <span class="team-badge team-badge-{{ banner_leaders.goals_met.team|lower }}">{{ banner_leaders.goals_met.team|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="headline-value">
+                {% if banner_leaders.goals_met %}{{ "{:,.0f}".format(banner_leaders.goals_met.value) }}{% else %}0{% endif %}
+            </div>
+            <div class="headline-subtitle">
+                {% if banner_leaders.goals_met %}
+                {{ banner_leaders.goals_met.class_name }}
+                {% endif %}
+            </div>
+            <div class="headline-extra">
+                {% if banner_leaders.goals_met %}
+                🏆 Winner: {{ format_grade(banner_leaders.goals_met.grade) }} • {{ banner_leaders.goals_met.class_name }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grade Filter Section -->
+<div class="grade-filter-section">
+    <div class="filter-title">Filter by Grade:</div>
+    <div>
+        <button class="grade-filter-btn {% if grade_filter == 'all' %}active{% endif %}" data-grade="all">All Grades</button>
+        <button class="grade-filter-btn {% if grade_filter == 'K' %}active{% endif %}" data-grade="K">Kindergarten</button>
+        <button class="grade-filter-btn {% if grade_filter == '1' %}active{% endif %}" data-grade="1">Grade 1</button>
+        <button class="grade-filter-btn {% if grade_filter == '2' %}active{% endif %}" data-grade="2">Grade 2</button>
+        <button class="grade-filter-btn {% if grade_filter == '3' %}active{% endif %}" data-grade="3">Grade 3</button>
+        <button class="grade-filter-btn {% if grade_filter == '4' %}active{% endif %}" data-grade="4">Grade 4</button>
+        <button class="grade-filter-btn {% if grade_filter == '5' %}active{% endif %}" data-grade="5">Grade 5</button>
+    </div>
+</div>
+
+<!-- Grade Breakdown Cards (shown when "All Grades" selected) -->
+<div id="gradeCardsSection" class="grade-cards-section" {% if grade_filter != 'all' %}style="display: none;"{% endif %}>
+    <h2 class="section-title">Grade Breakdown</h2>
+
+    <div class="row">
+        {% for grade in grade_summaries %}
+        <div class="col-md-4 mb-3">
+            <div class="grade-card">
+                <div class="grade-card-title">{{ format_grade(grade.grade_level)|upper }}</div>
+                <div class="grade-card-stats">
+                    <div class="grade-card-stat">📊 <strong>{{ grade.num_classes }}</strong> Class{{ 'es' if grade.num_classes != 1 else '' }}</div>
+                    <div class="grade-card-stat">👥 <strong>{{ grade.num_students }}</strong> Students</div>
+                </div>
+                <div class="grade-card-team-split">
+                    Team Split: 🔵 Kitsko: {{ grade.kitsko_students }} • 🟡 Staub: {{ grade.staub_students }}
+                </div>
+
+                <!-- Top Class Section -->
+                <div class="grade-card-section">
+                    <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                    <div class="grade-card-content">
+                        <div class="grade-card-metric">
+                            <div class="metric-header">Fundraising: {{ grade.top_fundraising_teacher if grade.top_fundraising_teacher else 'N/A' }}'s Class</div>
+                            <div class="metric-value-line">
+                                ${{ "{:,.0f}".format(grade.top_fundraising_amount or 0) }}
+                                {{ '🟡 Staub' if grade.top_fundraising_team == 'Staub' else '🔵 Kitsko' if grade.top_fundraising_team else '' }}
+                            </div>
+                        </div>
+                        <div class="grade-card-metric">
+                            <div class="metric-header">
+                                Reading (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_reading_teacher if grade.top_reading_teacher else 'N/A' }}'s Class
+                            </div>
+                            <div class="metric-value-line">
+                                {{ "{:.0f}".format((grade.top_reading_minutes or 0) / 60) }} hrs ({{ "{:,.0f}".format(grade.top_reading_minutes or 0) }} min)
+                                {{ '🟡 Staub' if grade.top_reading_team == 'Staub' else '🔵 Kitsko' if grade.top_reading_team else '' }}
+                            </div>
+                        </div>
+                        <div class="grade-card-metric">
+                            <div class="metric-header">
+                                Avg. Participation (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_participation_teacher if grade.top_participation_teacher else 'N/A' }}'s Class
+                            </div>
+                            <div class="metric-value-line">
+                                {{ "{:.1f}".format(grade.top_participation_pct or 0) }}%
+                                {{ '🟡 Staub' if grade.top_participation_team == 'Staub' else '🔵 Kitsko' if grade.top_participation_team else '' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Student Section -->
+                <div class="grade-card-section">
+                    <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                    <div class="grade-card-content">
+                        <div class="grade-card-metric">
+                            <div class="metric-header">Top Fundraiser: {{ grade.top_student_fundraiser if grade.top_student_fundraiser else 'N/A' }}</div>
+                            <div class="metric-value-line">
+                                ${{ "{:,.0f}".format(grade.top_student_fundraising_amount or 0) }}
+                                {{ '🟡 Staub' if grade.top_student_fundraiser_team == 'Staub' else '🔵 Kitsko' if grade.top_student_fundraiser_team else '' }}
+                            </div>
+                        </div>
+                        <div class="grade-card-metric">
+                            <div class="metric-header">
+                                Top Reader (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_student_reader if grade.top_student_reader else 'N/A' }}
+                            </div>
+                            <div class="metric-value-line">
+                                {{ "{:.1f}".format((grade.top_student_reading_minutes or 0) / 60) }} hrs ({{ "{:,.0f}".format(grade.top_student_reading_minutes or 0) }} min)
+                                {{ '🟡 Staub' if grade.top_student_reader_team == 'Staub' else '🔵 Kitsko' if grade.top_student_reader_team else '' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Individual Class Breakdown (shown when specific grade selected) -->
+<div id="classCardsSection" {% if grade_filter == 'all' %}style="display: none;"{% endif %}>
+    <h2 class="section-title" id="classCardsSectionTitle">Classes</h2>
+
+    <div class="row" id="classCardsContainer">
+        {% for cls in classes %}
+        <div class="col-lg-4 col-md-6 mb-3 class-card-wrapper" data-grade="{{ cls.grade_level }}">
+            <div class="class-detail-card class-detail-card-{{ cls.team_name|lower }}">
+                <div class="class-detail-title">
+                    {{ cls.class_name|upper }}
+                    <span class="team-badge team-badge-{{ cls.team_name|lower }}" style="float: right;">{{ cls.team_name|upper }}</span>
+                </div>
+                <div class="class-detail-info">
+                    Grade: {{ cls.grade_level }} • {{ cls.total_students }} Students • Team {{ cls.team_name }}
+                </div>
+                <div class="class-detail-metrics">
+                    <div class="class-detail-metric">💰 <strong>${{ "{:,.0f}".format(cls.total_fundraising) }}</strong></div>
+                    <div class="class-detail-metric">
+                        📖 <strong>{{ "{:,.0f}".format(cls.total_minutes) }} min</strong> ({{ "{:.0f}".format(cls.total_minutes / 60) }} hrs)
+                        {% if date_filter != 'all' %}◐{% endif %}
+                    </div>
+                    <div class="class-detail-metric">
+                        👥 <strong>{{ "{:.1f}".format(cls.participation_pct) }}%</strong> participation
+                        {% if date_filter != 'all' %}◐{% endif %}
+                    </div>
+                    <div class="class-detail-metric">
+                        ✅ <strong>{{ cls.students_met_goal }}</strong> met goal ≥1 day
+                        {% if date_filter != 'all' %}◐{% endif %}
+                    </div>
+                    <div class="class-detail-metric">🎁 <strong>{{ cls.total_sponsors }}</strong> sponsors</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- All Classes Detailed Table -->
+<div class="comparison-table">
+    <div class="table-controls">
+        <div class="table-info" id="tableInfoText">
+            <strong>All Classes Leaderboard</strong> • Showing: All Grades • {{ 'Full Contest' if date_filter == 'all' else 'Through ' + date_filter }}
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-primary" onclick="copyTableToClipboard()">
+                <i class="bi bi-clipboard"></i> Copy
+            </button>
+            <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV()">
+                <i class="bi bi-download"></i> Export CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Highlight Legend -->
+    <div class="alert alert-light border mb-3" style="background: #f8f9fa; padding: 0.75rem 1rem;">
+        <strong>Highlights Key:</strong>
+        <span class="winning-value winning-value-school" style="font-size: 0.85rem; margin-left: 0.5rem;">Gold</span> = School-wide winners (best across all grades)
+        <span class="ms-2">•</span>
+        <span class="winning-value winning-value-grade" style="font-size: 0.85rem; margin-left: 0.5rem;">Silver</span> = Grade-level winners (best within selected grade)
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="table table-striped" id="classesTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">CLASS NAME</th>
+                    <th onclick="sortTable(1)">GRADE</th>
+                    <th onclick="sortTable(2)">TEAM</th>
+                    <th onclick="sortTable(3)" class="text-end">STUDENTS</th>
+                    <th onclick="sortTable(4)" class="text-end">FUNDRAISING</th>
+                    <th onclick="sortTable(5)" class="text-end">MINUTES READ {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(6)" class="text-end">AVG/STU {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(7)" class="text-end">PARTICIPATION % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(8)" class="text-end">GOAL MET ≥1 DAY {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(9)" class="text-end">SPONSORS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cls in classes %}
+                <tr data-grade="{{ cls.grade_level }}"
+                    data-school-fundraising="{{ cls.is_school_winner.fundraising|string|lower }}"
+                    data-school-minutes="{{ cls.is_school_winner.minutes|string|lower }}"
+                    data-school-avg="{{ cls.is_school_winner.avg_minutes|string|lower }}"
+                    data-school-participation="{{ cls.is_school_winner.participation|string|lower }}"
+                    data-school-goal="{{ cls.is_school_winner.goal_met|string|lower }}"
+                    data-school-sponsors="{{ cls.is_school_winner.sponsors|string|lower }}"
+                    data-grade-fundraising="{{ cls.is_grade_winner.fundraising|string|lower }}"
+                    data-grade-minutes="{{ cls.is_grade_winner.minutes|string|lower }}"
+                    data-grade-avg="{{ cls.is_grade_winner.avg_minutes|string|lower }}"
+                    data-grade-participation="{{ cls.is_grade_winner.participation|string|lower }}"
+                    data-grade-goal="{{ cls.is_grade_winner.goal_met|string|lower }}"
+                    data-grade-sponsors="{{ cls.is_grade_winner.sponsors|string|lower }}">
+                    <td><strong>{{ cls.class_name }}</strong></td>
+                    <td class="text-center">{{ cls.grade_level }}</td>
+                    <td class="text-center"><span class="leader-badge leader-badge-{{ cls.team_name|lower }}">{{ cls.team_name|upper }}</span></td>
+                    <td class="text-end" data-value="{{ cls.total_students }}">{{ cls.total_students }}</td>
+                    <td class="text-end" data-value="{{ cls.total_fundraising }}">
+                        <span class="metric-cell">${{ "{:,.0f}".format(cls.total_fundraising) }}</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.total_minutes }}">
+                        <span class="metric-cell">{{ "{:,.0f}".format(cls.total_minutes) }} min<br><small class="text-muted">({{ "{:.0f}".format(cls.total_minutes / 60) }} hrs)</small></span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.avg_minutes_per_student }}">
+                        <span class="metric-cell">{{ "{:.0f}".format(cls.avg_minutes_per_student) }} min</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.participation_pct }}">
+                        <span class="metric-cell">{{ "{:.1f}".format(cls.participation_pct) }}%</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.students_met_goal }}">
+                        <span class="metric-cell">{{ cls.students_met_goal }}</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.total_sponsors }}">
+                        <span class="metric-cell">{{ cls.total_sponsors }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Collapsible Footer: Data Sources -->
+<div class="collapsible-footer">
+    <div class="collapsible-header" onclick="toggleFooter()">
+        <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+        <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+    </div>
+    <div class="collapsible-content" id="footerContent">
+        <div class="data-source-item">
+            <span class="data-source-label">• Reading minutes, Participation:</span>
+            <span class="data-source-value">Daily_Logs table (Updated: {{ metadata.daily_logs_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Fundraising, Sponsors:</span>
+            <span class="data-source-value">Reader_Cumulative table (Updated: {{ metadata.reader_cumulative_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Student counts, Team assignments:</span>
+            <span class="data-source-value">Roster table (Updated: {{ metadata.roster_updated }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Class metadata:</span>
+            <span class="data-source-value">Class_Info table (Updated: {{ metadata.roster_updated }})</span>
+        </div>
+    </div>
+</div>
+
+<!-- Data Info Modal -->
+<div class="modal fade" id="dataInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-info-circle"></i> Data Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Table Filtering Behavior</h6>
+                <p><strong>When "All Grades" is selected:</strong></p>
+                <ul>
+                    <li>Shows all classes from all grades</li>
+                    <li>🥇 <span class="winning-value winning-value-school" style="font-size: 0.85rem;">Gold highlights</span> = School-wide winners (best across ALL grades)</li>
+                </ul>
+                <p><strong>When a specific grade is selected (e.g., "2nd Grade"):</strong></p>
+                <ul>
+                    <li>Table filters to show ONLY classes from that grade</li>
+                    <li>🥈 <span class="winning-value winning-value-grade" style="font-size: 0.85rem;">Silver highlights</span> = Grade-level winners (best within THIS grade)</li>
+                    <li>🥇 <span class="winning-value winning-value-school" style="font-size: 0.85rem;">Gold highlights</span> = Classes that are ALSO school-wide winners</li>
+                </ul>
+
+                <h6 class="mt-4">Metrics That Honor Date Filter ◐</h6>
+                <p>These metrics change based on the selected date filter (cumulative through selected date):</p>
+                <ul>
+                    <li><strong>Minutes Read:</strong> Total capped reading minutes through selected date</li>
+                    <li><strong>Avg/Student:</strong> Average minutes per student through selected date</li>
+                    <li><strong>Participation %:</strong> Average daily participation through selected date</li>
+                    <li><strong>Goal Met ≥1 Day:</strong> Students who met their goal on at least one day through selected date</li>
+                </ul>
+
+                <h6 class="mt-4">Metrics That Don't Filter</h6>
+                <p>These metrics always show full contest totals:</p>
+                <ul>
+                    <li><strong>Fundraising:</strong> Total donations for entire contest</li>
+                    <li><strong>Sponsors:</strong> Total unique sponsors for entire contest</li>
+                    <li><strong>Student Counts:</strong> Fixed roster counts</li>
+                </ul>
+
+                <p class="mb-0"><em>Note: All minutes include team color bonus points and are capped at 120 minutes per student per day.</em></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CRITICAL: Declare grade filter variable FIRST (before any code that might reference it)
+let currentGradeFilter = '{{ grade_filter }}';
+
+// Initialize tooltips
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+
+// Store all banner data for grade switching (no page reload)
+const bannerDataAll = {
+    'all': {{ banner_leaders | tojson | safe }},
+    'K': {{ banner_leaders_by_grade['K'] | tojson | safe }},
+    '1': {{ banner_leaders_by_grade['1'] | tojson | safe }},
+    '2': {{ banner_leaders_by_grade['2'] | tojson | safe }},
+    '3': {{ banner_leaders_by_grade['3'] | tojson | safe }},
+    '4': {{ banner_leaders_by_grade['4'] | tojson | safe }},
+    '5': {{ banner_leaders_by_grade['5'] | tojson | safe }}
+};
+
+// Update banner display when grade filter changes
+function updateBanner(grade) {
+    const data = bannerDataAll[grade];
+    if (!data) return;
+
+    const dateFilter = '{{ date_filter }}';
+
+    // Helper to format grade display
+    function formatGrade(gradeLevel) {
+        const gradeMap = {
+            'K': 'Kindergarten',
+            '1': '1st Grade',
+            '2': '2nd Grade',
+            '3': '3rd Grade',
+            '4': '4th Grade',
+            '5': '5th Grade'
+        };
+        return gradeMap[gradeLevel] || gradeLevel + ' Grade';
+    }
+
+    // Update each metric section
+    const metrics = ['fundraising', 'minutes', 'sponsors', 'participation', 'goals_met'];
+    metrics.forEach(metric => {
+        const metricData = data[metric];
+        if (!metricData) return;
+
+        // Update values based on metric type
+        const sections = document.querySelectorAll(`.headline-metric`);
+        sections.forEach(section => {
+            const label = section.querySelector('.headline-label');
+            if (!label) return;
+
+            // Match metric by checking label text
+            const labelText = label.textContent.toLowerCase();
+            let isMatch = false;
+            if (metric === 'fundraising' && labelText.includes('fundraising')) isMatch = true;
+            else if (metric === 'minutes' && labelText.includes('minutes read')) isMatch = true;
+            else if (metric === 'sponsors' && labelText.includes('sponsors')) isMatch = true;
+            else if (metric === 'participation' && labelText.includes('participation')) isMatch = true;
+            else if (metric === 'goals_met' && labelText.includes('goals met')) isMatch = true;
+
+            if (!isMatch) return;
+
+            // Update team badge
+            const teamBadge = section.querySelector('.team-badge');
+            if (teamBadge && metricData.team) {
+                teamBadge.className = `team-badge team-badge-${metricData.team.toLowerCase()}`;
+                teamBadge.textContent = metricData.team.toUpperCase();
+            }
+
+            // Update value
+            const valueElem = section.querySelector('.headline-value');
+            if (valueElem && metricData.value !== undefined) {
+                if (metric === 'fundraising') {
+                    valueElem.textContent = `$${Math.round(metricData.value).toLocaleString()}`;
+                } else if (metric === 'minutes') {
+                    valueElem.textContent = `${Math.round(metricData.value).toLocaleString()} min`;
+                } else if (metric === 'participation') {
+                    valueElem.textContent = `${metricData.value.toFixed(1)}%`;
+                } else {
+                    valueElem.textContent = Math.round(metricData.value).toLocaleString();
+                }
+            }
+
+            // Update subtitle (teacher's class)
+            const subtitleElem = section.querySelector('.headline-subtitle');
+            if (subtitleElem && metricData.teacher) {
+                if (metric === 'minutes') {
+                    const hours = Math.round(metricData.value / 60);
+                    subtitleElem.textContent = `(${hours} hours)`;
+                } else {
+                    subtitleElem.textContent = `${metricData.teacher}'s Class`;
+                }
+            }
+
+            // Update winner line
+            const extraElem = section.querySelector('.headline-extra');
+            if (extraElem && metricData.teacher && metricData.grade) {
+                extraElem.textContent = `🏆 Winner: ${formatGrade(metricData.grade)} • ${metricData.teacher}'s Class`;
+            }
+        });
+    });
+}
+
+// Date filter (matching Teams tab pattern)
+function applyDateFilter() {
+    const dateFilter = document.getElementById('dateFilter').value;
+    // Save filter to sessionStorage for cross-page persistence
+    sessionStorage.setItem('readathonDateFilter', dateFilter);
+
+    const currentUrl = new URL(window.location.href);
+
+    if (dateFilter === 'all') {
+        currentUrl.searchParams.delete('date');
+    } else {
+        currentUrl.searchParams.set('date', dateFilter);
+    }
+
+    // Preserve grade filter in URL
+    if (currentGradeFilter && currentGradeFilter !== 'all') {
+        currentUrl.searchParams.set('grade', currentGradeFilter);
+    }
+
+    window.location.href = currentUrl.toString();
+}
+
+// Grade filter button setup will be initialized in DOMContentLoaded
+
+function filterTable(grade) {
+    const table = document.getElementById('classesTable');
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    const tableInfoText = document.getElementById('tableInfoText');
+
+    // Update table header text
+    const dateText = '{{ "Full Contest" if date_filter == "all" else "Through " + date_filter }}';
+    if (grade === 'all') {
+        tableInfoText.innerHTML = '<strong>All Classes Leaderboard</strong> • Showing: All Grades • ' + dateText;
+    } else {
+        // Map data format to display names
+        const gradeNames = {
+            'K': 'Kindergarten',
+            '1': '1st Grade',
+            '2': '2nd Grade',
+            '3': '3rd Grade',
+            '4': '4th Grade',
+            '5': '5th Grade'
+        };
+        tableInfoText.innerHTML = '<strong>' + gradeNames[grade] + ' Leaderboard</strong> • Showing: ' + gradeNames[grade] + ' • ' + dateText;
+    }
+
+    // Show/hide rows based on grade filter
+    rows.forEach(row => {
+        const rowGrade = row.getAttribute('data-grade');
+        if (grade === 'all' || rowGrade === grade) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+
+    // Apply highlights based on filter
+    applyHighlights(grade);
+}
+
+function applyHighlights(grade) {
+    const table = document.getElementById('classesTable');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.hidden)'));
+
+    // Column indices for metrics (4-9: fundraising, minutes, avg/stu, participation, goal met, sponsors)
+    const metricColumnIndices = [4, 5, 6, 7, 8, 9];
+    const schoolAttrMap = {
+        4: 'data-school-fundraising',
+        5: 'data-school-minutes',
+        6: 'data-school-avg',
+        7: 'data-school-participation',
+        8: 'data-school-goal',
+        9: 'data-school-sponsors'
+    };
+
+    // For each metric column, find the winner(s)
+    for (let colIndex of metricColumnIndices) {
+        let maxValue = -Infinity;
+        let maxCells = [];
+
+        // Find max value in visible rows (for grade-level winners)
+        rows.forEach(row => {
+            const cell = row.cells[colIndex];
+            const value = parseFloat(cell.getAttribute('data-value')) || 0;
+            if (value > maxValue) {
+                maxValue = value;
+                maxCells = [cell];
+            } else if (value === maxValue && value > 0) {
+                maxCells.push(cell);
+            }
+        });
+
+        // Apply highlights to each row
+        rows.forEach(row => {
+            const cell = row.cells[colIndex];
+            const value = parseFloat(cell.getAttribute('data-value')) || 0;
+            const isSchoolWinner = row.getAttribute(schoolAttrMap[colIndex]) === 'true';
+
+            // Remove existing highlight wrapper
+            const existingSpan = cell.querySelector('.winning-value');
+            if (existingSpan) {
+                cell.innerHTML = existingSpan.innerHTML;
+            }
+
+            // Apply new highlights
+            if (grade === 'all') {
+                // Show only school winners (gold)
+                if (isSchoolWinner && value > 0) {
+                    const content = cell.innerHTML.trim();
+                    cell.innerHTML = `<span class="winning-value winning-value-school">${content}</span>`;
+                }
+            } else {
+                // Specific grade: show BOTH grade winners (silver) AND school winners (gold)
+                const content = cell.innerHTML.trim();
+                const isMaxInGrade = maxCells.includes(cell);
+
+                if (isSchoolWinner && value > 0) {
+                    // Gold for school-wide winner (always show)
+                    cell.innerHTML = `<span class="winning-value winning-value-school">${content}</span>`;
+                } else if (isMaxInGrade && value > 0) {
+                    // Silver for grade-level winner (best within this grade, but not school winner)
+                    cell.innerHTML = `<span class="winning-value winning-value-grade">${content}</span>`;
+                }
+            }
+        });
+    }
+}
+
+// Toggle footer
+function toggleFooter() {
+    const content = document.getElementById('footerContent');
+    const icon = document.getElementById('footerIcon');
+
+    content.classList.toggle('show');
+
+    if (content.classList.contains('show')) {
+        icon.className = 'bi bi-chevron-down';
+    } else {
+        icon.className = 'bi bi-chevron-right';
+    }
+}
+
+// Table sorting
+let currentSortColumn = 1; // Default to Grade column
+let currentSortDirection = 'asc';
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('classesTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    // Toggle sort direction
+    if (currentSortColumn === columnIndex) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortDirection = 'asc';
+        currentSortColumn = columnIndex;
+    }
+
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue, bValue;
+
+        // Handle grade sorting (K < 1 < 2 < etc)
+        if (columnIndex === 1) {
+            // Map data format to sort order
+            const gradeOrder = {'K': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5};
+            aValue = gradeOrder[a.cells[columnIndex].textContent.trim()] || 999;
+            bValue = gradeOrder[b.cells[columnIndex].textContent.trim()] || 999;
+        }
+        // Numeric columns (columns 3+, except column 1 and 2)
+        else if (columnIndex >= 3) {
+            aValue = parseFloat(a.cells[columnIndex].getAttribute('data-value')) || 0;
+            bValue = parseFloat(b.cells[columnIndex].getAttribute('data-value')) || 0;
+        }
+        // Text columns (class name, team)
+        else {
+            aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+            bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+        }
+
+        // Compare values
+        if (currentSortDirection === 'asc') {
+            if (aValue < bValue) return -1;
+            if (aValue > bValue) return 1;
+            return 0;
+        } else {
+            if (aValue < bValue) return 1;
+            if (aValue > bValue) return -1;
+            return 0;
+        }
+    });
+
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update sort indicators
+    const headers = table.querySelectorAll('th');
+    headers.forEach(header => {
+        header.classList.remove('sorted-asc', 'sorted-desc');
+    });
+
+    if (currentSortDirection === 'asc') {
+        headers[columnIndex].classList.add('sorted-asc');
+    } else {
+        headers[columnIndex].classList.add('sorted-desc');
+    }
+
+    // Reapply highlights after sorting
+    applyHighlights(currentGradeFilter);
+}
+
+// Copy table to clipboard
+function copyTableToClipboard() {
+    const table = document.getElementById('classesTable');
+    let text = '';
+
+    // Headers
+    const headers = table.querySelectorAll('thead th');
+    headers.forEach((header, index) => {
+        if (index > 0) text += '\t';
+        text += header.textContent.replace(/[↕↑↓◐]/g, '').trim();
+    });
+    text += '\n';
+
+    // Rows (only visible ones)
+    const rows = table.querySelectorAll('tbody tr:not(.hidden)');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell, index) => {
+            if (index > 0) text += '\t';
+            // Remove HTML tags and extra whitespace
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cell.innerHTML;
+            text += tempDiv.textContent.replace(/\s+/g, ' ').trim();
+        });
+        text += '\n';
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+    });
+}
+
+// Export table to CSV
+function exportTableToCSV() {
+    const table = document.getElementById('classesTable');
+    let csv = '';
+
+    // Headers
+    const headers = table.querySelectorAll('thead th');
+    headers.forEach((header, index) => {
+        if (index > 0) csv += ',';
+        csv += '"' + header.textContent.replace(/[↕↑↓◐]/g, '').trim().replace(/"/g, '""') + '"';
+    });
+    csv += '\n';
+
+    // Rows (only visible ones)
+    const rows = table.querySelectorAll('tbody tr:not(.hidden)');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell, index) => {
+            if (index > 0) csv += ',';
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = cell.innerHTML;
+            csv += '"' + tempDiv.textContent.replace(/\s+/g, ' ').trim().replace(/"/g, '""') + '"';
+        });
+        csv += '\n';
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'grade_level_leaderboard.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Initialize default sort (by grade ascending) and apply initial highlights
+window.addEventListener('DOMContentLoaded', function() {
+    // Apply saved filter from sessionStorage if no URL parameter exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlDate = urlParams.get('date');
+    const savedFilter = sessionStorage.getItem('readathonDateFilter');
+
+    // If no URL parameter but we have a saved filter, apply it
+    if (!urlDate && savedFilter && savedFilter !== 'all') {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('date', savedFilter);
+        window.location.href = currentUrl.toString();
+        return; // Exit early since we're redirecting
+    }
+    // If we have a URL parameter, save it to sessionStorage
+    if (urlDate) {
+        sessionStorage.setItem('readathonDateFilter', urlDate);
+    }
+
+    // Grade filter is now set server-side via {{ grade_filter }}
+    // Just keep sessionStorage in sync with current filter
+    sessionStorage.setItem('readathonGradeFilter', currentGradeFilter);
+
+    // Set up grade filter buttons
+    document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const grade = this.dataset.grade;
+
+            // Save grade filter to sessionStorage for cross-page persistence
+            sessionStorage.setItem('readathonGradeFilter', grade);
+
+            // Build new URL with grade parameter
+            const currentUrl = new URL(window.location.href);
+            if (grade === 'all') {
+                currentUrl.searchParams.delete('grade');
+            } else {
+                currentUrl.searchParams.set('grade', grade);
+            }
+
+            console.log('[Grade Filter] Selected grade:', grade, '- Reloading with new URL');
+
+            // IMPORTANT: Reload page to trigger server-side SQL filtering
+            // All filtering/rendering happens on the server, so no client-side code needed
+            window.location.href = currentUrl.toString();
+        });
+    });
+
+    // Server-side filtering already provided the correct rows
+    // Just need to apply sorting and highlights
+    sortTable(1);
+    applyHighlights(currentGradeFilter);
+});
+</script>
+{% endblock %}
