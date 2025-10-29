@@ -1156,6 +1156,14 @@ function applyHighlights(grade) {
         8: 'data-school-goal',
         9: 'data-school-sponsors'
     };
+    const gradeAttrMap = {
+        4: 'data-grade-fundraising',
+        5: 'data-grade-minutes',
+        6: 'data-grade-avg',
+        7: 'data-grade-participation',
+        8: 'data-grade-goal',
+        9: 'data-grade-sponsors'
+    };
 
     // For each metric column, find the winner(s)
     for (let colIndex of metricColumnIndices) {
@@ -1188,10 +1196,16 @@ function applyHighlights(grade) {
 
             // Apply new highlights
             if (grade === 'all') {
-                // Show only school winners (gold)
+                // Show BOTH school winners (gold) AND grade winners (silver)
+                const content = cell.innerHTML.trim();
+                const isGradeWinner = row.getAttribute(gradeAttrMap[colIndex]) === 'true';
+
                 if (isSchoolWinner && value > 0) {
-                    const content = cell.innerHTML.trim();
+                    // Gold for school-wide winner (overrides silver)
                     cell.innerHTML = `<span class="winning-value winning-value-school">${content}</span>`;
+                } else if (isGradeWinner && value > 0) {
+                    // Silver for grade-level winner (best within their grade)
+                    cell.innerHTML = `<span class="winning-value winning-value-grade">${content}</span>`;
                 }
             } else {
                 // Specific grade: show BOTH grade winners (silver) AND school winners (gold)

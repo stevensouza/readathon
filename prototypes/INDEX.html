@@ -142,13 +142,13 @@
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="stats-card">
-                    <div class="stats-number">19</div>
+                    <div class="stats-number">26</div>
                     <div class="stats-label">Total Prototypes</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stats-card">
-                    <div class="stats-number">5</div>
+                    <div class="stats-number">12</div>
                     <div class="stats-label">Dashboard Designs</div>
                 </div>
             </div>
@@ -251,17 +251,150 @@
 
         <div class="prototype-card" data-category="dashboard">
             <div class="prototype-title">
-                <i class="bi bi-mortarboard-fill"></i> Classes Tab - Class Leaderboard
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V7 (Current Design)
             </div>
             <div class="prototype-meta">
                 <span><i class="bi bi-calendar"></i> October 2025</span>
-                <span><i class="bi bi-code-square"></i> Standalone</span>
+                <span><i class="bi bi-check-circle text-success"></i> Latest Version</span>
             </div>
             <div class="mb-2">
                 <span class="badge-category category-dashboard">Dashboard</span>
             </div>
             <div class="prototype-description">
-                Standalone Classes tab featuring sortable/filterable leaderboard of ALL classes. Includes grade-level filters, multiple sort options (participation, minutes, donations), expandable class details with full statistics (demonstrated with Room 105), and grade-level summary rollup table. Shows all classes ranked, not just top performers.
+                Final Grade Level tab with powerful filtering system. When "All Grades" selected: shows all classes, 🥇 gold highlights for school-wide winners. When specific grade selected: filters table to ONLY that grade's classes, 🥈 silver highlights for grade-level winners, 🥇 gold highlights remain for classes that are ALSO school winners. Table header updates dynamically ("All Classes Leaderboard" vs "2nd Grade Leaderboard"). Export/copy respects current filter. This dual-highlighting system gives users both zoom-out (school-wide view) and zoom-in (grade-focused view) capabilities with clear visual indicators at both levels.
+            </div>
+            <a href="dashboard_grade_level_tab_v7.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V6 (Design Iteration)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Grade Level tab design with improved readability. Features headline banner with 5 category leaders. All grade cards have unified blue background (#e3f2fd) with "Team Split" displayed. Each metric shows different winners with clean two-line structure: Line 1 shows metric label and winner name, Line 2 (indented) shows value and team. However, table filtering was not dynamic - V7 adds powerful grade filtering with silver/gold dual-highlighting system.
+            </div>
+            <a href="dashboard_grade_level_tab_v6.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V5 (Design Iteration)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Grade Level tab design with correct winner structure showing different winners per metric. Each metric in "Top Class" and "Top Student" sections shows winner on the same line (e.g., "Fundraising: Ms. Anderson's Class - $6,240 🟡 Staub"). However, the single-line format became cluttered and hard to read with longer metric names. V6 improves this with two-line structure for better scannability.
+            </div>
+            <a href="dashboard_grade_level_tab_v5.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V4 (Design Iteration)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Iteration with improved visual hierarchy. Added highlighted backgrounds to "🏆 TOP CLASS" and "🌟 TOP STUDENT" section headers. Team indicators (🔵 Kitsko or 🟡 Staub) shown on every metric line. However, incorrectly assumed ONE class/student won ALL metrics within each section (e.g., Ms. Anderson's Class for all Top Class metrics). V5 fixes this by allowing different winners per metric.
+            </div>
+            <a href="dashboard_grade_level_tab_v4.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V3 (Design Iteration)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Earlier Grade Level tab design with refined card structure. Features headline banner with 5 category leaders showing "🏆 Winner: Grade • Class Name" with team badges. All grade cards have unified blue background (#e3f2fd) with restructured content into "Top Class" and "Top Student" sections. Each section shows team membership via colored dots (🔵 Kitsko, 🟡 Staub) with hover tooltips. Top Class displays: Fundraising, Reading (With Color) ◐, Avg. Participation (With Color) ◐. Top Student shows: Name, Fundraising, Reading (With Color) ◐. Comprehensive table with dark header, gold highlights for school leaders in Minutes Read column, team oval badges, and export/copy functionality. Individual class cards (3 per row) keep team-colored backgrounds.
+            </div>
+            <a href="dashboard_grade_level_tab_v3.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V2 (Design Iteration)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Second iteration with team-colored grade cards. Features headline banner with winner indicators. Grade summary cards use team colors (blue/yellow backgrounds). Shows top class, top reader, and top fundraiser per grade. Comprehensive denormalized table with dark header (#2c3e50), striped rows, team oval badges, gold highlights for school leaders, and export/copy functionality. Filter indicators (◐) on date-sensitive metrics. No rank column - sortable by any metric.
+            </div>
+            <a href="dashboard_grade_level_tab_v2.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Grade Level Tab V1 (Earlier Iteration)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Design Iteration</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Earlier Grade Level tab iteration exploring initial layout concepts. Similar banner structure but with white cards (not team-colored), 2 classes per row for specific grade view, and table with rank column. Helped inform the final V2 design decisions.
+            </div>
+            <a href="dashboard_grade_level_tab.html" class="btn btn-primary" target="_blank">
+                <i class="bi bi-eye"></i> View Prototype
+            </a>
+        </div>
+
+        <div class="prototype-card" data-category="dashboard">
+            <div class="prototype-title">
+                <i class="bi bi-mortarboard-fill"></i> Classes Tab (Original Design)
+            </div>
+            <div class="prototype-meta">
+                <span><i class="bi bi-calendar"></i> October 2025</span>
+                <span><i class="bi bi-code-square"></i> Early Concept</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge-category category-dashboard">Dashboard</span>
+            </div>
+            <div class="prototype-description">
+                Original Classes tab design exploring class leaderboard concept before Grade Level redesign. Features sortable/filterable leaderboard of ALL classes with grade-level filters, multiple sort options (participation, minutes, donations), expandable class details with full statistics (demonstrated with Room 105), and grade-level summary rollup table. Shows all classes ranked by participation with color bonus.
             </div>
             <a href="dashboard_classes_tab.html" class="btn btn-primary" target="_blank">
                 <i class="bi bi-eye"></i> View Prototype

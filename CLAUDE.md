@@ -121,12 +121,71 @@ docs/                     # Feature documentation (31 features + architecture)
 IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
 ```
 
+## Universal Rules & UI Patterns
+
+**MANDATORY READING before implementing ANY feature:**
+
+1. **[RULES.md](RULES.md)** - Universal rules that apply across all pages
+   - Data source rules (which tables for what data)
+   - Team color assignments (alphabetical order: team 1 = blue, team 2 = yellow)
+   - Winner highlighting rules (gold = school-wide, silver = grade/team level)
+   - Banner metric order, state management, consistency principles
+
+2. **[UI_PATTERNS.md](UI_PATTERNS.md)** - Established UI patterns from existing pages
+   - Color palette (hex codes for all colors)
+   - Component patterns (filters, banners, badges, tables, footers)
+   - Layout templates and implementation checklists
+   - Quick reference to files with good examples
+
+**When to consult these files:**
+- Before starting any new feature implementation
+- When uncertain about data sources, colors, or styling
+- If you identify a new pattern or rule (add it and update the date)
+- When prototype → production implementation isn't matching expectations
+
+## Prototype-to-Production Workflow
+
+**MANDATORY process when implementing features from prototypes:**
+
+### Step 1: Before Starting Implementation
+- [ ] Read RULES.md completely
+- [ ] Read the prototype HTML file completely
+- [ ] Create element inventory: List ALL visual/functional features in prototype
+- [ ] Check 2-3 existing pages (school.html, teams.html, grade_level.html) for similar patterns
+- [ ] Consult UI_PATTERNS.md for styling, colors, component structures
+- [ ] Plan implementation: Map each prototype element → production code
+
+### Step 2: During Implementation
+- [ ] Reference RULES.md for every data calculation
+- [ ] Use UI_PATTERNS.md for consistent styling
+- [ ] Check school/teams/grade pages when uncertain about patterns
+- [ ] Add code comments for complex logic or rule applications
+
+### Step 3: Before Saying "It's Working"
+- [ ] Actually test with running Flask app (load URL, not just code review)
+- [ ] Open page in browser and compare side-by-side with prototype
+- [ ] Test ALL interactive elements (buttons, filters, sorting, dropdowns)
+- [ ] Verify calculations against database queries
+- [ ] Check RULES.md checklist (data sources, colors, consistency)
+
+### Step 4: Testing Discipline
+Instead of saying *"The banner now shows correct values"*, do this:
+1. Read prototype banner section
+2. Identify exact elements: 4 metrics? which ones? what order?
+3. Implement using correct data sources (per RULES.md)
+4. Test: Load actual URL in browser
+5. Verify: Banner shows same 4 metrics as prototype, same order
+6. Verify: Numbers match database (run SQL to confirm)
+7. Status: ✅ Matches prototype, ✅ Follows RULES.md
+
 ## Critical Context
 
 ### Before Starting Work
-1. **Read IMPLEMENTATION_PROMPT.md** - Complete requirements document
-2. **Check docs/QUICK_START_NEXT_SESSION.md** - Current development status
-3. **Consult docs/00-INDEX.md** - Searchable feature index
+1. **Read [RULES.md](RULES.md)** - Universal app rules
+2. **Read [UI_PATTERNS.md](UI_PATTERNS.md)** - Established patterns from existing pages
+3. **Read IMPLEMENTATION_PROMPT.md** - Complete requirements document
+4. **Check docs/QUICK_START_NEXT_SESSION.md** - Current development status
+5. **Consult docs/00-INDEX.md** - Searchable feature index
 
 ### Current Version
 **v2026.1.1** - Database selection with persistent preference
