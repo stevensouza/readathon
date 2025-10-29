@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Level Tab V7 - Read-a-Thon Prototype</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Page Header */
+        .page-header-grade-level {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Headline Banner */
+        .headline-banner {
+            background: #1e3a5f;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        .headline-metric {
+            text-align: center;
+            padding: 0.3rem 0.5rem;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .headline-metric:last-child {
+            border-right: none;
+        }
+
+        .headline-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-winner {
+            margin-bottom: 0.3rem;
+        }
+
+        .team-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .team-badge-kitsko {
+            background: #1e3a5f;
+            color: white;
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .team-badge-staub {
+            background: #f59e0b;
+            color: #1e3a5f;
+            border-color: rgba(30,58,95,0.3);
+        }
+
+        .headline-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #17a2b8;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-subtitle {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.3;
+        }
+
+        .headline-extra {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.6);
+            font-style: italic;
+            margin-top: 0.2rem;
+        }
+
+        /* Filter Indicator */
+        .filter-indicator {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            cursor: help;
+            margin-left: 0.3rem;
+            transition: color 0.2s;
+        }
+
+        .filter-indicator:hover {
+            color: rgba(255,255,255,0.95);
+        }
+
+        /* Grade Filter Section */
+        .grade-filter-section {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+        }
+
+        .grade-filter-btn {
+            padding: 0.5rem 1.25rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .grade-filter-btn:hover {
+            background: #f8f9fa;
+            border-color: #1e3a5f;
+        }
+
+        .grade-filter-btn.active {
+            background: #1e3a5f;
+            color: white;
+            border-color: #1e3a5f;
+        }
+
+        /* Grade Cards Section */
+        .grade-cards-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #1e3a5f;
+        }
+
+        /* Grade Summary Cards (when All Grades selected) - ALL BLUE */
+        .grade-card {
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-left: 4px solid #1e3a5f;
+            height: 100%;
+            background: #e3f2fd;
+        }
+
+        .grade-card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 0.5rem;
+        }
+
+        .grade-card-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .grade-card-stat {
+            color: #6c757d;
+        }
+
+        .grade-card-stat strong {
+            color: #2c3e50;
+        }
+
+        .grade-card-team-split {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .grade-card-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .grade-card-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .grade-card-section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            background: rgba(30, 58, 95, 0.1);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.3rem;
+        }
+
+        .grade-card-content {
+            padding-left: 1rem;
+        }
+
+        .grade-card-metric {
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-header {
+            color: #495057;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value-line {
+            padding-left: 1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.85rem;
+        }
+
+        /* Individual Class Detail Cards (when specific grade selected) */
+        .class-detail-card {
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-left: 4px solid #1e3a5f;
+            height: 100%;
+        }
+
+        .class-detail-card-kitsko {
+            background: #e3f2fd;
+            border-left-color: #1e3a5f;
+        }
+
+        .class-detail-card-staub {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+
+        .class-detail-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .class-detail-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .class-detail-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .class-detail-metric {
+            font-size: 0.85rem;
+            color: #495057;
+        }
+
+        .class-detail-metric strong {
+            color: #2c3e50;
+        }
+
+        /* Table Styles - Matching Teams Page */
+        .comparison-table {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid #1e3a5f;
+            margin-bottom: 2rem;
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .table-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .comparison-table .table {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table .table thead th {
+            background: #2c3e50 !important;
+            color: white !important;
+            font-weight: 600;
+            padding: 0.65rem 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid #1e3a5f;
+            border-top: none;
+        }
+
+        .comparison-table .table thead th::after {
+            content: ' ↕';
+            opacity: 0.3;
+            font-size: 0.8rem;
+        }
+
+        .comparison-table .table thead th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .comparison-table .table thead th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .comparison-table .table tbody td {
+            padding: 0.65rem 0.5rem;
+            vertical-align: middle;
+        }
+
+        .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+            background-color: white !important;
+        }
+
+        .comparison-table .table-striped tbody tr:nth-of-type(even) {
+            background-color: #f1f3f5 !important;
+        }
+
+        /* Row visibility for filtering */
+        .comparison-table .table tbody tr {
+            display: table-row;
+        }
+
+        .comparison-table .table tbody tr.hidden {
+            display: none;
+        }
+
+        /* Leader Badge (for team column in table) */
+        .leader-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .leader-badge-kitsko {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .leader-badge-staub {
+            background: #f59e0b;
+            color: #1e3a5f;
+        }
+
+        /* Winning value highlights */
+        .winning-value {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1.2rem;
+            font-weight: 700;
+        }
+
+        .winning-value-school {
+            background: #ffd700;
+            color: #000000;
+        }
+
+        .winning-value-grade {
+            background: #c0c0c0;
+            color: #000000;
+        }
+
+        /* Collapsible Footer */
+        .collapsible-footer {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .collapsible-content {
+            padding: 1rem;
+            display: none;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .collapsible-content.show {
+            display: block;
+        }
+
+        .data-source-item {
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .data-source-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .data-source-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-source-value {
+            color: #6c757d;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .headline-metric {
+                min-width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .headline-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="page-header-grade-level">
+            <h1 class="page-title">🎓 Grade Level</h1>
+            <div class="header-controls">
+                <select class="form-select form-select-sm" id="dateFilter" style="width: auto;">
+                    <option value="all" selected>Full Contest (Oct 10-15, 2025)</option>
+                    <option value="2025-10-15">2025-10-15 (Day 6)</option>
+                    <option value="2025-10-14">2025-10-14 (Day 5)</option>
+                    <option value="2025-10-13">2025-10-13 (Day 4)</option>
+                    <option value="2025-10-12">2025-10-12 (Day 3)</option>
+                    <option value="2025-10-11">2025-10-11 (Day 2)</option>
+                    <option value="2025-10-10">2025-10-10 (Day 1)</option>
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#dataInfoModal">
+                    <i class="bi bi-info-circle"></i> Data Info
+                </button>
+            </div>
+        </div>
+
+        <!-- Headline Banner -->
+        <div class="headline-banner">
+            <div class="row g-0">
+                <!-- Fundraising Leader -->
+                <div class="col headline-metric">
+                    <div class="headline-label">💰 Fundraising</div>
+                    <div class="headline-winner">
+                        <span class="team-badge team-badge-staub">STAUB</span>
+                    </div>
+                    <div class="headline-value">$6,240</div>
+                    <div class="headline-subtitle">52 of 411 students<br>(12.6%)</div>
+                    <div class="headline-extra">🏆 Winner: Kindergarten • Ms. Anderson's Class</div>
+                </div>
+
+                <!-- Minutes Read Leader -->
+                <div class="col headline-metric">
+                    <div class="headline-label">📖 Minutes Read <span class="filter-indicator" data-bs-toggle="tooltip" title="Cumulative through selected date">◐</span></div>
+                    <div class="headline-winner">
+                        <span class="team-badge team-badge-staub">STAUB</span>
+                    </div>
+                    <div class="headline-value">6,240 min</div>
+                    <div class="headline-subtitle">(104 hours)</div>
+                    <div class="headline-extra">🏆 Winner: Kindergarten • Ms. Anderson's Class</div>
+                </div>
+
+                <!-- Participation Leader -->
+                <div class="col headline-metric">
+                    <div class="headline-label">👥 Participation <span class="filter-indicator" data-bs-toggle="tooltip" title="Cumulative through selected date">◐</span></div>
+                    <div class="headline-winner">
+                        <span class="team-badge team-badge-kitsko">KITSKO</span>
+                    </div>
+                    <div class="headline-value">92.3%</div>
+                    <div class="headline-subtitle">24 of 26 students<br>(avg daily)</div>
+                    <div class="headline-extra">🏆 Winner: 3rd Grade • Mr. Wilson's Class</div>
+                </div>
+
+                <!-- Goal Met ≥1 Day Leader -->
+                <div class="col headline-metric">
+                    <div class="headline-label">✅ Goal Met ≥1 Day <span class="filter-indicator" data-bs-toggle="tooltip" title="Cumulative through selected date">◐</span></div>
+                    <div class="headline-winner">
+                        <span class="team-badge team-badge-kitsko">KITSKO</span>
+                    </div>
+                    <div class="headline-value">26</div>
+                    <div class="headline-subtitle">26 of 26 students<br>(100%)</div>
+                    <div class="headline-extra">🏆 Winner: 3rd Grade • Mr. Wilson's Class</div>
+                </div>
+
+                <!-- Sponsors Leader -->
+                <div class="col headline-metric">
+                    <div class="headline-label">🎁 Sponsors</div>
+                    <div class="headline-winner">
+                        <span class="team-badge team-badge-kitsko">KITSKO</span>
+                    </div>
+                    <div class="headline-value">48</div>
+                    <div class="headline-subtitle">48 of 411 students<br>(11.7%)</div>
+                    <div class="headline-extra">🏆 Winner: Kindergarten • Ms. Anderson's Class</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade Filter Section -->
+        <div class="grade-filter-section">
+            <div class="filter-title">Filter by Grade:</div>
+            <div>
+                <button class="grade-filter-btn active" data-grade="all">All Grades</button>
+                <button class="grade-filter-btn" data-grade="K">K</button>
+                <button class="grade-filter-btn" data-grade="1st">1st</button>
+                <button class="grade-filter-btn" data-grade="2nd">2nd</button>
+                <button class="grade-filter-btn" data-grade="3rd">3rd</button>
+                <button class="grade-filter-btn" data-grade="4th">4th</button>
+                <button class="grade-filter-btn" data-grade="5th">5th</button>
+            </div>
+        </div>
+
+        <!-- Grade Breakdown Cards (shown when "All Grades" selected) -->
+        <div id="gradeCardsSection" class="grade-cards-section">
+            <h2 class="section-title">Grade Breakdown</h2>
+
+            <div class="row mb-3">
+                <div class="col-md-4 mb-3">
+                    <div class="grade-card">
+                        <div class="grade-card-title">KINDERGARTEN</div>
+                        <div class="grade-card-stats">
+                            <div class="grade-card-stat">📊 <strong>1</strong> Class</div>
+                            <div class="grade-card-stat">👥 <strong>52</strong> Students</div>
+                        </div>
+                        <div class="grade-card-team-split">
+                            Team Split: 🔵 Kitsko: 26 • 🟡 Staub: 26
+                        </div>
+
+                        <!-- Top Class Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Fundraising: Ms. Anderson's Class</div>
+                                    <div class="metric-value-line">$6,240  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Reading (With Color) ◐: Ms. Anderson's Class</div>
+                                    <div class="metric-value-line">104 hrs (6,240 min)  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Avg. Participation (With Color) ◐: Ms. Anderson's Class</div>
+                                    <div class="metric-value-line">85.5% (+8 pts)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Student Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Fundraiser: Emma Johnson</div>
+                                    <div class="metric-value-line">$450  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Reader (With Color) ◐: Emma Johnson</div>
+                                    <div class="metric-value-line">12 hrs (720 min)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="grade-card">
+                        <div class="grade-card-title">1ST GRADE</div>
+                        <div class="grade-card-stats">
+                            <div class="grade-card-stat">📊 <strong>3</strong> Classes</div>
+                            <div class="grade-card-stat">👥 <strong>72</strong> Students</div>
+                        </div>
+                        <div class="grade-card-team-split">
+                            Team Split: 🔵 Kitsko: 38 • 🟡 Staub: 34
+                        </div>
+
+                        <!-- Top Class Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Fundraising: Mr. Thompson's Class</div>
+                                    <div class="metric-value-line">$3,890  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Reading (With Color) ◐: Mr. Thompson's Class</div>
+                                    <div class="metric-value-line">53 hrs (3,200 min)  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Avg. Participation (With Color) ◐: Ms. Rivera's Class</div>
+                                    <div class="metric-value-line">82.5% (+12 pts)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Student Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Fundraiser: Liam Martinez (Thompson)</div>
+                                    <div class="metric-value-line">$580  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Reader (With Color) ◐: Sofia Chen (Rivera)</div>
+                                    <div class="metric-value-line">12.5 hrs (750 min)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="grade-card">
+                        <div class="grade-card-title">2ND GRADE</div>
+                        <div class="grade-card-stats">
+                            <div class="grade-card-stat">📊 <strong>3</strong> Classes</div>
+                            <div class="grade-card-stat">👥 <strong>75</strong> Students</div>
+                        </div>
+                        <div class="grade-card-team-split">
+                            Team Split: 🔵 Kitsko: 37 • 🟡 Staub: 38
+                        </div>
+
+                        <!-- Top Class Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Fundraising: Ms. Garcia's Class</div>
+                                    <div class="metric-value-line">$4,120  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Reading (With Color) ◐: Ms. Garcia's Class</div>
+                                    <div class="metric-value-line">58 hrs (3,450 min)  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Avg. Participation (With Color) ◐: Ms. Garcia's Class</div>
+                                    <div class="metric-value-line">88.0% (+15 pts)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Student Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Fundraiser: Sophia Davis (Garcia)</div>
+                                    <div class="metric-value-line">$620  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Reader (With Color) ◐: James Wilson (Martinez)</div>
+                                    <div class="metric-value-line">12 hrs (720 min)  🔵 Kitsko</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4 mb-3">
+                    <div class="grade-card">
+                        <div class="grade-card-title">3RD GRADE</div>
+                        <div class="grade-card-stats">
+                            <div class="grade-card-stat">📊 <strong>3</strong> Classes</div>
+                            <div class="grade-card-stat">👥 <strong>78</strong> Students</div>
+                        </div>
+                        <div class="grade-card-team-split">
+                            Team Split: 🔵 Kitsko: 40 • 🟡 Staub: 38
+                        </div>
+
+                        <!-- Top Class Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Fundraising: Mr. Wilson's Class</div>
+                                    <div class="metric-value-line">$4,580  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Reading (With Color) ◐: Mr. Wilson's Class</div>
+                                    <div class="metric-value-line">62 hrs (3,720 min)  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Avg. Participation (With Color) ◐: Mr. Wilson's Class</div>
+                                    <div class="metric-value-line">92.3% (+18 pts)  🔵 Kitsko</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Student Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Fundraiser: Noah Anderson (Wilson)</div>
+                                    <div class="metric-value-line">$780  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Reader (With Color) ◐: Mia Patel (Lewis)</div>
+                                    <div class="metric-value-line">12.2 hrs (730 min)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="grade-card">
+                        <div class="grade-card-title">4TH GRADE</div>
+                        <div class="grade-card-stats">
+                            <div class="grade-card-stat">📊 <strong>3</strong> Classes</div>
+                            <div class="grade-card-stat">👥 <strong>68</strong> Students</div>
+                        </div>
+                        <div class="grade-card-team-split">
+                            Team Split: 🔵 Kitsko: 32 • 🟡 Staub: 36
+                        </div>
+
+                        <!-- Top Class Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Fundraising: Ms. Brown's Class</div>
+                                    <div class="metric-value-line">$3,450  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Reading (With Color) ◐: Ms. Brown's Class</div>
+                                    <div class="metric-value-line">52 hrs (3,100 min)  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Avg. Participation (With Color) ◐: Mr. Harris's Class</div>
+                                    <div class="metric-value-line">85.0% (+14 pts)  🔵 Kitsko</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Student Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Fundraiser: Olivia Taylor (Brown)</div>
+                                    <div class="metric-value-line">$540  🟡 Staub</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Reader (With Color) ◐: Ethan Kim (Harris)</div>
+                                    <div class="metric-value-line">11.8 hrs (710 min)  🔵 Kitsko</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="grade-card">
+                        <div class="grade-card-title">5TH GRADE</div>
+                        <div class="grade-card-stats">
+                            <div class="grade-card-stat">📊 <strong>3</strong> Classes</div>
+                            <div class="grade-card-stat">👥 <strong>66</strong> Students</div>
+                        </div>
+                        <div class="grade-card-team-split">
+                            Team Split: 🔵 Kitsko: 35 • 🟡 Staub: 31
+                        </div>
+
+                        <!-- Top Class Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🏆 TOP CLASS</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Fundraising: Mr. Davis's Class</div>
+                                    <div class="metric-value-line">$2,980  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Reading (With Color) ◐: Mr. Davis's Class</div>
+                                    <div class="metric-value-line">48 hrs (2,850 min)  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Avg. Participation (With Color) ◐: Ms. Lee's Class</div>
+                                    <div class="metric-value-line">81.0% (+10 pts)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Student Section -->
+                        <div class="grade-card-section">
+                            <div class="grade-card-section-title">🌟 TOP STUDENT</div>
+                            <div class="grade-card-content">
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Fundraiser: Ava Martinez (Davis)</div>
+                                    <div class="metric-value-line">$480  🔵 Kitsko</div>
+                                </div>
+                                <div class="grade-card-metric">
+                                    <div class="metric-header">Top Reader (With Color) ◐: Lucas Brown (Lee)</div>
+                                    <div class="metric-value-line">11.5 hrs (690 min)  🟡 Staub</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Class Breakdown (shown when specific grade selected) -->
+        <div id="classCardsSection" style="display: none;">
+            <h2 class="section-title">2nd Grade Classes</h2>
+
+            <div class="row mb-3">
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="class-detail-card class-detail-card-staub">
+                        <div class="class-detail-title">
+                            MS. GARCIA'S CLASS
+                            <span class="team-badge team-badge-staub" style="float: right;">STAUB</span>
+                        </div>
+                        <div class="class-detail-info">
+                            Grade: 2nd • 25 Students • Team Staub
+                        </div>
+                        <div class="class-detail-metrics">
+                            <div class="class-detail-metric">💰 <strong>$4,120</strong></div>
+                            <div class="class-detail-metric">📖 <strong>3,450 min</strong> (58 hrs) ◐</div>
+                            <div class="class-detail-metric">👥 <strong>88%</strong> participation ◐</div>
+                            <div class="class-detail-metric">✅ <strong>23</strong> met goal ≥1 day ◐</div>
+                            <div class="class-detail-metric">🎁 <strong>45</strong> sponsors</div>
+                        </div>
+                        <div class="class-detail-metric">
+                            📖 <strong>Top Reader:</strong> Sophia Davis • 720 min
+                        </div>
+                        <div class="class-detail-metric">
+                            💰 <strong>Top Fundraiser:</strong> Sophia Davis • $620
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="class-detail-card class-detail-card-kitsko">
+                        <div class="class-detail-title">
+                            MR. MARTINEZ'S CLASS
+                            <span class="team-badge team-badge-kitsko" style="float: right;">KITSKO</span>
+                        </div>
+                        <div class="class-detail-info">
+                            Grade: 2nd • 26 Students • Team Kitsko
+                        </div>
+                        <div class="class-detail-metrics">
+                            <div class="class-detail-metric">💰 <strong>$3,780</strong></div>
+                            <div class="class-detail-metric">📖 <strong>3,120 min</strong> (52 hrs) ◐</div>
+                            <div class="class-detail-metric">👥 <strong>81%</strong> participation ◐</div>
+                            <div class="class-detail-metric">✅ <strong>21</strong> met goal ≥1 day ◐</div>
+                            <div class="class-detail-metric">🎁 <strong>38</strong> sponsors</div>
+                        </div>
+                        <div class="class-detail-metric">
+                            📖 <strong>Top Reader:</strong> James Wilson • 680 min
+                        </div>
+                        <div class="class-detail-metric">
+                            💰 <strong>Top Fundraiser:</strong> James Wilson • $480
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="class-detail-card class-detail-card-staub">
+                        <div class="class-detail-title">
+                            MS. CHEN'S CLASS
+                            <span class="team-badge team-badge-staub" style="float: right;">STAUB</span>
+                        </div>
+                        <div class="class-detail-info">
+                            Grade: 2nd • 24 Students • Team Staub
+                        </div>
+                        <div class="class-detail-metrics">
+                            <div class="class-detail-metric">💰 <strong>$2,300</strong></div>
+                            <div class="class-detail-metric">📖 <strong>2,430 min</strong> (41 hrs) ◐</div>
+                            <div class="class-detail-metric">👥 <strong>75%</strong> participation ◐</div>
+                            <div class="class-detail-metric">✅ <strong>18</strong> met goal ≥1 day ◐</div>
+                            <div class="class-detail-metric">🎁 <strong>32</strong> sponsors</div>
+                        </div>
+                        <div class="class-detail-metric">
+                            📖 <strong>Top Reader:</strong> Emma Liu • 620 min
+                        </div>
+                        <div class="class-detail-metric">
+                            💰 <strong>Top Fundraiser:</strong> Emma Liu • $380
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Classes Detailed Table -->
+        <div class="comparison-table">
+            <div class="table-controls">
+                <div class="table-info" id="tableInfoText">
+                    <strong>All Classes Leaderboard</strong> • Showing: All Grades • Full Contest
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="copyTableToClipboard()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV()">
+                        <i class="bi bi-download"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="table table-striped" id="classesTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">CLASS NAME</th>
+                            <th onclick="sortTable(1)">GRADE</th>
+                            <th onclick="sortTable(2)">TEAM</th>
+                            <th onclick="sortTable(3)" class="text-end">STUDENTS</th>
+                            <th onclick="sortTable(4)" class="text-end">FUNDRAISING</th>
+                            <th onclick="sortTable(5)" class="text-end">MINUTES READ ◐</th>
+                            <th onclick="sortTable(6)" class="text-end">AVG/STU ◐</th>
+                            <th onclick="sortTable(7)" class="text-end">PARTICIPATION % ◐</th>
+                            <th onclick="sortTable(8)" class="text-end">GOAL MET ≥1 DAY ◐</th>
+                            <th onclick="sortTable(9)" class="text-end">SPONSORS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-grade="K">
+                            <td><strong>Ms. Anderson's Class</strong></td>
+                            <td class="text-center">K</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-staub">STAUB</span></td>
+                            <td class="text-end">52</td>
+                            <td class="text-end" data-value="6240" data-school-winner="true"><span class="winning-value winning-value-school">$6,240</span></td>
+                            <td class="text-end" data-value="6240" data-school-winner="true"><span class="winning-value winning-value-school">6,240 min<br><small class="text-muted">(104 hrs)</small></span></td>
+                            <td class="text-end" data-value="120">120 min</td>
+                            <td class="text-end" data-value="85.5">85.5%</td>
+                            <td class="text-end" data-value="48">48</td>
+                            <td class="text-end" data-value="48" data-school-winner="true"><span class="winning-value winning-value-school">48</span></td>
+                        </tr>
+                        <tr data-grade="3rd">
+                            <td><strong>Mr. Wilson's Class</strong></td>
+                            <td class="text-center">3rd</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-kitsko">KITSKO</span></td>
+                            <td class="text-end">26</td>
+                            <td class="text-end" data-value="4580">$4,580</td>
+                            <td class="text-end" data-value="3720">3,720 min<br><small class="text-muted">(62 hrs)</small></td>
+                            <td class="text-end" data-value="143" data-school-winner="true"><span class="winning-value winning-value-school">143 min</span></td>
+                            <td class="text-end" data-value="92.3" data-school-winner="true"><span class="winning-value winning-value-school">92.3%</span></td>
+                            <td class="text-end" data-value="26" data-school-winner="true"><span class="winning-value winning-value-school">26</span></td>
+                            <td class="text-end" data-value="42">42</td>
+                        </tr>
+                        <tr data-grade="2nd">
+                            <td><strong>Ms. Garcia's Class</strong></td>
+                            <td class="text-center">2nd</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-staub">STAUB</span></td>
+                            <td class="text-end">25</td>
+                            <td class="text-end" data-value="4120">$4,120</td>
+                            <td class="text-end" data-value="3450">3,450 min<br><small class="text-muted">(58 hrs)</small></td>
+                            <td class="text-end" data-value="138">138 min</td>
+                            <td class="text-end" data-value="88.0">88.0%</td>
+                            <td class="text-end" data-value="23">23</td>
+                            <td class="text-end" data-value="45">45</td>
+                        </tr>
+                        <tr data-grade="1st">
+                            <td><strong>Mr. Thompson's Class</strong></td>
+                            <td class="text-center">1st</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-kitsko">KITSKO</span></td>
+                            <td class="text-end">24</td>
+                            <td class="text-end" data-value="3890">$3,890</td>
+                            <td class="text-end" data-value="3200">3,200 min<br><small class="text-muted">(53 hrs)</small></td>
+                            <td class="text-end" data-value="133">133 min</td>
+                            <td class="text-end" data-value="79.2">79.2%</td>
+                            <td class="text-end" data-value="21">21</td>
+                            <td class="text-end" data-value="36">36</td>
+                        </tr>
+                        <tr data-grade="4th">
+                            <td><strong>Ms. Brown's Class</strong></td>
+                            <td class="text-center">4th</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-staub">STAUB</span></td>
+                            <td class="text-end">23</td>
+                            <td class="text-end" data-value="3450">$3,450</td>
+                            <td class="text-end" data-value="3100">3,100 min<br><small class="text-muted">(52 hrs)</small></td>
+                            <td class="text-end" data-value="135">135 min</td>
+                            <td class="text-end" data-value="82.6">82.6%</td>
+                            <td class="text-end" data-value="20">20</td>
+                            <td class="text-end" data-value="32">32</td>
+                        </tr>
+                        <tr data-grade="2nd">
+                            <td><strong>Mr. Martinez's Class</strong></td>
+                            <td class="text-center">2nd</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-kitsko">KITSKO</span></td>
+                            <td class="text-end">26</td>
+                            <td class="text-end" data-value="3780">$3,780</td>
+                            <td class="text-end" data-value="3120">3,120 min<br><small class="text-muted">(52 hrs)</small></td>
+                            <td class="text-end" data-value="120">120 min</td>
+                            <td class="text-end" data-value="81.0">81.0%</td>
+                            <td class="text-end" data-value="21">21</td>
+                            <td class="text-end" data-value="38">38</td>
+                        </tr>
+                        <tr data-grade="5th">
+                            <td><strong>Mr. Davis's Class</strong></td>
+                            <td class="text-center">5th</td>
+                            <td class="text-center"><span class="leader-badge leader-badge-kitsko">KITSKO</span></td>
+                            <td class="text-end">22</td>
+                            <td class="text-end" data-value="2980">$2,980</td>
+                            <td class="text-end" data-value="2850">2,850 min<br><small class="text-muted">(48 hrs)</small></td>
+                            <td class="text-end" data-value="130">130 min</td>
+                            <td class="text-end" data-value="78.5">78.5%</td>
+                            <td class="text-end" data-value="18">18</td>
+                            <td class="text-end" data-value="28">28</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Collapsible Footer: Data Sources -->
+        <div class="collapsible-footer">
+            <div class="collapsible-header" onclick="toggleFooter()">
+                <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+                <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+            </div>
+            <div class="collapsible-content" id="footerContent">
+                <div class="data-source-item">
+                    <span class="data-source-label">• Reading minutes, Participation:</span>
+                    <span class="data-source-value">Daily_Logs table (Updated: Oct 15, 2025 4:12 PM)</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Fundraising, Sponsors:</span>
+                    <span class="data-source-value">Reader_Cumulative table (Updated: Oct 15, 2025 4:12 PM)</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Student counts, Team assignments:</span>
+                    <span class="data-source-value">Roster table (Updated: Oct 15, 2025 3:45 PM)</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Class metadata:</span>
+                    <span class="data-source-value">Class_Info table (Updated: Oct 10, 2025 8:00 AM)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Info Modal -->
+        <div class="modal fade" id="dataInfoModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-info-circle"></i> Data Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Banner Behavior</h6>
+                        <p>The headline banner shows the leading class for each metric category:</p>
+                        <ul>
+                            <li><strong>When "All Grades" selected:</strong> Shows school-wide leaders (any grade)</li>
+                            <li><strong>When specific grade selected:</strong> Shows only leaders from that grade</li>
+                            <li><strong>All values update based on date filter</strong> (cumulative through selected date)</li>
+                        </ul>
+
+                        <h6 class="mt-4">Table Filtering Behavior (NEW in V7)</h6>
+                        <p><strong>When "All Grades" is selected:</strong></p>
+                        <ul>
+                            <li>Shows all classes from all grades</li>
+                            <li>🥇 <span class="winning-value winning-value-school" style="font-size: 0.85rem;">Gold highlights</span> = School-wide winners (best across ALL grades)</li>
+                        </ul>
+                        <p><strong>When a specific grade is selected (e.g., "2nd Grade"):</strong></p>
+                        <ul>
+                            <li>Table filters to show ONLY classes from that grade</li>
+                            <li>🥈 <span class="winning-value winning-value-grade" style="font-size: 0.85rem;">Silver highlights</span> = Grade-level winners (best within THIS grade)</li>
+                            <li>🥇 <span class="winning-value winning-value-school" style="font-size: 0.85rem;">Gold highlights</span> = Classes that are ALSO school-wide winners</li>
+                        </ul>
+
+                        <h6 class="mt-4">Grade Cards - Different Winners Per Metric</h6>
+                        <p>In the grade breakdown cards:</p>
+                        <ul>
+                            <li>All cards have blue background (unified look)</li>
+                            <li>Section headers: "🏆 TOP CLASS" and "🌟 TOP STUDENT" have highlighted backgrounds</li>
+                            <li><strong>Each metric can have a DIFFERENT winner</strong> (class or student)</li>
+                            <li>Winner name appears on Line 1, value and team on Line 2 (indented)</li>
+                            <li>Team indicator (🔵 Kitsko or 🟡 Staub) shows which team the winner belongs to</li>
+                        </ul>
+
+                        <h6 class="mt-4">Metrics That Honor Date Filter ◐</h6>
+                        <p>These metrics change based on the selected date filter (cumulative through selected date):</p>
+                        <ul>
+                            <li><strong>Minutes Read:</strong> Total capped reading minutes through selected date</li>
+                            <li><strong>Avg/Student:</strong> Average minutes per student through selected date</li>
+                            <li><strong>Participation %:</strong> Average daily participation through selected date (based on class size)</li>
+                            <li><strong>Goal Met ≥1 Day:</strong> Students who met their goal on at least one day through selected date</li>
+                        </ul>
+
+                        <h6 class="mt-4">Metrics That Don't Filter</h6>
+                        <p>These metrics always show full contest totals:</p>
+                        <ul>
+                            <li><strong>Fundraising:</strong> Total donations for entire contest</li>
+                            <li><strong>Sponsors:</strong> Total unique sponsors for entire contest</li>
+                            <li><strong>Student Counts:</strong> Fixed roster counts</li>
+                        </ul>
+
+                        <h6 class="mt-4">Data Sources</h6>
+                        <ul>
+                            <li><strong>Roster:</strong> Student and teacher assignments</li>
+                            <li><strong>Daily_Logs:</strong> Daily reading minutes per student (capped at 120 min/day)</li>
+                            <li><strong>Reader_Cumulative:</strong> Fundraising totals and sponsor counts</li>
+                            <li><strong>Class_Info:</strong> Class metadata and grade levels</li>
+                        </ul>
+
+                        <p class="mb-0"><em>Note: All minutes include team color bonus points and are capped at 120 minutes per student per day.</em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Prototype Note:</strong> This is a visual prototype using fictitious data. All names, numbers, and team names are for demonstration purposes only.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        let currentGradeFilter = 'all';
+
+        // Grade filter buttons
+        document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.grade-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const grade = this.dataset.grade;
+                currentGradeFilter = grade;
+
+                const gradeCards = document.getElementById('gradeCardsSection');
+                const classCards = document.getElementById('classCardsSection');
+
+                if (grade === 'all') {
+                    gradeCards.style.display = 'block';
+                    classCards.style.display = 'none';
+                } else {
+                    gradeCards.style.display = 'none';
+                    classCards.style.display = 'block';
+                }
+
+                // Filter and highlight table
+                filterTable(grade);
+            });
+        });
+
+        function filterTable(grade) {
+            const table = document.getElementById('classesTable');
+            const tbody = table.querySelector('tbody');
+            const rows = tbody.querySelectorAll('tr');
+            const tableInfoText = document.getElementById('tableInfoText');
+
+            // Update table header text
+            if (grade === 'all') {
+                tableInfoText.innerHTML = '<strong>All Classes Leaderboard</strong> • Showing: All Grades • Full Contest';
+            } else {
+                const gradeNames = {
+                    'K': 'Kindergarten',
+                    '1st': '1st Grade',
+                    '2nd': '2nd Grade',
+                    '3rd': '3rd Grade',
+                    '4th': '4th Grade',
+                    '5th': '5th Grade'
+                };
+                tableInfoText.innerHTML = `<strong>${gradeNames[grade]} Leaderboard</strong> • Showing: ${gradeNames[grade]} • Full Contest`;
+            }
+
+            // Show/hide rows based on grade filter
+            rows.forEach(row => {
+                const rowGrade = row.getAttribute('data-grade');
+                if (grade === 'all' || rowGrade === grade) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            // Apply highlights based on filter
+            applyHighlights(grade);
+        }
+
+        function applyHighlights(grade) {
+            const table = document.getElementById('classesTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr:not(.hidden)'));
+
+            // For each metric column (4-9), find the winner
+            for (let colIndex = 4; colIndex <= 9; colIndex++) {
+                let maxValue = -Infinity;
+                let maxCells = [];
+
+                // Find max value in visible rows
+                rows.forEach(row => {
+                    const cell = row.cells[colIndex];
+                    const value = parseFloat(cell.getAttribute('data-value'));
+                    if (value > maxValue) {
+                        maxValue = value;
+                        maxCells = [cell];
+                    } else if (value === maxValue) {
+                        maxCells.push(cell);
+                    }
+                });
+
+                // Apply highlights
+                rows.forEach(row => {
+                    const cell = row.cells[colIndex];
+                    const value = parseFloat(cell.getAttribute('data-value'));
+                    const isSchoolWinner = cell.getAttribute('data-school-winner') === 'true';
+
+                    // Remove existing highlight classes
+                    const existingSpan = cell.querySelector('.winning-value');
+                    if (existingSpan) {
+                        const text = existingSpan.textContent;
+                        cell.innerHTML = text;
+                    }
+
+                    // Apply new highlights
+                    if (grade === 'all') {
+                        // Show only school winners (gold)
+                        if (isSchoolWinner) {
+                            const content = cell.textContent.trim();
+                            cell.innerHTML = `<span class="winning-value winning-value-school">${content}</span>`;
+                        }
+                    } else {
+                        // Specific grade: show grade winners (silver) and school winners (gold)
+                        if (maxCells.includes(cell)) {
+                            const content = cell.textContent.trim();
+                            if (isSchoolWinner) {
+                                // Gold for school winner
+                                cell.innerHTML = `<span class="winning-value winning-value-school">${content}</span>`;
+                            } else {
+                                // Silver for grade winner
+                                cell.innerHTML = `<span class="winning-value winning-value-grade">${content}</span>`;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Toggle footer
+        function toggleFooter() {
+            const content = document.getElementById('footerContent');
+            const icon = document.getElementById('footerIcon');
+
+            content.classList.toggle('show');
+
+            if (content.classList.contains('show')) {
+                icon.className = 'bi bi-chevron-down';
+            } else {
+                icon.className = 'bi bi-chevron-right';
+            }
+        }
+
+        // Table sorting
+        let currentSortColumn = 1; // Default to Grade column
+        let currentSortDirection = 'asc';
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('classesTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Toggle sort direction
+            if (currentSortColumn === columnIndex) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortDirection = 'asc';
+                currentSortColumn = columnIndex;
+            }
+
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue = a.cells[columnIndex].textContent.trim();
+                let bValue = b.cells[columnIndex].textContent.trim();
+
+                // Extract numeric values for numeric columns
+                if (columnIndex >= 3 && columnIndex !== 1 && columnIndex !== 2) {
+                    aValue = parseFloat(a.cells[columnIndex].getAttribute('data-value')) || 0;
+                    bValue = parseFloat(b.cells[columnIndex].getAttribute('data-value')) || 0;
+                }
+
+                // Handle grade sorting (K < 1st < 2nd < etc)
+                if (columnIndex === 1) {
+                    const gradeOrder = {'K': 0, '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5};
+                    aValue = gradeOrder[aValue] || 999;
+                    bValue = gradeOrder[bValue] || 999;
+                }
+
+                if (currentSortDirection === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update sort indicators
+            const headers = table.querySelectorAll('th');
+            headers.forEach(header => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            if (currentSortDirection === 'asc') {
+                headers[columnIndex].classList.add('sorted-asc');
+            } else {
+                headers[columnIndex].classList.add('sorted-desc');
+            }
+
+            // Reapply highlights after sorting
+            applyHighlights(currentGradeFilter);
+        }
+
+        // Copy table to clipboard
+        function copyTableToClipboard() {
+            const table = document.getElementById('classesTable');
+            let text = '';
+
+            // Headers
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((header, index) => {
+                if (index > 0) text += '\t';
+                text += header.textContent.replace(/[↕↑↓◐]/g, '').trim();
+            });
+            text += '\n';
+
+            // Rows (only visible ones)
+            const rows = table.querySelectorAll('tbody tr:not(.hidden)');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell, index) => {
+                    if (index > 0) text += '\t';
+                    // Remove HTML tags and extra whitespace
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cell.innerHTML;
+                    text += tempDiv.textContent.replace(/\s+/g, ' ').trim();
+                });
+                text += '\n';
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Table copied to clipboard!');
+            });
+        }
+
+        // Export table to CSV
+        function exportTableToCSV() {
+            const table = document.getElementById('classesTable');
+            let csv = '';
+
+            // Headers
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((header, index) => {
+                if (index > 0) csv += ',';
+                csv += '"' + header.textContent.replace(/[↕↑↓◐]/g, '').trim().replace(/"/g, '""') + '"';
+            });
+            csv += '\n';
+
+            // Rows (only visible ones)
+            const rows = table.querySelectorAll('tbody tr:not(.hidden)');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell, index) => {
+                    if (index > 0) csv += ',';
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = cell.innerHTML;
+                    csv += '"' + tempDiv.textContent.replace(/\s+/g, ' ').trim().replace(/"/g, '""') + '"';
+                });
+                csv += '\n';
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'grade_level_leaderboard.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize default sort (by grade ascending) and apply initial highlights
+        window.addEventListener('DOMContentLoaded', function() {
+            sortTable(1);
+            applyHighlights('all');
+        });
+    </script>
+</body>
+</html>

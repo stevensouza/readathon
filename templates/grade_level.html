@@ -659,9 +659,9 @@
         <!-- Goals Met Leader -->
         <div class="col headline-metric">
             <div class="headline-label">
-                ✅ Goals Met
+                🎯 Goal Met (≥1 Day)
                 {% if date_filter != 'all' %}
-                <span class="filter-indicator" data-bs-toggle="tooltip" title="Students who met 120 min goal through {{ date_filter }}">◐</span>
+                <span class="filter-indicator" data-bs-toggle="tooltip" title="Students who met 120 min goal at least once through {{ date_filter }}">◐</span>
                 {% endif %}
             </div>
             <div class="headline-winner">
@@ -670,7 +670,7 @@
                 {% endif %}
             </div>
             <div class="headline-value">
-                {% if banner_leaders.goals_met %}{{ "{:,.0f}".format(banner_leaders.goals_met.value) }}{% else %}0{% endif %}
+                {% if banner_leaders.goals_met %}{{ "{:.1f}".format(banner_leaders.goals_met.value) }}%{% else %}0%{% endif %}
             </div>
             <div class="headline-subtitle">
                 {% if banner_leaders.goals_met %}
@@ -714,7 +714,9 @@
                     <div class="grade-card-stat">👥 <strong>{{ grade.num_students }}</strong> Students</div>
                 </div>
                 <div class="grade-card-team-split">
-                    Team Split: 🔵 Kitsko: {{ grade.kitsko_students }} • 🟡 Staub: {{ grade.staub_students }}
+                    {% if team_names|length >= 2 %}
+                        Team Split: 🔵 {{ team_names[0] }}: {{ grade[team_names[0].lower() + '_students'] }} • 🟡 {{ team_names[1] }}: {{ grade[team_names[1].lower() + '_students'] }}
+                    {% endif %}
                 </div>
 
                 <!-- Top Class Section -->
@@ -725,7 +727,7 @@
                             <div class="metric-header">Fundraising: {{ grade.top_fundraising_teacher if grade.top_fundraising_teacher else 'N/A' }}'s Class</div>
                             <div class="metric-value-line">
                                 ${{ "{:,.0f}".format(grade.top_fundraising_amount or 0) }}
-                                {{ '🟡 Staub' if grade.top_fundraising_team == 'Staub' else '🔵 Kitsko' if grade.top_fundraising_team else '' }}
+                                {% if team_names|length >= 2 %}{{ '🔵 ' + team_names[0] if grade.top_fundraising_team == team_names[0] else ('🟡 ' + team_names[1] if grade.top_fundraising_team == team_names[1] else '') }}{% endif %}
                             </div>
                         </div>
                         <div class="grade-card-metric">
@@ -734,7 +736,7 @@
                             </div>
                             <div class="metric-value-line">
                                 {{ "{:.0f}".format((grade.top_reading_minutes or 0) / 60) }} hrs ({{ "{:,.0f}".format(grade.top_reading_minutes or 0) }} min)
-                                {{ '🟡 Staub' if grade.top_reading_team == 'Staub' else '🔵 Kitsko' if grade.top_reading_team else '' }}
+                                {% if team_names|length >= 2 %}{{ '🔵 ' + team_names[0] if grade.top_reading_team == team_names[0] else ('🟡 ' + team_names[1] if grade.top_reading_team == team_names[1] else '') }}{% endif %}
                             </div>
                         </div>
                         <div class="grade-card-metric">
@@ -743,7 +745,7 @@
                             </div>
                             <div class="metric-value-line">
                                 {{ "{:.1f}".format(grade.top_participation_pct or 0) }}%
-                                {{ '🟡 Staub' if grade.top_participation_team == 'Staub' else '🔵 Kitsko' if grade.top_participation_team else '' }}
+                                {% if team_names|length >= 2 %}{{ '🔵 ' + team_names[0] if grade.top_participation_team == team_names[0] else ('🟡 ' + team_names[1] if grade.top_participation_team == team_names[1] else '') }}{% endif %}
                             </div>
                         </div>
                     </div>
@@ -757,7 +759,7 @@
                             <div class="metric-header">Top Fundraiser: {{ grade.top_student_fundraiser if grade.top_student_fundraiser else 'N/A' }}</div>
                             <div class="metric-value-line">
                                 ${{ "{:,.0f}".format(grade.top_student_fundraising_amount or 0) }}
-                                {{ '🟡 Staub' if grade.top_student_fundraiser_team == 'Staub' else '🔵 Kitsko' if grade.top_student_fundraiser_team else '' }}
+                                {% if team_names|length >= 2 %}{{ '🔵 ' + team_names[0] if grade.top_student_fundraiser_team == team_names[0] else ('🟡 ' + team_names[1] if grade.top_student_fundraiser_team == team_names[1] else '') }}{% endif %}
                             </div>
                         </div>
                         <div class="grade-card-metric">
@@ -766,7 +768,7 @@
                             </div>
                             <div class="metric-value-line">
                                 {{ "{:.1f}".format((grade.top_student_reading_minutes or 0) / 60) }} hrs ({{ "{:,.0f}".format(grade.top_student_reading_minutes or 0) }} min)
-                                {{ '🟡 Staub' if grade.top_student_reader_team == 'Staub' else '🔵 Kitsko' if grade.top_student_reader_team else '' }}
+                                {% if team_names|length >= 2 %}{{ '🔵 ' + team_names[0] if grade.top_student_reader_team == team_names[0] else ('🟡 ' + team_names[1] if grade.top_student_reader_team == team_names[1] else '') }}{% endif %}
                             </div>
                         </div>
                     </div>
@@ -845,52 +847,64 @@
                     <th onclick="sortTable(0)">CLASS NAME</th>
                     <th onclick="sortTable(1)">GRADE</th>
                     <th onclick="sortTable(2)">TEAM</th>
-                    <th onclick="sortTable(3)" class="text-end">STUDENTS</th>
-                    <th onclick="sortTable(4)" class="text-end">FUNDRAISING</th>
+                    <th onclick="sortTable(3)" class="text-end">FUNDRAISING</th>
+                    <th onclick="sortTable(4)" class="text-end">SPONSORS</th>
                     <th onclick="sortTable(5)" class="text-end">MINUTES READ {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(6)" class="text-end">AVG/STU {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(7)" class="text-end">PARTICIPATION % {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(8)" class="text-end">GOAL MET ≥1 DAY {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(9)" class="text-end">SPONSORS</th>
+                    <th onclick="sortTable(6)" class="text-end">PARTICIPATION % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(7)" class="text-end">ALL DAYS ACTIVE % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(8)" class="text-end">MET GOAL ≥1 DAY % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(9)" class="text-end">MET GOAL ALL DAYS % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(10)" class="text-end">COLOR WAR POINTS</th>
+                    <th onclick="sortTable(11)" class="text-end">STUDENTS</th>
                 </tr>
             </thead>
             <tbody>
                 {% for cls in classes %}
                 <tr data-grade="{{ cls.grade_level }}"
                     data-school-fundraising="{{ cls.is_school_winner.fundraising|string|lower }}"
-                    data-school-minutes="{{ cls.is_school_winner.minutes|string|lower }}"
-                    data-school-avg="{{ cls.is_school_winner.avg_minutes|string|lower }}"
-                    data-school-participation="{{ cls.is_school_winner.participation|string|lower }}"
-                    data-school-goal="{{ cls.is_school_winner.goal_met|string|lower }}"
                     data-school-sponsors="{{ cls.is_school_winner.sponsors|string|lower }}"
+                    data-school-minutes="{{ cls.is_school_winner.minutes|string|lower }}"
+                    data-school-participation="{{ cls.is_school_winner.participation|string|lower }}"
+                    data-school-all-days="{{ cls.is_school_winner.all_days_active|string|lower }}"
+                    data-school-goal-once="{{ cls.is_school_winner.goal_met_once|string|lower }}"
+                    data-school-goal-all="{{ cls.is_school_winner.goal_met_all_days|string|lower }}"
+                    data-school-color="{{ cls.is_school_winner.color_war_points|string|lower }}"
                     data-grade-fundraising="{{ cls.is_grade_winner.fundraising|string|lower }}"
+                    data-grade-sponsors="{{ cls.is_grade_winner.sponsors|string|lower }}"
                     data-grade-minutes="{{ cls.is_grade_winner.minutes|string|lower }}"
-                    data-grade-avg="{{ cls.is_grade_winner.avg_minutes|string|lower }}"
                     data-grade-participation="{{ cls.is_grade_winner.participation|string|lower }}"
-                    data-grade-goal="{{ cls.is_grade_winner.goal_met|string|lower }}"
-                    data-grade-sponsors="{{ cls.is_grade_winner.sponsors|string|lower }}">
+                    data-grade-all-days="{{ cls.is_grade_winner.all_days_active|string|lower }}"
+                    data-grade-goal-once="{{ cls.is_grade_winner.goal_met_once|string|lower }}"
+                    data-grade-goal-all="{{ cls.is_grade_winner.goal_met_all_days|string|lower }}"
+                    data-grade-color="{{ cls.is_grade_winner.color_war_points|string|lower }}">
                     <td><strong>{{ cls.class_name }}</strong></td>
                     <td class="text-center">{{ cls.grade_level }}</td>
                     <td class="text-center"><span class="leader-badge leader-badge-{{ cls.team_name|lower }}">{{ cls.team_name|upper }}</span></td>
-                    <td class="text-end" data-value="{{ cls.total_students }}">{{ cls.total_students }}</td>
                     <td class="text-end" data-value="{{ cls.total_fundraising }}">
                         <span class="metric-cell">${{ "{:,.0f}".format(cls.total_fundraising) }}</span>
-                    </td>
-                    <td class="text-end" data-value="{{ cls.total_minutes }}">
-                        <span class="metric-cell">{{ "{:,.0f}".format(cls.total_minutes) }} min<br><small class="text-muted">({{ "{:.0f}".format(cls.total_minutes / 60) }} hrs)</small></span>
-                    </td>
-                    <td class="text-end" data-value="{{ cls.avg_minutes_per_student }}">
-                        <span class="metric-cell">{{ "{:.0f}".format(cls.avg_minutes_per_student) }} min</span>
-                    </td>
-                    <td class="text-end" data-value="{{ cls.participation_pct }}">
-                        <span class="metric-cell">{{ "{:.1f}".format(cls.participation_pct) }}%</span>
-                    </td>
-                    <td class="text-end" data-value="{{ cls.students_met_goal }}">
-                        <span class="metric-cell">{{ cls.students_met_goal }}</span>
                     </td>
                     <td class="text-end" data-value="{{ cls.total_sponsors }}">
                         <span class="metric-cell">{{ cls.total_sponsors }}</span>
                     </td>
+                    <td class="text-end" data-value="{{ cls.total_minutes }}">
+                        <span class="metric-cell">{{ "{:,.0f}".format(cls.total_minutes) }} min<br><small class="text-muted">({{ "{:.0f}".format(cls.total_minutes / 60) }} hrs)</small></span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.participation_pct }}">
+                        <span class="metric-cell">{{ "{:.1f}".format(cls.participation_pct) }}%</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.all_days_active_pct }}">
+                        <span class="metric-cell">{{ "{:.1f}".format(cls.all_days_active_pct) }}%</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.goal_met_once_pct }}">
+                        <span class="metric-cell">{{ "{:.1f}".format(cls.goal_met_once_pct) }}%</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.goal_met_all_days_pct }}">
+                        <span class="metric-cell">{{ "{:.1f}".format(cls.goal_met_all_days_pct) }}%</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.color_war_points }}">
+                        <span class="metric-cell">{{ cls.color_war_points }}</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.total_students }}">{{ cls.total_students }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -1146,23 +1160,29 @@ function applyHighlights(grade) {
 
     const rows = Array.from(tbody.querySelectorAll('tr:not(.hidden)'));
 
-    // Column indices for metrics (4-9: fundraising, minutes, avg/stu, participation, goal met, sponsors)
-    const metricColumnIndices = [4, 5, 6, 7, 8, 9];
+    // Column indices for metrics (matches Teams table metrics exactly)
+    // 3: Fundraising, 4: Sponsors, 5: Minutes, 6: Participation%, 7: All Days Active%,
+    // 8: Goal Met≥1 Day%, 9: Goal Met All Days%, 10: Color War Points
+    const metricColumnIndices = [3, 4, 5, 6, 7, 8, 9, 10];
     const schoolAttrMap = {
-        4: 'data-school-fundraising',
+        3: 'data-school-fundraising',
+        4: 'data-school-sponsors',
         5: 'data-school-minutes',
-        6: 'data-school-avg',
-        7: 'data-school-participation',
-        8: 'data-school-goal',
-        9: 'data-school-sponsors'
+        6: 'data-school-participation',
+        7: 'data-school-all-days',
+        8: 'data-school-goal-once',
+        9: 'data-school-goal-all',
+        10: 'data-school-color'
     };
     const gradeAttrMap = {
-        4: 'data-grade-fundraising',
+        3: 'data-grade-fundraising',
+        4: 'data-grade-sponsors',
         5: 'data-grade-minutes',
-        6: 'data-grade-avg',
-        7: 'data-grade-participation',
-        8: 'data-grade-goal',
-        9: 'data-grade-sponsors'
+        6: 'data-grade-participation',
+        7: 'data-grade-all-days',
+        8: 'data-grade-goal-once',
+        9: 'data-grade-goal-all',
+        10: 'data-grade-color'
     };
 
     // For each metric column, find the winner(s)

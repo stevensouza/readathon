@@ -1268,7 +1268,7 @@ def grade_level_tab():
     # Build grade WHERE clause
     grade_where = ""
     if grade_filter != 'all':
-        grade_where = f"WHERE ci.grade_level = '{grade_filter}'"
+        grade_where = f" AND ci.grade_level = '{grade_filter}'"
 
     # DEBUG: Log filter state
     print(f"\n=== GRADE LEVEL ROUTE DEBUG ===")
@@ -1288,22 +1288,27 @@ def grade_level_tab():
     all_classes = [dict(row) for row in all_classes_result] if all_classes_result else []
 
     # Find TRUE school-wide winners (gold highlights) across ALL grades
+    # Matches metrics from Teams page for consistency
     if all_classes:
         school_winners = {
             'fundraising': max(all_classes, key=lambda x: x['total_fundraising'])['total_fundraising'],
             'minutes': max(all_classes, key=lambda x: x['total_minutes'])['total_minutes'],
-            'avg_minutes': max(all_classes, key=lambda x: x['avg_minutes_per_student'])['avg_minutes_per_student'],
             'participation': max(all_classes, key=lambda x: x['participation_pct'])['participation_pct'],
-            'goal_met': max(all_classes, key=lambda x: x['students_met_goal'])['students_met_goal'],
+            'all_days_active': max(all_classes, key=lambda x: x['all_days_active_pct'])['all_days_active_pct'],
+            'goal_met_once': max(all_classes, key=lambda x: x['goal_met_once_pct'])['goal_met_once_pct'],
+            'goal_met_all_days': max(all_classes, key=lambda x: x['goal_met_all_days_pct'])['goal_met_all_days_pct'],
+            'color_war_points': max(all_classes, key=lambda x: x['color_war_points'])['color_war_points'],
             'sponsors': max(all_classes, key=lambda x: x['total_sponsors'])['total_sponsors']
         }
     else:
         school_winners = {
             'fundraising': 0,
             'minutes': 0,
-            'avg_minutes': 0,
             'participation': 0,
-            'goal_met': 0,
+            'all_days_active': 0,
+            'goal_met_once': 0,
+            'goal_met_all_days': 0,
+            'color_war_points': 0,
             'sponsors': 0
         }
 
@@ -1320,6 +1325,7 @@ def grade_level_tab():
     print(f"=================================\n")
 
     # Find grade-level winners (silver highlights) for each metric - use ALL classes
+    # Matches metrics from Teams page for consistency
     grade_winners = {}
     for grade in ['K', '1', '2', '3', '4', '5']:
         grade_classes = [c for c in all_classes if c['grade_level'] == grade]
@@ -1327,9 +1333,11 @@ def grade_level_tab():
             grade_winners[grade] = {
                 'fundraising': max(grade_classes, key=lambda x: x['total_fundraising'])['total_fundraising'],
                 'minutes': max(grade_classes, key=lambda x: x['total_minutes'])['total_minutes'],
-                'avg_minutes': max(grade_classes, key=lambda x: x['avg_minutes_per_student'])['avg_minutes_per_student'],
                 'participation': max(grade_classes, key=lambda x: x['participation_pct'])['participation_pct'],
-                'goal_met': max(grade_classes, key=lambda x: x['students_met_goal'])['students_met_goal'],
+                'all_days_active': max(grade_classes, key=lambda x: x['all_days_active_pct'])['all_days_active_pct'],
+                'goal_met_once': max(grade_classes, key=lambda x: x['goal_met_once_pct'])['goal_met_once_pct'],
+                'goal_met_all_days': max(grade_classes, key=lambda x: x['goal_met_all_days_pct'])['goal_met_all_days_pct'],
+                'color_war_points': max(grade_classes, key=lambda x: x['color_war_points'])['color_war_points'],
                 'sponsors': max(grade_classes, key=lambda x: x['total_sponsors'])['total_sponsors']
             }
 
@@ -1343,28 +1351,46 @@ def grade_level_tab():
             cls['is_school_winner'] = {}
             cls['is_grade_winner'] = {}
 
-            # Check if this class is a school-wide winner
+            # Check if this class is a school-wide winner (matches Teams metrics)
             cls['is_school_winner']['fundraising'] = (cls['total_fundraising'] == school_winners['fundraising'] and cls['total_fundraising'] > 0)
             cls['is_school_winner']['minutes'] = (cls['total_minutes'] == school_winners['minutes'] and cls['total_minutes'] > 0)
-            cls['is_school_winner']['avg_minutes'] = (cls['avg_minutes_per_student'] == school_winners['avg_minutes'] and cls['avg_minutes_per_student'] > 0)
             cls['is_school_winner']['participation'] = (cls['participation_pct'] == school_winners['participation'] and cls['participation_pct'] > 0)
-            cls['is_school_winner']['goal_met'] = (cls['students_met_goal'] == school_winners['goal_met'] and cls['students_met_goal'] > 0)
+            cls['is_school_winner']['all_days_active'] = (cls['all_days_active_pct'] == school_winners['all_days_active'] and cls['all_days_active_pct'] > 0)
+            cls['is_school_winner']['goal_met_once'] = (cls['goal_met_once_pct'] == school_winners['goal_met_once'] and cls['goal_met_once_pct'] > 0)
+            cls['is_school_winner']['goal_met_all_days'] = (cls['goal_met_all_days_pct'] == school_winners['goal_met_all_days'] and cls['goal_met_all_days_pct'] > 0)
+            cls['is_school_winner']['color_war_points'] = (cls['color_war_points'] == school_winners['color_war_points'] and cls['color_war_points'] > 0)
             cls['is_school_winner']['sponsors'] = (cls['total_sponsors'] == school_winners['sponsors'] and cls['total_sponsors'] > 0)
 
-            # Check if this class is a grade-level winner
+            # Check if this class is a grade-level winner (matches Teams metrics)
             if cls['grade_level'] in grade_winners:
                 gw = grade_winners[cls['grade_level']]
                 cls['is_grade_winner']['fundraising'] = (cls['total_fundraising'] == gw['fundraising'] and cls['total_fundraising'] > 0)
                 cls['is_grade_winner']['minutes'] = (cls['total_minutes'] == gw['minutes'] and cls['total_minutes'] > 0)
-                cls['is_grade_winner']['avg_minutes'] = (cls['avg_minutes_per_student'] == gw['avg_minutes'] and cls['avg_minutes_per_student'] > 0)
                 cls['is_grade_winner']['participation'] = (cls['participation_pct'] == gw['participation'] and cls['participation_pct'] > 0)
-                cls['is_grade_winner']['goal_met'] = (cls['students_met_goal'] == gw['goal_met'] and cls['students_met_goal'] > 0)
+                cls['is_grade_winner']['all_days_active'] = (cls['all_days_active_pct'] == gw['all_days_active'] and cls['all_days_active_pct'] > 0)
+                cls['is_grade_winner']['goal_met_once'] = (cls['goal_met_once_pct'] == gw['goal_met_once'] and cls['goal_met_once_pct'] > 0)
+                cls['is_grade_winner']['goal_met_all_days'] = (cls['goal_met_all_days_pct'] == gw['goal_met_all_days'] and cls['goal_met_all_days_pct'] > 0)
+                cls['is_grade_winner']['color_war_points'] = (cls['color_war_points'] == gw['color_war_points'] and cls['color_war_points'] > 0)
                 cls['is_grade_winner']['sponsors'] = (cls['total_sponsors'] == gw['sponsors'] and cls['total_sponsors'] > 0)
 
     # === GET GRADE AGGREGATIONS FOR CARDS ===
     grade_agg_query = get_grade_aggregations_query(date_where)
     grade_summaries_result = db.execute_query(grade_agg_query)
     grade_summaries = [dict(row) for row in grade_summaries_result] if grade_summaries_result else []
+
+    # Get team names dynamically from database
+    team_names_query = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
+    team_names_result = db.execute_query(team_names_query)
+    team_names = [row['team_name'] for row in team_names_result] if team_names_result else []
+
+    # Enrich grade_summaries with properly named team attributes
+    for grade in grade_summaries:
+        if len(team_names) >= 2:
+            grade['team1_name'] = team_names[0]
+            grade['team2_name'] = team_names[1]
+            # Rename the generic columns to use actual team names for the template
+            grade[f'{team_names[0].lower()}_students'] = grade.get('team1_students', 0)
+            grade[f'{team_names[1].lower()}_students'] = grade.get('team2_students', 0)
 
     # === GET LEADERS FOR HEADLINE BANNER (All grades + each individual grade) ===
     def parse_banner_leaders(leaders_result):
@@ -1439,7 +1465,8 @@ def grade_level_tab():
                          banner_leaders_by_grade=banner_leaders_by_grade,
                          school_winners=school_winners if classes else {},
                          grade_winners=grade_winners if classes else {},
-                         metadata=metadata)
+                         metadata=metadata,
+                         team_names=team_names)
 
 
 # Keep old index route for backward compatibility during transition

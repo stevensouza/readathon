@@ -1,427 +1,431 @@
-# Quick Start Guide - Enhanced Metadata Implementation
+# Quick Start Guide - Grade Level Page Enhancements
 
-**Session Date:** 2025-10-16
-**Status:** Q21, Q22, Q23 Complete with Floating Analysis Button
-**Next Task:** Fix floating button modal implementation (PRIORITY) + Add metadata to remaining reports (Q1-Q20)
-
----
-
-## ⚠️ KNOWN ISSUE: Floating Button Needs Modal Dialog
-
-**Current Behavior (INCORRECT):**
-- Floating button scrolls to and expands analysis section
-- Located in admin.html:590-613 and reports.html:460-483
-
-**Required Behavior:**
-- Floating button should open modal dialog overlay (like prototype)
-- User can view analysis while staying at current scroll position
-- Modal closes on backdrop click, X button, or ESC key
-
-**Reference Implementation:** See prototype lines 512-577 (modal CSS), 653-724 (modal HTML), 830-845 (modal JS)
-
-**Fix Required:** Replace current button implementation with modal-based approach (details below in "IMMEDIATE NEXT STEPS")
+**Session Date:** 2025-10-29
+**Status:** Bug fixes complete, UI enhancements pending
+**Next Task:** Add info icons, tie handling, and documentation updates to Grade Level page
 
 ---
 
-## 📋 REFERENCE PROTOTYPE (USE THIS!)
+## 📋 RESTART PROMPT (Copy/Paste This)
 
-**Location:** `/Users/stevesouza/my/data/readathon/v2026_development/prototypes/enhanced_report_prototype_v4.html`
-**URL:** `file:///Users/stevesouza/my/data/readathon/v2026_development/prototypes/enhanced_report_prototype_v4.html`
+```
+Continue work on Grade Level page enhancements. Complete these tasks:
 
-**This prototype shows the COMPLETE implementation including:**
-- Description + Last Updated section
-- Collapsible Report Information (source tables, columns, terms)
-- Collapsible Analysis section (summary, breakdown, insights)
-- Floating "View Analysis" button (right side of screen)
-- Column tooltips on hover
-- Responsive mobile design
+1. Add information icons (ⓘ) to Grade Level detail table headers with tooltips
+   - Follow pattern from School and Teams pages
+   - Include descriptions for each column metric
 
-**Use this file as the reference** when implementing metadata for remaining reports (Q1-Q20).
+2. Implement tie acknowledgment logic:
+   - Banner section: Show all tied winners (e.g., "🏆 Winner: Class A, Class B (tie)")
+   - Grade cards section: Show all tied classes for top performers
+   - Detail table: Already working correctly (document this)
 
----
+3. Update documentation:
+   - Add tie handling rules to RULES.md
+   - Add info icon pattern to UI_PATTERNS.md
+   - Document standard approach for handling ties across all pages
 
-## ✅ COMPLETED
+4. Test thoroughly:
+   - Verify info icons appear and show correct tooltips
+   - Test tie scenarios with sample data
+   - Check grade filter still works (K, 1st, 2nd, etc.)
 
-1. **base.html** - Added all CSS for enhanced metadata (collapsible sections, tooltips, analysis, floating button)
-2. **reports.html** - Updated JavaScript `displayReport()` to render all new sections + floating button
-3. **admin.html** - Updated JavaScript `displayReport()` to render all new sections + floating button
-4. **report_metadata.py** - Created complete metadata module with:
-   - Global terms glossary (17 terms)
-   - Column metadata for Q21, Q22, Q23
-   - Analysis generators for Q21, Q22, Q23
-   - Helper functions
-
-5. **database.py** - Updated with enhanced metadata:
-   - Imported report_metadata module
-   - Added `_get_last_upload_timestamps()` helper method
-   - Updated Q21, Q22, Q23 methods with `last_updated`, `metadata`, `analysis` keys
-
-6. **Implementation docs:**
-   - `/docs/IMPLEMENTATION_STATUS_ENHANCED_METADATA.md` - Full status
-   - `/docs/QUICK_START_NEXT_SESSION.md` - This file
-
-7. **Floating Analysis Button** - Vertical button on right side that:
-   - Only appears for reports with analysis (Q21, Q22, Q23)
-   - Scrolls to and opens Analysis section when clicked
-   - Responsive for mobile devices
+Reference files:
+- /Users/stevesouza/my/data/readathon/v2026_development/templates/grade_level.html
+- /Users/stevesouza/my/data/readathon/v2026_development/app.py (line 1271 for grade_where)
+- /Users/stevesouza/my/data/readathon/v2026_development/queries.py (lines 1175, 1188, 1352, 1598-1601)
+- /Users/stevesouza/my/data/readathon/v2026_development/RULES.md
+- /Users/stevesouza/my/data/readathon/v2026_development/UI_PATTERNS.md
+```
 
 ---
 
-## 🚀 IMMEDIATE NEXT STEPS
+## ✅ RECENTLY COMPLETED (2025-10-29)
 
-### PRIORITY 1: Fix Floating Button Modal Implementation
+### Bug Fixes - Grade Level Page
+All four critical bugs have been fixed:
 
-**Problem:** Current implementation scrolls to section instead of opening modal dialog.
+1. **Goals Met Banner Calculation** (queries.py:1598-1601)
+   - **Problem:** Showed count "22" instead of percentage "95.2%"
+   - **Fix:** Changed to calculate percentage with CASE statement
+   ```python
+   CASE WHEN ci.total_students > 0
+       THEN ROUND(COUNT(DISTINCT dl.student_name) * 100.0 / ci.total_students, 1)
+       ELSE 0
+   END as value
+   ```
 
-**Solution Steps:**
+2. **SQL Syntax Error on Grade Filter** (app.py:1271, queries.py:1175, 1188)
+   - **Problem:** Double WHERE clause when filtering by grade (e.g., "WHERE ci.grade_level = 'K'")
+   - **Fix:** Changed grade_where to use " AND" instead of "WHERE", added "WHERE 1=1" anchors
+   ```python
+   # app.py:1271
+   grade_where = f" AND ci.grade_level = '{grade_filter}'"
 
-1. **Add Modal CSS to base.html** (add after line 424, before closing `</style>`):
+   # queries.py:1175, 1188
+   WHERE 1=1{grade_where}
+   ```
+
+3. **Student Count Showing School-Wide Total** (queries.py:1352)
+   - **Problem:** Showed 1497 (school total) instead of 67 (grade total)
+   - **Root cause:** JOIN multiplication with SUM(ci.total_students)
+   - **Fix:** Changed to COUNT(DISTINCT r.student_name)
+   ```python
+   COUNT(DISTINCT r.student_name) as num_students,
+   ```
+
+4. **Team Split Calculation**
+   - **Problem:** Showed 0 for both Kitsko and Staub teams
+   - **Fix:** Fixed as part of the student count fix above
+
+**Testing:** User confirmed "ok it looks good" after fixes.
+
+---
+
+## 🚀 PENDING TASKS
+
+### Task 1: Add Information Icons to Table Headers
+
+**Requirement:** Add ⓘ icons to each column header in the Grade Level detail table with tooltips explaining the metric.
+
+**Reference Implementation:**
+- School page: `/templates/school.html`
+- Teams page: `/templates/teams.html`
+
+**Pattern to Follow:**
+```html
+<th onclick="sortTable(3)" style="cursor:pointer;"
+    title="Total fundraising dollars raised by this class">
+    Fundraising ⓘ ▲
+</th>
+```
+
+**Columns Needing Icons:**
+- Class Name - "Teacher or homeroom class name"
+- Grade - "Grade level (K-5th)"
+- Team - "Team assignment (Kitsko or Staub)"
+- Fundraising - "Total fundraising dollars raised by this class"
+- Minutes Read - "Total reading minutes logged by students in this class (capped at 120 min/day)"
+- Sponsors - "Total number of sponsors for students in this class"
+- Participation % - "Percentage of students who logged reading time during the period"
+- Goals Met ≥1 Day - "Percentage of students who met their daily reading goal at least once"
+
+**File to Edit:** `/templates/grade_level.html` (detail table section)
+
+---
+
+### Task 2: Implement Tie Acknowledgment Logic
+
+**Requirement:** When multiple classes tie for a metric, acknowledge ALL tied winners (not just the first one).
+
+#### 2a. Banner Section Ties
+
+**Current Behavior:** Only shows first winner
+```
+🏆 Winner: 5th Grade • ogg
+```
+
+**Required Behavior:** Show all tied winners
+```
+🏆 Winners (tie): 5th Grade • ogg, 4th Grade • rivera
+```
+
+**Implementation Location:** `/app.py` - `grade_level` route (around line 1260-1340)
+**SQL to Modify:** `get_school_wide_leaders_query` in `/queries.py`
+
+**Logic:**
+1. For each metric, find the maximum value
+2. Select ALL classes that have that maximum value
+3. If count > 1, display "(tie)" indicator
+4. Format as comma-separated list
+
+#### 2b. Grade Cards Section Ties
+
+**Current Behavior:** Shows single top performer per card
+**Required Behavior:** Show all tied performers
+
+**Implementation Location:** Same as banner section (banner_data is used for cards)
+
+**Example:**
+```html
+<!-- Single winner -->
+<div class="grade-stat-number">
+    <span class="team-badge team-badge-kitsko">KITSKO</span>
+    <span class="ms-2">5th Grade • ogg</span>
+</div>
+
+<!-- Tied winners -->
+<div class="grade-stat-number">
+    <span class="team-badge team-badge-kitsko">KITSKO</span>
+    <span class="ms-2">5th Grade • ogg</span>
+</div>
+<div class="grade-stat-number-tie">
+    <span class="team-badge team-badge-staub">STAUB</span>
+    <span class="ms-2">4th Grade • rivera</span>
+</div>
+```
+
+#### 2c. Detail Table Ties (Document Only)
+
+**Current Behavior:** Sorting already groups tied values together naturally.
+
+**Action Required:** Add comment to code documenting this behavior:
+```python
+# Note: Detail table handles ties correctly through natural sorting.
+# When multiple classes have the same value, they appear consecutively
+# in the sorted output. No special tie-handling logic required.
+```
+
+---
+
+### Task 3: Update Documentation
+
+#### 3a. Add Tie Handling Rules to RULES.md
+
+**File:** `/RULES.md`
+**Section to Add:** After "Banner Calculation Rules" (around line 129)
+
+```markdown
+## Tie Handling Rules
+
+### When Ties Occur
+- **Definition:** A tie occurs when 2+ entities (classes, grades, teams) have the exact same value for a metric
+- **Applies to:** Banner metrics, card leaders, table winners (gold/silver ovals)
+
+### Tie Display Rules
+1. **Banner Section:** Show all tied winners with "(tie)" indicator
+   - Format: "🏆 Winners (tie): Entity A, Entity B, Entity C"
+   - Example: "🏆 Winners (tie): 5th Grade • ogg, 4th Grade • rivera"
+
+2. **Card Section:** Display all tied performers
+   - Show each tied entity on separate line or in stacked format
+   - Maintain team color badges for clarity
+
+3. **Detail Table:** Natural sorting groups ties together
+   - No special indicator needed
+   - Sorted output naturally shows all tied values consecutively
+
+4. **Gold/Silver Ovals:** Apply to ALL tied winners
+   - If 3 classes tie for school winner → all 3 get gold ovals
+   - If 2 classes tie for grade winner → both get silver ovals
+   - Gold still overrides silver (school-wide ties trump grade-level ties)
+
+### Implementation Pattern
+```python
+# Find maximum value
+max_value = max(row['value'] for row in results)
+
+# Get all entities with that value
+tied_winners = [row for row in results if row['value'] == max_value]
+
+# Check for tie
+is_tie = len(tied_winners) > 1
+
+# Format output
+if is_tie:
+    winner_text = f"Winners (tie): {', '.join(w['name'] for w in tied_winners)}"
+else:
+    winner_text = f"Winner: {tied_winners[0]['name']}"
+```
+
+### Consistency Requirement
+- Tie handling MUST be consistent across all pages (School, Teams, Grade Level, Students)
+- Any changes to tie logic must be applied to all pages
+```
+
+#### 3b. Add Info Icon Pattern to UI_PATTERNS.md
+
+**File:** `/UI_PATTERNS.md`
+**Section to Add:** After "Sortable Tables" section (around line 360)
+
+```markdown
+### 5. Information Icons (Tooltips)
+
+**Purpose:** Provide inline help for column headers and complex metrics
+
+**HTML Pattern:**
+```html
+<th onclick="sortTable(3)" style="cursor:pointer;"
+    title="Detailed description of this metric">
+    Column Name ⓘ ▲
+</th>
+```
+
+**CSS (Already in base.html):**
 ```css
-/* Modal Overlay */
-.analysis-modal-backdrop {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 9998;
-}
-
-.analysis-modal-backdrop.show {
-    display: block;
-}
-
-.analysis-modal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: 900px;
-    width: 90%;
-    max-height: 85vh;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    z-index: 9999;
-    overflow: hidden;
-}
-
-.analysis-modal.show {
-    display: block;
-}
-
-.modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-}
-
-.modal-close {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-close:hover {
-    opacity: 0.8;
-}
-
-.modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    max-height: calc(85vh - 80px);
+/* Tooltips automatically styled by browser */
+[title] {
+    cursor: help;
 }
 ```
 
-2. **Update reports.html floating button JavaScript** (replace lines 460-483):
-```javascript
-// Show/hide floating analysis button
-const floatingBtn = document.getElementById('floatingAnalysisBtn');
-if (report.analysis) {
-    if (!floatingBtn) {
-        // Create button if it doesn't exist
-        const btn = document.createElement('button');
-        btn.id = 'floatingAnalysisBtn';
-        btn.className = 'floating-analysis-btn';
-        btn.innerHTML = '📊 Analysis';
-        btn.onclick = openAnalysisModal;
-        document.body.appendChild(btn);
+**Best Practices:**
+- Use ⓘ character (Unicode U+24D8) for consistency
+- Place icon AFTER column name, BEFORE sort arrow (▲/▼)
+- Keep tooltip text concise (1-2 sentences max)
+- Explain what the metric measures and where data comes from
+- Use consistent terminology across all tooltips
 
-        // Create modal backdrop
-        const backdrop = document.createElement('div');
-        backdrop.id = 'analysisModalBackdrop';
-        backdrop.className = 'analysis-modal-backdrop';
-        backdrop.onclick = closeAnalysisModal;
-        document.body.appendChild(backdrop);
+**Standard Tooltip Texts:**
+- **Class Name:** "Teacher or homeroom class name"
+- **Grade:** "Grade level (K-5th)"
+- **Team:** "Team assignment for competition"
+- **Fundraising:** "Total fundraising dollars raised (from Reader_Cumulative table)"
+- **Minutes Read:** "Total reading minutes logged (capped at 120 min/day, includes color bonus)"
+- **Sponsors:** "Total number of unique sponsors (from Reader_Cumulative table)"
+- **Participation %:** "Percentage of students who logged reading time during the period"
+- **Goals Met:** "Percentage of students who met their daily reading goal at least once"
 
-        // Create modal container
-        const modal = document.createElement('div');
-        modal.id = 'analysisModal';
-        modal.className = 'analysis-modal';
-        document.body.appendChild(modal);
-
-        // ESC key handler
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeAnalysisModal();
-        });
-    }
-    document.getElementById('floatingAnalysisBtn').style.display = 'block';
-
-    // Store analysis data for modal
-    window.currentAnalysis = report.analysis;
-    window.currentReportTitle = report.title;
-} else {
-    if (floatingBtn) {
-        floatingBtn.style.display = 'none';
-    }
-}
-
-function openAnalysisModal() {
-    const modal = document.getElementById('analysisModal');
-    const backdrop = document.getElementById('analysisModalBackdrop');
-    const analysis = window.currentAnalysis;
-
-    // Build modal content
-    let modalHTML = `
-        <div class="modal-header">
-            <h3>📊 ${window.currentReportTitle} - Analysis</h3>
-            <button class="modal-close" onclick="closeAnalysisModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="summary-box">
-                <strong>Summary:</strong> ${analysis.summary}
-            </div>
-    `;
-
-    if (analysis.breakdown) {
-        analysis.breakdown.forEach(item => {
-            modalHTML += `
-                <div class="breakdown-card">
-                    <h4>${item.issue}: ${item.minutes} ${item.unit || 'minutes'}</h4>
-                    <p>${item.explanation}</p>
-            `;
-            if (item.top_contributors) {
-                modalHTML += `
-                    <p><strong>Top Contributors:</strong></p>
-                    <ul>
-                        ${item.top_contributors.map(c =>
-                            `<li>${c.student}: ${c.amount} ${item.unit || 'min'}</li>`
-                        ).join('')}
-                    </ul>
-                `;
-            }
-            modalHTML += `</div>`;
-        });
-    }
-
-    if (analysis.insights && analysis.insights.length > 0) {
-        modalHTML += `
-            <div class="insights-compact">
-                <strong>Insights & Recommendations:</strong>
-                <ul>
-                    ${analysis.insights.map(insight => `<li>${insight}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-    }
-
-    modalHTML += `</div>`;
-    modal.innerHTML = modalHTML;
-
-    // Show modal
-    backdrop.classList.add('show');
-    modal.classList.add('show');
-}
-
-function closeAnalysisModal() {
-    const modal = document.getElementById('analysisModal');
-    const backdrop = document.getElementById('analysisModalBackdrop');
-    if (modal) modal.classList.remove('show');
-    if (backdrop) backdrop.classList.remove('show');
-}
+**Implementation Checklist:**
+- [ ] Add ⓘ to all table column headers
+- [ ] Verify tooltips appear on hover
+- [ ] Test on mobile (long press should show tooltip)
+- [ ] Ensure tooltip doesn't interfere with sorting
+- [ ] Maintain consistency across all pages
 ```
 
-3. **Update admin.html floating button JavaScript** (replace lines 590-613 with same code as above)
-
-4. **Test in browser:**
-   - Visit http://127.0.0.1:5001/admin
-   - Click Q21, Q22, or Q23
-   - Verify floating button appears on right side
-   - Click button - modal should appear with backdrop overlay
-   - Click backdrop or X button - modal should close
-   - Press ESC key - modal should close
-
-### PRIORITY 2: Add Metadata to Remaining Reports
-
-**Pattern to Follow** (for reports WITHOUT analysis):
-
-1. **Add column metadata** to `report_metadata.py`:
-   ```python
-   COLUMN_METADATA = {
-       # ... existing Q21, Q22, Q23 ...
-       'q2': {  # Example for Q2 Daily Summary
-           'class_name': {
-               'source': 'Roster.class_name',
-               'description': 'Teacher or homeroom class name'
-           },
-           # ... more columns ...
-       },
-       # ... repeat for each report ...
-   }
-   ```
-
-2. **Update report method** in `database.py`:
-   ```python
-   return {
-       'title': 'QX: Report Name',
-       'description': '...',
-       'columns': [...],
-       'data': results,
-
-       # ADD THESE THREE KEYS:
-       'last_updated': self._get_last_upload_timestamps(),
-       'metadata': {
-           'source_tables': 'Table1, Table2 (primary)',
-           'columns': COLUMN_METADATA['qX'],
-           'terms': get_report_terms('qX')
-       }
-       # NO 'analysis' key for non-diagnostic reports
-   }
-   ```
-
-3. **Test in browser** - Verify metadata sections appear
-
-**Priority Order:**
-1. ✅ Q21, Q22, Q23 (DONE)
-2. Q2: Daily Summary Report
-3. Q5: Student Cumulative Report
-4. Q6, Q14, Q18, Q19, Q20: Competition Reports
-5. Q1, Q4, Q7, Q8: Utility Reports
-
 ---
 
-## 📋 REMAINING REPORTS TO UPDATE
+## 🔧 IMPLEMENTATION STEPS
 
-After Q21, Q22, Q23 are working:
+### Step 1: Add Info Icons (15-20 minutes)
 
-### Priority 1: Add to report_metadata.py
-1. Add column metadata for each report to `COLUMN_METADATA` dict
-2. Add term sets to `REPORT_TERM_SETS` (already exists for most)
-3. Create analysis generator functions (where applicable)
+1. Open `/templates/grade_level.html`
+2. Find the detail table `<thead>` section
+3. Add ⓘ icon and `title` attribute to each `<th>`
+4. Test in browser - hover over headers to verify tooltips
 
-### Priority 2: Update database.py
-For each report method, add the 3 new keys:
-- `last_updated`
-- `metadata` (source_tables, columns, terms)
-- `analysis` (if applicable)
+### Step 2: Implement Tie Logic (45-60 minutes)
 
-### Reports by Priority:
-**Integrity Reports (need analysis):**
-- ✅ Q21 (done)
-- ✅ Q22 (done)
-- ✅ Q23 (done)
+1. **Analyze current queries** in `/queries.py`:
+   - `get_school_wide_leaders_query` (lines 1550-1650)
+   - Identify how winners are selected (currently uses LIMIT 1 or similar)
 
-**Competition Reports (may need analysis):**
-- Q6: Class Participation Winner
-- Q14: Team Participation
-- Q18: Lead Class by Grade
-- Q19: Team Minutes
-- Q20: Team Donations
+2. **Modify SQL to return ALL tied winners:**
+   ```python
+   # Instead of LIMIT 1, use:
+   WITH MaxValues AS (
+       SELECT metric_name, MAX(value) as max_value
+       FROM ... GROUP BY metric_name
+   )
+   SELECT ...
+   WHERE value = (SELECT max_value FROM MaxValues WHERE metric_name = ...)
+   ```
 
-**Student Reports (minimal analysis):**
-- Q2: Daily Summary
-- Q5: Student Cumulative
-- Q8: Student Reading Details
+3. **Update Flask route** in `/app.py`:
+   - Modify banner_data structure to support multiple winners per metric
+   - Add `is_tie` flag and `winners` list
 
-**Utility Reports (no analysis needed):**
-- Q1: Table Counts
-- Q4: Prize Drawing
-- Q7: Complete Log
+4. **Update Jinja2 template** in `/templates/grade_level.html`:
+   - Check for multiple winners
+   - Format display with "(tie)" indicator
+   - Show all winners in comma-separated or stacked format
 
----
+5. **Test with production data:**
+   - Find metrics with actual ties
+   - Verify display is correct
+   - Test edge cases (2-way tie, 3-way tie, no tie)
 
-## 🔧 TROUBLESHOOTING
+### Step 3: Update Documentation (20-30 minutes)
 
-### If tooltips don't show:
-- Check browser console for JavaScript errors
-- Verify Bootstrap 5.3.0 is loaded
-- Check that `title` attributes are present on `<th>` elements
+1. Add tie handling rules to `/RULES.md`
+2. Add info icon pattern to `/UI_PATTERNS.md`
+3. Verify formatting is consistent with existing sections
+4. Update "Last Updated" dates in both files
 
-### If collapsible sections don't open:
-- Check browser console
-- Verify `<details>` and `<summary>` HTML is correct
-- Check CSS is loaded (arrow should rotate)
+### Step 4: Test Everything (30 minutes)
 
-### If analysis doesn't show:
-- Check that `generate_q21_analysis()` is being called
-- Verify it returns a dict (not None)
-- Check browser console for JavaScript errors in `displayReport()`
-- Verify the analysis section HTML is being built
-
-### If metadata doesn't appear:
-- Check that `report_metadata.py` is in the same directory as `database.py`
-- Verify import statement works (no ImportError)
-- Check that metadata dict has `source_tables`, `columns`, `terms` keys
-- Verify report response includes `metadata` key
+1. **Restart Flask:** `python3 app.py --db prod`
+2. **Test info icons:**
+   - Visit Grade Level page
+   - Hover over each column header
+   - Verify tooltips appear with correct text
+3. **Test tie logic:**
+   - Check banner for ties
+   - Check grade cards for ties
+   - Verify gold/silver ovals applied to all tied winners
+4. **Test grade filter:**
+   - Select K, 1st, 2nd, 3rd, 4th, 5th, All Grades
+   - Verify no SQL errors
+   - Verify student counts are correct
+5. **Test on mobile:**
+   - Responsive design still works
+   - Tooltips accessible (long press)
 
 ---
 
 ## 📁 FILES TO REFERENCE
 
-**Working prototype:**
-`/Users/stevesouza/my/data/readathon/v2026_development/prototypes/enhanced_report_prototype_v4.html`
-
-**Metadata module:**
-`/Users/stevesouza/my/data/readathon/v2026_development/report_metadata.py`
-
-**Main implementation:**
-`/Users/stevesouza/my/data/readathon/v2026_development/database.py`
-
 **Templates:**
-- `/Users/stevesouza/my/data/readathon/v2026_development/templates/base.html` (CSS)
-- `/Users/stevesouza/my/data/readathon/v2026_development/templates/reports.html` (JS)
+- `/Users/stevesouza/my/data/readathon/v2026_development/templates/grade_level.html` - Main file to edit
+- `/Users/stevesouza/my/data/readathon/v2026_development/templates/school.html` - Info icon reference
+- `/Users/stevesouza/my/data/readathon/v2026_development/templates/teams.html` - Tie handling reference
+
+**Backend:**
+- `/Users/stevesouza/my/data/readathon/v2026_development/app.py` - Flask route (line 1260-1340)
+- `/Users/stevesouza/my/data/readathon/v2026_development/queries.py` - SQL queries (lines 1175, 1188, 1352, 1598-1601)
 
 **Documentation:**
-- `/Users/stevesouza/my/data/readathon/v2026_development/docs/features/feature-30-enhanced-report-metadata.md`
-- `/Users/stevesouza/my/data/readathon/v2026_development/docs/features/feature-31-dynamic-report-analysis.md`
-- `/Users/stevesouza/my/data/readathon/v2026_development/docs/IMPLEMENTATION_STATUS_ENHANCED_METADATA.md`
+- `/Users/stevesouza/my/data/readathon/v2026_development/RULES.md` - Add tie rules
+- `/Users/stevesouza/my/data/readathon/v2026_development/UI_PATTERNS.md` - Add info icon pattern
 
 ---
 
 ## ✅ SUCCESS CRITERIA
 
-Q21 implementation is successful when:
-1. Report loads without errors
-2. Description and "Last Updated" visible at top
-3. "Report Information" section is collapsible (collapsed by default)
-4. "Columns & Data Sources" subsection works (collapsed by default, 8 columns)
-5. "Key Terms & Definitions" subsection works (collapsed by default, 8 terms)
-6. "Analysis" section is collapsible (collapsed by default)
-7. Analysis shows breakdown of issues with top contributors
-8. Column headers have info icon and show tooltip on hover
-9. All arrows rotate correctly when expanding/collapsing
-10. Export and Copy buttons work at top of report
+Implementation is complete when:
+
+1. **Info Icons:**
+   - [ ] ⓘ icon appears after each column name in detail table
+   - [ ] Tooltips display on hover with correct text
+   - [ ] Icons don't interfere with sorting functionality
+   - [ ] Mobile users can access tooltips (long press)
+
+2. **Tie Handling:**
+   - [ ] Banner shows all tied winners with "(tie)" indicator
+   - [ ] Grade cards show all tied performers
+   - [ ] Gold/silver ovals applied to ALL tied winners
+   - [ ] No SQL errors when ties occur
+   - [ ] Formatting is clean and readable
+
+3. **Documentation:**
+   - [ ] Tie handling rules added to RULES.md with examples
+   - [ ] Info icon pattern added to UI_PATTERNS.md with code samples
+   - [ ] Both files have updated "Last Updated" dates
+   - [ ] Code comments document tie behavior in detail table
+
+4. **Testing:**
+   - [ ] All grade filters work (K through 5th, All Grades)
+   - [ ] Student counts are accurate for each grade
+   - [ ] Banner metrics show correct percentages
+   - [ ] No SQL errors in Flask console
+   - [ ] Page renders correctly on desktop and mobile
 
 ---
 
-**Last Updated:** 2025-10-16
-**Ready for:** database.py implementation
+## 🔍 KNOWN ISSUES (Previously Fixed)
+
+These issues have been resolved:
+
+- ✅ Goals Met banner showing count instead of percentage (FIXED: queries.py:1598-1601)
+- ✅ SQL syntax error with double WHERE clause (FIXED: app.py:1271, queries.py:1175, 1188)
+- ✅ Student count showing school-wide total (FIXED: queries.py:1352)
+- ✅ Team Split showing 0 for both teams (FIXED: part of student count fix)
+
+Do not re-introduce these bugs during implementation.
+
+---
+
+## 📊 ESTIMATED TIME
+
+- **Task 1 (Info Icons):** 15-20 minutes
+- **Task 2 (Tie Logic):** 45-60 minutes
+- **Task 3 (Documentation):** 20-30 minutes
+- **Task 4 (Testing):** 30 minutes
+
+**Total:** ~2-2.5 hours
+
+---
+
+**Last Updated:** 2025-10-29
+**Ready for:** Implementation of info icons, tie handling, and documentation updates
