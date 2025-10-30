@@ -89,6 +89,34 @@
         line-height: 1.3;
     }
 
+    .leader-text {
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.6);
+        display: inline-block;
+        margin-top: 0.2rem;
+    }
+
+    .team-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .team-badge-kitsko {
+        background: #1e3a5f;
+        color: white;
+        border-color: rgba(255,255,255,0.4);
+    }
+
+    .team-badge-staub {
+        background: #f59e0b;
+        color: #1e3a5f;
+        border-color: rgba(30,58,95,0.3);
+    }
+
     /* Card Styles */
     .zen-card {
         background: white;
@@ -420,22 +448,27 @@
         <div class="col headline-metric">
             <div class="headline-label">💰 Fundraising</div>
             <div class="headline-value">${{ "{:,.0f}".format(metrics.total_fundraising) }}</div>
-            <div class="headline-subtitle">{{ metrics.fundraising_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.0f}".format(metrics.fundraising_pct) }}%)</div>
+            <div class="headline-subtitle">{{ metrics.fundraising_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.0f}".format(metrics.fundraising_pct) }}%)<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.fundraising_leader == team1_name.upper() else team2_name|lower }}">{{ teams.fundraising_leader }}</span></span></div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">📚 Minutes Read{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
             <div class="headline-value">{{ "{:,}".format(metrics.total_hours) }} hours</div>
-            <div class="headline-subtitle">({{ "{:,}".format(metrics.total_minutes) }} min)</div>
+            <div class="headline-subtitle">({{ "{:,}".format(metrics.total_minutes) }} min)<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.reading_leader_with_color == team1_name.upper() else team2_name|lower }}">{{ teams.reading_leader_with_color }}</span></span></div>
+        </div>
+        <div class="col headline-metric">
+            <div class="headline-label">🎁 Sponsors</div>
+            <div class="headline-value">{{ "{:,}".format(metrics.sponsors_students) }}</div>
+            <div class="headline-subtitle">{{ metrics.sponsors_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.1f}".format(metrics.sponsors_pct) }}%)<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.sponsors_leader == team1_name.upper() else team2_name|lower }}">{{ teams.sponsors_leader }}</span></span></div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">👥 Participation{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
             <div class="headline-value">{{ "{:.0f}".format(metrics.participation_pct) }}%</div>
-            <div class="headline-subtitle">{{ metrics.participating_students }} of {{ metrics.total_roster }}<br>Students</div>
+            <div class="headline-subtitle">{{ metrics.participating_students }} of {{ metrics.total_roster }}<br>Students<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.participation_leader_with_color == team1_name.upper() else team2_name|lower }}">{{ teams.participation_leader_with_color }}</span></span></div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">🎯 Goal Met (≥1 Day){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
             <div class="headline-value">{{ "{:.0f}".format(metrics.goals_met_pct) }}%</div>
-            <div class="headline-subtitle">{{ metrics.goals_met_students }} of {{ metrics.total_roster }}<br>Students</div>
+            <div class="headline-subtitle">{{ metrics.goals_met_students }} of {{ metrics.total_roster }}<br>Students<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.goals_met_leader == team1_name.upper() else team2_name|lower }}">{{ teams.goals_met_leader }}</span></span></div>
         </div>
     </div>
 </div>

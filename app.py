@@ -411,6 +411,78 @@ def school_tab():
         teams['participation_gap_with_color'] = teams[team2_name]['participation_pct_with_color'] - teams[team1_name]['participation_pct_with_color']
         teams['participation_leader_with_color'] = team2_name.upper()
 
+    # Goal Met calculations per team (students who met goal at least once)
+    # Team 1 goals met
+    team1_goals_met_query = f"""
+        SELECT COUNT(DISTINCT dl.student_name) as goals_met_students
+        FROM Daily_Logs dl
+        JOIN Roster r ON dl.student_name = r.student_name
+        JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+        WHERE LOWER(r.team_name) = LOWER('{team1_name}')
+          AND dl.minutes_read >= gr.min_daily_minutes {date_where}
+    """
+    team1_goals_met_result = db.execute_query(team1_goals_met_query)
+    teams[team1_name]['goals_met_students'] = team1_goals_met_result[0]['goals_met_students'] or 0 if team1_goals_met_result and team1_goals_met_result[0] else 0
+    teams[team1_name]['goals_met_pct'] = (teams[team1_name]['goals_met_students'] / teams[team1_name]['students'] * 100) if teams[team1_name]['students'] > 0 else 0
+
+    # Team 2 goals met
+    team2_goals_met_query = f"""
+        SELECT COUNT(DISTINCT dl.student_name) as goals_met_students
+        FROM Daily_Logs dl
+        JOIN Roster r ON dl.student_name = r.student_name
+        JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+        WHERE LOWER(r.team_name) = LOWER('{team2_name}')
+          AND dl.minutes_read >= gr.min_daily_minutes {date_where}
+    """
+    team2_goals_met_result = db.execute_query(team2_goals_met_query)
+    teams[team2_name]['goals_met_students'] = team2_goals_met_result[0]['goals_met_students'] or 0 if team2_goals_met_result and team2_goals_met_result[0] else 0
+    teams[team2_name]['goals_met_pct'] = (teams[team2_name]['goals_met_students'] / teams[team2_name]['students'] * 100) if teams[team2_name]['students'] > 0 else 0
+
+    # Goals met leader
+    if teams[team1_name]['goals_met_pct'] > teams[team2_name]['goals_met_pct']:
+        teams['goals_met_gap'] = teams[team1_name]['goals_met_pct'] - teams[team2_name]['goals_met_pct']
+        teams['goals_met_leader'] = team1_name.upper()
+    else:
+        teams['goals_met_gap'] = teams[team2_name]['goals_met_pct'] - teams[team1_name]['goals_met_pct']
+        teams['goals_met_leader'] = team2_name.upper()
+
+    # Sponsors calculations per team (students with at least 1 sponsor)
+    # Team 1 sponsors
+    team1_sponsors_query = f"""
+        SELECT COUNT(DISTINCT rc.student_name) as sponsors_students
+        FROM Reader_Cumulative rc
+        JOIN Roster r ON rc.student_name = r.student_name
+        WHERE LOWER(r.team_name) = LOWER('{team1_name}')
+          AND rc.sponsors > 0
+    """
+    team1_sponsors_result = db.execute_query(team1_sponsors_query)
+    teams[team1_name]['sponsors_students'] = team1_sponsors_result[0]['sponsors_students'] or 0 if team1_sponsors_result and team1_sponsors_result[0] else 0
+    teams[team1_name]['sponsors_pct'] = (teams[team1_name]['sponsors_students'] / teams[team1_name]['students'] * 100) if teams[team1_name]['students'] > 0 else 0
+
+    # Team 2 sponsors
+    team2_sponsors_query = f"""
+        SELECT COUNT(DISTINCT rc.student_name) as sponsors_students
+        FROM Reader_Cumulative rc
+        JOIN Roster r ON rc.student_name = r.student_name
+        WHERE LOWER(r.team_name) = LOWER('{team2_name}')
+          AND rc.sponsors > 0
+    """
+    team2_sponsors_result = db.execute_query(team2_sponsors_query)
+    teams[team2_name]['sponsors_students'] = team2_sponsors_result[0]['sponsors_students'] or 0 if team2_sponsors_result and team2_sponsors_result[0] else 0
+    teams[team2_name]['sponsors_pct'] = (teams[team2_name]['sponsors_students'] / teams[team2_name]['students'] * 100) if teams[team2_name]['students'] > 0 else 0
+
+    # Sponsors leader (team with more students having sponsors)
+    if teams[team1_name]['sponsors_students'] > teams[team2_name]['sponsors_students']:
+        teams['sponsors_gap'] = teams[team1_name]['sponsors_students'] - teams[team2_name]['sponsors_students']
+        teams['sponsors_leader'] = team1_name.upper()
+    else:
+        teams['sponsors_gap'] = teams[team2_name]['sponsors_students'] - teams[team1_name]['sponsors_students']
+        teams['sponsors_leader'] = team2_name.upper()
+
+    # School-wide sponsors total (for banner display)
+    metrics['sponsors_students'] = teams[team1_name]['sponsors_students'] + teams[team2_name]['sponsors_students']
+    metrics['sponsors_pct'] = (metrics['sponsors_students'] / total_roster * 100) if total_roster > 0 else 0
+
     # === TOP PERFORMERS ===
     performers = {}
 
@@ -708,8 +780,24 @@ def teams_tab():
     # Calculate full contest date range
     sorted_dates = sorted(dates)
     total_days = len(sorted_dates)
+    if sorted_dates:
+        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
+        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
+        full_contest_range = f"{start_date}-{end_date}"
+    else:
+        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
 
-    # === BANNER METRICS (5 metrics showing team winners) ===
+    # Campaign Day calculation - date-aware (for banner metric)
+    if date_filter != 'all' and date_filter in dates:
+        # Find position of selected date (1-based)
+        current_day = sorted_dates.index(date_filter) + 1
+        campaign_date = date_filter  # Store for subtitle display
+    else:
+        # Full contest - show total days
+        current_day = total_days
+        campaign_date = full_contest_range
+
+    # === BANNER METRICS (6 metrics showing team winners + Campaign Day) ===
     banner = {}
 
     # Helper function to get team data
@@ -818,6 +906,8 @@ def teams_tab():
             metrics['goal_met_students'] = goal_met_result[0]['students_met_goal'] or 0
         else:
             metrics['goal_met_students'] = 0
+        # Calculate percentage
+        metrics['goal_met_pct'] = (metrics['goal_met_students'] / team_size * 100) if team_size > 0 else 0
 
         # 5. Sponsors (total sponsors for team)
         sponsors_query = f"""
@@ -859,6 +949,13 @@ def teams_tab():
             'honors_filter': True
         },
         {
+            'name': 'Sponsors',
+            'icon': '🤝',
+            'key': 'sponsors',
+            'format': 'number',
+            'honors_filter': False
+        },
+        {
             'name': 'Participation',
             'icon': '👥',
             'key': 'participation_pct',
@@ -868,16 +965,9 @@ def teams_tab():
         {
             'name': 'Goal Met ≥1 Day',
             'icon': '🎯',
-            'key': 'goal_met_students',
-            'format': 'number',
+            'key': 'goal_met_pct',
+            'format': 'percentage',
             'honors_filter': True
-        },
-        {
-            'name': 'Sponsors',
-            'icon': '🤝',
-            'key': 'sponsors',
-            'format': 'number',
-            'honors_filter': False
         }
     ]
 
@@ -1237,6 +1327,8 @@ def teams_tab():
                          environment=env,
                          dates=dates,
                          date_filter=date_filter,
+                         current_day=current_day,
+                         campaign_date=campaign_date,
                          total_days=total_days,
                          full_contest_range=full_contest_range,
                          team1_name=team1_name,
@@ -1279,7 +1371,23 @@ def grade_level_tab():
 
     # Calculate full contest date range
     sorted_dates = sorted(dates)
-    full_contest_range = f"{sorted_dates[0]} - {sorted_dates[-1]}" if len(sorted_dates) > 1 else sorted_dates[0] if sorted_dates else "No dates"
+    total_days = len(sorted_dates)
+    if sorted_dates:
+        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
+        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
+        full_contest_range = f"{start_date}-{end_date}"
+    else:
+        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+
+    # Campaign Day calculation - date-aware (for banner metric)
+    if date_filter != 'all' and date_filter in dates:
+        # Find position of selected date (1-based)
+        current_day = sorted_dates.index(date_filter) + 1
+        campaign_date = date_filter  # Store for subtitle display
+    else:
+        # Full contest - show total days
+        current_day = total_days
+        campaign_date = full_contest_range
 
     # === GET ALL CLASSES (unfiltered) TO CALCULATE TRUE SCHOOL-WIDE WINNERS ===
     # IMPORTANT: School-wide winners must be calculated across ALL grades, not just filtered grades
@@ -1421,8 +1529,13 @@ def grade_level_tab():
         leaders_result_grade = db.execute_query(leaders_query_grade)
         banner_leaders_by_grade[grade] = parse_banner_leaders(leaders_result_grade)
 
-    # For backward compatibility, keep banner_leaders as the "all grades" version
-    banner_leaders = banner_leaders_all
+    # Set banner_leaders based on grade filter
+    if grade_filter != 'all' and grade_filter in banner_leaders_by_grade:
+        # Show filtered grade leaders in banner
+        banner_leaders = banner_leaders_by_grade[grade_filter]
+    else:
+        # Show all grades (school-wide) leaders in banner
+        banner_leaders = banner_leaders_all
 
     # === METADATA (Last Updated) ===
     metadata = {}
@@ -1458,6 +1571,9 @@ def grade_level_tab():
                          date_filter=date_filter,
                          grade_filter=grade_filter,
                          dates=dates,
+                         current_day=current_day,
+                         campaign_date=campaign_date,
+                         total_days=total_days,
                          full_contest_range=full_contest_range,
                          classes=classes,
                          grade_summaries=grade_summaries,

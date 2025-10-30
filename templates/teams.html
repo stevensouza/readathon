@@ -475,9 +475,15 @@
     </button>
 </div>
 
-<!-- Banner: 5 Head-to-Head Metrics -->
+<!-- Banner: 6 Metrics (Campaign Day + 5 Head-to-Head) -->
 <div class="headline-banner">
     <div class="row g-0">
+        <!-- Campaign Day (status metric, no team winner) -->
+        <div class="col headline-metric">
+            <div class="headline-label">📅 Campaign Day</div>
+            <div class="headline-value">{{ current_day }} of {{ total_days }}</div>
+            <div class="headline-subtitle">{{ campaign_date }}</div>
+        </div>
         {% for metric in banner.metrics %}
         <div class="col headline-metric">
             <div class="headline-label">{{ metric.icon }} {{ metric.name }}{% if metric.honors_filter and date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}</div>
@@ -506,6 +512,8 @@
                     {% set pct = (count / total * 100) if total > 0 else 0 %}
                     {% if metric.key == 'minutes_with_color' %}
                         ({{ "{:,.0f}".format(metric.team1_value / 60) }} hours)
+                    {% elif metric.format == 'percentage' %}
+                        {{ count }} of {{ total }} {{ team1_name }} students
                     {% else %}
                         {{ count }} of {{ total }} {{ team1_name }} students<br>({{ "{:.1f}".format(pct) }}%)
                     {% endif %}
@@ -515,6 +523,8 @@
                     {% set pct = (count / total * 100) if total > 0 else 0 %}
                     {% if metric.key == 'minutes_with_color' %}
                         ({{ "{:,.0f}".format(metric.team2_value / 60) }} hours)
+                    {% elif metric.format == 'percentage' %}
+                        {{ count }} of {{ total }} {{ team2_name }} students
                     {% else %}
                         {{ count }} of {{ total }} {{ team2_name }} students<br>({{ "{:.1f}".format(pct) }}%)
                     {% endif %}
