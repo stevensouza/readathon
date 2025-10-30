@@ -105,15 +105,15 @@ class TestPhase1StandardizedOrder:
         fundraising_pos = html.find('💰 Fundraising')
         minutes_pos = html.find('📚 Minutes Read')
         sponsors_pos = html.find('🎁 Sponsors')
-        participation_pos = html.find('👥 Participation')
+        participation_pos = html.find('👥 Avg. Participation (With Color)')
         goal_pos = html.find('🎯 Goal Met')
 
         # Verify order: Campaign Day < Fundraising < Minutes < Sponsors < Participation < Goal Met
         assert campaign_pos < fundraising_pos, "Campaign Day should come before Fundraising"
         assert fundraising_pos < minutes_pos, "Fundraising should come before Minutes Read"
         assert minutes_pos < sponsors_pos, "Minutes Read should come before Sponsors"
-        assert sponsors_pos < participation_pos, "Sponsors should come before Participation"
-        assert participation_pos < goal_pos, "Participation should come before Goal Met"
+        assert sponsors_pos < participation_pos, "Sponsors should come before Avg. Participation"
+        assert participation_pos < goal_pos, "Avg. Participation should come before Goal Met"
 
     def test_teams_metric_order(self, client):
         """Verify Teams page has metrics in correct order"""
@@ -130,7 +130,7 @@ class TestPhase1StandardizedOrder:
         campaign_pos = banner_html.find('📅 Campaign Day')
         fundraising_pos = banner_html.find('💰')  # Fundraising icon
         minutes_pos = banner_html.find('📚')  # Minutes icon (in Teams)
-        sponsors_pos = banner_html.find('🤝')  # Sponsors icon (in Teams)
+        sponsors_pos = banner_html.find('🎁')  # Sponsors icon (changed from 🤝 to 🎁)
         participation_pos = banner_html.find('👥')  # Participation icon
         goal_pos = banner_html.find('🎯')  # Goal Met icon
 
@@ -138,7 +138,7 @@ class TestPhase1StandardizedOrder:
         assert campaign_pos >= 0, "Campaign Day should be present"
         assert fundraising_pos >= 0, "Fundraising should be present"
         assert minutes_pos >= 0, "Minutes Read should be present"
-        assert sponsors_pos >= 0, "Sponsors should be present"
+        assert sponsors_pos >= 0, "Sponsors should be present (with 🎁 icon)"
         assert participation_pos >= 0, "Participation should be present"
         assert goal_pos >= 0, "Goal Met should be present"
 
@@ -146,8 +146,8 @@ class TestPhase1StandardizedOrder:
         assert campaign_pos < fundraising_pos, "Campaign Day should come before Fundraising"
         assert fundraising_pos < minutes_pos, "Fundraising should come before Minutes Read"
         assert minutes_pos < sponsors_pos, "Minutes Read should come before Sponsors"
-        assert sponsors_pos < participation_pos, "Sponsors should come before Participation"
-        assert participation_pos < goal_pos, "Participation should come before Goal Met"
+        assert sponsors_pos < participation_pos, "Sponsors should come before Avg. Participation"
+        assert participation_pos < goal_pos, "Avg. Participation should come before Goal Met"
 
     def test_grade_level_metric_order(self, client):
         """Verify Grade Level page has metrics in correct order"""
@@ -159,15 +159,15 @@ class TestPhase1StandardizedOrder:
         fundraising_pos = html.find('💰 Fundraising')
         minutes_pos = html.find('📖 Minutes Read')
         sponsors_pos = html.find('🎁 Sponsors')
-        participation_pos = html.find('👥 Participation')
+        participation_pos = html.find('👥 Avg. Participation (With Color)')
         goal_pos = html.find('🎯 Goal Met')
 
         # Verify order
         assert campaign_pos < fundraising_pos, "Campaign Day should come before Fundraising"
         assert fundraising_pos < minutes_pos, "Fundraising should come before Minutes Read"
         assert minutes_pos < sponsors_pos, "Minutes Read should come before Sponsors"
-        assert sponsors_pos < participation_pos, "Sponsors should come before Participation"
-        assert participation_pos < goal_pos, "Participation should come before Goal Met"
+        assert sponsors_pos < participation_pos, "Sponsors should come before Avg. Participation"
+        assert participation_pos < goal_pos, "Avg. Participation should come before Goal Met"
 
 
 class TestPhase2SponsorsMetric:
