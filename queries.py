@@ -1565,6 +1565,7 @@ def get_school_wide_leaders_query(date_where="", grade=None):
                     ci.teacher_name,
                     ci.grade_level,
                     ci.team_name,
+                    ci.total_students,
                     dl.log_date,
                     (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / ci.total_students) as daily_pct
                 FROM Class_Info ci
@@ -1572,16 +1573,39 @@ def get_school_wide_leaders_query(date_where="", grade=None):
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE 1=1 {grade_where} {date_where}
                 GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students, dl.log_date
+            ),
+            ClassAvgParticipation AS (
+                SELECT
+                    class_name,
+                    teacher_name,
+                    grade_level,
+                    team_name,
+                    total_students,
+                    AVG(daily_pct) as avg_participation
+                FROM ClassDailyParticipation
+                GROUP BY class_name, teacher_name, grade_level, team_name, total_students
+            ),
+            ColorBonus AS (
+                SELECT
+                    class_name,
+                    SUM(bonus_participation_points) as bonus_points
+                FROM Team_Color_Bonus
+                GROUP BY class_name
+            ),
+            DaysCount AS (
+                SELECT COUNT(DISTINCT dl.log_date) as total_days
+                FROM Daily_Logs dl
+                WHERE 1=1 {date_where}
             )
             SELECT
                 'participation' as metric,
-                class_name,
-                teacher_name,
-                grade_level,
-                team_name,
-                AVG(daily_pct) as value
-            FROM ClassDailyParticipation
-            GROUP BY class_name, teacher_name, grade_level, team_name
+                cap.class_name,
+                cap.teacher_name,
+                cap.grade_level,
+                cap.team_name,
+                (cap.avg_participation + (COALESCE(cb.bonus_points, 0) * 100.0 / (cap.total_students * (SELECT total_days FROM DaysCount)))) as value
+            FROM ClassAvgParticipation cap
+            LEFT JOIN ColorBonus cb ON cap.class_name = cb.class_name
             ORDER BY value DESC
             LIMIT 1
         )

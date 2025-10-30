@@ -461,8 +461,8 @@
             <div class="headline-subtitle">{{ metrics.sponsors_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.1f}".format(metrics.sponsors_pct) }}%)</div>
         </div>
         <div class="col headline-metric">
-            <div class="headline-label">👥 Participation{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
-            <div class="headline-value">{{ "{:.0f}".format(metrics.participation_pct) }}%</div>
+            <div class="headline-label">👥 Avg. Participation (With Color){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Average daily participation (with color bonus) through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
+            <div class="headline-value">{{ "{:.1f}".format(metrics.avg_participation_with_color) }}%</div>
             <div class="headline-subtitle">{{ metrics.participating_students }} of {{ metrics.total_roster }}<br>Students</div>
         </div>
         <div class="col headline-metric">

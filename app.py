@@ -167,6 +167,43 @@ def school_tab():
     metrics['total_hours'] = metrics['total_minutes'] // 60
     metrics['participation_pct'] = (metrics['participating_students'] / total_roster * 100) if total_roster > 0 else 0
 
+    # Average Daily Participation (With Color) - school-wide
+    # Calculate average daily participation percentage across all students
+    school_participation_query = f"""
+        SELECT
+            AVG(daily_pct) as avg_participation
+        FROM (
+            SELECT
+                dl.log_date,
+                (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / {total_roster}) as daily_pct
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
+            GROUP BY dl.log_date
+        )
+    """
+    school_participation_result = db.execute_query(school_participation_query)
+    base_school_participation = school_participation_result[0]['avg_participation'] or 0 if school_participation_result and school_participation_result[0] else 0
+
+    # Get total color bonus points across all classes
+    school_color_bonus_query = """
+        SELECT COALESCE(SUM(bonus_participation_points), 0) as total_bonus
+        FROM Team_Color_Bonus
+    """
+    school_color_bonus_result = db.execute_query(school_color_bonus_query)
+    school_color_bonus = school_color_bonus_result[0]['total_bonus'] if school_color_bonus_result and school_color_bonus_result[0] else 0
+
+    # Calculate total days in date range for color bonus calculation
+    total_days_query = f"""
+        SELECT COUNT(DISTINCT log_date) as total_days
+        FROM Daily_Logs
+        WHERE 1=1 {date_where}
+    """
+    total_days_result = db.execute_query(total_days_query)
+    total_days = total_days_result[0]['total_days'] if total_days_result and total_days_result[0] else 1
+
+    # Apply color bonus: color points act as "free" participation days
+    metrics['avg_participation_with_color'] = base_school_participation + (school_color_bonus * 100.0 / (total_roster * total_days)) if total_roster > 0 and total_days > 0 else base_school_participation
+
     # Goals met calculation
     goals_met_query = f"""
         SELECT
@@ -950,13 +987,13 @@ def teams_tab():
         },
         {
             'name': 'Sponsors',
-            'icon': '🤝',
+            'icon': '🎁',
             'key': 'sponsors',
             'format': 'number',
             'honors_filter': False
         },
         {
-            'name': 'Participation',
+            'name': 'Avg. Participation (With Color)',
             'icon': '👥',
             'key': 'participation_pct',
             'format': 'percentage',
