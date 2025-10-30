@@ -694,7 +694,7 @@
             <tr>
                 <td>
                     <strong>{{ row.metric }}</strong>
-                    {% if row.metric in ['Minutes Read', 'Participation %', 'All 4 Days Active %', 'Met Goal ≥1 Day %', 'Met Goal All Days %'] and date_filter != 'all' %}
+                    {% if row.metric in ['Minutes Read', 'Participation %', 'Avg. Participation (With Color)', 'All 4 Days Active %', 'Met Goal ≥1 Day %', 'Met Goal All Days %'] and date_filter != 'all' %}
                     <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>
                     {% endif %}
                 </td>

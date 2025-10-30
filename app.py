@@ -1121,7 +1121,7 @@ def teams_tab():
     top_performers[team1_name] = get_top_performers_for_team(team1_name)
     top_performers[team2_name] = get_top_performers_for_team(team2_name)
 
-    # === COMPARISON TABLE (9 metrics) ===
+    # === COMPARISON TABLE (10 metrics) ===
     comparison_table = []
 
     # Helper function to add table row
@@ -1184,7 +1184,10 @@ def teams_tab():
 
     add_comparison_row('Participation %', 'Reading', team1_participation_pct, team2_participation_pct, 'percentage')
 
-    # 3. All 4 Days Active % (students who read all days / total students)
+    # 3. Avg. Participation (With Color) - average daily participation with color bonus
+    add_comparison_row('Avg. Participation (With Color)', 'Reading', team1_metrics['participation_pct'], team2_metrics['participation_pct'], 'percentage')
+
+    # 4. All 4 Days Active % (students who read all days / total students)
     # First, get count of days in filter period
     days_count_query = f"""
         SELECT COUNT(DISTINCT log_date) as total_days
@@ -1439,6 +1442,7 @@ def grade_level_tab():
             'fundraising': max(all_classes, key=lambda x: x['total_fundraising'])['total_fundraising'],
             'minutes': max(all_classes, key=lambda x: x['total_minutes'])['total_minutes'],
             'participation': max(all_classes, key=lambda x: x['participation_pct'])['participation_pct'],
+            'avg_participation_with_color': max(all_classes, key=lambda x: x['avg_participation_with_color_pct'])['avg_participation_with_color_pct'],
             'all_days_active': max(all_classes, key=lambda x: x['all_days_active_pct'])['all_days_active_pct'],
             'goal_met_once': max(all_classes, key=lambda x: x['goal_met_once_pct'])['goal_met_once_pct'],
             'goal_met_all_days': max(all_classes, key=lambda x: x['goal_met_all_days_pct'])['goal_met_all_days_pct'],
@@ -1450,6 +1454,7 @@ def grade_level_tab():
             'fundraising': 0,
             'minutes': 0,
             'participation': 0,
+            'avg_participation_with_color': 0,
             'all_days_active': 0,
             'goal_met_once': 0,
             'goal_met_all_days': 0,
@@ -1479,6 +1484,7 @@ def grade_level_tab():
                 'fundraising': max(grade_classes, key=lambda x: x['total_fundraising'])['total_fundraising'],
                 'minutes': max(grade_classes, key=lambda x: x['total_minutes'])['total_minutes'],
                 'participation': max(grade_classes, key=lambda x: x['participation_pct'])['participation_pct'],
+                'avg_participation_with_color': max(grade_classes, key=lambda x: x['avg_participation_with_color_pct'])['avg_participation_with_color_pct'],
                 'all_days_active': max(grade_classes, key=lambda x: x['all_days_active_pct'])['all_days_active_pct'],
                 'goal_met_once': max(grade_classes, key=lambda x: x['goal_met_once_pct'])['goal_met_once_pct'],
                 'goal_met_all_days': max(grade_classes, key=lambda x: x['goal_met_all_days_pct'])['goal_met_all_days_pct'],
@@ -1500,6 +1506,7 @@ def grade_level_tab():
             cls['is_school_winner']['fundraising'] = (cls['total_fundraising'] == school_winners['fundraising'] and cls['total_fundraising'] > 0)
             cls['is_school_winner']['minutes'] = (cls['total_minutes'] == school_winners['minutes'] and cls['total_minutes'] > 0)
             cls['is_school_winner']['participation'] = (cls['participation_pct'] == school_winners['participation'] and cls['participation_pct'] > 0)
+            cls['is_school_winner']['avg_participation_with_color'] = (cls['avg_participation_with_color_pct'] == school_winners['avg_participation_with_color'] and cls['avg_participation_with_color_pct'] > 0)
             cls['is_school_winner']['all_days_active'] = (cls['all_days_active_pct'] == school_winners['all_days_active'] and cls['all_days_active_pct'] > 0)
             cls['is_school_winner']['goal_met_once'] = (cls['goal_met_once_pct'] == school_winners['goal_met_once'] and cls['goal_met_once_pct'] > 0)
             cls['is_school_winner']['goal_met_all_days'] = (cls['goal_met_all_days_pct'] == school_winners['goal_met_all_days'] and cls['goal_met_all_days_pct'] > 0)
@@ -1512,6 +1519,7 @@ def grade_level_tab():
                 cls['is_grade_winner']['fundraising'] = (cls['total_fundraising'] == gw['fundraising'] and cls['total_fundraising'] > 0)
                 cls['is_grade_winner']['minutes'] = (cls['total_minutes'] == gw['minutes'] and cls['total_minutes'] > 0)
                 cls['is_grade_winner']['participation'] = (cls['participation_pct'] == gw['participation'] and cls['participation_pct'] > 0)
+                cls['is_grade_winner']['avg_participation_with_color'] = (cls['avg_participation_with_color_pct'] == gw['avg_participation_with_color'] and cls['avg_participation_with_color_pct'] > 0)
                 cls['is_grade_winner']['all_days_active'] = (cls['all_days_active_pct'] == gw['all_days_active'] and cls['all_days_active_pct'] > 0)
                 cls['is_grade_winner']['goal_met_once'] = (cls['goal_met_once_pct'] == gw['goal_met_once'] and cls['goal_met_once_pct'] > 0)
                 cls['is_grade_winner']['goal_met_all_days'] = (cls['goal_met_all_days_pct'] == gw['goal_met_all_days'] and cls['goal_met_all_days_pct'] > 0)

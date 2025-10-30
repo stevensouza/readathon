@@ -812,7 +812,7 @@
                         {% if date_filter != 'all' %}◐{% endif %}
                     </div>
                     <div class="class-detail-metric">
-                        ✅ <strong>{{ cls.students_met_goal }}</strong> met goal ≥1 day
+                        ✅ <strong>{{ "{:.1f}".format(cls.goal_met_once_pct) }}%</strong> met goal ≥1 day
                         {% if date_filter != 'all' %}◐{% endif %}
                     </div>
                     <div class="class-detail-metric">🎁 <strong>{{ cls.total_sponsors }}</strong> sponsors</div>
@@ -858,11 +858,12 @@
                     <th onclick="sortTable(4)" class="text-end">SPONSORS</th>
                     <th onclick="sortTable(5)" class="text-end">MINUTES READ {% if date_filter != 'all' %}◐{% endif %}</th>
                     <th onclick="sortTable(6)" class="text-end">PARTICIPATION % {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(7)" class="text-end">ALL DAYS ACTIVE % {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(8)" class="text-end">MET GOAL ≥1 DAY % {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(9)" class="text-end">MET GOAL ALL DAYS % {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(10)" class="text-end">COLOR WAR POINTS</th>
-                    <th onclick="sortTable(11)" class="text-end">STUDENTS</th>
+                    <th onclick="sortTable(7)" class="text-end">AVG. PARTICIPATION (WITH COLOR) {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(8)" class="text-end">ALL DAYS ACTIVE % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(9)" class="text-end">MET GOAL ≥1 DAY % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(10)" class="text-end">MET GOAL ALL DAYS % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(11)" class="text-end">COLOR WAR POINTS</th>
+                    <th onclick="sortTable(12)" class="text-end">STUDENTS</th>
                 </tr>
             </thead>
             <tbody>
@@ -872,6 +873,7 @@
                     data-school-sponsors="{{ cls.is_school_winner.sponsors|string|lower }}"
                     data-school-minutes="{{ cls.is_school_winner.minutes|string|lower }}"
                     data-school-participation="{{ cls.is_school_winner.participation|string|lower }}"
+                    data-school-avg-participation-with-color="{{ cls.is_school_winner.avg_participation_with_color|string|lower }}"
                     data-school-all-days="{{ cls.is_school_winner.all_days_active|string|lower }}"
                     data-school-goal-once="{{ cls.is_school_winner.goal_met_once|string|lower }}"
                     data-school-goal-all="{{ cls.is_school_winner.goal_met_all_days|string|lower }}"
@@ -880,6 +882,7 @@
                     data-grade-sponsors="{{ cls.is_grade_winner.sponsors|string|lower }}"
                     data-grade-minutes="{{ cls.is_grade_winner.minutes|string|lower }}"
                     data-grade-participation="{{ cls.is_grade_winner.participation|string|lower }}"
+                    data-grade-avg-participation-with-color="{{ cls.is_grade_winner.avg_participation_with_color|string|lower }}"
                     data-grade-all-days="{{ cls.is_grade_winner.all_days_active|string|lower }}"
                     data-grade-goal-once="{{ cls.is_grade_winner.goal_met_once|string|lower }}"
                     data-grade-goal-all="{{ cls.is_grade_winner.goal_met_all_days|string|lower }}"
@@ -898,6 +901,9 @@
                     </td>
                     <td class="text-end" data-value="{{ cls.participation_pct }}">
                         <span class="metric-cell">{{ "{:.1f}".format(cls.participation_pct) }}%</span>
+                    </td>
+                    <td class="text-end" data-value="{{ cls.avg_participation_with_color_pct }}">
+                        <span class="metric-cell">{{ "{:.1f}".format(cls.avg_participation_with_color_pct) }}%</span>
                     </td>
                     <td class="text-end" data-value="{{ cls.all_days_active_pct }}">
                         <span class="metric-cell">{{ "{:.1f}".format(cls.all_days_active_pct) }}%</span>
@@ -1168,28 +1174,30 @@ function applyHighlights(grade) {
     const rows = Array.from(tbody.querySelectorAll('tr:not(.hidden)'));
 
     // Column indices for metrics (matches Teams table metrics exactly)
-    // 3: Fundraising, 4: Sponsors, 5: Minutes, 6: Participation%, 7: All Days Active%,
-    // 8: Goal Met≥1 Day%, 9: Goal Met All Days%, 10: Color War Points
-    const metricColumnIndices = [3, 4, 5, 6, 7, 8, 9, 10];
+    // 3: Fundraising, 4: Sponsors, 5: Minutes, 6: Participation%, 7: Avg. Participation (With Color),
+    // 8: All Days Active%, 9: Goal Met≥1 Day%, 10: Goal Met All Days%, 11: Color War Points
+    const metricColumnIndices = [3, 4, 5, 6, 7, 8, 9, 10, 11];
     const schoolAttrMap = {
         3: 'data-school-fundraising',
         4: 'data-school-sponsors',
         5: 'data-school-minutes',
         6: 'data-school-participation',
-        7: 'data-school-all-days',
-        8: 'data-school-goal-once',
-        9: 'data-school-goal-all',
-        10: 'data-school-color'
+        7: 'data-school-avg-participation-with-color',
+        8: 'data-school-all-days',
+        9: 'data-school-goal-once',
+        10: 'data-school-goal-all',
+        11: 'data-school-color'
     };
     const gradeAttrMap = {
         3: 'data-grade-fundraising',
         4: 'data-grade-sponsors',
         5: 'data-grade-minutes',
         6: 'data-grade-participation',
-        7: 'data-grade-all-days',
-        8: 'data-grade-goal-once',
-        9: 'data-grade-goal-all',
-        10: 'data-grade-color'
+        7: 'data-grade-avg-participation-with-color',
+        8: 'data-grade-all-days',
+        9: 'data-grade-goal-once',
+        10: 'data-grade-goal-all',
+        11: 'data-grade-color'
     };
 
     // For each metric column, find the winner(s)

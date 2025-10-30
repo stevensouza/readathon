@@ -1210,8 +1210,8 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
             GROUP BY tcb.class_name
         ),
         FilterDaysCount AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         Participation AS (
@@ -1281,6 +1281,25 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
                 END) = (SELECT total_days FROM FilterDaysCount)
             )
             GROUP BY class_name
+        ),
+        AvgDailyParticipation AS (
+            SELECT
+                class_name,
+                AVG(daily_pct) as avg_daily_pct
+            FROM (
+                SELECT
+                    ci.class_name,
+                    ci.total_students,
+                    dl.log_date,
+                    (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / ci.total_students) as daily_pct
+                FROM Class_Info ci
+                JOIN Roster r ON ci.class_name = r.class_name
+                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+                WHERE 1=1 {date_where}
+                {grade_where}
+                GROUP BY ci.class_name, ci.total_students, dl.log_date
+            )
+            GROUP BY class_name
         )
         SELECT
             cm.class_name,
@@ -1303,6 +1322,16 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
                 THEN ROUND(COALESCE(p.participated_count, 0) * 100.0 / cm.total_students, 1)
                 ELSE 0
             END as participation_pct,
+
+            -- Avg. Participation (With Color) - average daily participation + color bonus
+            CASE WHEN cm.total_students > 0 AND (SELECT total_days FROM FilterDaysCount) > 0
+                THEN ROUND(
+                    COALESCE(adp.avg_daily_pct, 0) +
+                    (COALESCE(cb.bonus_participation_points, 0) * 100.0 / (cm.total_students * (SELECT total_days FROM FilterDaysCount))),
+                    1
+                )
+                ELSE COALESCE(adp.avg_daily_pct, 0)
+            END as avg_participation_with_color_pct,
 
             -- All Days Active % (students who read all days / total)
             CASE WHEN cm.total_students > 0
@@ -1328,6 +1357,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
         FROM ClassMetrics cm
         LEFT JOIN ColorBonus cb ON cm.class_name = cb.class_name
         LEFT JOIN Participation p ON cm.class_name = p.class_name
+        LEFT JOIN AvgDailyParticipation adp ON cm.class_name = adp.class_name
         LEFT JOIN AllDaysActive ada ON cm.class_name = ada.class_name
         LEFT JOIN GoalMetOnce gmo ON cm.class_name = gmo.class_name
         LEFT JOIN GoalMetAllDays gma ON cm.class_name = gma.class_name
