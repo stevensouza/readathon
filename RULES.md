@@ -67,18 +67,95 @@ This file contains universal rules that apply across all pages and features in t
 All card-based pages (School, Teams, Grade Level, Students) MUST follow this order:
 1. **Filter Period dropdown** (centered, with label "📅 Filter Period:")
 2. **Data Info & Sources button** (collapsible footer at bottom of page)
-3. **Banner** (5 headline metrics in consistent order across pages)
+3. **Banner** (6 headline metrics in consistent order across all pages)
 4. **Middle Section Cards** (grade/team cards with top performers)
 5. **Detail Table** (sortable, filterable data table)
 
-### Banner Metric Order
-**IMPORTANT:** Banner metrics must appear in the SAME ORDER across all pages, even if entity differs:
+### Banner Metrics - Standard 6-Metric Structure
+**CRITICAL:** All three pages (School, Teams, Grade Level) use the EXACT SAME 6 metrics in the SAME ORDER:
 
-1. **Fundraising Leader** (highest $ amount)
-2. **Minutes Read Leader** (highest total minutes)
-3. **Sponsors Leader** (highest sponsor count)
-4. **Participation Leader** (highest % participation)
-5. **Goals Met Leader** (highest count of students meeting goal)
+1. **📅 Campaign Day** - Status metric (no team competition)
+   - Format: "X of Y" (e.g., "Day 3 of 10")
+   - Subtitle: Current date or date range
+   - Filter: Does NOT respect date filter (always shows full campaign status)
+
+2. **💰 Fundraising** - Total donations raised
+   - Format: $X,XXX (no decimals)
+   - Subtitle: Varies by page (e.g., "Top Class: TeacherName - $1,234")
+   - Filter: Does NOT respect date filter (cumulative from Reader_Cumulative)
+
+3. **📚/📖 Minutes Read** - Total reading minutes
+   - Format: X,XXX hours (converted from minutes)
+   - Subtitle: Varies by page (e.g., "Avg per Student: 45 hours")
+   - Filter: Respects date filter ◐
+   - Icon: 📚 on School/Teams pages, 📖 on Grade Level page
+
+4. **🎁 Sponsors** - Students with sponsors
+   - Format: X,XXX count
+   - Subtitle: "X of Y Students (Z%)"
+   - Filter: Does NOT respect date filter (cumulative from Reader_Cumulative)
+   - Icon: 🎁 (NOT 🤝)
+
+5. **👥 Avg. Participation (With Color)** - Average daily participation + color bonus
+   - Format: X.X% (1 decimal place)
+   - Subtitle: Varies by page (e.g., "Top Class: TeacherName - 85.3%")
+   - Filter: Respects date filter ◐
+   - Formula: (days_read / (students * days)) * 100 + (color_points / (students * days)) * 100
+   - **Special Rule: CAN EXCEED 100%** if all students read all days AND team has color war points
+   - Example: 10 students read 10/10 days = 100%, + 5 color points = 105%
+
+6. **🎯 Goal Met (≥1 Day)** - Students who met daily goal at least once
+   - Format: X.X% (1 decimal place)
+   - Subtitle: "X of Y students"
+   - Filter: Respects date filter ◐
+
+### Participation Metrics - Two Different Calculations
+
+The application uses **TWO distinct participation metrics**. DO NOT confuse them:
+
+#### 1. Participation % (Simple Cumulative)
+- **Formula:** `(students_who_participated / total_students) * 100`
+- **Definition:** Percentage of students who read >0 minutes at least once in the date range
+- **Used in:**
+  - Grade Level classes table "PARTICIPATION %" column
+  - Teams comparison table "Participation %" row
+- **Example:** 80 out of 100 students participated = 80%
+- **Does NOT include:** Color war bonus points
+- **Does NOT reflect:** Daily participation patterns or consistency
+
+#### 2. Avg. Participation (With Color)
+- **Formula:**
+  ```
+  base_avg = (total_days_read / (team_size * days_in_range)) * 100
+  color_adj = (color_war_points / (team_size * days_in_range)) * 100
+  result = base_avg + color_adj
+  ```
+- **Definition:** Average daily participation rate + color bonus points
+- **Used in:**
+  - All 3 page banners (School, Teams, Grade Level)
+  - Teams comparison table "Avg. Participation (With Color)" row
+  - Grade Level classes table "AVG. PARTICIPATION (WITH COLOR)" column
+- **Example:** 10 students read 5 days each out of 10 days = 50%, plus 2 color points = 52%
+- **Includes:** Color war bonus points
+- **Reflects:** Daily participation patterns (average across all days in range)
+- **Special Rule:** Can exceed 100% if all students read all days AND team has color points
+
+#### Why Two Metrics?
+
+**Simple Participation %:**
+- Shows breadth: "What percentage of students participated at all?"
+- Binary: Either a student participated (1) or didn't (0)
+- Useful for: Comparing class engagement levels
+
+**Avg. Participation (With Color):**
+- Shows depth + consistency: "How consistently did students participate day-to-day?"
+- Continuous: Reflects daily participation patterns
+- Includes color bonus as incentive
+- Useful for: Measuring sustained engagement + team spirit
+
+**Key Difference:**
+- A class with 100% Simple Participation (all students read once) might have 50% Avg. Participation (if they only read half the days)
+- Avg. Participation rewards consistent daily reading + team color spirit
 
 ### Team Badges
 - **Shape:** Rounded rectangles with padding
