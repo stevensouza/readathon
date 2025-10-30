@@ -194,8 +194,8 @@ def school_tab():
 
     # Calculate total days in date range for color bonus calculation
     total_days_query = f"""
-        SELECT COUNT(DISTINCT log_date) as total_days
-        FROM Daily_Logs
+        SELECT COUNT(DISTINCT dl.log_date) as total_days
+        FROM Daily_Logs dl
         WHERE 1=1 {date_where}
     """
     total_days_result = db.execute_query(total_days_query)
