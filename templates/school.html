@@ -448,27 +448,27 @@
         <div class="col headline-metric">
             <div class="headline-label">💰 Fundraising</div>
             <div class="headline-value">${{ "{:,.0f}".format(metrics.total_fundraising) }}</div>
-            <div class="headline-subtitle">{{ metrics.fundraising_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.0f}".format(metrics.fundraising_pct) }}%)<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.fundraising_leader == team1_name.upper() else team2_name|lower }}">{{ teams.fundraising_leader }}</span></span></div>
+            <div class="headline-subtitle">{{ metrics.fundraising_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.0f}".format(metrics.fundraising_pct) }}%)</div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">📚 Minutes Read{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
             <div class="headline-value">{{ "{:,}".format(metrics.total_hours) }} hours</div>
-            <div class="headline-subtitle">({{ "{:,}".format(metrics.total_minutes) }} min)<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.reading_leader_with_color == team1_name.upper() else team2_name|lower }}">{{ teams.reading_leader_with_color }}</span></span></div>
+            <div class="headline-subtitle">({{ "{:,}".format(metrics.total_minutes) }} min)</div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">🎁 Sponsors</div>
             <div class="headline-value">{{ "{:,}".format(metrics.sponsors_students) }}</div>
-            <div class="headline-subtitle">{{ metrics.sponsors_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.1f}".format(metrics.sponsors_pct) }}%)<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.sponsors_leader == team1_name.upper() else team2_name|lower }}">{{ teams.sponsors_leader }}</span></span></div>
+            <div class="headline-subtitle">{{ metrics.sponsors_students }} of {{ metrics.total_roster }}<br>Students ({{ "{:.1f}".format(metrics.sponsors_pct) }}%)</div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">👥 Participation{% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
             <div class="headline-value">{{ "{:.0f}".format(metrics.participation_pct) }}%</div>
-            <div class="headline-subtitle">{{ metrics.participating_students }} of {{ metrics.total_roster }}<br>Students<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.participation_leader_with_color == team1_name.upper() else team2_name|lower }}">{{ teams.participation_leader_with_color }}</span></span></div>
+            <div class="headline-subtitle">{{ metrics.participating_students }} of {{ metrics.total_roster }}<br>Students</div>
         </div>
         <div class="col headline-metric">
             <div class="headline-label">🎯 Goal Met (≥1 Day){% if request.args.get('date', 'all') != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ request.args.get('date') }}">◐</span>{% endif %}</div>
             <div class="headline-value">{{ "{:.0f}".format(metrics.goals_met_pct) }}%</div>
-            <div class="headline-subtitle">{{ metrics.goals_met_students }} of {{ metrics.total_roster }}<br>Students<br><span class="leader-text">Leader: <span class="team-badge team-badge-{{ team1_name|lower if teams.goals_met_leader == team1_name.upper() else team2_name|lower }}">{{ teams.goals_met_leader }}</span></span></div>
+            <div class="headline-subtitle">{{ metrics.goals_met_students }} of {{ metrics.total_roster }}<br>Students</div>
         </div>
     </div>
 </div>
@@ -532,16 +532,44 @@
             </div>
 
             <div class="team-lead">
-                <div style="font-weight: 700; margin-bottom: 0.5rem; text-align: center; font-size: 0.85rem;">🏆 CURRENT LEADERS</div>
-                <div style="margin-bottom: 0.3rem; font-size: 0.85rem;">
-                    <span style="color: rgba(0,0,0,0.6);">Fundraising:</span> <span style="font-weight: 700;">{{ teams.fundraising_leader }}</span> (+${{ "{:,.0f}".format(teams.fundraising_gap) }})
-                </div>
-                <div style="margin-bottom: 0.3rem; font-size: 0.85rem;">
-                    <span style="color: rgba(0,0,0,0.6);">Reading (With Color):</span> <span style="font-weight: 700;">{{ teams.reading_leader_with_color }}</span> (+{{ teams.reading_gap_with_color }} hrs)
-                </div>
-                <div style="font-size: 0.85rem;">
-                    <span style="color: rgba(0,0,0,0.6);">Participation (With Color):</span> <span style="font-weight: 700;">{{ teams.participation_leader_with_color }}</span> (+{{ "{:.1f}".format(teams.participation_gap_with_color) }}%)
-                </div>
+                <div style="font-weight: 700; margin-bottom: 0.75rem; text-align: center; font-size: 0.85rem;">🏆 CURRENT LEADERS</div>
+                <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                        <td style="padding: 0.4rem 0; text-align: left; color: rgba(0,0,0,0.6);">Fundraising</td>
+                        <td style="padding: 0.4rem 0; text-align: center; font-weight: 600;">+${{ "{:,.0f}".format(teams.fundraising_gap) }}</td>
+                        <td style="padding: 0.4rem 0; text-align: right;">
+                            <span class="team-badge team-badge-{{ team1_name|lower if teams.fundraising_leader == team1_name.upper() else team2_name|lower }}">{{ teams.fundraising_leader }}</span>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                        <td style="padding: 0.4rem 0; text-align: left; color: rgba(0,0,0,0.6);">Minutes Read</td>
+                        <td style="padding: 0.4rem 0; text-align: center; font-weight: 600;">+{{ teams.reading_gap_with_color }} hrs</td>
+                        <td style="padding: 0.4rem 0; text-align: right;">
+                            <span class="team-badge team-badge-{{ team1_name|lower if teams.reading_leader_with_color == team1_name.upper() else team2_name|lower }}">{{ teams.reading_leader_with_color }}</span>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                        <td style="padding: 0.4rem 0; text-align: left; color: rgba(0,0,0,0.6);">Sponsors</td>
+                        <td style="padding: 0.4rem 0; text-align: center; font-weight: 600;">+{{ teams.sponsors_gap }}</td>
+                        <td style="padding: 0.4rem 0; text-align: right;">
+                            <span class="team-badge team-badge-{{ team1_name|lower if teams.sponsors_leader == team1_name.upper() else team2_name|lower }}">{{ teams.sponsors_leader }}</span>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                        <td style="padding: 0.4rem 0; text-align: left; color: rgba(0,0,0,0.6);">Participation</td>
+                        <td style="padding: 0.4rem 0; text-align: center; font-weight: 600;">+{{ "{:.1f}".format(teams.participation_gap_with_color) }}%</td>
+                        <td style="padding: 0.4rem 0; text-align: right;">
+                            <span class="team-badge team-badge-{{ team1_name|lower if teams.participation_leader_with_color == team1_name.upper() else team2_name|lower }}">{{ teams.participation_leader_with_color }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.4rem 0; text-align: left; color: rgba(0,0,0,0.6);">Goal Met ≥1 Day</td>
+                        <td style="padding: 0.4rem 0; text-align: center; font-weight: 600;">+{{ "{:.1f}".format(teams.goals_met_gap) }}%</td>
+                        <td style="padding: 0.4rem 0; text-align: right;">
+                            <span class="team-badge team-badge-{{ team1_name|lower if teams.goals_met_leader == team1_name.upper() else team2_name|lower }}">{{ teams.goals_met_leader }}</span>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>

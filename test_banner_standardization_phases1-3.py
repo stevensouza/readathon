@@ -69,28 +69,27 @@ class TestPhase1TeamBadges:
     """Phase 1: Team badges on School page banner"""
 
     def test_school_banner_has_team_badges(self, client):
-        """Verify School page banner shows team badges"""
+        """Verify School page has team badges in Current Leaders section"""
         response = client.get('/school')
         html = response.data.decode('utf-8')
 
         assert response.status_code == 200
         # Check for team badge CSS classes
         assert 'team-badge' in html
-        # Should have at least 4 team badges (Fundraising, Minutes, Participation, Goal Met)
-        # Sponsors will be 5th after Phase 2
+        # Current Leaders section has 5 team badges (Fundraising, Minutes, Sponsors, Participation, Goal Met)
         badge_count = html.count('class="team-badge team-badge-')
-        assert badge_count >= 4, f"Expected at least 4 team badges, found {badge_count}"
+        assert badge_count >= 5, f"Expected at least 5 team badges in Current Leaders, found {badge_count}"
 
     def test_school_banner_team_badge_styling(self, client):
-        """Verify team badge CSS classes exist with new 'Leader:' format"""
+        """Verify team badge CSS classes exist in Current Leaders section"""
         response = client.get('/school')
         html = response.data.decode('utf-8')
 
         # Check that CSS for team badges exists
         assert '.team-badge-kitsko' in html or '.team-badge-staub' in html
-        # Check for new "Leader:" text format (Issue 1 fix)
-        assert 'leader-text' in html, "Should have leader-text class for new format"
-        assert 'Leader:' in html, "Should have 'Leader:' label in subtitle"
+        # Check for "CURRENT LEADERS" section with team badges
+        assert 'CURRENT LEADERS' in html, "Should have CURRENT LEADERS section"
+        assert 'team-badge' in html, "Should have team badges in Current Leaders section"
 
 
 class TestPhase1StandardizedOrder:
@@ -203,13 +202,13 @@ class TestPhase2SponsorsMetric:
         assert ' of ' in full_section, "Sponsors should show 'X of Y' format"
 
     def test_sponsors_has_team_badge(self, client):
-        """Verify Sponsors metric has a team badge"""
+        """Verify team badges exist in Current Leaders section (not in banner)"""
         response = client.get('/school')
         html = response.data.decode('utf-8')
 
-        # Count team badges - should be 5 now (Fundraising, Minutes, Sponsors, Participation, Goal Met)
+        # Team badges are now in Current Leaders section only (5 badges total: Fundraising, Minutes, Sponsors, Participation, Goal Met)
         badge_count = html.count('class="team-badge team-badge-')
-        assert badge_count >= 5, f"Expected at least 5 team badges (including Sponsors), found {badge_count}"
+        assert badge_count >= 5, f"Expected at least 5 team badges in Current Leaders, found {badge_count}"
 
     def test_sponsors_calculation_accuracy(self, client, sample_db):
         """Verify Sponsors calculation matches database"""
