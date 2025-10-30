@@ -1,6 +1,6 @@
 # Read-a-Thon Application Rules
 
-**Last Updated:** 2025-10-29
+**Last Updated:** 2025-10-30
 
 This file contains universal rules that apply across all pages and features in the Read-a-Thon application. These rules MUST be followed for every implementation.
 
@@ -142,6 +142,166 @@ GROUP BY ci.teacher_name, ci.grade_level
 
 ### General Design Principle:
 **"Be consistent. Always."** - Check existing implementations before creating new ones.
+
+---
+
+## Testing Requirements
+
+### All Pages Must Have Tests
+**CRITICAL:** Every user-facing page (School, Teams, Grade Level, Students, etc.) MUST have a corresponding pytest test suite before being deployed or committed.
+
+### Test File Naming Convention
+- File: `test_<page_name>_page.py`
+- Class: `Test<PageName>Page`
+- Example: `test_school_page.py` contains `class TestSchoolPage`
+
+### Mandatory Tests for ALL Pages
+Every page test suite MUST include these tests:
+
+1. **test_page_loads_successfully** - Verify HTTP 200 response
+   ```python
+   def test_page_loads_successfully(self, client):
+       response = client.get('/page_route')
+       assert response.status_code == 200
+       assert b'Read-a-Thon System' in response.data
+   ```
+
+2. **test_no_error_messages** - Scan for error patterns
+   ```python
+   def test_no_error_messages(self, client):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       error_patterns = ['Error:', 'Exception:', 'Traceback', 'error occurred']
+       html_lower = html.lower()
+       for pattern in error_patterns:
+           assert pattern.lower() not in html_lower
+   ```
+
+3. **test_percentage_formats** - Validate all percentages
+   ```python
+   def test_percentage_formats(self, client):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       percentages = re.findall(r'(\d+\.?\d*)%', html)
+       assert len(percentages) > 0
+       for pct in percentages:
+           float(pct)  # Should not raise ValueError
+   ```
+
+4. **test_currency_formats** - Validate all dollar amounts
+   ```python
+   def test_currency_formats(self, client):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       currencies = re.findall(r'\$[\d,]+\.?\d*', html)
+       assert len(currencies) > 0
+       for curr in currencies:
+           value = curr.replace('$', '').replace(',', '')
+           float(value)  # Should not raise ValueError
+   ```
+
+5. **test_sample_data_integrity** - Verify DB calculations
+   ```python
+   def test_sample_data_integrity(self, client, sample_db):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       # Query expected values from database
+       # Verify they appear in HTML
+   ```
+
+6. **test_team_badges_present** - Verify team color consistency
+   ```python
+   def test_team_badges_present(self, client):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       assert 'team-badge' in html
+   ```
+
+7. **test_winning_value_highlights** - Check gold/silver ovals
+   ```python
+   def test_winning_value_highlights(self, client):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       assert 'winning-value' in html
+   ```
+
+8. **test_headline_banner** - Validate banner structure
+   ```python
+   def test_headline_banner(self, client):
+       response = client.get('/page_route')
+       html = response.data.decode('utf-8')
+       assert 'headline-banner' in html or 'headline-metric' in html
+   ```
+
+### Page-Specific Tests
+In addition to mandatory tests, each page should have tests for:
+- Page-specific UI elements (cards, tables, filters)
+- Page-specific functionality (grade filter, date filter)
+- Page-specific data calculations
+
+### Running Tests Before Commit
+**MANDATORY:** All tests MUST pass before creating a commit.
+
+#### Pre-Commit Test Command
+```bash
+# Run all page tests
+pytest test_school_page.py test_teams_page.py test_grade_level_page.py -v
+
+# Or run all tests
+pytest -v
+```
+
+#### Git Commit Pre-Commit Hook (Recommended)
+Add to `.git/hooks/pre-commit`:
+```bash
+#!/bin/bash
+echo "Running tests before commit..."
+pytest test_school_page.py test_teams_page.py test_grade_level_page.py -v
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed! Commit aborted."
+    exit 1
+fi
+echo "✅ All tests passed!"
+```
+
+### Test Fixtures
+All page tests should use these standard fixtures:
+
+```python
+@pytest.fixture
+def client():
+    """Create a test client for the Flask application."""
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        with app.app_context():
+            with client.session_transaction() as sess:
+                sess['environment'] = 'sample'
+        yield client
+
+@pytest.fixture
+def sample_db():
+    """Get sample database instance for verification queries."""
+    return ReadathonDB('readathon_sample.db')
+```
+
+### Test Coverage Goals
+- **Minimum:** 80% code coverage for all Flask routes
+- **Target:** 90% code coverage
+- **Check coverage:** `pytest --cov=app --cov-report=html`
+
+### Adding Tests for New Pages
+When creating a new page:
+1. Create `test_<page_name>_page.py` before implementing the page
+2. Include all 8 mandatory tests
+3. Add page-specific tests for unique functionality
+4. Verify all tests pass before committing
+
+### Updating Tests After Bug Fixes
+When fixing a bug:
+1. Add a test that reproduces the bug (should fail)
+2. Fix the bug
+3. Verify test now passes
+4. Add similar tests to catch related issues
 
 ---
 
