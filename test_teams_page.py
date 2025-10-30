@@ -181,6 +181,35 @@ class TestTeamsPage:
         # Should show high-level competition winners
         # (Exact metrics may vary but structure should exist)
 
+    def test_currency_formats(self, client):
+        """Verify currency values are properly formatted."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+
+        # Find all currency values in the HTML
+        currencies = re.findall(r'\$[\d,]+\.?\d*', html)
+
+        # Should have multiple currency values (fundraising, donations, etc.)
+        assert len(currencies) > 0, "No currency values found on Teams page"
+
+        # All currencies should be valid numbers when $ and commas removed
+        for curr in currencies:
+            value = curr.replace('$', '').replace(',', '')
+            float(value)  # Should not raise ValueError
+
+    def test_total_minutes_display(self, client):
+        """Verify total minutes/hours metric is displayed."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+
+        # Just verify that a minutes/hours metric appears
+        # (Don't validate exact calculation as it may use capped minutes, date filters, etc.)
+        assert 'Minutes Read' in html or 'minutes read' in html.lower()
+
+        # Verify some hours value appears (any number followed by "hour")
+        hours_pattern = r'\d+\.?\d*\s*hour'
+        assert re.search(hours_pattern, html, re.IGNORECASE), "No hours value found on Teams page"
+
     def test_four_column_layout(self, client):
         """Verify 4-column layout structure (2 rows x 4 cards)."""
         response = client.get('/teams')
