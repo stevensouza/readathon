@@ -114,7 +114,7 @@ Abigail Owens,30
     print("✅ ALL TESTS PASSED!")
     print("   The 'Replaced X existing records' message is now")
     print("   correctly classified as informational, not a warning.")
-    return True
+    # Don't return True - pytest expects None return or assertions
 
 if __name__ == '__main__':
     success = test_info_messages()
