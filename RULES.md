@@ -90,11 +90,13 @@ All card-based pages (School, Teams, Grade Level, Students) MUST follow this ord
    - Filter: Respects date filter ◐
    - Icon: 📚 on School/Teams pages, 📖 on Grade Level page
 
-4. **🎁 Sponsors** - Students with sponsors
-   - Format: X,XXX count
-   - Subtitle: "X of Y Students (Z%)"
+4. **🎁 Sponsors** - Total sponsor commitments
+   - Format: X,XXX count (SUM of all sponsor_count values from Reader_Cumulative)
+   - Subtitle: "X of Y Students have sponsors (Z%)" where X = students with at least 1 sponsor
    - Filter: Does NOT respect date filter (cumulative from Reader_Cumulative)
    - Icon: 🎁 (NOT 🤝)
+   - **Calculation:** Main value is TOTAL sponsors (SUM), subtitle shows student count
+   - Example: "28 sponsors" main value, "7 of 411 students (1.7%)" subtitle
 
 5. **👥 Avg. Participation (With Color)** - Average daily participation + color bonus
    - Format: X.X% (1 decimal place)

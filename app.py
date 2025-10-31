@@ -483,40 +483,45 @@ def school_tab():
         teams['goals_met_gap'] = teams[team2_name]['goals_met_pct'] - teams[team1_name]['goals_met_pct']
         teams['goals_met_leader'] = team2_name.upper()
 
-    # Sponsors calculations per team (students with at least 1 sponsor)
+    # Sponsors calculations per team (total sponsors count + students with sponsors)
     # Team 1 sponsors
     team1_sponsors_query = f"""
-        SELECT COUNT(DISTINCT rc.student_name) as sponsors_students
-        FROM Reader_Cumulative rc
-        JOIN Roster r ON rc.student_name = r.student_name
+        SELECT
+            COALESCE(SUM(rc.sponsors), 0) as total_sponsors,
+            COUNT(DISTINCT CASE WHEN rc.sponsors > 0 THEN rc.student_name END) as students_with_sponsors
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         WHERE LOWER(r.team_name) = LOWER('{team1_name}')
-          AND rc.sponsors > 0
     """
     team1_sponsors_result = db.execute_query(team1_sponsors_query)
-    teams[team1_name]['sponsors_students'] = team1_sponsors_result[0]['sponsors_students'] or 0 if team1_sponsors_result and team1_sponsors_result[0] else 0
+    teams[team1_name]['total_sponsors'] = int(team1_sponsors_result[0]['total_sponsors'] or 0) if team1_sponsors_result and team1_sponsors_result[0] else 0
+    teams[team1_name]['sponsors_students'] = team1_sponsors_result[0]['students_with_sponsors'] or 0 if team1_sponsors_result and team1_sponsors_result[0] else 0
     teams[team1_name]['sponsors_pct'] = (teams[team1_name]['sponsors_students'] / teams[team1_name]['students'] * 100) if teams[team1_name]['students'] > 0 else 0
 
     # Team 2 sponsors
     team2_sponsors_query = f"""
-        SELECT COUNT(DISTINCT rc.student_name) as sponsors_students
-        FROM Reader_Cumulative rc
-        JOIN Roster r ON rc.student_name = r.student_name
+        SELECT
+            COALESCE(SUM(rc.sponsors), 0) as total_sponsors,
+            COUNT(DISTINCT CASE WHEN rc.sponsors > 0 THEN rc.student_name END) as students_with_sponsors
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         WHERE LOWER(r.team_name) = LOWER('{team2_name}')
-          AND rc.sponsors > 0
     """
     team2_sponsors_result = db.execute_query(team2_sponsors_query)
-    teams[team2_name]['sponsors_students'] = team2_sponsors_result[0]['sponsors_students'] or 0 if team2_sponsors_result and team2_sponsors_result[0] else 0
+    teams[team2_name]['total_sponsors'] = int(team2_sponsors_result[0]['total_sponsors'] or 0) if team2_sponsors_result and team2_sponsors_result[0] else 0
+    teams[team2_name]['sponsors_students'] = team2_sponsors_result[0]['students_with_sponsors'] or 0 if team2_sponsors_result and team2_sponsors_result[0] else 0
     teams[team2_name]['sponsors_pct'] = (teams[team2_name]['sponsors_students'] / teams[team2_name]['students'] * 100) if teams[team2_name]['students'] > 0 else 0
 
-    # Sponsors leader (team with more students having sponsors)
-    if teams[team1_name]['sponsors_students'] > teams[team2_name]['sponsors_students']:
-        teams['sponsors_gap'] = teams[team1_name]['sponsors_students'] - teams[team2_name]['sponsors_students']
+    # Sponsors leader (team with more total sponsors)
+    if teams[team1_name]['total_sponsors'] > teams[team2_name]['total_sponsors']:
+        teams['sponsors_gap'] = teams[team1_name]['total_sponsors'] - teams[team2_name]['total_sponsors']
         teams['sponsors_leader'] = team1_name.upper()
     else:
-        teams['sponsors_gap'] = teams[team2_name]['sponsors_students'] - teams[team1_name]['sponsors_students']
+        teams['sponsors_gap'] = teams[team2_name]['total_sponsors'] - teams[team1_name]['total_sponsors']
         teams['sponsors_leader'] = team2_name.upper()
 
     # School-wide sponsors total (for banner display)
+    metrics['total_sponsors'] = teams[team1_name]['total_sponsors'] + teams[team2_name]['total_sponsors']
     metrics['sponsors_students'] = teams[team1_name]['sponsors_students'] + teams[team2_name]['sponsors_students']
     metrics['sponsors_pct'] = (metrics['sponsors_students'] / total_roster * 100) if total_roster > 0 else 0
 
@@ -1033,7 +1038,7 @@ def teams_tab():
         if key == 'fundraising':
             metric['team1_count'] = team1_metrics['fundraising_students']
             metric['team2_count'] = team2_metrics['fundraising_students']
-        elif key == 'goal_met_students':
+        elif key == 'goal_met_pct':
             metric['team1_count'] = team1_metrics['goal_met_students']
             metric['team2_count'] = team2_metrics['goal_met_students']
         elif key == 'participation_pct':
