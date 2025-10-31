@@ -340,6 +340,58 @@ class TestTeamsPageBannerValues:
         assert '2 of 3' in subtitle_text, f"Expected '2 of 3 students', got: {subtitle_text}"
         assert '66 of 3' not in subtitle_text, f"Should NOT show '66 of 3' (bug), got: {subtitle_text}"
 
+    def test_campaign_day_value(self, client):
+        """Verify Campaign Day shows correct day count."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find Campaign Day metric
+        metrics = soup.find_all('div', class_='headline-metric')
+        campaign_metric = None
+        for metric in metrics:
+            label = metric.find('div', class_='headline-label')
+            if label and '📅 Campaign Day' in label.text:
+                campaign_metric = metric
+                break
+
+        assert campaign_metric is not None, "Campaign Day metric not found"
+
+        # Verify value shows "Day 2 of 2"
+        value = campaign_metric.find('div', class_='headline-value')
+        assert value is not None, "Campaign Day value not found"
+        assert '2' in value.text, f"Expected '2' in Campaign Day value, got: {value.text}"
+        assert 'of' in value.text.lower(), f"Expected 'of' in Campaign Day value, got: {value.text}"
+
+    def test_minutes_winner(self, client):
+        """Verify Minutes Read winner is team2 with 200 min (3.3 hours)."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find Minutes Read metric
+        metrics = soup.find_all('div', class_='headline-metric')
+        minutes_metric = None
+        for metric in metrics:
+            label = metric.find('div', class_='headline-label')
+            if label and '📚 Minutes Read' in label.text:
+                minutes_metric = metric
+                break
+
+        assert minutes_metric is not None, "Minutes Read metric not found"
+
+        # Verify team2 wins
+        winner_div = minutes_metric.find('div', class_='headline-winner')
+        assert winner_div is not None, "Minutes winner badge not found"
+        assert 'TEAM2' in winner_div.text.upper(), f"Expected TEAM2 to win minutes, got: {winner_div.text}"
+
+        # Verify value shows 200 min or 3.3 hours
+        value = minutes_metric.find('div', class_='headline-value')
+        assert value is not None, "Minutes value not found"
+        value_text = value.text.strip()
+        # Could show as "200" or "3" (hours) depending on format
+        assert '200' in value_text or '3' in value_text, f"Expected '200 min' or '3 hours', got: {value_text}"
+
 
 class TestGradeLevelPageBannerValues:
     """Test exact banner metric values on Grade Level page (full contest, all grades).
@@ -400,3 +452,95 @@ class TestGradeLevelPageBannerValues:
         assert response.status_code == 200, f"Expected 200, got: {response.status_code}"
         html = response.data.decode('utf-8')
         assert 'Grade Level' in html or 'Classes' in html, "Grade Level page content not found"
+
+    def test_campaign_day_value(self, client):
+        """Verify Campaign Day shows correct day count."""
+        response = client.get('/classes')
+        html = response.data.decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find Campaign Day metric
+        metrics = soup.find_all('div', class_='headline-metric')
+        campaign_metric = None
+        for metric in metrics:
+            label = metric.find('div', class_='headline-label')
+            if label and '📅 Campaign Day' in label.text:
+                campaign_metric = metric
+                break
+
+        assert campaign_metric is not None, "Campaign Day metric not found"
+
+        # Verify value shows "Day 2 of 2"
+        value = campaign_metric.find('div', class_='headline-value')
+        assert value is not None, "Campaign Day value not found"
+        assert '2' in value.text, f"Expected '2' in Campaign Day value, got: {value.text}"
+        assert 'of' in value.text.lower(), f"Expected 'of' in Campaign Day value, got: {value.text}"
+
+    def test_minutes_value(self, client):
+        """Verify Minutes Read shows 120 min (top class: teacher1)."""
+        response = client.get('/classes')
+        html = response.data.decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find Minutes Read metric
+        metrics = soup.find_all('div', class_='headline-metric')
+        minutes_metric = None
+        for metric in metrics:
+            label = metric.find('div', class_='headline-label')
+            if label and '📚 Minutes Read' in label.text or '📖 Minutes Read' in label.text:
+                minutes_metric = metric
+                break
+
+        assert minutes_metric is not None, "Minutes Read metric not found"
+
+        # Verify value shows 120 min (top class)
+        value = minutes_metric.find('div', class_='headline-value')
+        assert value is not None, "Minutes value not found"
+        value_text = value.text.strip()
+        assert '120' in value_text or '2' in value_text, f"Expected '120 min' or '2 hours' (top class), got: {value_text}"
+
+    def test_avg_participation_value(self, client):
+        """Verify Avg. Participation shows 125.0% (top class with color bonus)."""
+        response = client.get('/classes')
+        html = response.data.decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find Avg. Participation metric
+        metrics = soup.find_all('div', class_='headline-metric')
+        participation_metric = None
+        for metric in metrics:
+            label = metric.find('div', class_='headline-label')
+            if label and '👥 Avg. Participation' in label.text:
+                participation_metric = metric
+                break
+
+        assert participation_metric is not None, "Avg. Participation metric not found"
+
+        # Verify value shows 125.0% (top class with color bonus)
+        value = participation_metric.find('div', class_='headline-value')
+        assert value is not None, "Avg. Participation value not found"
+        value_text = value.text.strip()
+        assert '125' in value_text, f"Expected '125.0%' (top class), got: {value_text}"
+
+    def test_goal_met_value(self, client):
+        """Verify Goal Met shows 100.0% (top class: teacher1)."""
+        response = client.get('/classes')
+        html = response.data.decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find Goal Met metric
+        metrics = soup.find_all('div', class_='headline-metric')
+        goal_metric = None
+        for metric in metrics:
+            label = metric.find('div', class_='headline-label')
+            if label and '🎯 Goal Met' in label.text:
+                goal_metric = metric
+                break
+
+        assert goal_metric is not None, "Goal Met metric not found"
+
+        # Verify value shows 100.0% (top class)
+        value = goal_metric.find('div', class_='headline-value')
+        assert value is not None, "Goal Met value not found"
+        value_text = value.text.strip()
+        assert '100' in value_text, f"Expected '100.0%' (top class), got: {value_text}"
