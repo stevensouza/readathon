@@ -1,7 +1,8 @@
 # Students Page Design - Work in Progress
 
-**Status:** ASCII prototype complete, awaiting user review of existing pages before implementation
+**Status:** Groundrules established, ready to proceed with design
 **Created:** 2025-10-31
+**Last Updated:** 2025-11-01
 **Resume Keyword:** "let's resume our work on the students page"
 
 ---
@@ -175,8 +176,10 @@ Pagination: [← Prev]  Page 1 of 9  [Next →]  |  Rows per page: [50 ▼]
 ### Key Calculations:
 - **Fundraising:** `Reader_Cumulative.donation_amount` (NOT filtered by date)
 - **Sponsors (per student):** `Reader_Cumulative.sponsors` (individual student sponsor count)
-- **Reading minutes:** `SUM(MIN(Daily_Logs.minutes_read, 120))` (◐ honors date filter)
+- **Reading minutes:** `SUM(MIN(Daily_Logs.minutes_read, 120))` (◐ honors date filter) - **CAPPED at 120/day**
 - **Participation %:** `(days_read / total_days) * 100` (◐ honors date filter)
+
+**DECISION (2025-11-01):** Reading column in Students table MUST use **capped minutes** (max 120/day for official contest totals). This matches other pages (School/Teams/Grade Level) for consistency.
 
 ---
 

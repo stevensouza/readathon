@@ -178,6 +178,208 @@ Instead of saying *"The banner now shows correct values"*, do this:
 6. Verify: Numbers match database (run SQL to confirm)
 7. Status: ✅ Matches prototype, ✅ Follows RULES.md
 
+---
+
+## Testing Discipline (MANDATORY)
+
+**CRITICAL PROBLEM:** In the past, features were claimed "complete" when simple tests would have caught errors (including page load failures due to exceptions).
+
+**NEW RULE:** NEVER claim a feature is "working" or "complete" without:
+
+### 1. Automated Tests (Create DURING Implementation, NOT After)
+```bash
+# Create test file while implementing, not after
+test_students_page.py
+
+# Mandatory tests for ALL pages (see RULES.md lines 228-320):
+- test_page_loads_successfully (HTTP 200)
+- test_no_error_messages (scan for exceptions)
+- test_percentage_formats (validate all %)
+- test_currency_formats (validate all $)
+- test_sample_data_integrity (verify DB calculations)
+- test_team_badges_present (team color consistency)
+- test_winning_value_highlights (gold/silver ovals)
+- test_headline_banner (6 metrics present)
+```
+
+### 2. Manual Browser Testing (BEFORE Claiming Done)
+**Checklist - ALL must pass before saying "it's working":**
+- [ ] ✅ Run tests: `pytest test_students_page.py -v` (all passing)
+- [ ] ✅ Start Flask app: `python3 app.py --db sample`
+- [ ] ✅ Open URL in browser: `http://127.0.0.1:5001/students`
+- [ ] ✅ Page loads without errors (no exceptions, no blank page)
+- [ ] ✅ Compare side-by-side with prototype (visual match)
+- [ ] ✅ Banner: 6 metrics present, correct order, correct values
+- [ ] ✅ Table: Sortable headers, alternating row colors, correct data
+- [ ] ✅ Filters: Work correctly, persist via sessionStorage
+- [ ] ✅ Team colors: Follow alphabetical rule (blue/yellow)
+- [ ] ✅ Run SQL queries to verify calculations match displayed values
+
+### 3. Completion Statement Format
+**BAD:** "The banner now shows correct values ✅"
+
+**GOOD:**
+```
+✅ Banner implementation complete:
+- Tested in browser: http://127.0.0.1:5001/students
+- All 6 metrics present in correct order
+- Values verified against database queries:
+  * Fundraising: $45,678 (matches Reader_Cumulative SUM)
+  * Minutes: 8,234 hours (matches Daily_Logs capped SUM)
+  * Sponsors: 28 (matches Reader_Cumulative SUM)
+- Visual match with prototype ✅
+- All tests passing (8/8) ✅
+```
+
+**When tests fail or page doesn't load:**
+- ❌ Do NOT say "it's working"
+- ✅ Fix the issue first
+- ✅ Re-test until all checks pass
+- ✅ THEN report completion
+
+---
+
+## Immediate Documentation (REFLEX ACTION)
+
+**PROBLEM:** Context is lost during conversation compaction. Important decisions/rules are forgotten.
+
+**SOLUTION:** Document important information **immediately** when discovered, not "later" or "at the end".
+
+### When to Document Immediately (REFLEX)
+
+**User asks important question → Document answer NOW:**
+```
+User: "Should fundraising be capped or uncapped?"
+Claude: [Immediately edits RULES.md]
+        "✅ Documented in RULES.md line 82-85: Fundraising is NEVER capped,
+            always from Reader_Cumulative table"
+```
+
+**Design decision made → Update design doc NOW:**
+```
+User: "Students page should use capped minutes"
+Claude: [Immediately updates docs/STUDENTS_PAGE_DESIGN.md]
+        "✅ Documented in STUDENTS_PAGE_DESIGN.md line 178:
+            Reading column uses capped minutes (max 120/day)"
+```
+
+**New pattern discovered → Update UI_PATTERNS.md NOW:**
+```
+Claude: "I notice all pages use the same filter dropdown pattern"
+        [Immediately updates UI_PATTERNS.md]
+        "✅ Added Filter Period Selector pattern to UI_PATTERNS.md lines 50-109"
+```
+
+### Which Files to Update
+
+| Decision Type | File to Update | Example |
+|---------------|----------------|---------|
+| Data source rule | `RULES.md` | "Fundraising always from Reader_Cumulative" |
+| Calculation rule | `RULES.md` | "Participation can exceed 100% with color bonus" |
+| Visual pattern | `UI_PATTERNS.md` | "Team badges use rounded rectangles" |
+| Color assignment | `UI_PATTERNS.md` or `RULES.md` | "Team 1 (alphabetically first) = blue" |
+| Feature design | `docs/STUDENTS_PAGE_DESIGN.md` | "Detail view shows daily breakdown" |
+| Open questions | `docs/STUDENTS_PAGE_DESIGN.md` | "TBD: Export to CSV or Excel?" |
+
+### Compaction Reality
+
+**Q: Will Claude get notified before compaction happens?**
+- **A: No.** Compaction happens transparently. By the time conversation is shorter, it's too late.
+
+**Q: Can Claude save state during compaction?**
+- **A: No.** There's no "pre-compaction hook" to trigger documentation.
+
+**Q: Will user need to remind Claude to document?**
+- **A: Possibly yes, occasionally.** But by making it a **reflex action** (document immediately when decision is made), we minimize context loss.
+
+**Best Practice:**
+- ✅ Document IMMEDIATELY when decision is made (not later)
+- ✅ Update "Last Updated" date in file
+- ✅ Reference file location so user knows where to find it
+- ✅ If uncertain whether to document, ASK USER
+
+---
+
+## Students Page Implementation Phases
+
+**Context:** New Students tab with master-detail pattern (new for this app). Process must follow strict groundrules to avoid past issues.
+
+### Phase 1: Design - Master View (Table)
+**ASCII Prototype:**
+- [ ] Review RULES.md, UI_PATTERNS.md, existing pages
+- [ ] Create ASCII prototype for Students table view (all 411 students)
+- [ ] Define columns: Name, Grade, Team, Class, Fundraising, Reading (capped), Sponsors, Participation
+- [ ] Document design decisions in `docs/STUDENTS_PAGE_DESIGN.md`
+- [ ] Get user approval before HTML prototype
+
+**HTML Prototype:**
+- [ ] Create `/prototypes/students_tab.html` with fictitious data
+- [ ] Match color palette, component patterns from UI_PATTERNS.md
+- [ ] Verify sortable table headers (#1e3a5f background, white text)
+- [ ] Verify team colors (alphabetical rule: blue/yellow)
+- [ ] Verify 6-metric banner (same order as School/Teams/Grade pages)
+- [ ] **Test in browser** (not just code review!)
+- [ ] Provide both links (terminal + file://)
+- [ ] Get user approval before production
+
+### Phase 2: Design - Detail View (Daily Breakdown)
+**ASCII Prototype:**
+- [ ] Design detail view shown when clicking student row
+- [ ] Define content: Daily reading log, goal achievement, sponsor info, charts?
+- [ ] Document in `docs/STUDENTS_PAGE_DESIGN.md`
+- [ ] Get user approval before HTML prototype
+
+**HTML Prototype:**
+- [ ] Create `/prototypes/student_detail.html` with fictitious data
+- [ ] Match existing patterns for modal/detail views
+- [ ] **Test in browser** (clicking row → opens detail)
+- [ ] Get user approval before production
+
+### Phase 3: Production - Master View
+**Implementation:**
+- [ ] Create `test_students_page.py` (all 8 mandatory tests)
+- [ ] Update `app.py`: Add `/students` route
+- [ ] Update `database.py`: Add `get_students_data()` method
+- [ ] Update `queries.py`: Add student queries (capped minutes!)
+- [ ] Create `templates/students.html` (Jinja2)
+- [ ] Update `templates/base.html`: Add "Students" to nav menu
+- [ ] Implement filters, sorting, pagination
+
+**Testing (BEFORE claiming done):**
+- [ ] Run tests: `pytest test_students_page.py -v` (all passing)
+- [ ] Start Flask: `python3 app.py --db sample`
+- [ ] Open browser: `http://127.0.0.1:5001/students`
+- [ ] Verify: Page loads, no errors
+- [ ] Verify: Side-by-side match with prototype
+- [ ] Verify: All 6 banner metrics correct
+- [ ] Verify: Table sortable, correct colors
+- [ ] Verify: Calculations match database (run SQL)
+- [ ] **ONLY THEN** report completion
+
+### Phase 4: Production - Detail View
+**Implementation:**
+- [ ] Update `test_students_page.py`: Add detail view tests
+- [ ] Update `app.py`: Add `/students/<student_id>` route
+- [ ] Update `database.py`: Add `get_student_detail()` method
+- [ ] Update `queries.py`: Add daily breakdown queries
+- [ ] Create `templates/student_detail.html` or add modal to students.html
+- [ ] Implement click → open detail logic
+
+**Testing (BEFORE claiming done):**
+- [ ] Run tests: `pytest test_students_page.py -v` (all passing)
+- [ ] Test in browser: Click student row → detail opens
+- [ ] Verify: Daily breakdown shows correct data
+- [ ] Verify: Calculations match database
+- [ ] **ONLY THEN** report completion
+
+### Phase 5: Documentation & Commit
+- [ ] Update `docs/STUDENTS_PAGE_DESIGN.md` with final implementation
+- [ ] Update `docs/00-INDEX.md` if needed
+- [ ] Prepare commit message (project style)
+- [ ] **Ask for user approval** before committing
+
+---
+
 ## Critical Context
 
 ### Before Starting Work

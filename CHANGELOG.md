@@ -5,6 +5,46 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.4.0] - 2025-11-01
+
+### Development Process Improvements
+
+**Major Enhancement: Testing Discipline Framework**
+- Established mandatory testing requirements for all feature implementations
+- Never claim "complete" without automated tests + manual browser verification
+- 11-point completion checklist before declaring features "working"
+- Proper completion statement format with database verification examples
+- Create tests DURING implementation (not after)
+
+**Major Enhancement: Immediate Documentation Standards**
+- Document important decisions immediately when made (reflex action, not "later")
+- Survive conversation compaction by capturing context in files
+- Table showing which files to update for different decision types
+- Update "Last Updated" dates when files change
+- Honest acknowledgment: No pre-compaction notifications, occasional reminders may be needed
+
+**Students Page Implementation Roadmap**
+- Phase 1-2: Design (ASCII → HTML for master + detail views)
+- Phase 3-4: Production (with full testing checklists)
+- Phase 5: Documentation & commit
+- Each phase has explicit testing requirements
+- New master-detail pattern (first for this application)
+
+**Design Decisions Documented:**
+- Students page reading column will use capped minutes (max 120/day)
+- Matches School/Teams/Grade Level pages for consistency
+- Detail view will show daily breakdown when clicking student row
+
+**Files Modified:**
+- `CLAUDE.md`: Added 202 lines covering Testing Discipline, Immediate Documentation, Students Page phases
+- `docs/STUDENTS_PAGE_DESIGN.md`: Updated status, documented capped minutes decision
+- `VERSION`: v2026.3.0 → v2026.4.0
+
+**Commits:**
+- This release establishes development standards before Students page implementation begins
+
+---
+
 ## [v2026.3.0] - 2025-10-25
 
 ### Teams Competition Page Redesign
