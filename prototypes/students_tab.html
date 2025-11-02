@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - Read-a-Thon System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container-fluid {
+            max-width: 1400px;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Page Header - Matching Grade Level Page */
+        .page-header-students {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .filter-inline label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .filter-inline select {
+            width: 240px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        /* Headline Banner */
+        .headline-banner {
+            background: #1e3a5f;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        .headline-metric {
+            text-align: center;
+            padding: 0.3rem 0.5rem;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .headline-metric:last-child {
+            border-right: none;
+        }
+
+        .headline-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #17a2b8;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-subtitle {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.3;
+        }
+
+        .filter-indicator {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            cursor: help;
+            margin-left: 0.3rem;
+        }
+
+        /* Grade Filter Section - Matching Grade Level Page */
+        .grade-filter-section {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .grade-filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .grade-filter-btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .grade-filter-btn:hover {
+            background: #f8f9fa;
+            border-color: #1e3a5f;
+        }
+
+        .grade-filter-btn.active {
+            background: #1e3a5f;
+            color: white;
+            border-color: #1e3a5f;
+        }
+
+        .team-filter-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .team-filter-container label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .team-filter-container select {
+            width: 180px;
+            font-size: 0.85rem;
+        }
+
+        /* Table Container */
+        .comparison-table {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid #1e3a5f;
+            margin-bottom: 2rem;
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Table Styles */
+        .comparison-table .table {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table .table thead th {
+            background: #2c3e50 !important;
+            color: white !important;
+            font-weight: 600;
+            padding: 0.65rem 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid #1e3a5f;
+            border-top: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .comparison-table .table thead th::after {
+            content: ' ↕';
+            opacity: 0.3;
+            font-size: 0.8rem;
+        }
+
+        .comparison-table .table thead th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .comparison-table .table thead th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .comparison-table .table tbody td {
+            padding: 0.65rem 0.5rem;
+            vertical-align: middle;
+        }
+
+        .comparison-table .table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+            background-color: white !important;
+        }
+
+        .comparison-table .table-striped tbody tr:nth-of-type(even) {
+            background-color: #f1f3f5 !important;
+        }
+
+        .comparison-table .table tbody tr:hover {
+            background-color: #e3f2fd !important;
+        }
+
+        .comparison-table .table tbody tr.hidden {
+            display: none;
+        }
+
+        /* Team Badges - Oval/Pill Shape */
+        .team-badge {
+            display: inline-block;
+            padding: 0.3rem 0.9rem;
+            border-radius: 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .team-badge-team1 {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .team-badge-team2 {
+            background: #f59e0b;
+            color: #1e3a5f;
+        }
+
+        /* Winning value highlights */
+        .winning-value {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1.2rem;
+            font-weight: 700;
+        }
+
+        .winning-value-school {
+            background: #ffd700;
+            color: #000000;
+        }
+
+        .winning-value-grade {
+            background: #c0c0c0;
+            color: #000000;
+        }
+
+        /* Legend & Info Section - Collapsible */
+        .legend-section {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .legend-header {
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .legend-header:hover {
+            background: #e9ecef;
+        }
+
+        .legend-content {
+            padding: 1rem;
+            display: none;
+            border-top: 1px solid #dee2e6;
+            font-size: 0.85rem;
+        }
+
+        .legend-content.show {
+            display: block;
+        }
+
+        .legend-content h6 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .legend-content h6:first-child {
+            margin-top: 0;
+        }
+
+        .legend-content ul {
+            margin-bottom: 0;
+            padding-left: 1.25rem;
+        }
+
+        .legend-content li {
+            margin-bottom: 0.35rem;
+            line-height: 1.5;
+        }
+
+        .legend-content li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Collapsible Footer */
+        .collapsible-footer {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .collapsible-content {
+            padding: 1rem;
+            display: none;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .collapsible-content.show {
+            display: block;
+        }
+
+        .data-source-item {
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .data-source-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .data-source-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-source-value {
+            color: #6c757d;
+        }
+
+        /* Modal Styles */
+        .modal-header {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+
+        .student-info-box {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .student-info-row {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .student-info-item {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .student-info-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .student-info-value {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        .summary-metrics-table {
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-metrics-table th {
+            background: #1e3a5f !important;
+            color: white !important;
+            font-size: 0.8rem;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+        }
+
+        .summary-metrics-table td {
+            text-align: center;
+            padding: 1rem 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .daily-log-table th {
+            background: #2c3e50 !important;
+            color: white !important;
+            font-size: 0.8rem;
+            padding: 0.65rem 0.5rem;
+        }
+
+        .daily-log-table tbody td {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .cap-exceeded {
+            color: #f59e0b;
+        }
+
+        .goal-met {
+            color: #28a745;
+        }
+
+        .modal-notes {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-notes h6 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-notes ul {
+            margin-bottom: 0;
+            padding-left: 1.25rem;
+        }
+
+        .modal-notes li {
+            margin-bottom: 0.35rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Page Header - Matching Grade Level Layout -->
+        <div class="page-header-students">
+            <h1 class="page-title">👨‍🎓 Students</h1>
+
+            <div class="header-controls">
+                <div class="filter-inline">
+                    <label for="dateFilter">📅 Filter Period:</label>
+                    <select id="dateFilter" class="form-select form-select-sm">
+                        <option value="all" selected>Full Contest (Oct 10 - Oct 19, 2025)</option>
+                        <option value="2025-10-10">Fri, October 10 (Day 1)</option>
+                        <option value="2025-10-11">Sat, October 11 (Day 2)</option>
+                        <option value="2025-10-12">Sun, October 12 (Day 3)</option>
+                        <option value="2025-10-13">Mon, October 13 (Day 4)</option>
+                        <option value="2025-10-14">Tue, October 14 (Day 5)</option>
+                        <option value="2025-10-15">Wed, October 15 (Day 6)</option>
+                        <option value="2025-10-16">Thu, October 16 (Day 7)</option>
+                        <option value="2025-10-17">Fri, October 17 (Day 8)</option>
+                        <option value="2025-10-18">Sat, October 18 (Day 9)</option>
+                        <option value="2025-10-19">Sun, October 19 (Day 10)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#dataInfoModal">
+                    <i class="bi bi-info-circle"></i> Data Info
+                </button>
+            </div>
+        </div>
+
+        <!-- Headline Banner -->
+        <div class="headline-banner">
+            <div class="row g-0">
+                <!-- Campaign Day -->
+                <div class="col headline-metric">
+                    <div class="headline-label">📅 Campaign Day</div>
+                    <div class="headline-value" id="bannerCampaignDay">Day 10 of 10</div>
+                    <div class="headline-subtitle" id="bannerCampaignDate">Oct 10-19, 2025</div>
+                </div>
+
+                <!-- Fundraising -->
+                <div class="col headline-metric">
+                    <div class="headline-label">💰 Fundraising</div>
+                    <div class="headline-value" id="bannerFundraising">$45,678</div>
+                    <div class="headline-subtitle" id="bannerFundraisingSubtitle">325/411 students (79.1%)</div>
+                </div>
+
+                <!-- Minutes Read -->
+                <div class="col headline-metric">
+                    <div class="headline-label">
+                        📚 Minutes Read
+                        <span class="filter-indicator" title="Honors date filter">◐</span>
+                    </div>
+                    <div class="headline-value" id="bannerMinutes">8,234 hours</div>
+                    <div class="headline-subtitle" id="bannerMinutesSubtitle">Avg: 20.0 hours/student</div>
+                </div>
+
+                <!-- Sponsors -->
+                <div class="col headline-metric">
+                    <div class="headline-label">🎁 Sponsors</div>
+                    <div class="headline-value" id="bannerSponsors">1,247</div>
+                    <div class="headline-subtitle" id="bannerSponsorsSubtitle">289/411 students (70.3%)</div>
+                </div>
+
+                <!-- Avg. Participation -->
+                <div class="col headline-metric">
+                    <div class="headline-label">
+                        👥 Avg. Participation (With Color)
+                        <span class="filter-indicator" title="Honors date filter">◐</span>
+                    </div>
+                    <div class="headline-value" id="bannerParticipation">78.5%</div>
+                    <div class="headline-subtitle" id="bannerParticipationSubtitle">323/411 active</div>
+                </div>
+
+                <!-- Goal Met -->
+                <div class="col headline-metric">
+                    <div class="headline-label">
+                        🎯 Goal Met (≥1 Day)
+                        <span class="filter-indicator" title="Honors date filter">◐</span>
+                    </div>
+                    <div class="headline-value" id="bannerGoalMet">82.0%</div>
+                    <div class="headline-subtitle" id="bannerGoalMetSubtitle">337/411 students</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade and Team Filters - Matching Grade Level Page -->
+        <div class="grade-filter-section">
+            <div class="filter-row">
+                <div class="grade-filter-buttons">
+                    <button class="grade-filter-btn active" data-grade="all">All Grades</button>
+                    <button class="grade-filter-btn" data-grade="K">Kindergarten</button>
+                    <button class="grade-filter-btn" data-grade="1">Grade 1</button>
+                    <button class="grade-filter-btn" data-grade="2">Grade 2</button>
+                    <button class="grade-filter-btn" data-grade="3">Grade 3</button>
+                    <button class="grade-filter-btn" data-grade="4">Grade 4</button>
+                    <button class="grade-filter-btn" data-grade="5">Grade 5</button>
+                </div>
+
+                <div class="team-filter-container">
+                    <label for="teamFilter">Team:</label>
+                    <select id="teamFilter" class="form-select form-select-sm">
+                        <option value="all" selected>All Teams</option>
+                        <option value="team1">Team 1 (Blue)</option>
+                        <option value="team2">Team 2 (Yellow)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend & Data Notes Section (Collapsible, Collapsed by Default) -->
+        <div class="legend-section">
+            <div class="legend-header" onclick="toggleLegend()">
+                <span>
+                    <i class="bi bi-chevron-right" id="legendIcon"></i>
+                    Legend, Data Notes & Student Count
+                </span>
+                <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+            </div>
+            <div class="legend-content" id="legendContent">
+                <!-- Student Count Info -->
+                <h6 style="color: #1e3a5f; margin-bottom: 0.5rem;">📊 Student Count</h6>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Total students in database:</span>
+                    <span class="data-source-value">411 students</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Visible after filters:</span>
+                    <span class="data-source-value"><span id="visibleCount">20</span> students</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Active grade filter:</span>
+                    <span class="data-source-value" id="activeGradeFilter">All Grades</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Active team filter:</span>
+                    <span class="data-source-value" id="activeTeamFilter">All Teams</span>
+                </div>
+
+                <hr style="margin: 1rem 0; border-top: 1px solid #dee2e6;">
+
+                <!-- Legend & Data Notes -->
+                <h6 style="color: #1e3a5f; margin-bottom: 0.5rem;">📋 Legend & Data Notes</h6>
+                <ul style="margin-bottom: 0; padding-left: 1.25rem;">
+                    <li style="margin-bottom: 0.4rem;"><strong>⭕ Gold oval:</strong> School-wide winner (top across all 411 students)</li>
+                    <li style="margin-bottom: 0.4rem;"><strong>🥈 Silver oval:</strong> Grade/team winner (appears when grade or team filter is active)</li>
+                    <li style="margin-bottom: 0.4rem;"><strong>◐ Filter indicator:</strong> Metric recalculates based on selected date range</li>
+                    <li style="margin-bottom: 0.4rem;"><strong>💰 Fundraising & 🎁 Sponsors:</strong> Total for full contest (NOT filtered by date)</li>
+                    <li style="margin-bottom: 0.4rem;"><strong>📚 Minutes Capped:</strong> Maximum 120 minutes/day for official contest totals</li>
+                    <li style="margin-bottom: 0.4rem;"><strong>📚 Minutes Uncapped:</strong> Actual reading time (shows full student effort)</li>
+                    <li style="margin-bottom: 0;"><strong>Click any row</strong> to view daily breakdown with goal status and cap details</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="comparison-table">
+            <div class="table-controls">
+                <div class="table-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="copyTable()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportCSV()">
+                        <i class="bi bi-download"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped" id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Student Name</th>
+                            <th onclick="sortTable(1)">Grade</th>
+                            <th onclick="sortTable(2)">Team</th>
+                            <th onclick="sortTable(3)">Class</th>
+                            <th onclick="sortTable(4)">Teacher</th>
+                            <th onclick="sortTable(5)" class="text-end">Fundraising 💰</th>
+                            <th onclick="sortTable(6)" class="text-end">Sponsors 🎁</th>
+                            <th onclick="sortTable(7)" class="text-end">Minutes Capped 📚◐</th>
+                            <th onclick="sortTable(8)" class="text-end">Minutes Uncapped 📚</th>
+                            <th onclick="sortTable(9)" class="text-end">Days Partic.◐</th>
+                            <th onclick="sortTable(10)" class="text-end">Partic. % ◐</th>
+                            <th onclick="sortTable(11)" class="text-end">Days Goal ◐</th>
+                            <th onclick="sortTable(12)" class="text-end">Goal % ◐</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Sample data - 20 students -->
+                        <tr data-grade="5" data-team="team1" onclick="showStudentDetail('Sarah Chen', '5', 'Team 1', 'Adams', 'Ms. Adams')">
+                            <td>Sarah Chen</td>
+                            <td>5</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Adams</td>
+                            <td>Ms. Adams</td>
+                            <td class="text-end" data-value="2624"><span class="winning-value winning-value-school">$2,624</span></td>
+                            <td class="text-end" data-value="12">12</td>
+                            <td class="text-end" data-value="1200"><span class="winning-value winning-value-school">1,200</span> min</td>
+                            <td class="text-end" data-value="1245">1,245 min</td>
+                            <td class="text-end" data-value="10">10/10</td>
+                            <td class="text-end" data-value="100">100%</td>
+                            <td class="text-end" data-value="10">10</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="4" data-team="team2" onclick="showStudentDetail('David Park', '4', 'Team 2', 'Brown', 'Mr. Brown')">
+                            <td>David Park</td>
+                            <td>4</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Brown</td>
+                            <td>Mr. Brown</td>
+                            <td class="text-end" data-value="1987"><span class="winning-value winning-value-school">$1,987</span></td>
+                            <td class="text-end" data-value="9">9</td>
+                            <td class="text-end" data-value="1176">1,176 min</td>
+                            <td class="text-end" data-value="1198">1,198 min</td>
+                            <td class="text-end" data-value="10">10/10</td>
+                            <td class="text-end" data-value="100">100%</td>
+                            <td class="text-end" data-value="10">10</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="K" data-team="team1" onclick="showStudentDetail('Emma Wilson', 'K', 'Team 1', 'Carter', 'Mrs. Carter')">
+                            <td>Emma Wilson</td>
+                            <td>K</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Carter</td>
+                            <td>Mrs. Carter</td>
+                            <td class="text-end" data-value="1776"><span class="winning-value winning-value-school">$1,776</span></td>
+                            <td class="text-end" data-value="8">8</td>
+                            <td class="text-end" data-value="1152">1,152 min</td>
+                            <td class="text-end" data-value="1152">1,152 min</td>
+                            <td class="text-end" data-value="9">9/10</td>
+                            <td class="text-end" data-value="90">90%</td>
+                            <td class="text-end" data-value="9">9</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="2" data-team="team2" onclick="showStudentDetail('Noah Garcia', '2', 'Team 2', 'Davis', 'Ms. Davis')">
+                            <td>Noah Garcia</td>
+                            <td>2</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Davis</td>
+                            <td>Ms. Davis</td>
+                            <td class="text-end" data-value="1654">$1,654</td>
+                            <td class="text-end" data-value="7">7</td>
+                            <td class="text-end" data-value="960">960 min</td>
+                            <td class="text-end" data-value="960">960 min</td>
+                            <td class="text-end" data-value="8">8/10</td>
+                            <td class="text-end" data-value="80">80%</td>
+                            <td class="text-end" data-value="8">8</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="3" data-team="team1" onclick="showStudentDetail('Olivia Kim', '3', 'Team 1', 'Evans', 'Mr. Evans')">
+                            <td>Olivia Kim</td>
+                            <td>3</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Evans</td>
+                            <td>Mr. Evans</td>
+                            <td class="text-end" data-value="1543">$1,543</td>
+                            <td class="text-end" data-value="6">6</td>
+                            <td class="text-end" data-value="840">840 min</td>
+                            <td class="text-end" data-value="840">840 min</td>
+                            <td class="text-end" data-value="7">7/10</td>
+                            <td class="text-end" data-value="70">70%</td>
+                            <td class="text-end" data-value="7">7</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="1" data-team="team2" onclick="showStudentDetail('Liam Johnson', '1', 'Team 2', 'Foster', 'Ms. Foster')">
+                            <td>Liam Johnson</td>
+                            <td>1</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Foster</td>
+                            <td>Ms. Foster</td>
+                            <td class="text-end" data-value="1234">$1,234</td>
+                            <td class="text-end" data-value="5">5</td>
+                            <td class="text-end" data-value="720">720 min</td>
+                            <td class="text-end" data-value="758">758 min</td>
+                            <td class="text-end" data-value="6">6/10</td>
+                            <td class="text-end" data-value="60">60%</td>
+                            <td class="text-end" data-value="6">6</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="5" data-team="team1" onclick="showStudentDetail('Ava Martinez', '5', 'Team 1', 'Adams', 'Ms. Adams')">
+                            <td>Ava Martinez</td>
+                            <td>5</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Adams</td>
+                            <td>Ms. Adams</td>
+                            <td class="text-end" data-value="987"><span class="winning-value winning-value-grade">$987</span></td>
+                            <td class="text-end" data-value="4">4</td>
+                            <td class="text-end" data-value="1080"><span class="winning-value winning-value-grade">1,080</span> min</td>
+                            <td class="text-end" data-value="1089">1,089 min</td>
+                            <td class="text-end" data-value="9">9/10</td>
+                            <td class="text-end" data-value="90"><span class="winning-value winning-value-grade">90%</span></td>
+                            <td class="text-end" data-value="9">9</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="4" data-team="team2" onclick="showStudentDetail('Ethan Brown', '4', 'Team 2', 'Brown', 'Mr. Brown')">
+                            <td>Ethan Brown</td>
+                            <td>4</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Brown</td>
+                            <td>Mr. Brown</td>
+                            <td class="text-end" data-value="876">$876</td>
+                            <td class="text-end" data-value="3">3</td>
+                            <td class="text-end" data-value="960">960 min</td>
+                            <td class="text-end" data-value="960">960 min</td>
+                            <td class="text-end" data-value="8">8/10</td>
+                            <td class="text-end" data-value="80">80%</td>
+                            <td class="text-end" data-value="8">8</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="K" data-team="team1" onclick="showStudentDetail('Sophia Lee', 'K', 'Team 1', 'Carter', 'Mrs. Carter')">
+                            <td>Sophia Lee</td>
+                            <td>K</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Carter</td>
+                            <td>Mrs. Carter</td>
+                            <td class="text-end" data-value="765">$765</td>
+                            <td class="text-end" data-value="2">2</td>
+                            <td class="text-end" data-value="600">600 min</td>
+                            <td class="text-end" data-value="600">600 min</td>
+                            <td class="text-end" data-value="5">5/10</td>
+                            <td class="text-end" data-value="50">50%</td>
+                            <td class="text-end" data-value="5">5</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="3" data-team="team2" onclick="showStudentDetail('Mason Taylor', '3', 'Team 2', 'Garcia', 'Mr. Garcia')">
+                            <td>Mason Taylor</td>
+                            <td>3</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Garcia</td>
+                            <td>Mr. Garcia</td>
+                            <td class="text-end" data-value="654">$654</td>
+                            <td class="text-end" data-value="2">2</td>
+                            <td class="text-end" data-value="840">840 min</td>
+                            <td class="text-end" data-value="845">845 min</td>
+                            <td class="text-end" data-value="7">7/10</td>
+                            <td class="text-end" data-value="70">70%</td>
+                            <td class="text-end" data-value="6">6</td>
+                            <td class="text-end" data-value="86">86%</td>
+                        </tr>
+                        <tr data-grade="2" data-team="team1" onclick="showStudentDetail('Isabella White', '2', 'Team 1', 'Davis', 'Ms. Davis')">
+                            <td>Isabella White</td>
+                            <td>2</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Davis</td>
+                            <td>Ms. Davis</td>
+                            <td class="text-end" data-value="543">$543</td>
+                            <td class="text-end" data-value="2">2</td>
+                            <td class="text-end" data-value="480">480 min</td>
+                            <td class="text-end" data-value="480">480 min</td>
+                            <td class="text-end" data-value="4">4/10</td>
+                            <td class="text-end" data-value="40">40%</td>
+                            <td class="text-end" data-value="4">4</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="1" data-team="team2" onclick="showStudentDetail('James Harris', '1', 'Team 2', 'Foster', 'Ms. Foster')">
+                            <td>James Harris</td>
+                            <td>1</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Foster</td>
+                            <td>Ms. Foster</td>
+                            <td class="text-end" data-value="432">$432</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="360">360 min</td>
+                            <td class="text-end" data-value="360">360 min</td>
+                            <td class="text-end" data-value="3">3/10</td>
+                            <td class="text-end" data-value="30">30%</td>
+                            <td class="text-end" data-value="3">3</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="5" data-team="team1" onclick="showStudentDetail('Charlotte Miller', '5', 'Team 1', 'Adams', 'Ms. Adams')">
+                            <td>Charlotte Miller</td>
+                            <td>5</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Adams</td>
+                            <td>Ms. Adams</td>
+                            <td class="text-end" data-value="321">$321</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="600">600 min</td>
+                            <td class="text-end" data-value="612">612 min</td>
+                            <td class="text-end" data-value="5">5/10</td>
+                            <td class="text-end" data-value="50">50%</td>
+                            <td class="text-end" data-value="4">4</td>
+                            <td class="text-end" data-value="80">80%</td>
+                        </tr>
+                        <tr data-grade="4" data-team="team2" onclick="showStudentDetail('Benjamin Clark', '4', 'Team 2', 'Brown', 'Mr. Brown')">
+                            <td>Benjamin Clark</td>
+                            <td>4</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Brown</td>
+                            <td>Mr. Brown</td>
+                            <td class="text-end" data-value="234">$234</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="480">480 min</td>
+                            <td class="text-end" data-value="480">480 min</td>
+                            <td class="text-end" data-value="4">4/10</td>
+                            <td class="text-end" data-value="40">40%</td>
+                            <td class="text-end" data-value="3">3</td>
+                            <td class="text-end" data-value="75">75%</td>
+                        </tr>
+                        <tr data-grade="K" data-team="team1" onclick="showStudentDetail('Amelia Rodriguez', 'K', 'Team 1', 'Carter', 'Mrs. Carter')">
+                            <td>Amelia Rodriguez</td>
+                            <td>K</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Carter</td>
+                            <td>Mrs. Carter</td>
+                            <td class="text-end" data-value="187">$187</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="360">360 min</td>
+                            <td class="text-end" data-value="360">360 min</td>
+                            <td class="text-end" data-value="3">3/10</td>
+                            <td class="text-end" data-value="30">30%</td>
+                            <td class="text-end" data-value="3">3</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="3" data-team="team2" onclick="showStudentDetail('Lucas Anderson', '3', 'Team 2', 'Garcia', 'Mr. Garcia')">
+                            <td>Lucas Anderson</td>
+                            <td>3</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Garcia</td>
+                            <td>Mr. Garcia</td>
+                            <td class="text-end" data-value="98">$98</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="240">240 min</td>
+                            <td class="text-end" data-value="240">240 min</td>
+                            <td class="text-end" data-value="2">2/10</td>
+                            <td class="text-end" data-value="20">20%</td>
+                            <td class="text-end" data-value="2">2</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="2" data-team="team1" onclick="showStudentDetail('Harper Thomas', '2', 'Team 1', 'Davis', 'Ms. Davis')">
+                            <td>Harper Thomas</td>
+                            <td>2</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Davis</td>
+                            <td>Ms. Davis</td>
+                            <td class="text-end" data-value="65">$65</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="240">240 min</td>
+                            <td class="text-end" data-value="240">240 min</td>
+                            <td class="text-end" data-value="2">2/10</td>
+                            <td class="text-end" data-value="20">20%</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="50">50%</td>
+                        </tr>
+                        <tr data-grade="1" data-team="team2" onclick="showStudentDetail('Evelyn Martinez', '1', 'Team 2', 'Foster', 'Ms. Foster')">
+                            <td>Evelyn Martinez</td>
+                            <td>1</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Foster</td>
+                            <td>Ms. Foster</td>
+                            <td class="text-end" data-value="45">$45</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="120">120 min</td>
+                            <td class="text-end" data-value="120">120 min</td>
+                            <td class="text-end" data-value="1">1/10</td>
+                            <td class="text-end" data-value="10">10%</td>
+                            <td class="text-end" data-value="1">1</td>
+                            <td class="text-end" data-value="100">100%</td>
+                        </tr>
+                        <tr data-grade="5" data-team="team1" onclick="showStudentDetail('Alexander Wilson', '5', 'Team 1', 'Adams', 'Ms. Adams')">
+                            <td>Alexander Wilson</td>
+                            <td>5</td>
+                            <td><span class="team-badge team-badge-team1">TEAM 1</span></td>
+                            <td>Adams</td>
+                            <td>Ms. Adams</td>
+                            <td class="text-end" data-value="0">$0</td>
+                            <td class="text-end" data-value="0">0</td>
+                            <td class="text-end" data-value="720">720 min</td>
+                            <td class="text-end" data-value="745">745 min</td>
+                            <td class="text-end" data-value="6">6/10</td>
+                            <td class="text-end" data-value="60">60%</td>
+                            <td class="text-end" data-value="5">5</td>
+                            <td class="text-end" data-value="83">83%</td>
+                        </tr>
+                        <tr data-grade="3" data-team="team2" onclick="showStudentDetail('Mia Foster', '3', 'Team 2', 'Garcia', 'Mr. Garcia')">
+                            <td>Mia Foster</td>
+                            <td>3</td>
+                            <td><span class="team-badge team-badge-team2">TEAM 2</span></td>
+                            <td>Garcia</td>
+                            <td>Mr. Garcia</td>
+                            <td class="text-end" data-value="0">$0</td>
+                            <td class="text-end" data-value="0">0</td>
+                            <td class="text-end" data-value="0">0 min</td>
+                            <td class="text-end" data-value="0">0 min</td>
+                            <td class="text-end" data-value="0">0/10</td>
+                            <td class="text-end" data-value="0">0%</td>
+                            <td class="text-end" data-value="0">0</td>
+                            <td class="text-end" data-value="0">0%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Collapsible Footer -->
+        <div class="collapsible-footer">
+            <div class="collapsible-header" onclick="toggleFooter()">
+                <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+                <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+            </div>
+            <div class="collapsible-content" id="footerContent">
+                <div class="data-source-item">
+                    <span class="data-source-label">• Reading minutes, Participation:</span>
+                    <span class="data-source-value">Daily_Logs table (capped at 120 min/day)</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Fundraising, Sponsors:</span>
+                    <span class="data-source-value">Reader_Cumulative table (full contest totals)</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Student roster, Team assignments:</span>
+                    <span class="data-source-value">Roster table (411 students total)</span>
+                </div>
+                <div class="data-source-item">
+                    <span class="data-source-label">• Daily reading goals:</span>
+                    <span class="data-source-value">Grade_Rules table (varies by grade: K=15 min, 1=20 min, 2=25 min, 3-5=30 min/day)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Info Modal -->
+    <div class="modal fade" id="dataInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-info-circle"></i> Data Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Banner and Table Filtering</h6>
+                    <p>The banner metrics and table data update based on your filter selections:</p>
+                    <ul>
+                        <li><strong>Grade Filter:</strong> Shows only students from selected grade(s)</li>
+                        <li><strong>Team Filter:</strong> Shows only students from selected team(s)</li>
+                        <li><strong>Combined Filters:</strong> Both filters work together (e.g., "Grade 5 + Team 1")</li>
+                    </ul>
+
+                    <h6 class="mt-4">Silver Highlighting (&Filter Active)</h6>
+                    <p>When you filter by grade or team, silver ovals (🥈) appear on the highest values within that filtered group.</p>
+                    <ul>
+                        <li><strong>Gold ovals (⭕):</strong> School-wide winners (across all 411 students)</li>
+                        <li><strong>Silver ovals (🥈):</strong> Grade/team winners (within filtered group only)</li>
+                    </ul>
+
+                    <h6 class="mt-4">Metrics That Honor Date Filter ◐</h6>
+                    <p>These metrics change based on the selected date filter:</p>
+                    <ul>
+                        <li><strong>Minutes Read:</strong> Cumulative through selected date</li>
+                        <li><strong>Avg. Participation:</strong> Average daily participation through selected date</li>
+                        <li><strong>Goal Met:</strong> Students who met goal through selected date</li>
+                        <li><strong>Days Participated:</strong> Count of days with >0 minutes through selected date</li>
+                    </ul>
+
+                    <h6 class="mt-4">Metrics That Don't Filter by Date</h6>
+                    <p>These metrics always show full contest totals:</p>
+                    <ul>
+                        <li><strong>Fundraising:</strong> Total donations for entire contest</li>
+                        <li><strong>Sponsors:</strong> Total sponsors for entire contest</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Detail Modal -->
+    <div class="modal fade" id="studentDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📋 Student Detail: <span id="modalStudentName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Student Info -->
+                    <div class="student-info-box">
+                        <div class="student-info-row">
+                            <div class="student-info-item">
+                                <div class="student-info-label">Grade</div>
+                                <div class="student-info-value" id="modalGrade"></div>
+                            </div>
+                            <div class="student-info-item">
+                                <div class="student-info-label">Team</div>
+                                <div class="student-info-value"><span id="modalTeamBadge"></span></div>
+                            </div>
+                            <div class="student-info-item">
+                                <div class="student-info-label">Class</div>
+                                <div class="student-info-value" id="modalClass"></div>
+                            </div>
+                            <div class="student-info-item">
+                                <div class="student-info-label">Teacher</div>
+                                <div class="student-info-value" id="modalTeacher"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Metrics -->
+                    <h6 style="font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">Summary Metrics (Oct 10-19, 2025)</h6>
+                    <table class="table table-bordered summary-metrics-table">
+                        <thead>
+                            <tr>
+                                <th>💰 Fundraising</th>
+                                <th>🎁 Sponsors</th>
+                                <th>📚 Minutes Capped</th>
+                                <th>📚 Minutes Uncapped</th>
+                                <th>👥 Participation</th>
+                                <th>🎯 Goal Met</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="winning-value winning-value-school">$2,624</span><br><small class="text-muted">(School #1)</small></td>
+                                <td>12 sponsors</td>
+                                <td><span class="winning-value winning-value-school">1,200 min</span><br><small class="text-muted">(School #1)</small></td>
+                                <td>1,245 min<br><small class="text-muted">(+45 over cap)</small></td>
+                                <td>10/10 days<br><small class="text-muted">100%</small></td>
+                                <td>10/10 days<br><small class="text-muted">100%</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Daily Reading Log -->
+                    <h6 style="font-weight: 700; color: #2c3e50; margin-bottom: 1rem; margin-top: 2rem;">📅 Daily Reading Log</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered daily-log-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Day</th>
+                                    <th>Date</th>
+                                    <th class="text-end">Minutes Read<br><small>(Actual)</small></th>
+                                    <th class="text-end">Capped<br><small>(Max 120)</small></th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center">1</td>
+                                    <td>Fri, Oct 10</td>
+                                    <td class="text-end">127 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+7 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">2</td>
+                                    <td>Sat, Oct 11</td>
+                                    <td class="text-end">135 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+15 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">3</td>
+                                    <td>Sun, Oct 12</td>
+                                    <td class="text-end">118 min</td>
+                                    <td class="text-end">118 min</td>
+                                    <td>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">4</td>
+                                    <td>Mon, Oct 13</td>
+                                    <td class="text-end">132 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+12 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">5</td>
+                                    <td>Tue, Oct 14</td>
+                                    <td class="text-end">125 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+5 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">6</td>
+                                    <td>Wed, Oct 15</td>
+                                    <td class="text-end">128 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+8 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">7</td>
+                                    <td>Thu, Oct 16</td>
+                                    <td class="text-end">120 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">8</td>
+                                    <td>Fri, Oct 17</td>
+                                    <td class="text-end">115 min</td>
+                                    <td class="text-end">115 min</td>
+                                    <td>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">9</td>
+                                    <td>Sat, Oct 18</td>
+                                    <td class="text-end">122 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+2 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">10</td>
+                                    <td>Sun, Oct 19</td>
+                                    <td class="text-end">123 min</td>
+                                    <td class="text-end">120 min</td>
+                                    <td>
+                                        <span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+3 min)</span><br>
+                                        <span class="status-indicator goal-met">✅ Met daily goal</span>
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f8f9fa; font-weight: 700;">
+                                    <td colspan="2" class="text-end">TOTAL</td>
+                                    <td class="text-end">1,245 min<br><small class="text-muted">(20.8 hrs)</small></td>
+                                    <td class="text-end">1,200 min<br><small class="text-muted">(20.0 hrs)</small></td>
+                                    <td>
+                                        Days participated: 10/10<br>
+                                        Days met goal: 10/10 (100%)
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="modal-notes">
+                        <h6>📝 Understanding This Report</h6>
+                        <ul>
+                            <li><strong>⚠️ Exceeded cap:</strong> Student read more than 120 minutes this day. Contest calculations use capped value.</li>
+                            <li><strong>✅ Met daily goal:</strong> Student met or exceeded their grade-level reading goal (Grade 5 goal: 30 min/day).</li>
+                            <li><strong>Minutes Capped:</strong> Total used for official contest rankings and awards (max 120 min/day).</li>
+                            <li><strong>Minutes Uncapped:</strong> Actual total reading time, showing full student effort beyond contest limits.</li>
+                            <li><strong>⭕ Gold highlight:</strong> This student is the school-wide winner for this metric.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Grade name mapping
+        const gradeNames = {
+            'all': 'All Grades',
+            'K': 'Kindergarten',
+            '1': 'Grade 1',
+            '2': 'Grade 2',
+            '3': 'Grade 3',
+            '4': 'Grade 4',
+            '5': 'Grade 5'
+        };
+
+        const teamNames = {
+            'all': 'All Teams',
+            'team1': 'Team 1 (Blue)',
+            'team2': 'Team 2 (Yellow)'
+        };
+
+        // Grade filter functionality
+        document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.grade-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Apply filter
+                applyFilters();
+            });
+        });
+
+        // Team filter functionality
+        document.getElementById('teamFilter').addEventListener('change', applyFilters);
+
+        function applyFilters() {
+            const gradeFilter = document.querySelector('.grade-filter-btn.active').dataset.grade;
+            const teamFilter = document.getElementById('teamFilter').value;
+            const rows = document.querySelectorAll('#studentsTable tbody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowGrade = row.dataset.grade;
+                const rowTeam = row.dataset.team;
+
+                let showRow = true;
+
+                // Apply grade filter
+                if (gradeFilter !== 'all' && rowGrade !== gradeFilter) {
+                    showRow = false;
+                }
+
+                // Apply team filter
+                if (teamFilter !== 'all' && rowTeam !== teamFilter) {
+                    showRow = false;
+                }
+
+                if (showRow) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            // Update visible count
+            document.getElementById('visibleCount').textContent = visibleCount;
+
+            // Update active filter labels
+            document.getElementById('activeGradeFilter').textContent = gradeNames[gradeFilter];
+            document.getElementById('activeTeamFilter').textContent = teamNames[teamFilter];
+
+            // Update silver highlighting based on filtered group
+            updateSilverHighlighting(gradeFilter, teamFilter);
+
+            // Recalculate banner based on visible rows (in production this would be real calculation)
+            updateBanner(gradeFilter, teamFilter, visibleCount);
+        }
+
+        function updateSilverHighlighting(gradeFilter, teamFilter) {
+            // Remove all silver highlights first
+            document.querySelectorAll('.winning-value-grade').forEach(el => {
+                el.classList.remove('winning-value-grade');
+            });
+
+            // Only add silver highlights when filter is active (not "all")
+            if (gradeFilter === 'all' && teamFilter === 'all') {
+                return; // No silver highlighting when viewing all
+            }
+
+            // Get visible rows
+            const visibleRows = Array.from(document.querySelectorAll('#studentsTable tbody tr:not(.hidden)'));
+            if (visibleRows.length === 0) return;
+
+            // Find max values for each metric column (excluding gold winners)
+            const metrics = [5, 6, 7, 8, 9, 10, 11, 12]; // Column indices for numeric metrics
+
+            metrics.forEach(colIndex => {
+                let maxValue = -Infinity;
+                let maxCells = [];
+
+                visibleRows.forEach(row => {
+                    const cell = row.cells[colIndex];
+                    const value = parseFloat(cell.getAttribute('data-value'));
+
+                    // Skip if this cell already has gold highlighting
+                    if (cell.querySelector('.winning-value-school')) {
+                        return;
+                    }
+
+                    if (value > maxValue) {
+                        maxValue = value;
+                        maxCells = [cell];
+                    } else if (value === maxValue && value > 0) {
+                        maxCells.push(cell);
+                    }
+                });
+
+                // Apply silver highlighting to max values
+                maxCells.forEach(cell => {
+                    const span = cell.querySelector('span:not(.winning-value-school)') || document.createElement('span');
+                    if (!span.classList.contains('winning-value-school')) {
+                        span.className = 'winning-value winning-value-grade';
+                        span.textContent = cell.textContent.trim();
+                        cell.textContent = '';
+                        cell.appendChild(span);
+                    }
+                });
+            });
+        }
+
+        function updateBanner(gradeFilter, teamFilter, visibleCount) {
+            // In production, banner would recalculate based on filtered students
+            // For prototype, we'll just update the subtitle to show it's responsive
+            const totalStudents = 411;
+
+            if (gradeFilter === 'all' && teamFilter === 'all') {
+                document.getElementById('bannerFundraisingSubtitle').textContent = '325/411 students (79.1%)';
+                document.getElementById('bannerMinutesSubtitle').textContent = 'Avg: 20.0 hours/student';
+                document.getElementById('bannerSponsorsSubtitle').textContent = '289/411 students (70.3%)';
+                document.getElementById('bannerParticipationSubtitle').textContent = '323/411 active';
+                document.getElementById('bannerGoalMetSubtitle').textContent = '337/411 students';
+            } else {
+                // Show filtered count in banner
+                const filterLabel = gradeFilter !== 'all' ? gradeNames[gradeFilter] : teamNames[teamFilter];
+                document.getElementById('bannerFundraisingSubtitle').textContent = `Filtered: ${filterLabel}`;
+                document.getElementById('bannerMinutesSubtitle').textContent = `${visibleCount} students`;
+                document.getElementById('bannerSponsorsSubtitle').textContent = `${visibleCount} students`;
+                document.getElementById('bannerParticipationSubtitle').textContent = `${visibleCount} students`;
+                document.getElementById('bannerGoalMetSubtitle').textContent = `${visibleCount} students`;
+            }
+        }
+
+        // Table sorting
+        let currentSortColumn = -1;
+        let currentSortDirection = 'asc';
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('studentsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr:not(.hidden)'));
+
+            // Toggle direction if same column
+            if (currentSortColumn === columnIndex) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortDirection = 'asc';
+                currentSortColumn = columnIndex;
+            }
+
+            // Sort rows
+            rows.sort((a, b) => {
+                const aValue = a.cells[columnIndex].getAttribute('data-value') ||
+                              a.cells[columnIndex].textContent.trim();
+                const bValue = b.cells[columnIndex].getAttribute('data-value') ||
+                              b.cells[columnIndex].textContent.trim();
+
+                // Try numeric comparison first
+                const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+                const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+
+                let comparison = 0;
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    comparison = aNum - bNum;
+                } else {
+                    comparison = aValue.localeCompare(bValue, undefined, {numeric: true});
+                }
+
+                return currentSortDirection === 'asc' ? comparison : -comparison;
+            });
+
+            // Re-append rows
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update sort indicators
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach((header, index) => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+                if (index === columnIndex) {
+                    header.classList.add(currentSortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+        }
+
+        // Copy table to clipboard
+        function copyTable() {
+            const table = document.getElementById('studentsTable');
+            const rows = table.querySelectorAll('tbody tr:not(.hidden)');
+            let text = '';
+
+            // Header row
+            table.querySelectorAll('thead th').forEach(th => {
+                text += th.textContent.trim() + '\t';
+            });
+            text += '\n';
+
+            // Data rows
+            rows.forEach(row => {
+                row.querySelectorAll('td').forEach(td => {
+                    text += td.textContent.trim() + '\t';
+                });
+                text += '\n';
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Table copied to clipboard!');
+            });
+        }
+
+        // Export to CSV
+        function exportCSV() {
+            const table = document.getElementById('studentsTable');
+            const rows = table.querySelectorAll('tbody tr:not(.hidden)');
+            let csv = '';
+
+            // Header row
+            table.querySelectorAll('thead th').forEach(th => {
+                csv += '"' + th.textContent.trim() + '",';
+            });
+            csv = csv.slice(0, -1) + '\n';
+
+            // Data rows
+            rows.forEach(row => {
+                row.querySelectorAll('td').forEach(td => {
+                    csv += '"' + td.textContent.trim() + '",';
+                });
+                csv = csv.slice(0, -1) + '\n';
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'students_report.csv';
+            a.click();
+        }
+
+        // Show student detail modal
+        function showStudentDetail(name, grade, team, classname, teacher) {
+            document.getElementById('modalStudentName').textContent = name;
+            document.getElementById('modalGrade').textContent = grade;
+
+            // Create team badge with proper styling
+            const teamBadge = document.createElement('span');
+            teamBadge.className = 'team-badge team-badge-' + team.toLowerCase().replace(' ', '');
+            teamBadge.textContent = team.toUpperCase();
+            document.getElementById('modalTeamBadge').innerHTML = '';
+            document.getElementById('modalTeamBadge').appendChild(teamBadge);
+
+            document.getElementById('modalClass').textContent = classname;
+            document.getElementById('modalTeacher').textContent = teacher;
+
+            const modal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
+            modal.show();
+        }
+
+        // Toggle footer
+        function toggleFooter() {
+            const content = document.getElementById('footerContent');
+            const icon = document.getElementById('footerIcon');
+
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                icon.className = 'bi bi-chevron-right';
+            } else {
+                content.classList.add('show');
+                icon.className = 'bi bi-chevron-down';
+            }
+        }
+
+        // Toggle legend section
+        function toggleLegend() {
+            const content = document.getElementById('legendContent');
+            const icon = document.getElementById('legendIcon');
+
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                icon.className = 'bi bi-chevron-right';
+            } else {
+                content.classList.add('show');
+                icon.className = 'bi bi-chevron-down';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            applyFilters();
+        });
+    </script>
+</body>
+</html>
