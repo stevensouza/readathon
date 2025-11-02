@@ -432,7 +432,7 @@
         <span class="filter-note">(auto-updates)</span>
     </div>
 
-    <button class="data-info-btn" data-bs-toggle="modal" data-bs-target="#dataSourceModal">
+    <button class="data-info-btn" data-bs-toggle="modal" data-bs-target="#dataInfoModal">
         <i class="bi bi-info-circle"></i> Data Info
     </button>
 </div>
@@ -723,39 +723,67 @@
     </div>
 </div>
 
-<!-- Data Source Modal -->
-<div class="modal fade" id="dataSourceModal" tabindex="-1" aria-labelledby="dataSourceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- Data Info Modal -->
+<div class="modal fade" id="dataInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header modal-header-custom">
-                <h5 class="modal-title" id="dataSourceModalLabel">
-                    <i class="bi bi-database"></i> Data Sources & Last Updated
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-info-circle"></i> Data Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="data-source-item mb-3">
+                <!-- Section 1: Filtering Behavior -->
+                <h6>Date Filter</h6>
+                <p>The date filter controls which reading data is displayed:</p>
+                <ul>
+                    <li><strong>Specific Day:</strong> Shows cumulative progress through that date (e.g., Day 3 = Days 1+2+3 combined)</li>
+                    <li><strong>All Days:</strong> Shows complete contest totals</li>
+                </ul>
+
+                <hr class="my-3">
+
+                <!-- Section 3: Date Filter Behavior -->
+                <h6>Metrics That Honor Date Filter ◐</h6>
+                <p>These metrics change based on the selected date filter:</p>
+                <ul>
+                    <li><strong>Minutes Read:</strong> Cumulative through selected date</li>
+                    <li><strong>Participation:</strong> Average daily participation through selected date</li>
+                    <li><strong>Goals Met:</strong> Students who met goal through selected date</li>
+                </ul>
+
+                <h6 class="mt-4">Metrics That Don't Filter by Date</h6>
+                <p>These metrics always show full contest totals:</p>
+                <ul>
+                    <li><strong>Fundraising:</strong> Total donations for entire contest</li>
+                    <li><strong>Sponsors:</strong> Total sponsors for entire contest</li>
+                </ul>
+
+                <hr class="my-3">
+
+                <!-- Section 4: Data Sources -->
+                <h6>Data Sources</h6>
+                <div class="data-source-item mb-2">
                     <div class="data-source-label mb-1">Reading Minutes & Participation:</div>
                     <div class="data-source-value ms-3">
                         Source: <strong>Daily_Logs</strong> table<br>
                         Last Updated: <strong>{{ metadata.daily_logs_updated }}</strong>
                     </div>
                 </div>
-                <div class="data-source-item mb-3">
+                <div class="data-source-item mb-2">
                     <div class="data-source-label mb-1">Fundraising & Sponsors:</div>
                     <div class="data-source-value ms-3">
                         Source: <strong>Reader_Cumulative</strong> table<br>
                         Last Updated: <strong>{{ metadata.reader_cumulative_updated }}</strong>
                     </div>
                 </div>
-                <div class="data-source-item">
+                <div class="data-source-item mb-2">
                     <div class="data-source-label mb-1">Student Counts:</div>
                     <div class="data-source-value ms-3">
                         Source: <strong>Roster</strong> table<br>
                         Last Updated: <strong>{{ metadata.roster_updated }}</strong>
                     </div>
                 </div>
-                <div class="data-source-item mb-3">
+                <div class="data-source-item mb-2">
                     <div class="data-source-label mb-1">Team Color Bonus:</div>
                     <div class="data-source-value ms-3">
                         Source: <strong>Team_Color_Bonus</strong> table<br>
@@ -763,22 +791,8 @@
                     </div>
                 </div>
 
-                <hr class="my-3">
-
-                <div class="data-source-item">
-                    <div class="data-source-label mb-2"><i class="bi bi-funnel"></i> Date Filter Behavior:</div>
-                    <div class="data-source-value ms-3" style="font-size: 0.8rem; line-height: 1.6;">
-                        <strong>Reading Metrics (Filtered by date):</strong><br>
-                        <span style="color: #6c757d;">• Minutes Read, Participation, Goals Met</span><br>
-                        <span style="color: #6c757d;">• Shows data <em>cumulative through</em> selected date</span><br>
-                        <span style="color: #6c757d;">• Example: Day 3 = Days 1+2+3 combined</span><br><br>
-
-                        <strong>Fundraising Metrics (Not filtered):</strong><br>
-                        <span style="color: #6c757d;">• Total Fundraising, Sponsors</span><br>
-                        <span style="color: #6c757d;">• Always shows <em>full contest</em> totals</span><br>
-                        <span style="color: #6c757d;">• Fundraising is cumulative by design</span>
-                    </div>
-                </div>
+                <!-- Section 5: Notes -->
+                <p class="mb-0 mt-3"><em>Note: All minutes include team color bonus points and are capped at 120 minutes per student per day for official contest totals.</em></p>
             </div>
         </div>
     </div>

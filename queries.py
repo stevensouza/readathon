@@ -1130,7 +1130,7 @@ QUERY_Q23_ROSTER_INTEGRITY = """
 # GRADE LEVEL TAB QUERIES
 # ============================================================================
 
-def get_grade_level_classes_query(date_where="", grade_where=""):
+def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
     """
     Get all classes with their metrics for the Grade Level tab.
     Metrics match the Teams page calculations exactly for consistency.
@@ -1138,8 +1138,10 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
     Args:
         date_where: SQL WHERE clause for date filtering (e.g., "AND dl.log_date <= '2025-10-15'")
                     Empty string = full contest
-        grade_where: SQL WHERE clause for grade filtering (e.g., "WHERE ci.grade_level = '2'")
+        grade_where: SQL WHERE clause for grade filtering (e.g., "AND ci.grade_level = '2'")
                      Empty string = all grades
+        team_where: SQL WHERE clause for team filtering (e.g., "AND ci.team_name = 'Team 1'")
+                    Empty string = all teams
 
     Returns metrics (matching Teams table rows):
     - Fundraising (NEVER filtered)
@@ -1172,7 +1174,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
             FROM Class_Info ci
             LEFT JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            WHERE 1=1{grade_where}
+            WHERE 1=1{grade_where}{team_where}
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students
         ),
         MinutesMetrics AS (
@@ -1185,7 +1187,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
             FROM Class_Info ci
             LEFT JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            WHERE 1=1{date_where}{grade_where}
+            WHERE 1=1{date_where}{grade_where}{team_where}
             GROUP BY ci.class_name
         ),
         ClassMetrics AS (
@@ -1222,7 +1224,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
             JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             WHERE dl.minutes_read > 0 {date_where}
-            {grade_where}
+            {grade_where}{team_where}
             GROUP BY ci.class_name
         ),
         AllDaysActive AS (
@@ -1239,7 +1241,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
                 JOIN Roster r ON ci.class_name = r.class_name
                 JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE dl.minutes_read > 0 {date_where}
-                {grade_where}
+                {grade_where}{team_where}
                 GROUP BY ci.class_name, dl.student_name
                 HAVING COUNT(DISTINCT dl.log_date) = (SELECT total_days FROM FilterDaysCount)
             )
@@ -1254,7 +1256,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
             JOIN Daily_Logs dl ON r.student_name = dl.student_name
             JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
             WHERE dl.minutes_read >= gr.min_daily_minutes {date_where}
-            {grade_where}
+            {grade_where}{team_where}
             GROUP BY ci.class_name
         ),
         GoalMetAllDays AS (
@@ -1274,7 +1276,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
                 JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
                 WHERE 1=1 {date_where}
-                {grade_where}
+                {grade_where}{team_where}
                 GROUP BY ci.class_name, dl.student_name
                 HAVING COUNT(DISTINCT CASE
                     WHEN dl.minutes_read >= gr.min_daily_minutes THEN dl.log_date
@@ -1296,7 +1298,7 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
                 JOIN Roster r ON ci.class_name = r.class_name
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE 1=1 {date_where}
-                {grade_where}
+                {grade_where}{team_where}
                 GROUP BY ci.class_name, ci.total_students, dl.log_date
             )
             GROUP BY class_name
@@ -1364,11 +1366,20 @@ def get_grade_level_classes_query(date_where="", grade_where=""):
         ORDER BY cm.grade_level, cm.teacher_name
     """
 
-def get_grade_aggregations_query(date_where=""):
+def get_grade_aggregations_query(date_where="", grade_where="", team_where=""):
     """
     Get grade-level aggregations for grade summary cards.
     Shows top class and top student per grade for each metric.
+
+    Args:
+        date_where: SQL WHERE clause for date filtering (uses dl. prefix)
+        grade_where: SQL WHERE clause for grade filtering (uses ci. or r. prefix)
+        team_where: SQL WHERE clause for team filtering (uses ci. or r. prefix)
     """
+    # Build WHERE clauses for Roster table (using r. prefix)
+    grade_where_r = grade_where.replace('ci.grade_level', 'r.grade_level') if grade_where else ""
+    team_where_r = team_where.replace('ci.team_name', 'r.team_name') if team_where else ""
+
     return f"""
         WITH TeamNames AS (
             SELECT DISTINCT team_name
@@ -1384,6 +1395,7 @@ def get_grade_aggregations_query(date_where=""):
                 SUM(CASE WHEN r.team_name = (SELECT team_name FROM TeamNames LIMIT 1 OFFSET 1) THEN 1 ELSE 0 END) as team2_students
             FROM Class_Info ci
             JOIN Roster r ON ci.class_name = r.class_name
+            WHERE 1=1 {grade_where} {team_where}
             GROUP BY ci.grade_level
         ),
         GradeTopFundraising AS (
@@ -1395,6 +1407,7 @@ def get_grade_aggregations_query(date_where=""):
                 ROW_NUMBER() OVER (PARTITION BY r.grade_level ORDER BY SUM(rc.donation_amount) DESC) as rn
             FROM Roster r
             LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            WHERE 1=1 {grade_where_r} {team_where_r}
             GROUP BY r.grade_level, r.teacher_name, r.team_name
         ),
         GradeTopReading AS (
@@ -1406,6 +1419,7 @@ def get_grade_aggregations_query(date_where=""):
                 ROW_NUMBER() OVER (PARTITION BY r.grade_level ORDER BY SUM(MIN(dl.minutes_read, 120)) DESC) as rn
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where_r} {team_where_r}
             GROUP BY r.grade_level, r.teacher_name, r.team_name
         ),
         ClassDailyParticipation AS (
@@ -1418,6 +1432,7 @@ def get_grade_aggregations_query(date_where=""):
             FROM Class_Info ci
             LEFT JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where} {team_where}
             GROUP BY ci.grade_level, ci.teacher_name, ci.team_name, dl.log_date, ci.total_students
         ),
         GradeTopParticipation AS (
@@ -1439,6 +1454,7 @@ def get_grade_aggregations_query(date_where=""):
                 ROW_NUMBER() OVER (PARTITION BY r.grade_level ORDER BY rc.donation_amount DESC) as rn
             FROM Reader_Cumulative rc
             JOIN Roster r ON rc.student_name = r.student_name
+            WHERE 1=1 {grade_where_r} {team_where_r}
         ),
         StudentTopReading AS (
             SELECT
@@ -1449,6 +1465,7 @@ def get_grade_aggregations_query(date_where=""):
                 ROW_NUMBER() OVER (PARTITION BY r.grade_level ORDER BY SUM(MIN(dl.minutes_read, 120)) DESC) as rn
             FROM Daily_Logs dl
             JOIN Roster r ON dl.student_name = r.student_name {date_where}
+            WHERE 1=1 {grade_where_r} {team_where_r}
             GROUP BY r.grade_level, dl.student_name, r.team_name
         )
         SELECT
@@ -1501,16 +1518,428 @@ def get_grade_aggregations_query(date_where=""):
             END
     """
 
-def get_school_wide_leaders_query(date_where="", grade=None):
+# ============================================================================
+# STUDENTS PAGE QUERIES
+# ============================================================================
+
+def get_students_master_query(date_where="", date_where_no_alias="", grade_where="", team_where=""):
+    """
+    Get all students with their aggregate data for the Students page master table.
+
+    Returns 13 columns per student:
+    - student_name, grade_level, team_name, class_name, teacher_name
+    - fundraising (donation_amount), sponsors
+    - minutes_capped (max 120/day), minutes_uncapped (actual)
+    - days_participated, participation_pct
+    - days_met_goal, goal_met_pct
+
+    Args:
+        date_where: SQL WHERE clause for date filtering with alias (e.g., "AND dl.log_date <= '2025-10-15'")
+        date_where_no_alias: SQL WHERE clause for date filtering without alias (e.g., "AND log_date <= '2025-10-15'")
+        grade_where: SQL WHERE clause for grade filtering (e.g., "AND r.grade_level = '2'")
+        team_where: SQL WHERE clause for team filtering (e.g., "AND r.team_name = 'Phoenix'")
+    """
+    return f"""
+        WITH TotalDays AS (
+            SELECT COUNT(DISTINCT log_date) as total_days
+            FROM Daily_Logs
+            WHERE 1=1 {date_where_no_alias}
+        ),
+        StudentMetrics AS (
+            SELECT
+                r.student_name,
+                r.grade_level,
+                r.team_name,
+                r.class_name,
+                r.teacher_name,
+                COALESCE(rc.donation_amount, 0) as fundraising,
+                COALESCE(rc.sponsors, 0) as sponsors,
+                COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as minutes_capped,
+                COALESCE(SUM(dl.minutes_read), 0) as minutes_uncapped,
+                COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated,
+                COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) as days_met_goal
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name, r.teacher_name,
+                     rc.donation_amount, rc.sponsors
+        )
+        SELECT
+            sm.student_name,
+            sm.grade_level,
+            sm.team_name,
+            sm.class_name,
+            sm.teacher_name,
+            sm.fundraising,
+            sm.sponsors,
+            sm.minutes_capped,
+            sm.minutes_uncapped,
+            sm.days_participated,
+            CASE WHEN (SELECT total_days FROM TotalDays) > 0
+                THEN ROUND(100.0 * sm.days_participated / (SELECT total_days FROM TotalDays), 1)
+                ELSE 0
+            END as participation_pct,
+            sm.days_met_goal,
+            CASE WHEN sm.days_participated > 0
+                THEN ROUND(100.0 * sm.days_met_goal / sm.days_participated, 1)
+                ELSE 0
+            END as goal_met_pct
+        FROM StudentMetrics sm
+        ORDER BY sm.student_name
+    """
+
+def get_student_detail_query(date_where=""):
+    """
+    Get individual student detail with summary metrics and daily breakdown.
+
+    Returns two result sets:
+    1. Student summary (1 row)
+    2. Daily log entries (multiple rows)
+
+    This query is designed to be executed twice:
+    - First without the daily breakdown (just summary)
+    - Second with daily breakdown (for modal)
+
+    Args:
+        date_where: SQL WHERE clause for date filtering
+    """
+    summary_query = f"""
+        SELECT
+            r.student_name,
+            r.grade_level,
+            r.team_name,
+            r.class_name,
+            r.teacher_name,
+            COALESCE(rc.donation_amount, 0) as fundraising,
+            COALESCE(rc.sponsors, 0) as sponsors,
+            COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_capped,
+            COALESCE(SUM(dl.minutes_read), 0) as total_uncapped,
+            COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated,
+            COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) as days_met_goal,
+            gr.min_daily_minutes as grade_goal
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+        LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+        WHERE r.student_name = ?
+        GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name, r.teacher_name,
+                 rc.donation_amount, rc.sponsors, gr.min_daily_minutes
+    """
+
+    daily_query = f"""
+        SELECT
+            dl.log_date,
+            dl.minutes_read as actual_minutes,
+            CASE WHEN dl.minutes_read > 120 THEN 120 ELSE dl.minutes_read END as capped_minutes,
+            CASE WHEN dl.minutes_read > 120 THEN 1 ELSE 0 END as exceeded_cap,
+            CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 ELSE 0 END as met_goal,
+            gr.min_daily_minutes as grade_goal
+        FROM Daily_Logs dl
+        JOIN Roster r ON dl.student_name = r.student_name
+        JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+        WHERE dl.student_name = ? {date_where}
+        ORDER BY dl.log_date
+    """
+
+    return summary_query, daily_query
+
+def get_students_school_winners_query(date_where=""):
+    """
+    Get school-wide winners (gold highlights) for all metrics.
+
+    Returns one row per metric with the max value across ALL students.
+    Used to identify which students get gold oval highlights.
+
+    Args:
+        date_where: SQL WHERE clause for date filtering
+
+    Returns columns: metric_name, max_value
+    """
+    return f"""
+        SELECT 'fundraising' as metric, MAX(COALESCE(rc.donation_amount, 0)) as max_value
+        FROM Reader_Cumulative rc
+
+        UNION ALL
+
+        SELECT 'sponsors' as metric, MAX(COALESCE(rc.sponsors, 0)) as max_value
+        FROM Reader_Cumulative rc
+
+        UNION ALL
+
+        SELECT 'minutes_capped' as metric, MAX(total_capped) as max_value
+        FROM (
+            SELECT SUM(MIN(dl.minutes_read, 120)) as total_capped
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
+            GROUP BY dl.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'minutes_uncapped' as metric, MAX(total_uncapped) as max_value
+        FROM (
+            SELECT SUM(dl.minutes_read) as total_uncapped
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
+            GROUP BY dl.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'days_participated' as metric, MAX(days_participated) as max_value
+        FROM (
+            SELECT COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
+            GROUP BY dl.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'days_met_goal' as metric, MAX(days_met_goal) as max_value
+        FROM (
+            SELECT COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) as days_met_goal
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            GROUP BY r.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'participation_pct' as metric, MAX(participation_pct) as max_value
+        FROM (
+            SELECT CASE
+                WHEN (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE 1=1 {date_where}) > 0
+                THEN ROUND(100.0 * COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) / (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE 1=1 {date_where}), 1)
+                ELSE 0
+            END as participation_pct
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            GROUP BY r.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'goal_met_pct' as metric, MAX(goal_met_pct) as max_value
+        FROM (
+            SELECT CASE
+                WHEN COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) > 0
+                THEN ROUND(100.0 * COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) / COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END), 1)
+                ELSE 0
+            END as goal_met_pct
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            GROUP BY r.student_name
+        )
+    """
+
+def get_students_banner_query(date_where="", date_where_no_alias="", grade_where="", team_where=""):
+    """
+    Get banner metrics for Students page (6 metrics matching School/Teams/Grade pages).
+
+    Metrics (in order):
+    1. Campaign Day - Full contest status (no filter)
+    2. Fundraising - Total for filtered students (no date filter)
+    3. Minutes Read - Total capped minutes for filtered students (honors date filter)
+    4. Sponsors - Total sponsors for filtered students (no date filter)
+    5. Avg. Participation (With Color) - Filtered students (honors date filter, can exceed 100%)
+    6. Goal Met (≥1 Day) - Filtered students who met goal ≥1 day (honors date filter)
+
+    Args:
+        date_where: SQL WHERE clause for date filtering with alias
+        date_where_no_alias: SQL WHERE clause for date filtering without alias
+        grade_where: SQL WHERE clause for grade filtering
+        team_where: SQL WHERE clause for team filtering
+    """
+    return f"""
+        WITH FilteredStudents AS (
+            SELECT COUNT(DISTINCT r.student_name) as total_students
+            FROM Roster r
+            WHERE 1=1 {grade_where} {team_where}
+        ),
+        TotalDays AS (
+            SELECT COUNT(DISTINCT log_date) as total_days
+            FROM Daily_Logs
+            WHERE 1=1 {date_where_no_alias}
+        ),
+        AllDays AS (
+            SELECT COUNT(DISTINCT log_date) as all_days
+            FROM Daily_Logs
+        ),
+        Fundraising AS (
+            SELECT
+                COALESCE(SUM(rc.donation_amount), 0) as total_fundraising,
+                MAX(rc.donation_amount) as max_fundraising
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            WHERE 1=1 {grade_where} {team_where}
+        ),
+        Minutes AS (
+            SELECT
+                COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_minutes
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where} {team_where}
+        ),
+        Sponsors AS (
+            SELECT
+                COALESCE(SUM(rc.sponsors), 0) as total_sponsors
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            WHERE 1=1 {grade_where} {team_where}
+        ),
+        Participation AS (
+            SELECT
+                COUNT(DISTINCT r.student_name) as participated_count
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE dl.minutes_read > 0 {grade_where} {team_where}
+        ),
+        GoalMet AS (
+            SELECT
+                COUNT(DISTINCT r.student_name) as goal_met_count
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE dl.minutes_read >= gr.min_daily_minutes {grade_where} {team_where}
+        )
+        SELECT
+            (SELECT total_days FROM TotalDays) as campaign_days,
+            (SELECT all_days FROM AllDays) as total_contest_days,
+            (SELECT total_fundraising FROM Fundraising) as total_fundraising,
+            (SELECT total_minutes FROM Minutes) as total_minutes,
+            (SELECT total_sponsors FROM Sponsors) as total_sponsors,
+            CASE WHEN (SELECT total_students FROM FilteredStudents) > 0 AND (SELECT total_days FROM TotalDays) > 0
+                THEN ROUND(100.0 * (SELECT participated_count FROM Participation) / (SELECT total_students FROM FilteredStudents), 1)
+                ELSE 0
+            END as avg_participation_pct,
+            CASE WHEN (SELECT total_students FROM FilteredStudents) > 0
+                THEN ROUND(100.0 * (SELECT goal_met_count FROM GoalMet) / (SELECT total_students FROM FilteredStudents), 1)
+                ELSE 0
+            END as goal_met_pct,
+            (SELECT total_students FROM FilteredStudents) as total_students
+    """
+
+def get_students_filtered_winners_query(date_where="", grade_where="", team_where=""):
+    """
+    Get winners within the current filter group (silver highlights).
+
+    Only used when grade_filter != 'all' OR team_filter != 'all'
+    Returns max values for each metric within the filtered group.
+
+    Args:
+        date_where: SQL WHERE clause for date filtering
+        grade_where: SQL WHERE clause for grade filtering
+        team_where: SQL WHERE clause for team filtering
+
+    Returns columns: metric_name, max_value
+    """
+    return f"""
+        SELECT 'fundraising' as metric, MAX(COALESCE(rc.donation_amount, 0)) as max_value
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        WHERE 1=1 {grade_where} {team_where}
+
+        UNION ALL
+
+        SELECT 'sponsors' as metric, MAX(COALESCE(rc.sponsors, 0)) as max_value
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        WHERE 1=1 {grade_where} {team_where}
+
+        UNION ALL
+
+        SELECT 'minutes_capped' as metric, MAX(total_capped) as max_value
+        FROM (
+            SELECT SUM(MIN(dl.minutes_read, 120)) as total_capped
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY dl.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'minutes_uncapped' as metric, MAX(total_uncapped) as max_value
+        FROM (
+            SELECT SUM(dl.minutes_read) as total_uncapped
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY dl.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'days_participated' as metric, MAX(days_participated) as max_value
+        FROM (
+            SELECT COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY dl.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'days_met_goal' as metric, MAX(days_met_goal) as max_value
+        FROM (
+            SELECT COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) as days_met_goal
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY r.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'participation_pct' as metric, MAX(participation_pct) as max_value
+        FROM (
+            SELECT CASE
+                WHEN (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE 1=1 {date_where}) > 0
+                THEN ROUND(100.0 * COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) / (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE 1=1 {date_where}), 1)
+                ELSE 0
+            END as participation_pct
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY r.student_name
+        )
+
+        UNION ALL
+
+        SELECT 'goal_met_pct' as metric, MAX(goal_met_pct) as max_value
+        FROM (
+            SELECT CASE
+                WHEN COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) > 0
+                THEN ROUND(100.0 * COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) / COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END), 1)
+                ELSE 0
+            END as goal_met_pct
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {grade_where} {team_where}
+            GROUP BY r.student_name
+        )
+    """
+
+def get_school_wide_leaders_query(date_where="", grade=None, team=None):
     """
     Get leaders for the headline banner.
     If grade is None: Returns top class across ALL grades (school-wide)
     If grade is specified: Returns top class within that grade only
+    If team is specified: Returns top class within that team only
 
     IMPORTANT: Groups by CLASS_NAME (not teacher_name) to handle teachers with multiple classes
     IMPORTANT: Includes color bonus in minutes to match table calculations
     """
     grade_where = f" AND ci.grade_level = '{grade}'" if grade else ""
+    team_where = f" AND ci.team_name = '{team}'" if team else ""
 
     return f"""
         SELECT * FROM (
@@ -1524,7 +1953,7 @@ def get_school_wide_leaders_query(date_where="", grade=None):
             FROM Class_Info ci
             JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            WHERE 1=1 {grade_where}
+            WHERE 1=1 {grade_where} {team_where}
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
             ORDER BY value DESC
             LIMIT 1
@@ -1544,7 +1973,7 @@ def get_school_wide_leaders_query(date_where="", grade=None):
                 FROM Class_Info ci
                 JOIN Roster r ON ci.class_name = r.class_name
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
-                WHERE 1=1 {grade_where}
+                WHERE 1=1 {grade_where} {team_where}
                 GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
             ),
             ColorBonus AS (
@@ -1580,7 +2009,7 @@ def get_school_wide_leaders_query(date_where="", grade=None):
             FROM Class_Info ci
             JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            WHERE 1=1 {grade_where}
+            WHERE 1=1 {grade_where} {team_where}
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
             ORDER BY value DESC
             LIMIT 1
@@ -1601,7 +2030,7 @@ def get_school_wide_leaders_query(date_where="", grade=None):
                 FROM Class_Info ci
                 JOIN Roster r ON ci.class_name = r.class_name
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                WHERE 1=1 {grade_where} {date_where}
+                WHERE 1=1 {grade_where} {team_where} {date_where}
                 GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students, dl.log_date
             ),
             ClassAvgParticipation AS (

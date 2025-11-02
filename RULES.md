@@ -1,6 +1,6 @@
 # Read-a-Thon Application Rules
 
-**Last Updated:** 2025-10-30
+**Last Updated:** 2025-11-02
 
 This file contains universal rules that apply across all pages and features in the Read-a-Thon application. These rules MUST be followed for every implementation.
 
@@ -170,9 +170,27 @@ The application uses **TWO distinct participation metrics**. DO NOT confuse them
 ## State Management & Persistence
 
 ### Sticky Filters (Cross-Page)
-- **Filter Period:** Persists via `sessionStorage.setItem('readathonDateFilter', value)`
-- **Restored on page load:** All pages check sessionStorage and apply saved filter
-- **Grade Level Filter:** Persists within grade level page only (stored in sessionStorage)
+All filters persist across page navigation until explicitly changed by the user.
+
+1. **Database Selector** (Application-Wide)
+   - Persistence: `.readathon_config` file (server-side)
+   - Scope: All pages (navigation bar in base.html)
+   - Restored: Automatically on server startup
+
+2. **Filter Period / Date Filter** (Browser Session)
+   - Persistence: `sessionStorage.setItem('readathonDateFilter', value)`
+   - Scope: School, Teams, Grade Level, Students pages
+   - Restored: On page load via sessionStorage
+
+3. **Grade Level Filter** (Browser Session)
+   - Persistence: `sessionStorage.setItem('readathonGradeFilter', value)`
+   - Scope: Grade Level and Students pages
+   - Restored: On page load via sessionStorage
+
+4. **Team Filter** (Browser Session)
+   - Persistence: `sessionStorage.setItem('readathonTeamFilter', value)`
+   - Scope: Grade Level and Students pages
+   - Restored: On page load via sessionStorage
 
 ### Filter Restoration Pattern
 ```javascript

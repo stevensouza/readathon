@@ -1,0 +1,1361 @@
+{% extends "base.html" %}
+
+{% block title %}Students - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Students Tab Specific Styles */
+
+    /* Page Header - Matching Grade Level Page */
+    .page-header-students {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .filter-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .filter-inline label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .filter-inline select {
+        width: 240px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    /* Headline Banner */
+    .headline-banner {
+        background: #1e3a5f;
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .headline-metric {
+        text-align: center;
+        padding: 0.3rem 0.5rem;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .headline-metric:last-child {
+        border-right: none;
+    }
+
+    .headline-label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #17a2b8;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .headline-subtitle {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.3;
+        text-align: center;
+    }
+
+    .filter-indicator {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.6);
+        cursor: help;
+        margin-left: 0.3rem;
+    }
+
+    /* Grade Filter Section - Matching Grade Level Page */
+    .grade-filter-section {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .grade-filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .grade-filter-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        border: 2px solid #dee2e6;
+        background: white;
+        color: #2c3e50;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .grade-filter-btn:hover {
+        background: #f8f9fa;
+        border-color: #1e3a5f;
+    }
+
+    .grade-filter-btn.active {
+        background: #1e3a5f;
+        color: white;
+        border-color: #1e3a5f;
+    }
+
+    .team-filter-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .team-filter-container label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .team-filter-container select {
+        width: 180px;
+        font-size: 0.85rem;
+    }
+
+    /* Table Container */
+    .comparison-table {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-top: 4px solid #1e3a5f;
+        margin-bottom: 2rem;
+    }
+
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .search-box {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Table Styles */
+    .comparison-table .table {
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+
+    .comparison-table .table thead th {
+        background: #2c3e50 !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.65rem 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #1e3a5f;
+        border-top: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .comparison-table .table thead th::after {
+        content: ' ↕';
+        opacity: 0.3;
+        font-size: 0.8rem;
+    }
+
+    .comparison-table .table thead th.sorted-asc::after {
+        content: ' ↑';
+        opacity: 1;
+    }
+
+    .comparison-table .table thead th.sorted-desc::after {
+        content: ' ↓';
+        opacity: 1;
+    }
+
+    .comparison-table .table tbody td {
+        padding: 0.65rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .comparison-table .table tbody tr {
+        cursor: pointer;
+        transition: background-color 0.15s;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+        background-color: white !important;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(even) {
+        background-color: #f1f3f5 !important;
+    }
+
+    .comparison-table .table tbody tr:hover {
+        background-color: #e3f2fd !important;
+    }
+
+    .comparison-table .table tbody tr.hidden {
+        display: none;
+    }
+
+    /* Team Badges - Oval/Pill Shape */
+    .team-badge {
+        display: inline-block;
+        padding: 0.3rem 0.9rem;
+        border-radius: 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .team-badge-0 {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .team-badge-1 {
+        background: #f59e0b;
+        color: #1e3a5f;
+    }
+
+    /* Winning value highlights */
+    .winning-value {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 1.2rem;
+        font-weight: 700;
+    }
+
+    .winning-value-school {
+        background: #ffd700;
+        color: #000000;
+    }
+
+    .winning-value-grade {
+        background: #c0c0c0;
+        color: #000000;
+    }
+
+    /* Legend & Info Section - Collapsible */
+    .legend-section {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .legend-header {
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .legend-header:hover {
+        background: #e9ecef;
+    }
+
+    .legend-content {
+        padding: 1rem;
+        display: none;
+        border-top: 1px solid #dee2e6;
+        font-size: 0.85rem;
+    }
+
+    .legend-content.show {
+        display: block;
+    }
+
+    .legend-content h6 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .legend-content h6:first-child {
+        margin-top: 0;
+    }
+
+    .legend-content ul {
+        margin-bottom: 0;
+        padding-left: 1.25rem;
+    }
+
+    .legend-content li {
+        margin-bottom: 0.35rem;
+        line-height: 1.5;
+    }
+
+    .legend-content li:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Collapsible Footer */
+    .collapsible-footer {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .collapsible-header {
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+
+    .collapsible-header:hover {
+        background: #e9ecef;
+    }
+
+    .collapsible-content {
+        padding: 1rem;
+        display: none;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .collapsible-content.show {
+        display: block;
+    }
+
+    .data-source-item {
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    .data-source-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .data-source-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .data-source-value {
+        color: #6c757d;
+    }
+
+    /* Modal Styles */
+    .modal-header {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .modal-header .btn-close {
+        filter: invert(1);
+    }
+
+    .student-info-box {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .student-info-row {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .student-info-item {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .student-info-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .student-info-value {
+        font-size: 1rem;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+
+    .summary-metrics-table {
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-metrics-table th {
+        background: #1e3a5f !important;
+        color: white !important;
+        font-size: 0.8rem;
+        padding: 0.75rem 0.5rem;
+        text-align: center;
+    }
+
+    .summary-metrics-table td {
+        text-align: center;
+        padding: 1rem 0.5rem;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .daily-log-table th {
+        background: #2c3e50 !important;
+        color: white !important;
+        font-size: 0.8rem;
+        padding: 0.65rem 0.5rem;
+    }
+
+    .daily-log-table tbody td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .cap-exceeded {
+        color: #f59e0b;
+    }
+
+    .goal-met {
+        color: #28a745;
+    }
+
+    .modal-notes {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        margin-top: 1.5rem;
+    }
+
+    .modal-notes h6 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .modal-notes ul {
+        margin-bottom: 0;
+        padding-left: 1.25rem;
+    }
+
+    .modal-notes li {
+        margin-bottom: 0.35rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header - Matching School Layout (Centered Filter) -->
+    <div class="page-header-students">
+        <h1 class="page-title">👨‍🎓 Students</h1>
+
+        <div class="filter-inline">
+            <label for="dateFilter">📅 Filter Period:</label>
+            <select id="dateFilter" class="form-select form-select-sm">
+                <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Full Contest ({{ full_contest_range }})</option>
+                {% for date in dates|reverse %}
+                <option value="{{ date }}" {% if date_filter == date %}selected{% endif %}>{{ date }} (Day {{ loop.index }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#dataInfoModal">
+            <i class="bi bi-info-circle"></i> Data Info
+        </button>
+    </div>
+
+    <!-- Headline Banner -->
+    <div class="headline-banner">
+        <div class="row g-0">
+            <!-- Campaign Day -->
+            <div class="col headline-metric">
+                <div class="headline-label">📅 Campaign Day</div>
+                <div class="headline-value">Day {{ banner.campaign_day }} of {{ banner.total_days }}</div>
+                <div class="headline-subtitle">{{ banner.campaign_date }}</div>
+            </div>
+
+            <!-- Fundraising -->
+            <div class="col headline-metric">
+                <div class="headline-label">💰 Fundraising</div>
+                <div class="headline-value">${{ '{:,.0f}'.format(banner.total_fundraising) }}</div>
+                <div class="headline-subtitle">{{ banner.total_students }} students</div>
+            </div>
+
+            <!-- Minutes Read -->
+            <div class="col headline-metric">
+                <div class="headline-label">
+                    📚 Minutes Read
+                    <span class="filter-indicator" title="Honors date filter">◐</span>
+                </div>
+                <div class="headline-value">{{ '{:,.0f}'.format(banner.total_hours) }} hours</div>
+                <div class="headline-subtitle">{{ banner.total_students }} students</div>
+            </div>
+
+            <!-- Sponsors -->
+            <div class="col headline-metric">
+                <div class="headline-label">🎁 Sponsors</div>
+                <div class="headline-value">{{ '{:,.0f}'.format(banner.total_sponsors) }}</div>
+                <div class="headline-subtitle">{{ banner.total_students }} students</div>
+            </div>
+
+            <!-- Avg. Participation -->
+            <div class="col headline-metric">
+                <div class="headline-label">
+                    👥 Avg. Participation (With Color)
+                    <span class="filter-indicator" title="Honors date filter">◐</span>
+                </div>
+                <div class="headline-value">{{ '%.1f'|format(banner.avg_participation_pct) }}%</div>
+                <div class="headline-subtitle">{{ banner.total_students }} students</div>
+            </div>
+
+            <!-- Goal Met -->
+            <div class="col headline-metric">
+                <div class="headline-label">
+                    🎯 Goal Met (≥1 Day)
+                    <span class="filter-indicator" title="Honors date filter">◐</span>
+                </div>
+                <div class="headline-value">{{ '%.1f'|format(banner.goal_met_pct) }}%</div>
+                <div class="headline-subtitle">{{ banner.total_students }} students</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade and Team Filters - Matching Grade Level Page -->
+    <div class="grade-filter-section">
+        <div class="filter-row">
+            <div class="grade-filter-buttons">
+                <button class="grade-filter-btn {% if grade_filter == 'all' %}active{% endif %}" data-grade="all">All Grades</button>
+                <button class="grade-filter-btn {% if grade_filter == 'K' %}active{% endif %}" data-grade="K">Kindergarten</button>
+                <button class="grade-filter-btn {% if grade_filter == '1' %}active{% endif %}" data-grade="1">Grade 1</button>
+                <button class="grade-filter-btn {% if grade_filter == '2' %}active{% endif %}" data-grade="2">Grade 2</button>
+                <button class="grade-filter-btn {% if grade_filter == '3' %}active{% endif %}" data-grade="3">Grade 3</button>
+                <button class="grade-filter-btn {% if grade_filter == '4' %}active{% endif %}" data-grade="4">Grade 4</button>
+                <button class="grade-filter-btn {% if grade_filter == '5' %}active{% endif %}" data-grade="5">Grade 5</button>
+            </div>
+
+            <div class="team-filter-container">
+                <label for="teamFilter">Team:</label>
+                <select id="teamFilter" class="form-select form-select-sm">
+                    <option value="all" {% if team_filter == 'all' %}selected{% endif %}>All Teams</option>
+                    {% for team in team_names %}
+                    <option value="{{ team }}" {% if team_filter == team %}selected{% endif %}>{{ team }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend & Data Notes Section (Collapsible, Collapsed by Default) -->
+    <div class="legend-section">
+        <div class="legend-header" onclick="toggleLegend()">
+            <span>
+                <i class="bi bi-chevron-right" id="legendIcon"></i>
+                Legend, Data Notes & Student Count
+            </span>
+            <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+        </div>
+        <div class="legend-content" id="legendContent">
+            <!-- Student Count Info -->
+            <h6 style="color: #1e3a5f; margin-bottom: 0.5rem;">📊 Student Count</h6>
+            <div class="data-source-item">
+                <span class="data-source-label">• Total students in database:</span>
+                <span class="data-source-value">411 students</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Visible after filters:</span>
+                <span class="data-source-value"><span id="visibleCount">{{ students|length }}</span> students</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Active grade filter:</span>
+                <span class="data-source-value" id="activeGradeFilter">{% if grade_filter == 'all' %}All Grades{% else %}Grade {{ grade_filter }}{% endif %}</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Active team filter:</span>
+                <span class="data-source-value" id="activeTeamFilter">{% if team_filter == 'all' %}All Teams{% else %}{{ team_filter }}{% endif %}</span>
+            </div>
+
+            <hr style="margin: 1rem 0; border-top: 1px solid #dee2e6;">
+
+            <!-- Legend & Data Notes -->
+            <h6 style="color: #1e3a5f; margin-bottom: 0.5rem;">📋 Legend & Data Notes</h6>
+            <ul style="margin-bottom: 0; padding-left: 1.25rem;">
+                <li style="margin-bottom: 0.4rem;"><strong>⭕ Gold oval:</strong> School-wide winner (top across all 411 students)</li>
+                <li style="margin-bottom: 0.4rem;"><strong>🥈 Silver oval:</strong> Grade/team winner (appears when grade or team filter is active)</li>
+                <li style="margin-bottom: 0.4rem;"><strong>◐ Filter indicator:</strong> Metric recalculates based on selected date range</li>
+                <li style="margin-bottom: 0.4rem;"><strong>💰 Fundraising & 🎁 Sponsors:</strong> Total for full contest (NOT filtered by date)</li>
+                <li style="margin-bottom: 0.4rem;"><strong>📚 Minutes Capped:</strong> Maximum 120 minutes/day for official contest totals</li>
+                <li style="margin-bottom: 0.4rem;"><strong>📚 Minutes Uncapped:</strong> Actual reading time (shows full student effort)</li>
+                <li style="margin-bottom: 0;"><strong>Click any row</strong> to view daily breakdown with goal status and cap details</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="comparison-table">
+        <div class="table-controls">
+            <div class="search-box">
+                <input type="text" id="nameSearch" class="form-control form-control-sm" placeholder="🔍 Search by student name..." style="width: 250px;">
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearSearch()" title="Clear search">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+            <div class="table-actions">
+                <button class="btn btn-sm btn-outline-primary" onclick="copyTable()">
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportCSV()">
+                    <i class="bi bi-download"></i> Export CSV
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Student Name</th>
+                        <th onclick="sortTable(1)">Grade</th>
+                        <th onclick="sortTable(2)">Team</th>
+                        <th onclick="sortTable(3)">Class</th>
+                        <th onclick="sortTable(4)">Teacher</th>
+                        <th onclick="sortTable(5)" class="text-end">Fundraising 💰</th>
+                        <th onclick="sortTable(6)" class="text-end">Sponsors 🎁</th>
+                        <th onclick="sortTable(7)" class="text-end">Minutes Capped 📚◐</th>
+                        <th onclick="sortTable(8)" class="text-end">Minutes Uncapped 📚</th>
+                        <th onclick="sortTable(9)" class="text-end">Days Partic.◐</th>
+                        <th onclick="sortTable(10)" class="text-end">Partic. % ◐</th>
+                        <th onclick="sortTable(11)" class="text-end">Days Goal ◐</th>
+                        <th onclick="sortTable(12)" class="text-end">Goal % ◐</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr data-grade="{{ student.grade_level }}"
+                        data-team="{{ student.team_name }}"
+                        data-student-name="{{ student.student_name }}"
+                        onclick="showStudentDetail('{{ student.student_name }}')">
+                        <td>{{ student.student_name }}</td>
+                        <td>{{ student.grade_level }}</td>
+                        <td><span class="team-badge team-badge-{{ team_index_map[student.team_name] }}">{{ student.team_name|upper }}</span></td>
+                        <td>{{ student.class_name }}</td>
+                        <td>{{ student.teacher_name }}</td>
+                        <td class="text-end" data-value="{{ student.fundraising }}">
+                            {% if student.fundraising == school_winners.get('fundraising') %}
+                            <span class="winning-value winning-value-school">${{ '{:,.0f}'.format(student.fundraising) }}</span>
+                            {% elif highlight_mode == 'silver' and student.fundraising == filtered_winners.get('fundraising') %}
+                            <span class="winning-value winning-value-grade">${{ '{:,.0f}'.format(student.fundraising) }}</span>
+                            {% else %}
+                            ${{ '{:,.0f}'.format(student.fundraising) }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.sponsors }}">
+                            {% if student.sponsors == school_winners.get('sponsors') %}
+                            <span class="winning-value winning-value-school">{{ student.sponsors }}</span>
+                            {% elif highlight_mode == 'silver' and student.sponsors == filtered_winners.get('sponsors') %}
+                            <span class="winning-value winning-value-grade">{{ student.sponsors }}</span>
+                            {% else %}
+                            {{ student.sponsors }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.minutes_capped }}">
+                            {% if student.minutes_capped == school_winners.get('minutes_capped') %}
+                            <span class="winning-value winning-value-school">{{ '{:,.0f}'.format(student.minutes_capped) }}</span> min
+                            {% elif highlight_mode == 'silver' and student.minutes_capped == filtered_winners.get('minutes_capped') %}
+                            <span class="winning-value winning-value-grade">{{ '{:,.0f}'.format(student.minutes_capped) }}</span> min
+                            {% else %}
+                            {{ '{:,.0f}'.format(student.minutes_capped) }} min
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.minutes_uncapped }}">
+                            {% if student.minutes_uncapped == school_winners.get('minutes_uncapped') %}
+                            <span class="winning-value winning-value-school">{{ '{:,.0f}'.format(student.minutes_uncapped) }}</span> min
+                            {% elif highlight_mode == 'silver' and student.minutes_uncapped == filtered_winners.get('minutes_uncapped') %}
+                            <span class="winning-value winning-value-grade">{{ '{:,.0f}'.format(student.minutes_uncapped) }}</span> min
+                            {% else %}
+                            {{ '{:,.0f}'.format(student.minutes_uncapped) }} min
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.days_participated }}">
+                            {% if student.days_participated == school_winners.get('days_participated') %}
+                            <span class="winning-value winning-value-school">{{ student.days_participated }}</span>/{{ banner.days_in_filter }}
+                            {% elif highlight_mode == 'silver' and student.days_participated == filtered_winners.get('days_participated') %}
+                            <span class="winning-value winning-value-grade">{{ student.days_participated }}</span>/{{ banner.days_in_filter }}
+                            {% else %}
+                            {{ student.days_participated }}/{{ banner.days_in_filter }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.participation_pct }}">
+                            {% if student.participation_pct == school_winners.get('participation_pct') %}
+                            <span class="winning-value winning-value-school">{{ '%.1f'|format(student.participation_pct) }}</span>%
+                            {% elif highlight_mode == 'silver' and student.participation_pct == filtered_winners.get('participation_pct') %}
+                            <span class="winning-value winning-value-grade">{{ '%.1f'|format(student.participation_pct) }}</span>%
+                            {% else %}
+                            {{ '%.1f'|format(student.participation_pct) }}%
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.days_met_goal }}">
+                            {% if student.days_met_goal == school_winners.get('days_met_goal') %}
+                            <span class="winning-value winning-value-school">{{ student.days_met_goal }}</span>
+                            {% elif highlight_mode == 'silver' and student.days_met_goal == filtered_winners.get('days_met_goal') %}
+                            <span class="winning-value winning-value-grade">{{ student.days_met_goal }}</span>
+                            {% else %}
+                            {{ student.days_met_goal }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end" data-value="{{ student.goal_met_pct }}">
+                            {% if student.goal_met_pct == school_winners.get('goal_met_pct') %}
+                            <span class="winning-value winning-value-school">{{ '%.1f'|format(student.goal_met_pct) }}</span>%
+                            {% elif highlight_mode == 'silver' and student.goal_met_pct == filtered_winners.get('goal_met_pct') %}
+                            <span class="winning-value winning-value-grade">{{ '%.1f'|format(student.goal_met_pct) }}</span>%
+                            {% else %}
+                            {{ '%.1f'|format(student.goal_met_pct) }}%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Collapsible Footer -->
+    <div class="collapsible-footer">
+        <div class="collapsible-header" onclick="toggleFooter()">
+            <span><i class="bi bi-chevron-right" id="footerIcon"></i> Data Sources & Last Updated</span>
+            <span style="font-size: 0.75rem; color: #6c757d;">Click to expand</span>
+        </div>
+        <div class="collapsible-content" id="footerContent">
+            <div class="data-source-item">
+                <span class="data-source-label">• Reading minutes, Participation:</span>
+                <span class="data-source-value">Daily_Logs table (Updated: {{ metadata.daily_logs_updated }})</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Fundraising, Sponsors:</span>
+                <span class="data-source-value">Reader_Cumulative table (Updated: {{ metadata.reader_cumulative_updated }})</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Student roster, Team assignments:</span>
+                <span class="data-source-value">Roster table (Updated: {{ metadata.roster_updated }})</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Daily reading goals:</span>
+                <span class="data-source-value">Grade_Rules table (Updated: {{ metadata.grade_rules_updated }})</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Note:</span>
+                <span class="data-source-value">Minutes capped at 120/day for official contest totals. Uncapped values show full student effort.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Info Modal -->
+<div class="modal fade" id="dataInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-info-circle"></i> Data Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Banner and Table Filtering</h6>
+                <p>The banner metrics and table data update based on your filter selections:</p>
+                <ul>
+                    <li><strong>Grade Filter:</strong> Shows only students from selected grade(s)</li>
+                    <li><strong>Team Filter:</strong> Shows only students from selected team(s)</li>
+                    <li><strong>Combined Filters:</strong> Both filters work together (e.g., "Grade 5 + Team 1")</li>
+                </ul>
+
+                <h6 class="mt-4">Silver Highlighting (Filter Active)</h6>
+                <p>When you filter by grade or team, silver highlights appear on the highest values within that filtered group:</p>
+                <ul>
+                    <li>🥇 <span class="winning-value winning-value-school" style="font-size: 0.85rem;">Gold highlights</span> = School-wide winners (across all 411 students)</li>
+                    <li>🥈 <span class="winning-value winning-value-grade" style="font-size: 0.85rem;">Silver highlights</span> = Grade/team winners (within filtered group only)</li>
+                </ul>
+
+                <h6 class="mt-4">Metrics That Honor Date Filter ◐</h6>
+                <p>These metrics change based on the selected date filter:</p>
+                <ul>
+                    <li><strong>Minutes Read:</strong> Cumulative through selected date</li>
+                    <li><strong>Avg. Participation:</strong> Average daily participation through selected date</li>
+                    <li><strong>Goal Met:</strong> Students who met goal through selected date</li>
+                    <li><strong>Days Participated:</strong> Count of days with >0 minutes through selected date</li>
+                </ul>
+
+                <h6 class="mt-4">Metrics That Don't Filter by Date</h6>
+                <p>These metrics always show full contest totals:</p>
+                <ul>
+                    <li><strong>Fundraising:</strong> Total donations for entire contest</li>
+                    <li><strong>Sponsors:</strong> Total sponsors for entire contest</li>
+                </ul>
+
+                <hr class="my-3">
+
+                <!-- SECTION 4: Data Sources & Timestamps -->
+                <h6>Data Sources</h6>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Reading Minutes & Participation:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Daily_Logs</strong> table<br>
+                        Last Updated: <strong>{{ metadata.daily_logs_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Fundraising & Sponsors:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Reader_Cumulative</strong> table<br>
+                        Last Updated: <strong>{{ metadata.reader_cumulative_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Student Counts:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Roster</strong> table<br>
+                        Last Updated: <strong>{{ metadata.roster_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Team Color Bonus:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Team_Color_Bonus</strong> table<br>
+                        Event Date: <strong>{{ metadata.team_color_bonus_updated }}</strong>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: Important Notes -->
+                <p class="mb-0 mt-3"><em>Note: All minutes include team color bonus points and are capped at 120 minutes per student per day for official contest totals.</em></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Detail Modal -->
+<div class="modal fade" id="studentDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📋 Student Detail: <span id="modalStudentName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading student data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JavaScript for Students Page
+    const currentDateFilter = '{{ date_filter }}';
+    const currentGradeFilter = '{{ grade_filter }}';
+    const currentTeamFilter = '{{ team_filter }}';
+
+    // Date filter change handler
+    document.getElementById('dateFilter').addEventListener('change', function() {
+        const date = this.value;
+        const grade = document.querySelector('.grade-filter-btn.active').dataset.grade;
+        const team = document.getElementById('teamFilter').value;
+        // Save date filter to sessionStorage for cross-page persistence
+        sessionStorage.setItem('readathonDateFilter', date);
+        window.location.href = `/students?date=${date}&grade=${grade}&team=${team}`;
+    });
+
+    // Grade filter buttons
+    document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const grade = this.dataset.grade;
+            const date = document.getElementById('dateFilter').value;
+            const team = document.getElementById('teamFilter').value;
+            // Save grade filter to sessionStorage for cross-page persistence
+            sessionStorage.setItem('readathonGradeFilter', grade);
+            window.location.href = `/students?date=${date}&grade=${grade}&team=${team}`;
+        });
+    });
+
+    // Team filter dropdown
+    document.getElementById('teamFilter').addEventListener('change', function() {
+        const team = this.value;
+
+        // Save to sessionStorage for persistence across pages
+        sessionStorage.setItem('readathonTeamFilter', team);
+
+        const date = document.getElementById('dateFilter').value;
+        const grade = document.querySelector('.grade-filter-btn.active').dataset.grade;
+        window.location.href = `/students?date=${date}&grade=${grade}&team=${team}`;
+    });
+
+    // Restore team filter from sessionStorage on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        const savedTeamFilter = sessionStorage.getItem('readathonTeamFilter');
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTeam = urlParams.get('team');
+
+        // If URL has team parameter, save it
+        if (urlTeam) {
+            sessionStorage.setItem('readathonTeamFilter', urlTeam);
+        }
+        // If no URL parameter but we have saved filter, redirect to include it
+        else if (savedTeamFilter && savedTeamFilter !== 'all') {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('team', savedTeamFilter);
+            window.location.href = currentUrl.toString();
+            return;
+        }
+        // Otherwise save current filter
+        else if (document.getElementById('teamFilter')) {
+            const currentTeam = document.getElementById('teamFilter').value;
+            sessionStorage.setItem('readathonTeamFilter', currentTeam);
+        }
+    });
+
+    // Table sorting
+    let currentSortColumn = -1;
+    let currentSortDirection = 'asc';
+
+    function sortTable(columnIndex) {
+        const table = document.getElementById('studentsTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        // Toggle direction if same column
+        if (currentSortColumn === columnIndex) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortDirection = 'asc';
+            currentSortColumn = columnIndex;
+        }
+
+        // Sort rows
+        rows.sort((a, b) => {
+            const aValue = a.cells[columnIndex].getAttribute('data-value') ||
+                          a.cells[columnIndex].textContent.trim();
+            const bValue = b.cells[columnIndex].getAttribute('data-value') ||
+                          b.cells[columnIndex].textContent.trim();
+
+            // Try numeric comparison first
+            const aNum = parseFloat(String(aValue).replace(/[^0-9.-]/g, ''));
+            const bNum = parseFloat(String(bValue).replace(/[^0-9.-]/g, ''));
+
+            let comparison = 0;
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                comparison = aNum - bNum;
+            } else {
+                comparison = String(aValue).localeCompare(String(bValue), undefined, {numeric: true});
+            }
+
+            return currentSortDirection === 'asc' ? comparison : -comparison;
+        });
+
+        // Re-append rows
+        rows.forEach(row => tbody.appendChild(row));
+
+        // Update sort indicators
+        const headers = table.querySelectorAll('thead th');
+        headers.forEach((header, index) => {
+            header.classList.remove('sorted-asc', 'sorted-desc');
+            if (index === columnIndex) {
+                header.classList.add(currentSortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            }
+        });
+    }
+
+    // Copy table to clipboard
+    function copyTable() {
+        const table = document.getElementById('studentsTable');
+        const rows = table.querySelectorAll('tbody tr');
+        let text = '';
+
+        // Header row
+        table.querySelectorAll('thead th').forEach(th => {
+            text += th.textContent.trim() + '\t';
+        });
+        text += '\n';
+
+        // Data rows
+        rows.forEach(row => {
+            row.querySelectorAll('td').forEach(td => {
+                text += td.textContent.trim() + '\t';
+            });
+            text += '\n';
+        });
+
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Table copied to clipboard!');
+        });
+    }
+
+    // Export to CSV
+    function exportCSV() {
+        const table = document.getElementById('studentsTable');
+        const rows = table.querySelectorAll('tbody tr');
+        let csv = '';
+
+        // Header row
+        table.querySelectorAll('thead th').forEach(th => {
+            csv += '"' + th.textContent.trim() + '",';
+        });
+        csv = csv.slice(0, -1) + '\n';
+
+        // Data rows
+        rows.forEach(row => {
+            row.querySelectorAll('td').forEach(td => {
+                csv += '"' + td.textContent.trim() + '",';
+            });
+            csv = csv.slice(0, -1) + '\n';
+        });
+
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'students_report.csv';
+        a.click();
+    }
+
+    // Show student detail modal (AJAX fetch)
+    function showStudentDetail(studentName) {
+        const modal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
+        document.getElementById('modalStudentName').textContent = studentName;
+
+        // Show loading state
+        document.getElementById('modalBody').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Loading student data...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        // Fetch student detail from server
+        const dateFilter = document.getElementById('dateFilter').value;
+        fetch(`/student/${encodeURIComponent(studentName)}?date=${dateFilter}`)
+            .then(response => response.json())
+            .then(data => {
+                renderStudentDetail(data);
+            })
+            .catch(error => {
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> Failed to load student data. Please try again.
+                    </div>
+                `;
+                console.error('Error fetching student detail:', error);
+            });
+    }
+
+    function renderStudentDetail(data) {
+        const summary = data.summary;
+        const daily = data.daily || [];
+
+        // Get team index from team_name (alphabetically sorted)
+        // Collect all unique team names from the table
+        const teamSet = new Set();
+        document.querySelectorAll('.team-badge').forEach(badge => {
+            const teamText = badge.textContent.trim();
+            if (teamText) teamSet.add(teamText);
+        });
+        const teamNames = Array.from(teamSet).sort();
+        const teamIndex = teamNames.indexOf(summary.team_name.toUpperCase());
+
+        // Build HTML for modal body
+        let html = `
+            <!-- Student Info -->
+            <div class="student-info-box">
+                <div class="student-info-row">
+                    <div class="student-info-item">
+                        <div class="student-info-label">Grade</div>
+                        <div class="student-info-value">${summary.grade_level}</div>
+                    </div>
+                    <div class="student-info-item">
+                        <div class="student-info-label">Team</div>
+                        <div class="student-info-value"><span class="team-badge team-badge-${teamIndex}">${summary.team_name.toUpperCase()}</span></div>
+                    </div>
+                    <div class="student-info-item">
+                        <div class="student-info-label">Class</div>
+                        <div class="student-info-value">${summary.class_name}</div>
+                    </div>
+                    <div class="student-info-item">
+                        <div class="student-info-label">Teacher</div>
+                        <div class="student-info-value">${summary.teacher_name}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Metrics -->
+            <h6 style="font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">Summary Metrics</h6>
+            <table class="table table-bordered summary-metrics-table">
+                <thead>
+                    <tr>
+                        <th>💰 Fundraising</th>
+                        <th>🎁 Sponsors</th>
+                        <th>📚 Minutes Capped</th>
+                        <th>📚 Minutes Uncapped</th>
+                        <th>👥 Participation</th>
+                        <th>🎯 Goal Met</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>$${summary.fundraising.toLocaleString()}</td>
+                        <td>${summary.sponsors} sponsors</td>
+                        <td>${summary.total_capped} min</td>
+                        <td>${summary.total_uncapped} min<br><small class="text-muted">(+${summary.total_uncapped - summary.total_capped} over cap)</small></td>
+                        <td>${summary.days_participated}/${data.days_in_filter} days<br><small class="text-muted">${(summary.days_participated / data.days_in_filter * 100).toFixed(1)}%</small></td>
+                        <td>${summary.days_met_goal}/${data.days_in_filter} days<br><small class="text-muted">${summary.days_participated > 0 ? (summary.days_met_goal / summary.days_participated * 100).toFixed(1) : 0}%</small></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Daily Reading Log -->
+            <h6 style="font-weight: 700; color: #2c3e50; margin-bottom: 1rem; margin-top: 2rem;">📅 Daily Reading Log</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered daily-log-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Day</th>
+                            <th>Date</th>
+                            <th class="text-end">Minutes Read<br><small>(Actual)</small></th>
+                            <th class="text-end">Capped<br><small>(Max 120)</small></th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        // Add daily log rows
+        let dayNum = 1;
+        daily.forEach(day => {
+            const exceeded = day.exceeded_cap ? `<span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+${day.actual_minutes - 120} min)</span><br>` : '';
+            const goalMet = day.met_goal ? `<span class="status-indicator goal-met">✅ Met daily goal</span>` : '';
+
+            html += `
+                <tr>
+                    <td class="text-center">${dayNum++}</td>
+                    <td>${new Date(day.log_date).toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'})}</td>
+                    <td class="text-end">${day.actual_minutes} min</td>
+                    <td class="text-end">${day.capped_minutes} min</td>
+                    <td>${exceeded}${goalMet}</td>
+                </tr>
+            `;
+        });
+
+        // Add total row
+        html += `
+                        <tr style="background-color: #f8f9fa; font-weight: 700;">
+                            <td colspan="2" class="text-end">TOTAL</td>
+                            <td class="text-end">${summary.total_uncapped} min<br><small class="text-muted">(${(summary.total_uncapped / 60).toFixed(1)} hrs)</small></td>
+                            <td class="text-end">${summary.total_capped} min<br><small class="text-muted">(${(summary.total_capped / 60).toFixed(1)} hrs)</small></td>
+                            <td>
+                                Days participated: ${summary.days_participated}/${data.days_in_filter}<br>
+                                Days met goal: ${summary.days_met_goal}/${data.days_in_filter} (${summary.days_participated > 0 ? (summary.days_met_goal / summary.days_participated * 100).toFixed(0) : 0}%)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Notes -->
+            <div class="modal-notes">
+                <h6>📝 Understanding This Report</h6>
+                <ul>
+                    <li><strong>⚠️ Exceeded cap:</strong> Student read more than 120 minutes this day. Contest calculations use capped value.</li>
+                    <li><strong>✅ Met daily goal:</strong> Student met or exceeded their grade-level reading goal (Grade ${summary.grade_level} goal: ${summary.grade_goal} min/day).</li>
+                    <li><strong>Minutes Capped:</strong> Total used for official contest rankings and awards (max 120 min/day).</li>
+                    <li><strong>Minutes Uncapped:</strong> Actual total reading time, showing full student effort beyond contest limits.</li>
+                </ul>
+            </div>
+        `;
+
+        document.getElementById('modalBody').innerHTML = html;
+    }
+
+    // Toggle footer
+    function toggleFooter() {
+        const content = document.getElementById('footerContent');
+        const icon = document.getElementById('footerIcon');
+
+        if (content.classList.contains('show')) {
+            content.classList.remove('show');
+            icon.className = 'bi bi-chevron-right';
+        } else {
+            content.classList.add('show');
+            icon.className = 'bi bi-chevron-down';
+        }
+    }
+
+    // Toggle legend section
+    function toggleLegend() {
+        const content = document.getElementById('legendContent');
+        const icon = document.getElementById('legendIcon');
+
+        if (content.classList.contains('show')) {
+            content.classList.remove('show');
+            icon.className = 'bi bi-chevron-right';
+        } else {
+            content.classList.add('show');
+            icon.className = 'bi bi-chevron-down';
+        }
+    }
+
+    // Name search filter
+    function filterTable() {
+        const searchInput = document.getElementById('nameSearch');
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const table = document.getElementById('studentsTable');
+        const rows = table.querySelectorAll('tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const studentName = row.getAttribute('data-student-name').toLowerCase();
+
+            if (searchTerm === '' || studentName.includes(searchTerm)) {
+                row.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        // Update visible count
+        document.getElementById('visibleCount').textContent = visibleCount;
+    }
+
+    // Clear search
+    function clearSearch() {
+        document.getElementById('nameSearch').value = '';
+        filterTable();
+        document.getElementById('nameSearch').focus();
+    }
+
+    // Update visible count on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const visibleCount = document.querySelectorAll('#studentsTable tbody tr').length;
+        document.getElementById('visibleCount').textContent = visibleCount;
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Apply saved date filter from sessionStorage if no URL parameter exists
+        const urlDate = urlParams.get('date');
+        const savedDateFilter = sessionStorage.getItem('readathonDateFilter');
+
+        // If no URL parameter but we have a saved date filter, apply it
+        if (!urlDate && savedDateFilter && savedDateFilter !== 'all') {
+            const grade = document.querySelector('.grade-filter-btn.active').dataset.grade;
+            const team = document.getElementById('teamFilter').value;
+            window.location.href = `/students?date=${savedDateFilter}&grade=${grade}&team=${team}`;
+            return; // Exit early since we're redirecting
+        }
+        // If we have a URL parameter, save it to sessionStorage
+        else if (urlDate) {
+            sessionStorage.setItem('readathonDateFilter', urlDate);
+        }
+
+        // Apply saved grade filter from sessionStorage if no URL parameter exists
+        const urlGrade = urlParams.get('grade');
+        const savedGradeFilter = sessionStorage.getItem('readathonGradeFilter');
+
+        // If no URL parameter but we have a saved filter, apply it
+        if (!urlGrade && savedGradeFilter && savedGradeFilter !== 'all') {
+            const date = document.getElementById('dateFilter').value;
+            const team = document.getElementById('teamFilter').value;
+            window.location.href = `/students?date=${date}&grade=${savedGradeFilter}&team=${team}`;
+            return; // Exit early since we're redirecting
+        }
+        // If we have a URL parameter, save it to sessionStorage
+        else if (urlGrade) {
+            sessionStorage.setItem('readathonGradeFilter', urlGrade);
+        }
+
+        // Set up name search filter
+        const nameSearchInput = document.getElementById('nameSearch');
+        nameSearchInput.addEventListener('input', filterTable);
+        nameSearchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Escape') {
+                clearSearch();
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1041,6 +1041,205 @@ class ReadathonDB:
                 'error': str(e)
             }
 
+    # ========== Students Page Methods ==========
+
+    def get_students_data(self, date_filter: str = 'all', grade_filter: str = 'all',
+                          team_filter: str = 'all') -> List[Dict[str, Any]]:
+        """
+        Get all students with their aggregate data for the Students page table.
+
+        Args:
+            date_filter: 'all' or specific date (cumulative through date)
+            grade_filter: 'all' or grade level ('K', '1st', '2nd', '3rd', '4th', '5th')
+            team_filter: 'all' or team name
+
+        Returns:
+            List of dicts with 13 columns per student:
+            - student_name, grade_level, team_name, class_name, teacher_name
+            - fundraising, sponsors
+            - minutes_capped, minutes_uncapped
+            - days_participated, participation_pct
+            - days_met_goal, goal_met_pct
+        """
+        # Build WHERE clauses
+        date_where = ""
+        date_where_no_alias = ""
+        grade_where = ""
+        team_where = ""
+
+        if date_filter != 'all':
+            date_where = f"AND dl.log_date <= '{date_filter}'"
+            date_where_no_alias = f"AND log_date <= '{date_filter}'"
+
+        if grade_filter != 'all':
+            grade_where = f"AND r.grade_level = '{grade_filter}'"
+
+        if team_filter != 'all':
+            team_where = f"AND r.team_name = '{team_filter}'"
+
+        # Get query from queries.py
+        query = get_students_master_query(date_where, date_where_no_alias, grade_where, team_where)
+
+        # Execute and return results
+        return self.execute_query(query)
+
+    def get_student_detail(self, student_name: str, date_filter: str = 'all') -> Dict[str, Any]:
+        """
+        Get individual student detail with summary metrics and daily breakdown.
+
+        Args:
+            student_name: Name of student
+            date_filter: 'all' or specific date (cumulative through date)
+
+        Returns:
+            Dict with:
+            - summary: Student summary metrics (fundraising, minutes, sponsors, etc.)
+            - daily: List of daily log entries
+        """
+        # Build WHERE clause for date filter
+        date_where = ""
+        if date_filter != 'all':
+            date_where = f"AND dl.log_date <= '{date_filter}'"
+
+        # Get queries from queries.py
+        summary_query, daily_query = get_student_detail_query(date_where)
+
+        # Execute summary query
+        summary_results = self.execute_query(summary_query, (student_name,))
+        summary = summary_results[0] if summary_results else None
+
+        # Execute daily query
+        daily_results = self.execute_query(daily_query, (student_name,))
+
+        return {
+            'summary': summary,
+            'daily': daily_results
+        }
+
+    def get_students_school_winners(self, date_filter: str = 'all') -> Dict[str, float]:
+        """
+        Get school-wide max values for each metric (gold highlights).
+
+        Args:
+            date_filter: 'all' or specific date (cumulative through date)
+
+        Returns:
+            Dict mapping metric name to max value:
+            {
+                'fundraising': 1250.0,
+                'sponsors': 15,
+                'minutes_capped': 720,
+                'minutes_uncapped': 850,
+                'days_participated': 6,
+                'days_met_goal': 6
+            }
+        """
+        # Build WHERE clause for date filter
+        date_where = ""
+        if date_filter != 'all':
+            date_where = f"AND dl.log_date <= '{date_filter}'"
+
+        # Get query from queries.py
+        query = get_students_school_winners_query(date_where)
+
+        # Execute query
+        results = self.execute_query(query)
+
+        # Convert to dict
+        winners = {}
+        for row in results:
+            winners[row['metric']] = row['max_value']
+
+        return winners
+
+    def get_students_banner(self, date_filter: str = 'all', grade_filter: str = 'all',
+                           team_filter: str = 'all') -> Dict[str, Any]:
+        """
+        Get banner metrics for Students page (6 metrics matching School/Teams/Grade pages).
+
+        Args:
+            date_filter: 'all' or specific date (cumulative through date)
+            grade_filter: 'all' or grade level
+            team_filter: 'all' or team name
+
+        Returns:
+            Dict with:
+            - campaign_days: Current day number (date-aware)
+            - total_contest_days: Total days in contest
+            - total_fundraising: Sum of fundraising for filtered students
+            - total_minutes: Sum of capped minutes for filtered students
+            - total_sponsors: Sum of sponsors for filtered students
+            - avg_participation_pct: Avg. participation % (can exceed 100% with color)
+            - goal_met_pct: % of students who met goal ≥1 day
+            - total_students: Number of students in filtered group
+        """
+        # Build WHERE clauses
+        date_where = ""
+        date_where_no_alias = ""
+        grade_where = ""
+        team_where = ""
+
+        if date_filter != 'all':
+            date_where = f"AND dl.log_date <= '{date_filter}'"
+            date_where_no_alias = f"AND log_date <= '{date_filter}'"
+
+        if grade_filter != 'all':
+            grade_where = f"AND r.grade_level = '{grade_filter}'"
+
+        if team_filter != 'all':
+            team_where = f"AND r.team_name = '{team_filter}'"
+
+        # Get query from queries.py
+        query = get_students_banner_query(date_where, date_where_no_alias, grade_where, team_where)
+
+        # Execute query
+        results = self.execute_query(query)
+
+        return results[0] if results else {}
+
+    def get_students_filtered_winners(self, date_filter: str = 'all', grade_filter: str = 'all',
+                                     team_filter: str = 'all') -> Dict[str, float]:
+        """
+        Get winners within the current filter group (silver highlights).
+
+        Only used when grade_filter != 'all' OR team_filter != 'all'.
+        Returns max values for each metric within the filtered group.
+
+        Args:
+            date_filter: 'all' or specific date (cumulative through date)
+            grade_filter: 'all' or grade level
+            team_filter: 'all' or team name
+
+        Returns:
+            Dict mapping metric name to max value (same format as get_students_school_winners)
+        """
+        # Build WHERE clauses
+        date_where = ""
+        grade_where = ""
+        team_where = ""
+
+        if date_filter != 'all':
+            date_where = f"AND dl.log_date <= '{date_filter}'"
+
+        if grade_filter != 'all':
+            grade_where = f"AND r.grade_level = '{grade_filter}'"
+
+        if team_filter != 'all':
+            team_where = f"AND r.team_name = '{team_filter}'"
+
+        # Get query from queries.py
+        query = get_students_filtered_winners_query(date_where, grade_where, team_where)
+
+        # Execute query
+        results = self.execute_query(query)
+
+        # Convert to dict
+        winners = {}
+        for row in results:
+            winners[row['metric']] = row['max_value']
+
+        return winners
+
 
 # Report generation functions
 class ReportGenerator:

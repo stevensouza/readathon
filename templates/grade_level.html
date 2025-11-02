@@ -164,6 +164,20 @@
         margin-bottom: 1.5rem;
     }
 
+    .filter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .grade-filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
     .filter-title {
         font-size: 0.9rem;
         font-weight: 600;
@@ -173,7 +187,6 @@
 
     .grade-filter-btn {
         padding: 0.5rem 1.25rem;
-        margin: 0.25rem;
         border-radius: 0.5rem;
         border: 2px solid #dee2e6;
         background: white;
@@ -181,6 +194,7 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        font-size: 0.9rem;
     }
 
     .grade-filter-btn:hover {
@@ -192,6 +206,24 @@
         background: #1e3a5f;
         color: white;
         border-color: #1e3a5f;
+    }
+
+    .team-filter-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .team-filter-container label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .team-filter-container select {
+        width: 180px;
+        font-size: 0.85rem;
     }
 
     /* Grade Cards Section */
@@ -694,16 +726,28 @@
 </div>
 
 <!-- Grade Filter Section -->
+<!-- Grade and Team Filters - Matching Students Page -->
 <div class="grade-filter-section">
-    <div class="filter-title">Filter by Grade:</div>
-    <div>
-        <button class="grade-filter-btn {% if grade_filter == 'all' %}active{% endif %}" data-grade="all">All Grades</button>
-        <button class="grade-filter-btn {% if grade_filter == 'K' %}active{% endif %}" data-grade="K">Kindergarten</button>
-        <button class="grade-filter-btn {% if grade_filter == '1' %}active{% endif %}" data-grade="1">Grade 1</button>
-        <button class="grade-filter-btn {% if grade_filter == '2' %}active{% endif %}" data-grade="2">Grade 2</button>
-        <button class="grade-filter-btn {% if grade_filter == '3' %}active{% endif %}" data-grade="3">Grade 3</button>
-        <button class="grade-filter-btn {% if grade_filter == '4' %}active{% endif %}" data-grade="4">Grade 4</button>
-        <button class="grade-filter-btn {% if grade_filter == '5' %}active{% endif %}" data-grade="5">Grade 5</button>
+    <div class="filter-row">
+        <div class="grade-filter-buttons">
+            <button class="grade-filter-btn {% if grade_filter == 'all' %}active{% endif %}" data-grade="all">All Grades</button>
+            <button class="grade-filter-btn {% if grade_filter == 'K' %}active{% endif %}" data-grade="K">Kindergarten</button>
+            <button class="grade-filter-btn {% if grade_filter == '1' %}active{% endif %}" data-grade="1">Grade 1</button>
+            <button class="grade-filter-btn {% if grade_filter == '2' %}active{% endif %}" data-grade="2">Grade 2</button>
+            <button class="grade-filter-btn {% if grade_filter == '3' %}active{% endif %}" data-grade="3">Grade 3</button>
+            <button class="grade-filter-btn {% if grade_filter == '4' %}active{% endif %}" data-grade="4">Grade 4</button>
+            <button class="grade-filter-btn {% if grade_filter == '5' %}active{% endif %}" data-grade="5">Grade 5</button>
+        </div>
+
+        <div class="team-filter-container">
+            <label for="teamFilter">Team:</label>
+            <select id="teamFilter" class="form-select form-select-sm" onchange="applyTeamFilter()">
+                <option value="all" {% if team_filter == 'all' %}selected{% endif %}>All Teams</option>
+                {% for team in team_names %}
+                <option value="{{ team }}" {% if team_filter == team %}selected{% endif %}>{{ team }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
 </div>
 
@@ -990,7 +1034,41 @@
                     <li><strong>Student Counts:</strong> Fixed roster counts</li>
                 </ul>
 
-                <p class="mb-0"><em>Note: All minutes include team color bonus points and are capped at 120 minutes per student per day.</em></p>
+                <hr class="my-3">
+
+                <!-- SECTION 4: Data Sources & Timestamps -->
+                <h6>Data Sources</h6>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Reading Minutes & Participation:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Daily_Logs</strong> table<br>
+                        Last Updated: <strong>{{ metadata.daily_logs_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Fundraising & Sponsors:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Reader_Cumulative</strong> table<br>
+                        Last Updated: <strong>{{ metadata.reader_cumulative_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Student Counts:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Roster</strong> table<br>
+                        Last Updated: <strong>{{ metadata.roster_updated }}</strong>
+                    </div>
+                </div>
+                <div class="data-source-item mb-2">
+                    <div class="data-source-label mb-1">Team Color Bonus:</div>
+                    <div class="data-source-value ms-3">
+                        Source: <strong>Team_Color_Bonus</strong> table<br>
+                        Event Date: <strong>{{ metadata.team_color_bonus_updated }}</strong>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: Important Notes -->
+                <p class="mb-0 mt-3"><em>Note: All minutes include team color bonus points and are capped at 120 minutes per student per day for official contest totals.</em></p>
             </div>
         </div>
     </div>
@@ -1430,9 +1508,25 @@ window.addEventListener('DOMContentLoaded', function() {
         sessionStorage.setItem('readathonDateFilter', urlDate);
     }
 
-    // Grade filter is now set server-side via {{ grade_filter }}
-    // Just keep sessionStorage in sync with current filter
-    sessionStorage.setItem('readathonGradeFilter', currentGradeFilter);
+    // Apply saved grade filter from sessionStorage if no URL parameter exists
+    const urlGrade = urlParams.get('grade');
+    const savedGradeFilter = sessionStorage.getItem('readathonGradeFilter');
+
+    // If no URL parameter but we have a saved grade filter, apply it
+    if (!urlGrade && savedGradeFilter && savedGradeFilter !== 'all') {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('grade', savedGradeFilter);
+        window.location.href = currentUrl.toString();
+        return; // Exit early since we're redirecting
+    }
+    // If we have a URL parameter, save it to sessionStorage
+    else if (urlGrade) {
+        sessionStorage.setItem('readathonGradeFilter', urlGrade);
+    }
+    // If neither URL nor saved filter, save current filter to sessionStorage
+    else {
+        sessionStorage.setItem('readathonGradeFilter', currentGradeFilter);
+    }
 
     // Set up grade filter buttons
     document.querySelectorAll('.grade-filter-btn').forEach(btn => {
@@ -1450,6 +1544,12 @@ window.addEventListener('DOMContentLoaded', function() {
                 currentUrl.searchParams.set('grade', grade);
             }
 
+            // Preserve team filter
+            const teamFilter = document.getElementById('teamFilter').value;
+            if (teamFilter && teamFilter !== 'all') {
+                currentUrl.searchParams.set('team', teamFilter);
+            }
+
             console.log('[Grade Filter] Selected grade:', grade, '- Reloading with new URL');
 
             // IMPORTANT: Reload page to trigger server-side SQL filtering
@@ -1462,6 +1562,58 @@ window.addEventListener('DOMContentLoaded', function() {
     // Just need to apply sorting and highlights
     sortTable(1);
     applyHighlights(currentGradeFilter);
+
+    // === TEAM FILTER PERSISTENCE ===
+    // Restore team filter from sessionStorage on page load
+    const savedTeamFilter = sessionStorage.getItem('readathonTeamFilter');
+    const urlTeam = new URLSearchParams(window.location.search).get('team');
+
+    // If URL has team parameter, save it
+    if (urlTeam) {
+        sessionStorage.setItem('readathonTeamFilter', urlTeam);
+    }
+    // If no URL parameter but we have saved filter, redirect to include it
+    else if (savedTeamFilter && savedTeamFilter !== 'all') {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('team', savedTeamFilter);
+        window.location.href = currentUrl.toString();
+        return;
+    }
+    // Otherwise save current filter
+    else if (document.getElementById('teamFilter')) {
+        const currentTeam = document.getElementById('teamFilter').value;
+        sessionStorage.setItem('readathonTeamFilter', currentTeam);
+    }
 });
+
+// Team filter function
+function applyTeamFilter() {
+    const teamFilter = document.getElementById('teamFilter').value;
+
+    // Save to sessionStorage
+    sessionStorage.setItem('readathonTeamFilter', teamFilter);
+
+    // Build new URL with team parameter
+    const currentUrl = new URL(window.location.href);
+    if (teamFilter === 'all') {
+        currentUrl.searchParams.delete('team');
+    } else {
+        currentUrl.searchParams.set('team', teamFilter);
+    }
+
+    // Preserve grade and date filters
+    const savedGrade = sessionStorage.getItem('readathonGradeFilter');
+    if (savedGrade && savedGrade !== 'all') {
+        currentUrl.searchParams.set('grade', savedGrade);
+    }
+
+    const dateFilter = document.getElementById('dateFilter').value;
+    if (dateFilter && dateFilter !== 'all') {
+        currentUrl.searchParams.set('date', dateFilter);
+    }
+
+    // Reload page with new filter
+    window.location.href = currentUrl.toString();
+}
 </script>
 {% endblock %}

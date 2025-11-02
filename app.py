@@ -1393,6 +1393,7 @@ def grade_level_tab():
     # Get filter parameters (optional)
     date_filter = request.args.get('date', 'all')
     grade_filter = request.args.get('grade', 'all')
+    team_filter = request.args.get('team', 'all')
 
     # Get all available dates
     dates = db.get_all_dates()
@@ -1407,12 +1408,19 @@ def grade_level_tab():
     if grade_filter != 'all':
         grade_where = f" AND ci.grade_level = '{grade_filter}'"
 
+    # Build team WHERE clause
+    team_where = ""
+    if team_filter != 'all':
+        team_where = f" AND ci.team_name = '{team_filter}'"
+
     # DEBUG: Log filter state
     print(f"\n=== GRADE LEVEL ROUTE DEBUG ===")
     print(f"  date_filter: {date_filter}")
     print(f"  grade_filter: {grade_filter}")
+    print(f"  team_filter: {team_filter}")
     print(f"  date_where: {repr(date_where)}")
     print(f"  grade_where: {repr(grade_where)}")
+    print(f"  team_where: {repr(team_where)}")
 
     # Calculate full contest date range
     sorted_dates = sorted(dates)
@@ -1435,8 +1443,8 @@ def grade_level_tab():
         campaign_date = full_contest_range
 
     # === GET ALL CLASSES (unfiltered) TO CALCULATE TRUE SCHOOL-WIDE WINNERS ===
-    # IMPORTANT: School-wide winners must be calculated across ALL grades, not just filtered grades
-    all_classes_query = get_grade_level_classes_query(date_where, "")  # No grade filter
+    # IMPORTANT: School-wide winners must be calculated across ALL grades/teams, not just filtered
+    all_classes_query = get_grade_level_classes_query(date_where, "", "")  # No grade/team filter
     all_classes_result = db.execute_query(all_classes_query)
     all_classes = [dict(row) for row in all_classes_result] if all_classes_result else []
 
@@ -1468,7 +1476,7 @@ def grade_level_tab():
         }
 
     # === GET FILTERED CLASSES FOR DISPLAY ===
-    classes_query = get_grade_level_classes_query(date_where, grade_where)
+    classes_query = get_grade_level_classes_query(date_where, grade_where, team_where)
     classes_result = db.execute_query(classes_query)
 
     # DEBUG: Log result count
@@ -1532,7 +1540,7 @@ def grade_level_tab():
                 cls['is_grade_winner']['sponsors'] = (cls['total_sponsors'] == gw['sponsors'] and cls['total_sponsors'] > 0)
 
     # === GET GRADE AGGREGATIONS FOR CARDS ===
-    grade_agg_query = get_grade_aggregations_query(date_where)
+    grade_agg_query = get_grade_aggregations_query(date_where, grade_where, team_where)
     grade_summaries_result = db.execute_query(grade_agg_query)
     grade_summaries = [dict(row) for row in grade_summaries_result] if grade_summaries_result else []
 
@@ -1565,8 +1573,9 @@ def grade_level_tab():
                 }
         return leaders
 
-    # Get school-wide leaders (all grades)
-    leaders_query_all = get_school_wide_leaders_query(date_where, grade=None)
+    # Get school-wide leaders (all grades, optionally filtered by team)
+    team_for_banner = team_filter if team_filter != 'all' else None
+    leaders_query_all = get_school_wide_leaders_query(date_where, grade=None, team=team_for_banner)
     leaders_result_all = db.execute_query(leaders_query_all)
     banner_leaders_all = parse_banner_leaders(leaders_result_all)
 
@@ -1575,7 +1584,7 @@ def grade_level_tab():
     grades = ['K', '1', '2', '3', '4', '5']
 
     for grade in grades:
-        leaders_query_grade = get_school_wide_leaders_query(date_where, grade=grade)
+        leaders_query_grade = get_school_wide_leaders_query(date_where, grade=grade, team=team_for_banner)
         leaders_result_grade = db.execute_query(leaders_query_grade)
         banner_leaders_by_grade[grade] = parse_banner_leaders(leaders_result_grade)
 
@@ -1620,6 +1629,7 @@ def grade_level_tab():
                          environment=env,
                          date_filter=date_filter,
                          grade_filter=grade_filter,
+                         team_filter=team_filter,
                          dates=dates,
                          current_day=current_day,
                          campaign_date=campaign_date,
@@ -1633,6 +1643,176 @@ def grade_level_tab():
                          grade_winners=grade_winners if classes else {},
                          metadata=metadata,
                          team_names=team_names)
+
+
+@app.route('/students')
+def students_tab():
+    """Students master-detail dashboard"""
+    env = session.get('environment', DEFAULT_DATABASE)
+    db = get_current_db()
+
+    # Get filter parameters
+    date_filter = request.args.get('date', 'all')
+    grade_filter = request.args.get('grade', 'all')
+    team_filter = request.args.get('team', 'all')
+
+    # Get all available dates for filter dropdown
+    dates = db.get_all_dates()
+
+    # Get team names (sorted alphabetically for consistency)
+    team_names_query = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
+    team_names_result = db.execute_query(team_names_query)
+    team_names = [row['team_name'] for row in team_names_result] if team_names_result else []
+
+    # Calculate full contest date range
+    sorted_dates = sorted(dates)
+    total_days = len(sorted_dates)
+    if sorted_dates:
+        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
+        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
+        full_contest_range = f"{start_date}-{end_date}"
+    else:
+        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+
+    # === GET DATA FROM DATABASE ===
+
+    # Get all students data with filters
+    students = db.get_students_data(date_filter, grade_filter, team_filter)
+
+    # Get banner metrics (6 metrics)
+    banner_metrics = db.get_students_banner(date_filter, grade_filter, team_filter)
+
+    # Get school-wide winners (gold highlights)
+    school_winners = db.get_students_school_winners(date_filter)
+
+    # Get filtered winners (silver highlights) - only if filters applied
+    filtered_winners = {}
+    if grade_filter != 'all' or team_filter != 'all':
+        filtered_winners = db.get_students_filtered_winners(date_filter, grade_filter, team_filter)
+
+    # === BANNER SETUP ===
+
+    # Campaign Day calculation - date-aware
+    if date_filter != 'all' and date_filter in dates:
+        # Find position of selected date (1-based)
+        current_day = sorted_dates.index(date_filter) + 1
+        campaign_date = date_filter  # Store for subtitle display
+    else:
+        # Full contest - show total days
+        current_day = total_days
+        campaign_date = full_contest_range
+
+    # Build banner dictionary with all 6 metrics
+    banner = {
+        'campaign_day': current_day,
+        'campaign_date': campaign_date,
+        'total_days': total_days,  # Total contest days (never changes with filters)
+        'days_in_filter': current_day,  # Number of days included in current filter (for "X/Y" display)
+        'total_fundraising': banner_metrics.get('total_fundraising', 0),
+        'total_minutes': banner_metrics.get('total_minutes', 0),
+        'total_hours': banner_metrics.get('total_minutes', 0) // 60,
+        'total_sponsors': banner_metrics.get('total_sponsors', 0),
+        'avg_participation_pct': banner_metrics.get('avg_participation_pct', 0),
+        'goal_met_pct': banner_metrics.get('goal_met_pct', 0),
+        'total_students': banner_metrics.get('total_students', 0)
+    }
+
+    # === HIGHLIGHTING SETUP ===
+
+    # Determine which highlighting mode to use
+    # - Gold: School-wide winners (all students)
+    # - Silver: Filtered winners (grade/team subset)
+    highlight_mode = 'gold' if (grade_filter == 'all' and team_filter == 'all') else 'silver'
+
+    # Choose appropriate winners dict
+    winners = school_winners if highlight_mode == 'gold' else filtered_winners
+
+    # === BUILD TEAM INDEX MAPPING (alphabetical order determines color) ===
+    # Team 1 (alphabetically first) = index 0 (blue)
+    # Team 2 (alphabetically second) = index 1 (yellow)
+    team_index_map = {}
+    for idx, team_name in enumerate(team_names):
+        team_index_map[team_name] = idx
+
+    # === METADATA (Last Updated) ===
+    metadata = {}
+
+    # Daily_Logs timestamp
+    daily_logs_ts_query = """
+        SELECT MAX(upload_timestamp) as last_updated
+        FROM Upload_History
+        WHERE file_type = 'daily'
+    """
+    daily_logs_ts = db.execute_query(daily_logs_ts_query)
+    if daily_logs_ts and daily_logs_ts[0] and daily_logs_ts[0]['last_updated']:
+        metadata['daily_logs_updated'] = daily_logs_ts[0]['last_updated']
+    else:
+        metadata['daily_logs_updated'] = 'Never'
+
+    # Reader_Cumulative timestamp
+    reader_cumulative_ts_query = """
+        SELECT MAX(upload_timestamp) as last_updated
+        FROM Upload_History
+        WHERE file_type = 'cumulative'
+    """
+    reader_cumulative_ts = db.execute_query(reader_cumulative_ts_query)
+    if reader_cumulative_ts and reader_cumulative_ts[0] and reader_cumulative_ts[0]['last_updated']:
+        metadata['reader_cumulative_updated'] = reader_cumulative_ts[0]['last_updated']
+    else:
+        metadata['reader_cumulative_updated'] = 'Never'
+
+    # Roster timestamp (static - set during init)
+    metadata['roster_updated'] = '09/15/2025 8:00 AM'
+
+    # Grade_Rules timestamp (static)
+    metadata['grade_rules_updated'] = '09/15/2025 8:00 AM'
+
+    # === RENDER TEMPLATE ===
+
+    return render_template('students.html',
+                         environment=env,
+                         students=students,
+                         banner=banner,
+                         school_winners=school_winners,
+                         filtered_winners=filtered_winners,
+                         highlight_mode=highlight_mode,
+                         date_filter=date_filter,
+                         grade_filter=grade_filter,
+                         team_filter=team_filter,
+                         dates=dates,
+                         team_names=team_names,
+                         team_index_map=team_index_map,
+                         full_contest_range=full_contest_range,
+                         metadata=metadata)
+
+
+@app.route('/student/<student_name>')
+def student_detail(student_name):
+    """Student detail API endpoint (returns JSON for modal)"""
+    env = session.get('environment', DEFAULT_DATABASE)
+    db = get_current_db()
+
+    # Get filter parameter (should match main page filter)
+    date_filter = request.args.get('date', 'all')
+
+    # Get all dates for calculating days_in_filter
+    dates = db.get_all_dates()
+    sorted_dates = sorted(dates)
+
+    # Calculate days in filter (for "X/Y" display)
+    if date_filter != 'all' and date_filter in dates:
+        days_in_filter = sorted_dates.index(date_filter) + 1
+    else:
+        days_in_filter = len(sorted_dates)
+
+    # Get student detail from database
+    detail = db.get_student_detail(student_name, date_filter)
+
+    # Add days_in_filter to response
+    detail['days_in_filter'] = days_in_filter
+
+    # Return JSON
+    return jsonify(detail)
 
 
 # Keep old index route for backward compatibility during transition
