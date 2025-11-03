@@ -28,6 +28,8 @@
                     <div class="form-text">
                         Select multiple CSV files. Expected filename format: <code>daily_YYYY-MM-DD.csv</code> or similar with date pattern.
                         <br>CSV with columns: <code>ReaderName</code>, <code>Minutes</code> (+ optional: ClassID, Teacher, ReaderID)
+                        <br>Example: <code>John Smith, 45</code> or <code>Jane Doe, 120, C101, Teacher Name, R456</code>
+                        <br><strong>Validation:</strong> Reader names must match database roster. Minutes are capped at 120 per day for contest calculations.
                     </div>
                 </div>
 
@@ -86,12 +88,15 @@
                         <input type="file" class="form-control" id="cumulative_file" name="cumulative_file" accept=".csv" required>
                         <div class="form-text">
                             CSV with columns: <code>"Reader Name"</code>, <code>Teacher</code>, <code>Raised</code>, <code>Sponsors</code>, <code>Minutes</code> (+ optional: Email, Sessions, PageCreated)
+                            <br>Example: <code>"John Smith", "Teacher Name", 125.50, 5, 450</code>
+                            <br><strong>Validation:</strong> Reader names and teachers must match database roster. This replaces ALL existing cumulative data.
+                            <br><strong>Note:</strong> Fundraising amounts are in dollars, minutes are total cumulative reading time.
                         </div>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-cloud-upload"></i> Upload Cumulative Stats
                         </button>
                     </div>
@@ -135,7 +140,7 @@
 
                     <!-- Submit Button -->
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-warning btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-cloud-upload"></i> Upload Team Color Bonus
                         </button>
                     </div>
