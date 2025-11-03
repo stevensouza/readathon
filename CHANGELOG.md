@@ -5,6 +5,67 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.6.1] - 2025-11-03
+
+### Documentation Enhancements
+
+**Major Update: Comprehensive Documentation of Implemented Features**
+- Updated all three documentation pages to reflect current v2026.6.0 feature set
+- Added detailed "Development Patterns That Worked Well" section with 8 comprehensive patterns
+- Clarified distinction between implemented features and future enhancements
+
+**User Manual (help.html):**
+- Added navigation overview with 5 main tabs
+- New "Dashboard Tabs" section covering School, Teams, Grade Level, and Students pages
+- Updated "Reports & Data" section describing consolidated three-in-one page structure
+- Documented enhanced metadata with automated analysis modal
+- Added filter persistence information
+- Removed duplicate Tables section (now integrated into Reports & Data)
+
+**Claude Development Guide (claude_development.html):**
+- Added comprehensive "Development Patterns That Worked Well" section (8 patterns)
+  1. Development Guardrails (RULES.md & UI_PATTERNS.md)
+  2. Multi-Phase Complex Features (Banner Standardization)
+  3. Regression Tests (Lock in Verified Behavior)
+  4. Filter Persistence (sessionStorage Pattern)
+  5. Gold/Silver Highlighting System
+  6. Testing During Implementation (Not After)
+  7. Conditional Indicators (Half-Circle ◐ Pattern)
+  8. Master-Detail Pattern (Students Page)
+- Each pattern includes problem statement, actual prompts used, code examples, and benefits
+- Updated navigation consolidation workflow (7→5 tabs)
+- Added Students page example workflow (v2026.5.0)
+- Added Reports & Data consolidation workflow (v2026.6.0)
+- Updated version summary with 215 passing tests
+
+**Requirements Document (IMPLEMENTATION_PROMPT.md):**
+- Added comprehensive "Current Implementation Status" section (150+ lines)
+- Documented all 5 dashboard tabs with detailed features
+- Listed complete technical stack and database schema (8 tables)
+- Explained key business logic (120-min cap, sanctioned dates, team competition)
+- Added gold/silver highlighting rules and filter behavior
+- Documented testing approach (215 tests) and versioning scheme
+- Clarified distinction: implemented features (top section) vs future enhancements (bottom section)
+
+**Files Modified:**
+- `templates/help.html` - Updated with latest features and consolidated structure
+- `templates/claude_development.html` - Added 8 development patterns with examples
+- `IMPLEMENTATION_PROMPT.md` - Added current implementation status section
+- `VERSION` - v2026.6.0 → v2026.6.1
+- `CHANGELOG.md` - Added v2026.6.1 release notes
+
+**Commits:**
+- `f30c7ab`: Update documentation to reflect latest features (v2026.6.0)
+- `5876080`: Add comprehensive "Development Patterns That Worked Well" section
+
+**Benefits:**
+- Complete reference for users learning the application
+- Valuable guide for developers wanting to understand successful Claude Code patterns
+- Requirements document can now be used to recreate the application from scratch
+- All documentation accurate through v2026.6.0
+
+---
+
 ## [v2026.6.0] - 2025-11-03
 
 ### Reports & Data Page Consolidation
