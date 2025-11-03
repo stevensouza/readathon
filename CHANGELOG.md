@@ -5,6 +5,49 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.6.0] - 2025-11-03
+
+### Reports & Data Page Consolidation
+
+**Major Feature: Unified Reports & Data Interface**
+- Consolidated three separate pages (Reports, Tables, Admin) into single "Reports & Data" page
+- Improved navigation with clearer organizational structure
+- Reduced menu clutter from 7 tabs to 5 tabs
+- Better user experience with all data access functions in one location
+
+**Page Reorganization:**
+- **Reports Tab** → **Reports & Data Tab**
+  - Reports section (22 pre-configured reports with metadata and analysis)
+  - Tables section (direct table viewing)
+  - Admin section (database management tools)
+- Maintained all existing functionality while improving discoverability
+- Accordion-based interface for clean organization
+
+**Visual Consistency Improvements:**
+- Standardized all Reports page buttons to blue theme (#3b82f6 gradient)
+- Removed inconsistent green/teal/yellow action buttons
+- Matches application-wide subdued blue color scheme from v2026.2.0
+- Professional, cohesive look across entire interface
+
+**Upload Page Enhancements:**
+- Improved consistency with application color scheme
+- Enhanced documentation for upload process
+- Better visual hierarchy and organization
+
+**Files Modified:**
+- `templates/base.html` - Updated navigation menu (7 tabs → 5 tabs)
+- `templates/reports.html` - Consolidated three pages into accordion sections
+- `templates/upload.html` - Improved consistency and documentation
+- `app.py` - Updated routes and removed obsolete /tables and /admin endpoints
+- `VERSION` - v2026.5.0 → v2026.6.0
+
+**Commits:**
+- `72b420d`: Consolidate Reports, Tables, and Admin into unified Reports & Data page
+- `3cf1710`: Standardize Reports page button colors to blue theme
+- `503885c`: Improve Upload page consistency and documentation
+
+---
+
 ## [v2026.5.0] - 2025-11-03
 
 ### Students Page - Final Fixes and Completion
