@@ -104,6 +104,7 @@
                                 <li class="mb-2"><a href="#collaborative" class="toc-link"><i class="bi bi-chat-dots"></i> Collaborative & Iterative Approach</a></li>
                                 <li class="mb-2"><a href="#prompt-library" class="toc-link"><i class="bi bi-code-square"></i> Prompt Library by Scenario</a></li>
                                 <li class="mb-2"><a href="#workflows" class="toc-link"><i class="bi bi-arrows-move"></i> Common Multi-Step Workflows</a></li>
+                                <li class="mb-2"><a href="#what-worked" class="toc-link"><i class="bi bi-star-fill"></i> Development Patterns That Worked Well</a></li>
                                 <li class="mb-2"><a href="#challenges" class="toc-link"><i class="bi bi-exclamation-triangle"></i> Challenges & Lessons Learned</a></li>
                                 <li class="mb-2"><a href="#resources" class="toc-link"><i class="bi bi-link-45deg"></i> Resources & Next Steps</a></li>
                             </ul>
@@ -710,6 +711,186 @@ Add architecture reference docs (schema, API endpoints, file formats)."</code></
 
                 <div class="alert alert-info">
                     <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Break large features into 3-5 prompts. Test each step before moving forward. For major UX changes, create prototypes first to ensure the new structure works before refactoring production code.
+                </div>
+            </div>
+        </div>
+
+        <!-- What Worked Well -->
+        <div class="card mb-4" id="what-worked">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-star-fill"></i> Development Patterns That Worked Exceptionally Well</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead mb-4">These are the practices and patterns that made development smooth, maintainable, and successful:</p>
+
+                <h5>1. Development Guardrails: RULES.md & UI_PATTERNS.md 📏</h5>
+                <div class="alert alert-success mb-4">
+                    <strong>The Problem:</strong> Without clear rules, every new feature became a discussion about colors, data sources, and styling.
+                    <br><strong>The Solution:</strong> Created two reference documents that Claude could consult for every feature.
+                </div>
+
+                <p><strong>RULES.md</strong> - Universal truths about the application:</p>
+                <ul>
+                    <li>Data source rules (which table for what data)</li>
+                    <li>Team color assignment (alphabetical order: team 1 = blue, team 2 = yellow)</li>
+                    <li>Winner highlighting rules (gold = school-wide, silver = grade/team level)</li>
+                    <li>Banner metric order (same 6 metrics across all pages)</li>
+                    <li>Filter behavior (which metrics respect date filters)</li>
+                </ul>
+
+                <p><strong>UI_PATTERNS.md</strong> - Established patterns from existing pages:</p>
+                <ul>
+                    <li>Color palette with exact hex codes</li>
+                    <li>Component patterns (filters, banners, badges, tables)</li>
+                    <li>HTML/CSS/JavaScript snippets to copy</li>
+                    <li>Examples from working pages to reference</li>
+                </ul>
+
+                <p class="mb-0"><strong>Example Prompts Using These Files:</strong></p>
+                <pre class="bg-light p-3 rounded mb-4" style="white-space: pre-wrap;"><code>"Before implementing the Students page, read RULES.md completely.
+Make sure team colors follow the alphabetical rule and highlighting
+uses gold for school winners, silver for grade winners."
+
+"Update the Teams page banner to match the 6-metric structure from
+UI_PATTERNS.md. Use the exact same order as School page."</code></pre>
+
+                <h5>2. Multi-Phase Complex Features: Banner Standardization 🎯</h5>
+                <p><strong>Challenge:</strong> Standardize 6 metrics across 3 pages (School, Teams, Grade Level) with consistent calculations, icons, and filter behavior.</p>
+                <p><strong>Approach:</strong> Break it into 7 phases, each with specific goals and tests:</p>
+                <ol>
+                    <li><strong>Phase 1:</strong> Campaign Day + Team Badges</li>
+                    <li><strong>Phase 2:</strong> Add Sponsors metric</li>
+                    <li><strong>Phase 3:</strong> Goal Met formatting</li>
+                    <li><strong>Phase 4:</strong> Switch to Avg. Participation (With Color)</li>
+                    <li><strong>Phase 5:</strong> Add new metric to detail tables</li>
+                    <li><strong>Phase 6:</strong> Fix bugs discovered during testing</li>
+                    <li><strong>Phase 7:</strong> Comprehensive integration tests</li>
+                </ol>
+                <p><strong>Result:</strong> 82 banner-specific tests, all passing. Perfect consistency across pages.</p>
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-lightbulb"></i> Key Insight:</strong> Breaking large features into phases with specific deliverables
+                    prevents scope creep and makes progress measurable. Each phase had 10-20 tests to lock in behavior.
+                </div>
+
+                <h5 class="mt-4">3. Regression Tests: Lock in Verified Behavior ✅</h5>
+                <p><strong>Problem:</strong> After user verified specific values in screenshots, future changes could break them silently.</p>
+                <p><strong>Solution:</strong> Create regression tests with exact values from user-verified screenshots.</p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Example: Student21 Detail Modal Regression Test</strong>
+"Create a regression test for student21's detail modal. I've verified these exact values:
+- Fundraising: $20, 2 sponsors
+- Reading: 50 min capped, 50 min uncapped
+- Participation: 2/2 days (100.0%)
+- Daily breakdown: Oct 10 (25 min), Oct 11 (25 min)
+
+Lock in all 20+ values so any future changes will fail this test if they alter
+the calculation logic."
+
+<strong>Result:</strong> test_student21_detail_regression() - catches any unintended calculation changes</code></pre>
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li>User-verified data becomes permanent test fixture</li>
+                    <li>Future refactoring won't silently break calculations</li>
+                    <li>Confidence to make changes knowing tests will catch errors</li>
+                </ul>
+
+                <h5 class="mt-4">4. Filter Persistence: sessionStorage Pattern 💾</h5>
+                <p><strong>Feature:</strong> User selects date/grade/team filter, navigates to different page → filter remembered.</p>
+                <p><strong>Implementation:</strong> Save filters in sessionStorage, restore on page load.</p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Prompt:</strong>
+"Users want their filter selections to persist across pages. When they select
+'Day 3' on School page and navigate to Teams page, show the same date filter.
+Use sessionStorage so it survives page navigation but resets on browser close."
+
+<strong>JavaScript Pattern Claude Implemented:</strong>
+// On filter change - save to sessionStorage
+function applyDateFilter() {
+    const dateFilter = document.getElementById('dateFilter').value;
+    sessionStorage.setItem('readathonDateFilter', dateFilter);
+    window.location.href = `?date=${dateFilter}`;
+}
+
+// On page load - restore saved filter
+const savedFilter = sessionStorage.getItem('readathonDateFilter');
+if (savedFilter && !urlParams.has('date')) {
+    window.location.href = `?date=${savedFilter}`;
+}</code></pre>
+                <p><strong>Critical Bug We Fixed:</strong> Reading filters from DOM before sessionStorage populated them caused filter loss.
+                <strong>Solution:</strong> Read ALL filters from sessionStorage simultaneously, then redirect once with complete URL.</p>
+
+                <h5 class="mt-4">5. Gold/Silver Highlighting System 🥇🥈</h5>
+                <p><strong>Business Rule:</strong> Show gold ovals around school-wide winners, silver ovals around grade/team-level winners.</p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Prompt:</strong>
+"Implement winner highlighting with these rules:
+- Gold ovals: School-wide top values (max across ALL students)
+- Silver ovals: Grade-level top values (max within each grade)
+- Gold overrides silver (if both, show gold only)
+- Apply to all 8 table columns: Fundraising, Reading, Sponsors, Participation, etc.
+- Use exact CSS from UI_PATTERNS.md for oval styling"
+
+<strong>Result:</strong> Consistent highlighting across School, Teams, Grade Level, and Students pages.
+Gold highlights are rare and prestigious. Silver highlights are more common but still meaningful.</code></pre>
+
+                <h5 class="mt-4">6. Testing During Implementation (Not After) 🧪</h5>
+                <p><strong>Old Pattern (Bad):</strong> Write feature → Mark complete → Write tests later (maybe)</p>
+                <p><strong>New Pattern (Good):</strong> Write tests WHILE writing feature → Feature complete only when tests pass</p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Example Prompt:</strong>
+"I'm implementing the Students page. Create test_students_page.py NOW with these tests:
+1. test_page_loads_successfully (HTTP 200, no exceptions)
+2. test_banner_metrics_present (all 6 metrics visible)
+3. test_table_structure (sortable headers, correct columns)
+4. test_filter_controls_present (grade, team, date dropdowns)
+...
+
+Run tests after EVERY change. Don't mark feature complete until all tests pass."
+
+<strong>Benefits:</strong>
+- Catches bugs immediately (not weeks later)
+- Forces thinking about edge cases early
+- Feature is truly "done" when tests pass
+- 215 tests accumulated naturally during development</code></pre>
+
+                <h5 class="mt-4">7. Conditional Indicators: Half-Circle (◐) Pattern 🌓</h5>
+                <p><strong>Problem:</strong> Some metrics respect date filters, others don't. How do users know which is which?</p>
+                <p><strong>Solution:</strong> Show ◐ symbol next to metrics that change with date filter.</p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Prompt:</strong>
+"Add half-circle indicators (◐) to metrics that respect date filter.
+Only show when date filter is active (not 'Full Contest').
+Add Bootstrap tooltip: 'Cumulative through [date]'
+
+Metrics with ◐: Minutes Read, Avg. Participation, Goal Met
+Metrics without: Campaign Day, Fundraising, Sponsors (always cumulative)
+
+Use this pattern:
+{% if date_filter != 'all' %}
+    <span class="filter-indicator" data-bs-toggle="tooltip" title="...">◐</span>
+{% endif %}"
+
+<strong>Result:</strong> Clear visual indication of which metrics change with filter.
+Users understand what they're seeing without guessing.</code></pre>
+
+                <h5 class="mt-4">8. Master-Detail Pattern: Students Page 👥</h5>
+                <p><strong>Challenge:</strong> Show 411 students in table, but also show detailed daily breakdown for each student.</p>
+                <p><strong>Pattern:</strong> Master view (table) + Detail view (modal) triggered by row click.</p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Prompt Sequence:</strong>
+
+1. "Design master view: table with all 411 students, sortable columns,
+   filters for grade/team/date."
+
+2. "Design detail view: modal showing single student's info, daily reading log,
+   goal achievement, totals."
+
+3. "Implement click handler: when user clicks student row, fetch detail data
+   from /api/students/&lt;id&gt; endpoint and populate modal."
+
+4. "Create regression test: lock in student21's exact values from user-verified
+   screenshot (20+ values across summary and daily breakdown)."
+
+<strong>Result:</strong> Clean separation of master/detail, fast table rendering,
+detailed drill-down on demand. 50 tests covering both views.</code></pre>
+
+                <div class="alert alert-warning mt-4">
+                    <strong><i class="bi bi-star"></i> Golden Rule:</strong> Before implementing ANY feature, read RULES.md and UI_PATTERNS.md.
+                    Reference existing pages for patterns. Create tests during implementation. Use regression tests for user-verified data.
                 </div>
             </div>
         </div>
