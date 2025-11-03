@@ -161,6 +161,53 @@
                 </button>
             </div>
         </div>
+
+        <!-- Run Group Card -->
+        <div class="card mt-3">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseRunGroup">
+                <h5 class="mb-0">
+                    🎯 Run Group
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseRunGroup">
+                    <p>Select any group and run all items in that group:</p>
+                    <ul class="small mb-3">
+                        <li><strong>Prize Reports:</strong> All prize winner reports</li>
+                        <li><strong>Update/Slides:</strong> Slide deck reports</li>
+                        <li><strong>Export:</strong> Export/analysis reports</li>
+                        <li><strong>Admin:</strong> Data integrity checks</li>
+                        <li><strong>Tables:</strong> All database tables</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label for="runGroupSelect" class="form-label">Select Group</label>
+                    <select class="form-select" id="runGroupSelect">
+                        <option value="prize">Prize Reports (11 items)</option>
+                        <option value="slides">Update Reports / Slides (5 items)</option>
+                        <option value="export">Export Reports (3 items)</option>
+                        <option value="admin">Admin Reports (4 items)</option>
+                        <option value="tables">Database Tables (8 items)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="runGroupDate" class="form-label">Date (for date-dependent items)</label>
+                    <select class="form-select" id="runGroupDate">
+                        {% for date in dates %}
+                        <option value="{{ date }}">{{ date }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Used for reports that require a date (Q2, Q4, Q7)</small>
+                </div>
+
+                <button class="btn btn-success w-100" onclick="runGroup()">
+                    <i class="bi bi-play-circle"></i> Run All Items in Group
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="col-md-8">
@@ -339,6 +386,201 @@ function displayWorkflowResults(workflow) {
                     Generated ${workflow.reports.length} reports.
                 </div>
                 ${reportsHtml}
+            </div>
+        </div>
+    `;
+}
+
+// Run Group function - runs all items in selected group
+async function runGroup() {
+    const selectedGroup = document.getElementById('runGroupSelect').value;
+    const date = document.getElementById('runGroupDate').value;
+
+    // Group to report ID mappings
+    const groupMappings = {
+        'prize': ['q4', 'q5', 'q6', 'q9', 'q10', 'q11', 'q12', 'q13', 'q15', 'q16'],
+        'slides': ['q2', 'q14', 'q18', 'q19', 'q20'],
+        'export': ['q3', 'q7', 'q8'],
+        'admin': ['q1', 'q21', 'q22', 'q23'],
+        'tables': ['roster', 'class_info', 'grade_rules', 'daily_logs', 'reader_cumulative', 'team_color_bonus', 'upload_history', 'complete_log']
+    };
+
+    const items = groupMappings[selectedGroup];
+    if (!items || items.length === 0) {
+        alert('No items found in selected group');
+        return;
+    }
+
+    // Show loading
+    document.getElementById('workflowResults').innerHTML = `
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Running ${items.length} items from ${selectedGroup} group...</p>
+                <small class="text-muted">This may take a moment</small>
+            </div>
+        </div>
+    `;
+
+    try {
+        const results = [];
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Determine if this is a table group
+        const isTables = selectedGroup === 'tables';
+
+        for (let i = 0; i < items.length; i++) {
+            const itemId = items[i];
+
+            try {
+                let url;
+                if (isTables) {
+                    url = `/api/table/${itemId}`;
+                } else {
+                    url = `/api/report/${itemId}?`;
+                    if (date) url += `date=${date}`;
+                }
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.error) {
+                    errorCount++;
+                    results.push({
+                        id: itemId,
+                        title: result.title || itemId,
+                        error: result.error,
+                        success: false
+                    });
+                } else {
+                    successCount++;
+                    results.push({
+                        id: itemId,
+                        title: result.title,
+                        data: result.data,
+                        columns: result.columns,
+                        row_count: result.data ? result.data.length : 0,
+                        success: true,
+                        isTable: isTables
+                    });
+                }
+            } catch (error) {
+                errorCount++;
+                results.push({
+                    id: itemId,
+                    title: itemId,
+                    error: error.message,
+                    success: false
+                });
+            }
+
+            // Update progress
+            document.getElementById('workflowResults').innerHTML = `
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3">Running ${selectedGroup} group: ${i + 1}/${items.length} complete</p>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar" role="progressbar" style="width: ${((i + 1) / items.length) * 100}%">
+                                ${Math.round(((i + 1) / items.length) * 100)}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Display results
+        displayGroupResults(selectedGroup, results, successCount, errorCount);
+
+    } catch (error) {
+        document.getElementById('workflowResults').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayGroupResults(groupName, results, successCount, errorCount) {
+    let resultsHtml = '';
+
+    results.forEach((result, index) => {
+        if (!result.success) {
+            resultsHtml += `
+                <div class="card mb-3 border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0">${index + 1}. ${result.title} ❌</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger mb-0">
+                            <i class="bi bi-exclamation-triangle"></i> ${result.error}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Build table preview (show first 5 rows)
+            let tablePreview = '';
+            if (result.data && result.data.length > 0) {
+                const previewRows = result.data.slice(0, 5);
+                tablePreview = `
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    ${result.columns.map(col => `<th>${col.replace(/_/g, ' ').toUpperCase()}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${previewRows.map(row => `
+                                    <tr>
+                                        ${result.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        ${result.data.length > 5 ? `<small class="text-muted">Showing 5 of ${result.data.length} rows</small>` : ''}
+                    </div>
+                `;
+            }
+
+            resultsHtml += `
+                <div class="card mb-3">
+                    <div class="card-header card-header-blue">
+                        <h6 class="mb-0">${index + 1}. ${result.title} ✅</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-table"></i> ${result.row_count} ${result.row_count === 1 ? 'row' : 'rows'}
+                        </p>
+                        ${tablePreview}
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    const statusClass = errorCount > 0 ? 'alert-warning' : 'alert-success';
+    const statusIcon = errorCount > 0 ? 'bi-exclamation-triangle' : 'bi-check-circle-fill';
+
+    document.getElementById('workflowResults').innerHTML = `
+        <div class="card">
+            <div class="card-header card-header-blue">
+                <h5 class="mb-0">🎯 Run Group: ${groupName.charAt(0).toUpperCase() + groupName.slice(1)}</h5>
+            </div>
+            <div class="card-body">
+                <div class="${statusClass}">
+                    <i class="bi ${statusIcon}"></i>
+                    Completed ${results.length} items: ${successCount} successful, ${errorCount} failed
+                </div>
+                <hr>
+                ${resultsHtml}
             </div>
         </div>
     `;

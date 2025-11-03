@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Reports (Queries) - Read-a-Thon System{% endblock %}
+{% block title %}Reports & Data - Read-a-Thon System{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">
-            <i class="bi bi-graph-up"></i> Reports (Queries)
+            <i class="bi bi-database"></i> Reports & Data
         </h1>
     </div>
 </div>
@@ -14,18 +14,79 @@
 <div class="row">
     <!-- Report List -->
     <div class="col-md-4">
+        <!-- Filter Controls -->
+        <div class="card mb-3">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseFilters">
+                <h6 class="mb-0">
+                    <i class="bi bi-funnel"></i> Filters
+                    <i class="bi bi-chevron-down float-end" id="filtersChevron"></i>
+                </h6>
+            </div>
+            <div class="collapse show" id="collapseFilters">
+                <div class="card-body">
+                    <!-- Search Box -->
+                    <div class="mb-3">
+                        <label for="searchBox" class="form-label">Search</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchBox"
+                                   placeholder="Search reports, tables..."
+                                   value="{{ search_query or '' }}">
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearch"
+                                    style="{% if not search_query %}display: none;{% endif %}">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Live filter by name or description</small>
+                    </div>
+
+                    <!-- Group Filter -->
+                    <div class="mb-0">
+                        <label for="groupFilter" class="form-label">Group</label>
+                        <select class="form-select" id="groupFilter">
+                            {% for opt in group_options %}
+                            <option value="{{ opt.value }}"
+                                    {% if opt.value == selected_group %}selected{% endif %}>
+                                {{ opt.label }} ({{ opt.count }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items List -->
         <div class="card">
             <div class="card-header card-header-blue">
-                <h5 class="mb-0">Available Reports</h5>
+                <h5 class="mb-0">Available Items (<span id="itemCount">{{ items|length }}</span>)</h5>
             </div>
-            <div class="list-group list-group-flush">
-                {% for report in reports %}
-                <a href="#" class="list-group-item list-group-item-action report-link" data-report-id="{{ report.id }}">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">{{ report.name }}</h6>
-                        <small class="badge {% if report.type == 'utility' %}bg-secondary{% elif report.type == 'daily' %}bg-info{% elif report.type == 'cumulative' %}bg-success{% elif report.type == 'export' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ report.type }}</small>
+            <div class="list-group list-group-flush" id="itemsList">
+                {% for item in items %}
+                <a href="#" class="list-group-item list-group-item-action item-link"
+                   data-item-id="{{ item.id }}"
+                   data-item-type="{{ item.item_type }}"
+                   data-name="{{ item.name }}"
+                   data-description="{{ item.description }}"
+                   data-row-number="{{ loop.index }}">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-start" style="flex: 1;">
+                            <span class="badge bg-secondary me-2" style="min-width: 35px; font-size: 0.85rem;">{{ loop.index }}</span>
+                            <div>
+                                <h6 class="mb-1">{{ item.name }}</h6>
+                                <small class="text-muted">{{ item.description }}</small>
+                            </div>
+                        </div>
+                        <small class="badge ms-2
+                            {% if item.item_type == 'table' %}bg-secondary
+                            {% elif item.item_type == 'workflow' %}bg-dark
+                            {% elif item.report_type == 'utility' %}bg-info
+                            {% elif item.report_type == 'daily' %}bg-primary
+                            {% elif item.report_type == 'cumulative' %}bg-success
+                            {% elif item.report_type == 'export' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ item.item_type }}
+                        </small>
                     </div>
-                    <small class="text-muted">{{ report.description }}</small>
                 </a>
                 {% endfor %}
             </div>
@@ -97,26 +158,143 @@
 
 {% block extra_js %}
 <script>
-let currentReportId = null;
+let currentItemId = null;
+let currentItemType = null;
+let allItems = []; // Store all items for client-side filtering
 
-// Report link click handler
-document.querySelectorAll('.report-link').forEach(link => {
+// Store all items on page load
+document.querySelectorAll('.item-link').forEach(link => {
+    allItems.push({
+        element: link,
+        id: link.dataset.itemId,
+        type: link.dataset.itemType,
+        name: link.dataset.name.toLowerCase(),
+        description: link.dataset.description.toLowerCase()
+    });
+});
+
+// Restore filters from sessionStorage on page load
+window.addEventListener('DOMContentLoaded', function() {
+    // Handle filters collapse chevron rotation
+    const filtersCollapse = document.getElementById('collapseFilters');
+    const filtersChevron = document.getElementById('filtersChevron');
+
+    if (filtersCollapse && filtersChevron) {
+        filtersCollapse.addEventListener('show.bs.collapse', function() {
+            filtersChevron.style.transform = 'rotate(180deg)';
+            filtersChevron.style.transition = 'transform 0.3s ease';
+        });
+
+        filtersCollapse.addEventListener('hide.bs.collapse', function() {
+            filtersChevron.style.transform = 'rotate(0deg)';
+            filtersChevron.style.transition = 'transform 0.3s ease';
+        });
+
+        // Set initial chevron state (expanded by default)
+        if (filtersCollapse.classList.contains('show')) {
+            filtersChevron.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    const savedGroup = sessionStorage.getItem('reportsSelectedGroup');
+    const savedSearch = sessionStorage.getItem('reportsSearchText');
+
+    if (savedGroup && savedGroup !== '{{ selected_group }}') {
+        document.getElementById('groupFilter').value = savedGroup;
+    }
+    if (savedSearch && savedSearch !== '{{ search_query or "" }}') {
+        document.getElementById('searchBox').value = savedSearch;
+        document.getElementById('clearSearch').style.display = 'block';
+    }
+
+    // Apply client-side filtering if search is active
+    if (savedSearch) {
+        filterItemsClientSide(savedSearch);
+    }
+});
+
+// Group filter change handler
+document.getElementById('groupFilter').addEventListener('change', function() {
+    const selectedGroup = this.value;
+    sessionStorage.setItem('reportsSelectedGroup', selectedGroup);
+
+    // Navigate to reports page with new group
+    window.location.href = `/reports?group=${selectedGroup}`;
+});
+
+// Search box handler (live filtering)
+document.getElementById('searchBox').addEventListener('input', function() {
+    const searchText = this.value.trim();
+    sessionStorage.setItem('reportsSearchText', searchText);
+
+    // Show/hide clear button
+    document.getElementById('clearSearch').style.display = searchText ? 'block' : 'none';
+
+    // Filter items client-side
+    filterItemsClientSide(searchText);
+});
+
+// Clear search button handler
+document.getElementById('clearSearch').addEventListener('click', function() {
+    document.getElementById('searchBox').value = '';
+    sessionStorage.setItem('reportsSearchText', '');
+    this.style.display = 'none';
+    filterItemsClientSide('');
+});
+
+// Client-side filtering function
+function filterItemsClientSide(searchText) {
+    const search = searchText.toLowerCase();
+    let visibleCount = 0;
+    let visibleIndex = 1;
+
+    allItems.forEach(item => {
+        const matches = !search ||
+                       item.name.includes(search) ||
+                       item.description.includes(search);
+
+        item.element.style.display = matches ? '' : 'none';
+
+        if (matches) {
+            visibleCount++;
+            // Update row number badge
+            const badge = item.element.querySelector('.badge.bg-secondary.me-2');
+            if (badge) {
+                badge.textContent = visibleIndex;
+            }
+            visibleIndex++;
+        }
+    });
+
+    // Update count
+    document.getElementById('itemCount').textContent = visibleCount;
+}
+
+// Item link click handler
+document.querySelectorAll('.item-link').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();
-        currentReportId = this.dataset.reportId;
+        currentItemId = this.dataset.itemId;
+        currentItemType = this.dataset.itemType;
 
-        // Highlight selected report
-        document.querySelectorAll('.report-link').forEach(l => l.classList.remove('active'));
+        // Highlight selected item
+        document.querySelectorAll('.item-link').forEach(l => l.classList.remove('active'));
         this.classList.add('active');
 
-        // Show/hide options based on report
-        showReportOptions(currentReportId);
-
-        // Show options panel
-        document.getElementById('reportOptions').style.display = 'block';
-
-        // Auto-run report immediately
-        runCurrentReport();
+        // Handle different item types
+        if (currentItemType === 'report') {
+            // Show/hide options based on report
+            showReportOptions(currentItemId);
+            document.getElementById('reportOptions').style.display = 'block';
+            runCurrentReport();
+        } else if (currentItemType === 'table') {
+            // Hide report options, show table
+            document.getElementById('reportOptions').style.display = 'none';
+            loadTable(currentItemId);
+        } else if (currentItemType === 'workflow') {
+            // Redirect to workflows page
+            window.location.href = `/workflows#${currentItemId}`;
+        }
     });
 });
 
@@ -139,15 +317,159 @@ function showReportOptions(reportId) {
     }
 }
 
+async function loadTable(tableId) {
+    // Show loading
+    document.getElementById('reportResults').innerHTML = `
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading table data...</p>
+            </div>
+        </div>
+    `;
+
+    try {
+        // Fetch table data and metadata in parallel
+        const [dataResponse, metadataResponse] = await Promise.all([
+            fetch(`/api/table/${tableId}`),
+            fetch(`/api/table_metadata/${tableId}`)
+        ]);
+
+        const tableData = await dataResponse.json();
+        const metadata = await metadataResponse.json();
+
+        if (tableData.error) {
+            throw new Error(tableData.error);
+        }
+
+        displayTable(tableData, metadata);
+    } catch (error) {
+        document.getElementById('reportResults').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayTable(tableData, metadata) {
+    // Build table metadata section
+    let metadataHtml = '';
+    if (metadata && !metadata.error) {
+        const lastUpdated = metadata.last_updated ?
+            `<div class="metadata-item"><strong>Last Updated:</strong> <span class="value">${metadata.last_updated}</span></div>` : '';
+
+        const columnsHtml = metadata.columns && metadata.columns.length > 0 ?
+            `<details class="nested-subsection">
+                <summary><i class="bi bi-columns"></i> Columns (${metadata.columns.length})</summary>
+                <div class="subsection-body">
+                    ${metadata.columns.map(col => `
+                        <div class="column-item">
+                            <span class="column-mapping">• ${col.name}:</span>
+                            <span class="column-description">${col.description}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </details>` : '';
+
+        const relatedHtml = (metadata.referenced_by && metadata.referenced_by.length > 0) ||
+                           (metadata.references && metadata.references.length > 0) ?
+            `<div class="metadata-item">
+                <strong>Related Tables:</strong>
+                <div class="value">
+                    ${metadata.referenced_by && metadata.referenced_by.length > 0 ?
+                        `<div><em>Referenced by:</em> ${metadata.referenced_by.join(', ')}</div>` : ''}
+                    ${metadata.references && metadata.references.length > 0 ?
+                        `<div><em>References:</em> ${metadata.references.join(', ')}</div>` : ''}
+                </div>
+            </div>` : '';
+
+        metadataHtml = `
+            <details class="report-section report-metadata">
+                <summary><i class="bi bi-info-circle"></i> Table Information</summary>
+                <div class="metadata-body">
+                    <div class="metadata-item"><strong>Source:</strong> <span class="value">Database table</span></div>
+                    <div class="metadata-item"><strong>Primary Key:</strong> <span class="value">${metadata.primary_key || 'N/A'}</span></div>
+                    <div class="metadata-item"><strong>Row Count:</strong> <span class="value">${metadata.row_count || 0} rows</span></div>
+                    ${lastUpdated}
+                    ${relatedHtml}
+                    <div class="metadata-item"><strong>Description:</strong> <div class="value">${metadata.description || 'No description available'}</div></div>
+                    ${columnsHtml}
+                </div>
+            </details>
+        `;
+    }
+
+    // Build table HTML (reuse existing table display logic)
+    let tableHtml = '';
+    if (tableData.data && tableData.data.length > 0) {
+        tableHtml = `
+            <div class="table-responsive">
+                <table class="table table-striped table-hover report-table" id="reportTable">
+                    <thead class="table-dark">
+                        <tr>
+                            ${tableData.columns.map((col, idx) => `
+                                <th class="sortable-header" onclick="sortTable(${idx})">
+                                    ${col.replace(/_/g, ' ').toUpperCase()}
+                                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        ${tableData.data.map(row => `
+                            <tr>
+                                ${tableData.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        tableHtml = '<div class="alert alert-warning">No data available</div>';
+    }
+
+    // Build copy/export buttons
+    const headerButtons = `
+        <button class="btn btn-sm btn-primary" onclick="copyTableToClipboard('reportTable')">
+            <i class="bi bi-clipboard"></i> Copy
+        </button>
+    `;
+
+    // Results header
+    const resultCount = tableData.data ? tableData.data.length : 0;
+    const resultsHeader = `
+        <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #343a40; color: white; font-weight: 600;">
+            <span><i class="bi bi-table"></i> Results: ${resultCount} ${resultCount === 1 ? 'row' : 'rows'}</span>
+        </div>
+    `;
+
+    // Render table
+    document.getElementById('reportResults').innerHTML = `
+        <div class="card" style="border-radius: 8px; overflow: hidden;">
+            <div class="card-header card-header-blue" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="mb-0"><i class="bi bi-table"></i> ${tableData.title}</h5>
+                <div>${headerButtons}</div>
+            </div>
+            ${metadataHtml}
+            ${resultsHeader}
+            <div class="p-0">${tableHtml}</div>
+        </div>
+    `;
+}
+
 async function runCurrentReport() {
-    if (!currentReportId) return;
+    if (!currentItemId) return;
 
     const date = document.getElementById('reportDate').value;
     const groupBy = document.getElementById('groupBy').value;
     const sortBy = document.getElementById('sortBy').value;
     const limit = document.getElementById('limitRows').value;
 
-    let url = `/api/report/${currentReportId}?`;
+    let url = `/api/report/${currentItemId}?`;
     if (date) url += `date=${date}&`;
     if (groupBy) url += `group_by=${groupBy}&`;
     if (sortBy) url += `sort_by=${sortBy}&`;
@@ -185,7 +507,7 @@ async function runCurrentReport() {
 
 function displayReport(report) {
     // Build Export/Copy buttons
-    const exportUrl = `/api/export/${currentReportId}?date=${document.getElementById('reportDate').value}&group_by=${document.getElementById('groupBy').value}&sort_by=${document.getElementById('sortBy').value}`;
+    const exportUrl = `/api/export/${currentItemId}?date=${document.getElementById('reportDate').value}&group_by=${document.getElementById('groupBy').value}&sort_by=${document.getElementById('sortBy').value}`;
 
     const headerButtons = `
         <button class="btn btn-sm btn-primary" onclick="copyTableToClipboard('reportTable')">

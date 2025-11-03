@@ -785,6 +785,160 @@ class ReadathonDB:
 
         return counts
 
+    def get_table_metadata(self, table_id: str) -> Dict[str, Any]:
+        """
+        Get detailed metadata for a specific table.
+        Returns table structure, column info, row count, relationships, etc.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # Table metadata definitions
+        table_metadata = {
+            'roster': {
+                'table_name': 'Roster',
+                'primary_key': 'student_name',
+                'description': 'Student roster with class, teacher, grade, and team assignments for all participants.',
+                'referenced_by': ['Daily_Logs', 'Reader_Cumulative'],
+                'references': ['Class_Info'],
+                'columns': [
+                    {'name': 'student_name', 'description': 'Student full name (primary key)'},
+                    {'name': 'class_name', 'description': 'Homeroom class ID'},
+                    {'name': 'home_room', 'description': 'Home room identifier'},
+                    {'name': 'teacher_name', 'description': 'Teacher name'},
+                    {'name': 'grade_level', 'description': 'Grade level (K, 1, 2, 3, 4, 5)'},
+                    {'name': 'team_name', 'description': 'Competition team assignment'},
+                ]
+            },
+            'class_info': {
+                'table_name': 'Class_Info',
+                'primary_key': 'class_name',
+                'description': 'Summary of each class including home room, teacher, grade, team, and total students.',
+                'referenced_by': ['Roster'],
+                'references': [],
+                'columns': [
+                    {'name': 'class_name', 'description': 'Homeroom class ID (primary key)'},
+                    {'name': 'home_room', 'description': 'Home room identifier'},
+                    {'name': 'teacher_name', 'description': 'Teacher name'},
+                    {'name': 'grade_level', 'description': 'Grade level (K, 1, 2, 3, 4, 5)'},
+                    {'name': 'team_name', 'description': 'Competition team assignment'},
+                    {'name': 'total_students', 'description': 'Number of students in class'},
+                ]
+            },
+            'grade_rules': {
+                'table_name': 'Grade_Rules',
+                'primary_key': 'grade_level',
+                'description': 'Minimum and maximum daily reading minutes by grade level for goal calculations.',
+                'referenced_by': [],
+                'references': [],
+                'columns': [
+                    {'name': 'grade_level', 'description': 'Grade level (K, 1, 2, 3, 4, 5) (primary key)'},
+                    {'name': 'min_minutes', 'description': 'Minimum daily reading goal in minutes'},
+                    {'name': 'max_minutes', 'description': 'Maximum daily reading goal in minutes'},
+                ]
+            },
+            'daily_logs': {
+                'table_name': 'Daily_Logs',
+                'primary_key': 'student_name, log_date',
+                'description': 'Daily reading minutes for each student by date - tracks participation and goal achievement.',
+                'referenced_by': [],
+                'references': ['Roster'],
+                'columns': [
+                    {'name': 'student_name', 'description': 'Student full name (foreign key to Roster)'},
+                    {'name': 'log_date', 'description': 'Date of reading log (YYYY-MM-DD format)'},
+                    {'name': 'minutes_read', 'description': 'Minutes read on this date (uncapped)'},
+                    {'name': 'capped_minutes', 'description': 'Minutes read (capped at 120 per day for official totals)'},
+                    {'name': 'met_goal', 'description': 'Whether student met their daily reading goal (0 or 1)'},
+                ]
+            },
+            'reader_cumulative': {
+                'table_name': 'Reader_Cumulative',
+                'primary_key': 'student_name',
+                'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student.',
+                'referenced_by': [],
+                'references': ['Roster'],
+                'columns': [
+                    {'name': 'student_name', 'description': 'Student full name (foreign key to Roster)'},
+                    {'name': 'total_donations', 'description': 'Total fundraising amount raised'},
+                    {'name': 'num_sponsors', 'description': 'Number of sponsors supporting this student'},
+                    {'name': 'total_minutes', 'description': 'Cumulative reading minutes (from Daily_Logs)'},
+                ]
+            },
+            'team_color_bonus': {
+                'table_name': 'Team_Color_Bonus',
+                'primary_key': 'student_name, log_date',
+                'description': 'Special event bonus: students wearing team colors earn extra participation points and bonus minutes.',
+                'referenced_by': [],
+                'references': ['Roster'],
+                'columns': [
+                    {'name': 'student_name', 'description': 'Student full name (foreign key to Roster)'},
+                    {'name': 'log_date', 'description': 'Date of bonus event'},
+                    {'name': 'wore_team_color', 'description': 'Whether student wore team colors (0 or 1)'},
+                    {'name': 'bonus_minutes', 'description': 'Bonus minutes awarded (typically 10)'},
+                    {'name': 'bonus_points', 'description': 'Bonus participation points awarded'},
+                ]
+            },
+            'upload_history': {
+                'table_name': 'Upload_History',
+                'primary_key': 'upload_id',
+                'description': 'Complete audit trail of all data uploads with timestamps, file details, and action history.',
+                'referenced_by': [],
+                'references': [],
+                'columns': [
+                    {'name': 'upload_id', 'description': 'Unique upload identifier (auto-increment)'},
+                    {'name': 'upload_date', 'description': 'Timestamp of upload'},
+                    {'name': 'file_name', 'description': 'Original CSV file name'},
+                    {'name': 'file_type', 'description': 'Type of data (daily_reading, cumulative, etc.)'},
+                    {'name': 'rows_processed', 'description': 'Number of rows processed from CSV'},
+                    {'name': 'status', 'description': 'Upload status (success, error, etc.)'},
+                    {'name': 'action_taken', 'description': 'Action performed (replace, update, skip)'},
+                    {'name': 'records_replaced', 'description': 'Number of records replaced/updated'},
+                    {'name': 'audit_details', 'description': 'Detailed audit information (JSON format)'},
+                ]
+            },
+            'complete_log': {
+                'table_name': 'Q7: Complete Log (Query)',
+                'primary_key': 'N/A (Generated Query)',
+                'description': 'Complete denormalized log combining Daily_Logs, Roster, and Reader_Cumulative - perfect for export to Excel/CSV.',
+                'referenced_by': [],
+                'references': ['Daily_Logs', 'Roster', 'Reader_Cumulative'],
+                'columns': [
+                    {'name': 'Various', 'description': 'Dynamic columns from joined tables - see Q7 report for full column list'},
+                ]
+            },
+        }
+
+        if table_id not in table_metadata:
+            return {'error': f'Unknown table: {table_id}'}
+
+        metadata = table_metadata[table_id].copy()
+
+        # Get row count
+        if table_id == 'complete_log':
+            # Complete log is a query, not a table - get count from Daily_Logs
+            cursor.execute("SELECT COUNT(*) FROM Daily_Logs")
+        else:
+            table_name_sql = metadata['table_name']
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name_sql}")
+        metadata['row_count'] = cursor.fetchone()[0]
+
+        # Get last updated timestamp (if applicable)
+        last_updated = None
+        if table_id == 'daily_logs':
+            cursor.execute("SELECT MAX(log_date) FROM Daily_Logs")
+            result = cursor.fetchone()[0]
+            if result:
+                last_updated = result
+        elif table_id == 'upload_history':
+            cursor.execute("SELECT MAX(upload_date) FROM Upload_History")
+            result = cursor.fetchone()[0]
+            if result:
+                last_updated = result
+
+        metadata['last_updated'] = last_updated
+
+        return metadata
+
     def execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
         """Execute a query and return results as list of dicts"""
         conn = self.get_connection()

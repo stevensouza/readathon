@@ -861,13 +861,12 @@
                     <a href="/upload" class="nav-link-item {% if request.path == '/upload' %}active{% endif %}">📤 Upload</a>
 
                     <div class="nav-dropdown">
-                        <button class="nav-link-item {% if request.path in ['/reports', '/workflows', '/tables'] %}active{% endif %}" onclick="toggleReportsDropdown()">
+                        <button class="nav-link-item {% if request.path in ['/reports', '/workflows'] %}active{% endif %}" onclick="toggleReportsDropdown()">
                             📊 Reports & Data <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
                         <div class="dropdown-menu-custom" id="reportsDropdown">
-                            <a href="/reports" class="dropdown-item-custom">📊 Reports (Q1-Q23)</a>
+                            <a href="/reports" class="dropdown-item-custom">📊 Reports & Data (All)</a>
                             <a href="/workflows" class="dropdown-item-custom">🔄 Workflows</a>
-                            <a href="/tables" class="dropdown-item-custom">📋 Tables (Raw Data)</a>
                         </div>
                     </div>
 
