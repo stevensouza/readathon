@@ -466,13 +466,19 @@ timestamp, row counts, and any errors?"
                             <div class="accordion-body">
                                 <div class="mb-3">
                                     <h6>Navigation Menu (Explicit - I Knew What I Wanted)</h6>
-                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>My Prompt (Explicit):</strong>
+                                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;"><code><strong>Initial Prompt (Explicit):</strong>
 "Create base.html template with Bootstrap 5.3.0 navigation bar.
 Menu items: School, Teams, Classes, Students, Upload, Reports, Admin.
 Make it responsive with mobile toggle. Use CDN for Bootstrap."
 
-<em>Note: This is an example where I was explicit because I knew exactly what
-menu structure I wanted.</em></code></pre>
+<strong>Later: Navigation Consolidation (v2026.6.0)</strong>
+"The navigation has too many tabs (7). Let's consolidate Reports, Tables,
+and Admin into a single 'Reports & Data' page with three accordion sections.
+This reduces menu clutter and groups related functionality."
+
+<strong>Result:</strong> 5 clean tabs - School, Teams, Grade Level, Students, Upload, Reports & Data
+
+<em>Note: This is an example where I was explicit initially, then refined based on UX feedback.</em></code></pre>
                                 </div>
                                 <div class="mb-3">
                                     <h6>Color Scheme (Collaborative)</h6>
@@ -679,8 +685,31 @@ Add architecture reference docs (schema, API endpoints, file formats)."</code></
                     </ol>
                 </div>
 
+                <div class="mb-4">
+                    <h5>Example 3: Students Page with Master-Detail Pattern (v2026.5.0)</h5>
+                    <ol>
+                        <li><strong>ASCII Prototype (Master View):</strong> "Design table showing all 411 students with columns: Name, Grade, Team, Class, Fundraising, Reading, Sponsors, Participation. Include filter controls and gold/silver highlighting."</li>
+                        <li><strong>HTML Prototype (Master View):</strong> "Create /prototypes/students_tab.html with Bootstrap table, filter dropdowns, sortable headers, using Option H color scheme."</li>
+                        <li><strong>ASCII Prototype (Detail View):</strong> "Design modal showing single student's daily breakdown when row clicked: student info, daily reading log, goal achievement, totals."</li>
+                        <li><strong>Production (Master View):</strong> "Implement templates/students.html with database integration. Add /students route, create get_students_data() in database.py, implement filter persistence using sessionStorage."</li>
+                        <li><strong>Production (Detail View):</strong> "Add /api/students/&lt;student_id&gt; endpoint, implement get_student_detail() method, create modal with daily breakdown table."</li>
+                        <li><strong>Testing:</strong> "Create test_students_page.py with 50 comprehensive tests covering page load, filters, highlighting, modal, regression tests. All tests must pass before marking complete."</li>
+                    </ol>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Example 4: Reports & Data Page Consolidation (v2026.6.0)</h5>
+                    <ol>
+                        <li><strong>UX Analysis:</strong> "The navigation has 7 tabs (School, Teams, Grade Level, Students, Upload, Reports, Tables, Admin). That's cluttered. What if we consolidate Reports, Tables, and Admin into one page?"</li>
+                        <li><strong>Design Decision:</strong> "Create a single 'Reports & Data' page with three accordion sections: Reports (22 pre-configured reports), Tables (raw database views), Admin (management tools)."</li>
+                        <li><strong>Implementation:</strong> "Update templates/base.html navigation menu (7→5 tabs). Consolidate templates/reports.html to include all three sections. Remove obsolete /tables and /admin routes from app.py."</li>
+                        <li><strong>Visual Consistency:</strong> "Standardize all buttons to blue theme (#3b82f6 gradient) to match application-wide subdued color scheme from v2026.2.0."</li>
+                        <li><strong>Testing:</strong> "Verify all reports still work, tables load correctly, admin tools function properly. Check navigation works on mobile."</li>
+                    </ol>
+                </div>
+
                 <div class="alert alert-info">
-                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Break large features into 3-5 prompts. Test each step before moving forward.
+                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Break large features into 3-5 prompts. Test each step before moving forward. For major UX changes, create prototypes first to ensure the new structure works before refactoring production code.
                 </div>
             </div>
         </div>
@@ -776,8 +805,21 @@ Add architecture reference docs (schema, API endpoints, file formats)."</code></
                 <ul>
                     <li><a href="/help/requirements">📋 Application Requirements</a> - View the complete 3,723-line specification</li>
                     <li><a href="/help">📖 User Manual</a> - Learn how to use this application</li>
-                    <li><a href="/admin">⚙️ Admin</a> - See upload audit trail and data management features</li>
+                    <li><a href="/reports">📊 Reports & Data</a> - See 22 reports with enhanced metadata and analysis</li>
+                    <li><a href="/">🏫 Dashboard Tabs</a> - Explore School, Teams, Grade Level, and Students views</li>
                 </ul>
+
+                <div class="alert alert-success mt-3">
+                    <strong>Latest Version: v2026.6.0</strong> - Reports & Data Page Consolidation
+                    <ul class="mb-0 mt-2">
+                        <li>✅ 5 clean dashboard tabs (School, Teams, Grade Level, Students, Upload)</li>
+                        <li>✅ Consolidated Reports & Data page (22 reports + tables + admin)</li>
+                        <li>✅ Students page with master-detail pattern (411 students)</li>
+                        <li>✅ Grade Level page with class breakdown and filtering</li>
+                        <li>✅ Enhanced metadata with automated analysis modal</li>
+                        <li>✅ 215 automated tests passing ✅</li>
+                    </ul>
+                </div>
 
                 <h5 class="mt-3">Project Files</h5>
                 <ul>

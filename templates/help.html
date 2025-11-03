@@ -17,10 +17,21 @@
             <div class="card-body">
                 <h5>Daily Workflow (3 Simple Steps)</h5>
                 <ol class="lead">
-                    <li>Click <strong>"Upload Data"</strong> → Select date → Upload your CSV files</li>
-                    <li>Click <strong>"Reports"</strong> → Select a report → Click "Run Report"</li>
+                    <li>Click <strong>"Upload"</strong> → Select date → Upload your CSV files</li>
+                    <li>Click <strong>"Reports & Data"</strong> → Select a report → Click "Run Report"</li>
                     <li>Use <strong>"Copy to Clipboard"</strong> or <strong>"Export CSV"</strong> buttons</li>
                 </ol>
+
+                <h5 class="mt-4">Navigation Overview</h5>
+                <p>The application has 5 main tabs:</p>
+                <ul>
+                    <li><strong>School:</strong> School-wide overview with team competition</li>
+                    <li><strong>Teams:</strong> Head-to-head team comparison metrics</li>
+                    <li><strong>Grade Level:</strong> Grade-by-grade and class-by-class breakdown</li>
+                    <li><strong>Students:</strong> Individual student performance (master-detail view)</li>
+                    <li><strong>Upload:</strong> Import daily reading and cumulative stats</li>
+                    <li><strong>Reports & Data:</strong> 22 pre-configured reports, table views, and admin tools</li>
+                </ul>
 
                 <div class="alert alert-info mt-3">
                     <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Use the <strong>environment selector</strong> in the top-right to switch between Production and Sample data!
@@ -239,13 +250,25 @@
             </div>
         </div>
 
-        <!-- Reports -->
+        <!-- Reports & Data Page -->
         <div class="card mb-4">
             <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-graph-up"></i> Reports Guide</h4>
+                <h4 class="mb-0"><i class="bi bi-graph-up"></i> Reports & Data Page</h4>
             </div>
             <div class="card-body">
-                <table class="table table-hover">
+                <h5>Three Sections in One Page</h5>
+                <p>The Reports & Data page consolidates three key functions into accordion sections:</p>
+
+                <h6 class="mt-3">1. Reports Section</h6>
+                <p>22 pre-configured reports with enhanced metadata:</p>
+                <ul>
+                    <li><strong>Column Descriptions:</strong> Every column explained</li>
+                    <li><strong>Data Sources:</strong> Shows which database tables power each metric</li>
+                    <li><strong>Key Terms:</strong> Glossary of important definitions</li>
+                    <li><strong>Automated Analysis:</strong> Click the <span class="badge bg-primary">🔍 Analysis</span> button to see data insights</li>
+                </ul>
+
+                <table class="table table-hover table-sm mt-3">
                     <thead class="table-light">
                         <tr>
                             <th>Report</th>
@@ -304,8 +327,31 @@
                             <td><span class="badge bg-success">Cumulative</span></td>
                             <td>Total donations raised by each team</td>
                         </tr>
+                        <tr>
+                            <td><strong>Q21-Q23</strong></td>
+                            <td><span class="badge bg-danger">Integrity</span></td>
+                            <td>Data reconciliation and validation reports</td>
+                        </tr>
                     </tbody>
                 </table>
+
+                <h6 class="mt-4">2. Tables Section</h6>
+                <p>View raw database tables:</p>
+                <ul>
+                    <li>Roster, Class Info, Grade Rules</li>
+                    <li>Daily Logs, Reader Cumulative</li>
+                    <li>Upload History (audit trail)</li>
+                    <li>Team Color Bonus</li>
+                    <li>All tables support sorting, copy to clipboard, and CSV export</li>
+                </ul>
+
+                <h6 class="mt-4">3. Admin Section</h6>
+                <p>Database management tools:</p>
+                <ul>
+                    <li>Selective table clearing (clear specific tables without affecting others)</li>
+                    <li>Upload history viewer</li>
+                    <li>Database integrity tools</li>
+                </ul>
 
                 <h5 class="mt-3">Report Options</h5>
                 <ul>
@@ -314,40 +360,6 @@
                     <li><strong>Sort By:</strong> Q5 can sort by minutes, goals, or donations</li>
                     <li><strong>Limit:</strong> Q5 can show top 10, 25, 50, or all students</li>
                 </ul>
-            </div>
-        </div>
-
-        <!-- Tables Section -->
-        <div class="card mb-4">
-            <div class="card-header bg-secondary text-white">
-                <h4 class="mb-0"><i class="bi bi-table"></i> Tables - Raw Data Viewer</h4>
-            </div>
-            <div class="card-body">
-                <h5>What's the Tables Section?</h5>
-                <p>The Tables page lets you view the raw contents of every database table. Think of it as looking "under the hood" of your data.</p>
-
-                <h6 class="mt-3">Available Tables:</h6>
-                <ul>
-                    <li><strong>Roster:</strong> All 411 students with class, teacher, grade, and team assignments</li>
-                    <li><strong>Class Info:</strong> Summary of all 19 classes (10 Kitsko, 9 Staub)</li>
-                    <li><strong>Grade Rules:</strong> Minimum and maximum daily minutes by grade (K-5)</li>
-                    <li><strong>Daily Logs:</strong> Every student's reading minutes for every date uploaded</li>
-                    <li><strong>Reader Cumulative:</strong> Each student's cumulative donations, sponsors, and total minutes</li>
-                    <li><strong>Upload History:</strong> Complete audit trail of all file uploads with timestamps</li>
-                    <li><strong>Q7: Complete Log (Query):</strong> Denormalized export combining all data - perfect for Excel analysis</li>
-                </ul>
-
-                <h6 class="mt-3">Table Features:</h6>
-                <ul>
-                    <li><strong>Sortable Columns:</strong> Click any column header to sort (click again to reverse)</li>
-                    <li><strong>Copy to Clipboard:</strong> Copy entire table for pasting into Excel/Google Sheets</li>
-                    <li><strong>Export CSV:</strong> Download table as CSV file</li>
-                    <li><strong>Row Count:</strong> See total number of records in each table</li>
-                </ul>
-
-                <div class="alert alert-info">
-                    <strong><i class="bi bi-info-circle"></i> Note:</strong> Q7 Complete Log appears in both Reports and Tables sections. Use it from Tables when you want to browse all data, or from Reports when you want to filter by specific dates.
-                </div>
             </div>
         </div>
 
@@ -392,6 +404,58 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tabs -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-grid-3x3"></i> Dashboard Tabs</h4>
+            </div>
+            <div class="card-body">
+                <h5>School Tab</h5>
+                <p>School-wide overview showing:</p>
+                <ul>
+                    <li>6-metric headline banner (Campaign Day, Fundraising, Minutes, Sponsors, Avg. Participation, Goal Met)</li>
+                    <li>Team competition (head-to-head comparison)</li>
+                    <li>Top performers (students and classes)</li>
+                    <li>Participation breakdown</li>
+                </ul>
+
+                <h5 class="mt-3">Teams Tab</h5>
+                <p>Detailed team competition metrics:</p>
+                <ul>
+                    <li>4-column layout (2 rows × 4 cards per team)</li>
+                    <li>Fundraising leaders, top classes, reading leaders for each team</li>
+                    <li>Colored oval highlights around winning values</li>
+                    <li>Comparison table showing all metrics side-by-side</li>
+                </ul>
+
+                <h5 class="mt-3">Grade Level Tab</h5>
+                <p>Grade-by-grade and class-by-class breakdown:</p>
+                <ul>
+                    <li>Filter by grade (K, 1, 2, 3, 4, 5, or All Grades)</li>
+                    <li>Grade-level cards showing total metrics per grade</li>
+                    <li>Class detail table (sortable by any column)</li>
+                    <li>Gold highlights for school-wide winners, silver for grade-level winners</li>
+                    <li>Team badges showing which team each class belongs to</li>
+                </ul>
+
+                <h5 class="mt-3">Students Tab (NEW)</h5>
+                <p>Individual student performance viewer:</p>
+                <ul>
+                    <li>Master-detail pattern: click any student to see daily breakdown</li>
+                    <li>All 411 students in sortable table</li>
+                    <li>Filters: Grade, Team, Date range</li>
+                    <li>Columns: Name, Grade, Team, Class, Fundraising, Reading, Sponsors, Participation</li>
+                    <li>Gold highlights for school-wide top performers, silver for grade-level leaders</li>
+                    <li>Detail view shows: Daily reading log, goal achievement, sponsor info, totals</li>
+                </ul>
+
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-info-circle"></i> Filter Persistence:</strong>
+                    Date, team, and grade filters persist as you navigate between tabs - your selections are remembered!
                 </div>
             </div>
         </div>
