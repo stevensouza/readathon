@@ -557,8 +557,7 @@
             <!-- Minutes Read -->
             <div class="col headline-metric">
                 <div class="headline-label">
-                    📚 Minutes Read
-                    <span class="filter-indicator" title="Honors date filter">◐</span>
+                    📚 Minutes Read{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}
                 </div>
                 <div class="headline-value">{{ '{:,.0f}'.format(banner.total_hours) }} hours</div>
                 <div class="headline-subtitle">{{ banner.total_students }} students</div>
@@ -574,8 +573,7 @@
             <!-- Avg. Participation -->
             <div class="col headline-metric">
                 <div class="headline-label">
-                    👥 Avg. Participation (With Color)
-                    <span class="filter-indicator" title="Honors date filter">◐</span>
+                    👥 Avg. Participation{% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Average daily participation through {{ date_filter }}">◐</span>{% endif %}
                 </div>
                 <div class="headline-value">{{ '%.1f'|format(banner.avg_participation_pct) }}%</div>
                 <div class="headline-subtitle">{{ banner.total_students }} students</div>
@@ -584,8 +582,7 @@
             <!-- Goal Met -->
             <div class="col headline-metric">
                 <div class="headline-label">
-                    🎯 Goal Met (≥1 Day)
-                    <span class="filter-indicator" title="Honors date filter">◐</span>
+                    🎯 Goal Met (≥1 Day){% if date_filter != 'all' %} <span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Cumulative through {{ date_filter }}">◐</span>{% endif %}
                 </div>
                 <div class="headline-value">{{ '%.1f'|format(banner.goal_met_pct) }}%</div>
                 <div class="headline-subtitle">{{ banner.total_students }} students</div>
@@ -693,12 +690,12 @@
                         <th onclick="sortTable(4)">Teacher</th>
                         <th onclick="sortTable(5)" class="text-end">Fundraising 💰</th>
                         <th onclick="sortTable(6)" class="text-end">Sponsors 🎁</th>
-                        <th onclick="sortTable(7)" class="text-end">Minutes Capped 📚◐</th>
-                        <th onclick="sortTable(8)" class="text-end">Minutes Uncapped 📚</th>
-                        <th onclick="sortTable(9)" class="text-end">Days Partic.◐</th>
-                        <th onclick="sortTable(10)" class="text-end">Partic. % ◐</th>
-                        <th onclick="sortTable(11)" class="text-end">Days Goal ◐</th>
-                        <th onclick="sortTable(12)" class="text-end">Goal % ◐</th>
+                        <th onclick="sortTable(7)" class="text-end">Minutes Capped 📚{% if date_filter != 'all' %}◐{% endif %}</th>
+                        <th onclick="sortTable(8)" class="text-end">Minutes Uncapped 📚{% if date_filter != 'all' %}◐{% endif %}</th>
+                        <th onclick="sortTable(9)" class="text-end">Days Partic.{% if date_filter != 'all' %}◐{% endif %}</th>
+                        <th onclick="sortTable(10)" class="text-end">Partic. % {% if date_filter != 'all' %}◐{% endif %}</th>
+                        <th onclick="sortTable(11)" class="text-end">Days Goal {% if date_filter != 'all' %}◐{% endif %}</th>
+                        <th onclick="sortTable(12)" class="text-end">Goal % {% if date_filter != 'all' %}◐{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -717,6 +714,8 @@
                             <span class="winning-value winning-value-school">${{ '{:,.0f}'.format(student.fundraising) }}</span>
                             {% elif highlight_mode == 'silver' and student.fundraising == filtered_winners.get('fundraising') %}
                             <span class="winning-value winning-value-grade">${{ '{:,.0f}'.format(student.fundraising) }}</span>
+                            {% elif grade_winners and student.fundraising == grade_winners.get(student.grade_level, {}).get('fundraising') %}
+                            <span class="winning-value winning-value-grade">${{ '{:,.0f}'.format(student.fundraising) }}</span>
                             {% else %}
                             ${{ '{:,.0f}'.format(student.fundraising) }}
                             {% endif %}
@@ -725,6 +724,8 @@
                             {% if student.sponsors == school_winners.get('sponsors') %}
                             <span class="winning-value winning-value-school">{{ student.sponsors }}</span>
                             {% elif highlight_mode == 'silver' and student.sponsors == filtered_winners.get('sponsors') %}
+                            <span class="winning-value winning-value-grade">{{ student.sponsors }}</span>
+                            {% elif grade_winners and student.sponsors == grade_winners.get(student.grade_level, {}).get('sponsors') %}
                             <span class="winning-value winning-value-grade">{{ student.sponsors }}</span>
                             {% else %}
                             {{ student.sponsors }}
@@ -735,6 +736,8 @@
                             <span class="winning-value winning-value-school">{{ '{:,.0f}'.format(student.minutes_capped) }}</span> min
                             {% elif highlight_mode == 'silver' and student.minutes_capped == filtered_winners.get('minutes_capped') %}
                             <span class="winning-value winning-value-grade">{{ '{:,.0f}'.format(student.minutes_capped) }}</span> min
+                            {% elif grade_winners and student.minutes_capped == grade_winners.get(student.grade_level, {}).get('minutes_capped') %}
+                            <span class="winning-value winning-value-grade">{{ '{:,.0f}'.format(student.minutes_capped) }}</span> min
                             {% else %}
                             {{ '{:,.0f}'.format(student.minutes_capped) }} min
                             {% endif %}
@@ -743,6 +746,8 @@
                             {% if student.minutes_uncapped == school_winners.get('minutes_uncapped') %}
                             <span class="winning-value winning-value-school">{{ '{:,.0f}'.format(student.minutes_uncapped) }}</span> min
                             {% elif highlight_mode == 'silver' and student.minutes_uncapped == filtered_winners.get('minutes_uncapped') %}
+                            <span class="winning-value winning-value-grade">{{ '{:,.0f}'.format(student.minutes_uncapped) }}</span> min
+                            {% elif grade_winners and student.minutes_uncapped == grade_winners.get(student.grade_level, {}).get('minutes_uncapped') %}
                             <span class="winning-value winning-value-grade">{{ '{:,.0f}'.format(student.minutes_uncapped) }}</span> min
                             {% else %}
                             {{ '{:,.0f}'.format(student.minutes_uncapped) }} min
@@ -753,6 +758,8 @@
                             <span class="winning-value winning-value-school">{{ student.days_participated }}</span>/{{ banner.days_in_filter }}
                             {% elif highlight_mode == 'silver' and student.days_participated == filtered_winners.get('days_participated') %}
                             <span class="winning-value winning-value-grade">{{ student.days_participated }}</span>/{{ banner.days_in_filter }}
+                            {% elif grade_winners and student.days_participated == grade_winners.get(student.grade_level, {}).get('days_participated') %}
+                            <span class="winning-value winning-value-grade">{{ student.days_participated }}</span>/{{ banner.days_in_filter }}
                             {% else %}
                             {{ student.days_participated }}/{{ banner.days_in_filter }}
                             {% endif %}
@@ -761,6 +768,8 @@
                             {% if student.participation_pct == school_winners.get('participation_pct') %}
                             <span class="winning-value winning-value-school">{{ '%.1f'|format(student.participation_pct) }}</span>%
                             {% elif highlight_mode == 'silver' and student.participation_pct == filtered_winners.get('participation_pct') %}
+                            <span class="winning-value winning-value-grade">{{ '%.1f'|format(student.participation_pct) }}</span>%
+                            {% elif grade_winners and student.participation_pct == grade_winners.get(student.grade_level, {}).get('participation_pct') %}
                             <span class="winning-value winning-value-grade">{{ '%.1f'|format(student.participation_pct) }}</span>%
                             {% else %}
                             {{ '%.1f'|format(student.participation_pct) }}%
@@ -771,6 +780,8 @@
                             <span class="winning-value winning-value-school">{{ student.days_met_goal }}</span>
                             {% elif highlight_mode == 'silver' and student.days_met_goal == filtered_winners.get('days_met_goal') %}
                             <span class="winning-value winning-value-grade">{{ student.days_met_goal }}</span>
+                            {% elif grade_winners and student.days_met_goal == grade_winners.get(student.grade_level, {}).get('days_met_goal') %}
+                            <span class="winning-value winning-value-grade">{{ student.days_met_goal }}</span>
                             {% else %}
                             {{ student.days_met_goal }}
                             {% endif %}
@@ -779,6 +790,8 @@
                             {% if student.goal_met_pct == school_winners.get('goal_met_pct') %}
                             <span class="winning-value winning-value-school">{{ '%.1f'|format(student.goal_met_pct) }}</span>%
                             {% elif highlight_mode == 'silver' and student.goal_met_pct == filtered_winners.get('goal_met_pct') %}
+                            <span class="winning-value winning-value-grade">{{ '%.1f'|format(student.goal_met_pct) }}</span>%
+                            {% elif grade_winners and student.goal_met_pct == grade_winners.get(student.grade_level, {}).get('goal_met_pct') %}
                             <span class="winning-value winning-value-grade">{{ '%.1f'|format(student.goal_met_pct) }}</span>%
                             {% else %}
                             {{ '%.1f'|format(student.goal_met_pct) }}%
@@ -1311,41 +1324,48 @@
 
     // Update visible count on page load
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Bootstrap tooltips for filter indicators
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
         const visibleCount = document.querySelectorAll('#studentsTable tbody tr').length;
         document.getElementById('visibleCount').textContent = visibleCount;
 
         const urlParams = new URLSearchParams(window.location.search);
 
-        // Apply saved date filter from sessionStorage if no URL parameter exists
+        // Get all URL parameters
         const urlDate = urlParams.get('date');
-        const savedDateFilter = sessionStorage.getItem('readathonDateFilter');
+        const urlGrade = urlParams.get('grade');
+        const urlTeam = urlParams.get('team');
 
-        // If no URL parameter but we have a saved date filter, apply it
-        if (!urlDate && savedDateFilter && savedDateFilter !== 'all') {
-            const grade = document.querySelector('.grade-filter-btn.active').dataset.grade;
-            const team = document.getElementById('teamFilter').value;
-            window.location.href = `/students?date=${savedDateFilter}&grade=${grade}&team=${team}`;
+        // Get all saved filters from sessionStorage
+        const savedDateFilter = sessionStorage.getItem('readathonDateFilter');
+        const savedGradeFilter = sessionStorage.getItem('readathonGradeFilter');
+        const savedTeamFilter = sessionStorage.getItem('readathonTeamFilter');
+
+        // Check if we need to redirect to apply saved filters
+        const needsDateRedirect = !urlDate && savedDateFilter && savedDateFilter !== 'all';
+        const needsGradeRedirect = !urlGrade && savedGradeFilter && savedGradeFilter !== 'all';
+        const needsTeamRedirect = !urlTeam && savedTeamFilter && savedTeamFilter !== 'all';
+
+        // If any filter needs to be restored, redirect with ALL saved filters
+        if (needsDateRedirect || needsGradeRedirect || needsTeamRedirect) {
+            const finalDate = urlDate || savedDateFilter || 'all';
+            const finalGrade = urlGrade || savedGradeFilter || 'all';
+            const finalTeam = urlTeam || savedTeamFilter || 'all';
+            window.location.href = `/students?date=${finalDate}&grade=${finalGrade}&team=${finalTeam}`;
             return; // Exit early since we're redirecting
         }
-        // If we have a URL parameter, save it to sessionStorage
-        else if (urlDate) {
+
+        // Save any URL parameters to sessionStorage for next time
+        if (urlDate) {
             sessionStorage.setItem('readathonDateFilter', urlDate);
         }
-
-        // Apply saved grade filter from sessionStorage if no URL parameter exists
-        const urlGrade = urlParams.get('grade');
-        const savedGradeFilter = sessionStorage.getItem('readathonGradeFilter');
-
-        // If no URL parameter but we have a saved filter, apply it
-        if (!urlGrade && savedGradeFilter && savedGradeFilter !== 'all') {
-            const date = document.getElementById('dateFilter').value;
-            const team = document.getElementById('teamFilter').value;
-            window.location.href = `/students?date=${date}&grade=${savedGradeFilter}&team=${team}`;
-            return; // Exit early since we're redirecting
-        }
-        // If we have a URL parameter, save it to sessionStorage
-        else if (urlGrade) {
+        if (urlGrade) {
             sessionStorage.setItem('readathonGradeFilter', urlGrade);
+        }
+        if (urlTeam) {
+            sessionStorage.setItem('readathonTeamFilter', urlTeam);
         }
 
         // Set up name search filter

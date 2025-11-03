@@ -1685,10 +1685,15 @@ def students_tab():
     # Get school-wide winners (gold highlights)
     school_winners = db.get_students_school_winners(date_filter)
 
-    # Get filtered winners (silver highlights) - only if filters applied
+    # Get filtered winners (silver highlights)
     filtered_winners = {}
+    grade_winners = {}
     if grade_filter != 'all' or team_filter != 'all':
+        # Specific filter applied - use filtered winners
         filtered_winners = db.get_students_filtered_winners(date_filter, grade_filter, team_filter)
+    else:
+        # All grades shown - get grade-level winners for silver highlighting
+        grade_winners = db.get_students_grade_winners(date_filter)
 
     # === BANNER SETUP ===
 
@@ -1775,6 +1780,7 @@ def students_tab():
                          banner=banner,
                          school_winners=school_winners,
                          filtered_winners=filtered_winners,
+                         grade_winners=grade_winners,
                          highlight_mode=highlight_mode,
                          date_filter=date_filter,
                          grade_filter=grade_filter,

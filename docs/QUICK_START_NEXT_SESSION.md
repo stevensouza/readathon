@@ -1,513 +1,292 @@
-# Quick Start Guide - Students Page Production Implementation
+# Quick Start Guide - Next Session
 
-**Session Date:** 2025-11-01
-**Status:** HTML prototype complete and approved, ready for production implementation
-**Next Task:** Begin Phase 1 of production implementation (Database queries)
+**Last Updated:** 2025-11-03
+**Status:** Students Page Complete (v2026.5.0) - Ready for Next Feature
+**Current Version:** v2026.5.0
 
 ---
 
 ## 📋 RESTART PROMPT (Copy/Paste This)
 
 ```
-Continue work on Students Page production implementation.
+Continue work on Read-a-Thon application.
 
 **Current Status:**
-- ✅ ASCII prototypes approved (master view + detail view)
-- ✅ HTML prototype complete: /prototypes/students_tab.html
-- ✅ All refinements applied based on user feedback
-- ✅ Design documentation complete: docs/STUDENTS_PAGE_DESIGN.md
-- ✅ Production implementation plan complete
+- ✅ Students Page complete with all fixes and regression tests (v2026.5.0)
+- ✅ 235 tests passing (50 Students page tests)
+- ✅ All 4 dashboard tabs fully functional: School, Teams, Grade Level, Students
+- ✅ Filter persistence working across all pages (date, grade, team)
+- ✅ Gold/silver highlighting working correctly across all pages
 
-**Next Step:** Begin Phase 1 - Database Queries
+**Completed in v2026.5.0:**
+- Students page production implementation complete
+- Half-circle indicators (◐) now conditional on date filter
+- Banner title corrected ("Avg. Participation" not "With Color")
+- Grade-level silver highlighting for all-grades view
+- Grade filter persistence bug fixed (all filters read simultaneously)
+- 2 comprehensive regression tests added (student21 detail + complete table)
 
-Follow the production implementation plan in docs/STUDENTS_PAGE_DESIGN.md starting at line 752.
+**Potential Next Tasks:**
+1. Add team filter to Grade Level page (enhancement)
+2. Add name search to Students table (enhancement)
+3. New features or reports as needed
 
-**Key Files:**
-- Production plan: docs/STUDENTS_PAGE_DESIGN.md (lines 752-1549)
-- HTML prototype: prototypes/students_tab.html
-- Design decisions: docs/STUDENTS_PAGE_DESIGN.md (lines 246-627)
+Refer to:
 - Universal rules: RULES.md
 - UI patterns: UI_PATTERNS.md
-
-**Implementation Phases:**
-1. Phase 1: Database Queries (queries.py) - 5 new queries needed
-2. Phase 2: Flask Routes (app.py) - 2 new routes (/students, /student/<name>)
-3. Phase 3: Database Methods (database.py) - 5 new methods
-4. Phase 4: Template (templates/students.html) - Convert prototype to Jinja2
-5. Phase 5: Navigation (templates/base.html) - Add Students link
-6. Phase 6: Testing (test_students_page.py) - 40+ automated tests
-7. Phase 7: Pre-Commit Checklist - Verify all requirements met
-
-**Estimated Time:** 3.5-5.5 hours (can split into 2 sessions)
-
-**Testing Discipline:** All tests must pass before commit (see RULES.md lines 228-320)
+- Version history: CHANGELOG.md
 ```
 
 ---
 
-## ✅ RECENTLY COMPLETED (2025-11-01)
+## ✅ JUST COMPLETED (v2026.5.0 - 2025-11-03)
 
-### Students Page HTML Prototype
-Successfully created and refined HTML prototype based on approved ASCII designs.
+### Students Page Final Fixes and Regression Tests
 
-**File:** `/prototypes/students_tab.html`
+**All critical bugs fixed:**
+1. **Half-circle indicators (◐)** - Now only appear when single day selected
+   - Added conditionals in banner (3 metrics) and table headers (6 columns)
+   - Implemented Bootstrap tooltips for context
+2. **Banner title** - Removed "(With Color)" from Avg. Participation
+   - Color war bonuses don't apply at student level
+3. **Participation calculation** - Simplified from nested aggregates
+   - Now: `COUNT(*) / (students × days) × 100`
+4. **Grade-level silver highlighting** - Fixed for all-grades view
+   - Created `get_students_grade_winners()` method
+   - Each grade's top performers get silver highlights
+5. **Grade filter persistence** - Fixed critical bug
+   - Rewrote filter restoration to read ALL filters from sessionStorage simultaneously
+   - Prevents grade filter from being lost during navigation
 
-**Features Implemented:**
-- ✅ All 13 columns: Student Name, Grade, Team, Class, Teacher, Fundraising, Sponsors, Minutes (Capped/Uncapped), Days Participated, Participation %, Days Met Goal, Goal Met %
-- ✅ Grade filter buttons: "Kindergarten", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5"
-- ✅ Team filter dropdown: "All Teams", team names
-- ✅ Date filter: Honors ◐ metrics (Minutes, Participation, Goals)
-- ✅ Combined filters: Grade + Team + Date work together
-- ✅ Banner: 6 metrics matching School/Teams/Grade pages
-- ✅ Gold highlighting: School-wide winners
-- ✅ Silver highlighting: Grade/team winners when filters active
-- ✅ Team badges: Proper oval/pill shape (border-radius: 1.5rem)
-- ✅ Legend section: Collapsible, combines legend + student count info
-- ✅ Student detail modal: Daily breakdown with goal status
-- ✅ Copy and Export CSV buttons
-- ✅ Header layout: Title left, Filter Period center, Data Info right
-- ✅ No pagination: Shows all students
+**Regression tests added:**
+1. **student21 detail modal** - Locks in all 20+ values for student21
+2. **Complete table regression** - Verifies all 7 students' data and gold/silver highlights
 
-**Refinements Applied:**
-1. Filter labels match Grade Level page ("Kindergarten" not "K")
-2. Team badges more oval (1.5rem border-radius, not 0.8rem)
-3. Legend combined with student count, collapsible by default
-4. Silver highlighting implemented for filtered groups
-5. All students shown (no pagination controls)
-6. Header layout consistent with other pages
+**Test Results:**
+- Students page: 50/50 tests passing ✅
+- Full suite: 235 tests passing ✅
 
-**Design Decisions Documented:**
-- 12 major design decisions documented in STUDENTS_PAGE_DESIGN.md
-- Filter approach: A2 (grade buttons + team dropdown on same row)
-- All data honors BOTH date filter AND grade/team filters
-- Banner recalculates based on filters in production
-- Legend section collapsed by default
-- Sticky filters via sessionStorage
+**Files Modified:**
+- `templates/students.html` - Conditional rendering, filter restoration logic
+- `queries.py` - Simplified participation calculation
+- `database.py` - Added `get_students_grade_winners()` method
+- `app.py` - Call grade_winners method when viewing all grades
+- `test_students_page.py` - Added 2 comprehensive regression tests
 
 ---
 
-## 🚀 NEXT: PRODUCTION IMPLEMENTATION
+## 📊 PROJECT STATUS OVERVIEW
 
-### Phase 1: Database Queries (queries.py)
+### Completed Features (v2026.1.0 - v2026.5.0)
 
-**Estimated Time:** 60-90 minutes
+**v2026.5.0 (2025-11-03)** - Students Page Final Fixes
+- Fixed half-circle indicators (conditional rendering)
+- Fixed banner title (removed "With Color")
+- Fixed grade-level winner highlighting for all-grades view
+- Fixed grade filter persistence bug
+- Added 2 comprehensive regression tests
 
-**5 Queries to Implement:**
+**v2026.4.0 (2025-11-01)** - Development Process Improvements
+- Established testing discipline framework
+- Immediate documentation standards
+- Students page implementation roadmap
 
-#### Query 1: Get All Students Data (Master Table)
-**Function:** `STUDENTS_MASTER_QUERY`
+**v2026.3.0 (2025-10-25)** - Teams Page Redesign
+- 4-column layout (2 rows × 4 cards)
+- Team-specific colored borders and backgrounds
+- Filter indicators and global filter persistence
 
-**Purpose:** Get 13 columns for all students, filtered by date/grade/team
+**v2026.2.0** - Grade Level Page
+- Grade-specific cards and detail tables
+- Filter persistence with sessionStorage
+- Gold/silver winner highlighting
 
-**Returns:** List of dicts with:
-- student_name, grade_level, team_name, class_name, teacher_name
-- fundraising, sponsors
-- minutes_capped (max 120/day), minutes_uncapped
-- days_participated, participation_pct
-- days_met_goal, goal_met_pct
+**v2026.1.0** - Database Selection
+- Persistent database preference
+- Command-line arguments (--db sample/prod)
+- Launcher scripts
 
-**SQL Requirements:**
-- JOIN Roster, Reader_Cumulative, Daily_Logs
-- Filter by date range (BETWEEN ? AND ?)
-- Filter by grade (? = 'all' OR grade_level = ?)
-- Filter by team (? = 'all' OR team_name = ?)
-- Calculate capped minutes: SUM(CASE WHEN minutes_read > 120 THEN 120 ELSE minutes_read END)
-- Calculate participation %: (days_participated / total_days) * 100
-- Calculate goal met %: (days_met_goal / days_participated) * 100
+### Test Coverage
+- **Total tests:** 235 passing + 5 skipped
+- **Students page:** 50 tests
+- **Banner regression:** Tests for all pages
+- **Filter persistence:** Cross-page testing
 
-**Edge Cases:**
-- Students with no Daily_Logs (show 0s)
-- Students with $0 fundraising (show $0)
-- Date filter = 'all' (use full contest period Oct 10-19)
-
----
-
-#### Query 2: Get Student Detail (Daily Breakdown)
-**Function:** `STUDENT_DETAIL_SUMMARY_QUERY`, `STUDENT_DETAIL_DAILY_QUERY`
-
-**Purpose:** Get individual student summary + daily log entries
-
-**Returns:**
-- Summary metrics (same as master table row)
-- Daily log array with: date, actual_minutes, capped_minutes, exceeded_cap (0/1), met_goal (0/1), grade_goal
-
-**SQL Requirements:**
-- JOIN Roster, Reader_Cumulative, Daily_Logs, Grade_Rules
-- WHERE student_name = ?
-- AND log_date BETWEEN ? AND ?
-- ORDER BY log_date
+### Documentation Status
+- ✅ RULES.md - Universal rules across all pages
+- ✅ UI_PATTERNS.md - Established UI component patterns
+- ✅ STUDENTS_PAGE_DESIGN.md - Complete design documentation
+- ✅ STUDENTS_PAGE_STATUS.md - Implementation status tracking
+- ✅ CHANGELOG.md - Version history
+- ✅ All feature documentation in docs/features/
 
 ---
 
-#### Query 3: Get School-Wide Winners (Gold Highlights)
-**Function:** `SCHOOL_WINNERS_QUERY`
+## 🎯 POTENTIAL NEXT TASKS
 
-**Purpose:** Find student names with max values for each metric (all 411 students)
+### Enhancement: Team Filter for Grade Level Page
+**Scope:** Large change affecting multiple components
 
-**Returns:** Dict with 8 keys (one per metric), each containing list of student names
+**What needs updating:**
+- Banner queries (add team_where parameter)
+- Grade cards (team filtering logic)
+- Detail table (team_where in query)
+- UI (add team dropdown matching Students page)
+- Tests (add team filter test cases)
 
-**Metrics:**
-- fundraising, sponsors, minutes_capped, minutes_uncapped
-- days_participated, participation_pct, days_met_goal, goal_met_pct
+**Estimated effort:** 4-6 hours
 
-**SQL Pattern (for each metric):**
-```sql
-WITH max_val AS (
-    SELECT MAX(metric_column) AS max_value
-    FROM ...
-)
-SELECT student_name
-FROM ...
-WHERE metric_column = (SELECT max_value FROM max_val)
+### Enhancement: Name Search for Students Table
+**Scope:** Small UI convenience feature
+
+**What to add:**
+- Search input field
+- JavaScript filter function (case-insensitive)
+- Clear/reset button
+- Visible count update
+
+**Estimated effort:** 30-60 minutes
+
+### New Features
+Check with user for priorities:
+- Additional reports or data views
+- Export functionality enhancements
+- New dashboard metrics
+- Data import improvements
+
+---
+
+## 📁 KEY FILE LOCATIONS
+
+### Core Application
+- `app.py` - Flask routes and API endpoints
+- `database.py` - Database operations and report generators
+- `queries.py` - SQL queries extracted for maintainability
+- `report_metadata.py` - Column metadata and analysis
+
+### Templates
+- `templates/base.html` - Base template with navigation
+- `templates/students.html` - Students page (812 lines)
+- `templates/grade_level.html` - Grade Level page
+- `templates/teams.html` - Teams page (4-column layout)
+- `templates/school.html` - School dashboard
+
+### Documentation
+- `CLAUDE.md` - Project guidance for Claude Code
+- `RULES.md` - Universal rules across all pages
+- `UI_PATTERNS.md` - UI component patterns
+- `docs/STUDENTS_PAGE_DESIGN.md` - Students page design doc
+- `docs/QUICK_START_NEXT_SESSION.md` - This file
+- `CHANGELOG.md` - Version history
+
+### Tests
+- `test_students_page.py` - 50 tests for Students page
+- `test_banner.py` - Banner regression tests
+- `test_audit_trail.py` - Audit trail functionality
+
+---
+
+## 🚨 CRITICAL PATTERNS TO REMEMBER
+
+### Filter Persistence (SessionStorage)
+```javascript
+// Save filters when user changes them
+sessionStorage.setItem('readathonDateFilter', date);
+sessionStorage.setItem('readathonGradeFilter', grade);
+sessionStorage.setItem('readathonTeamFilter', team);
+
+// Restore on page load (read ALL at once!)
+const savedDate = sessionStorage.getItem('readathonDateFilter');
+const savedGrade = sessionStorage.getItem('readathonGradeFilter');
+const savedTeam = sessionStorage.getItem('readathonTeamFilter');
 ```
 
-**Handles Ties:** Returns ALL students with max value (multiple if tied)
-
----
-
-#### Query 4: Get Banner Metrics (Students Page)
-**Function:** `STUDENTS_BANNER_METRICS_QUERY`
-
-**Purpose:** Calculate 6 banner metrics filtered by grade/team
-
-**Returns:** Dict with 6 metrics (same structure as School/Teams/Grade banners)
-
-**Metrics:**
-1. Campaign Day (no filtering - always full contest)
-2. Fundraising (SUM for filtered students, no date filter)
-3. Minutes Read (SUM capped for filtered students + date range)
-4. Sponsors (SUM for filtered students, no date filter)
-5. Avg. Participation (With Color) - filtered + date range
-6. Goal Met (≥1 Day) - filtered + date range
-
-**Filters Applied:**
-- Campaign Day: None (always shows "Day X of 10")
-- Fundraising: Grade + Team (no date)
-- Minutes Read: Grade + Team + Date
-- Sponsors: Grade + Team (no date)
-- Avg. Participation: Grade + Team + Date
-- Goal Met: Grade + Team + Date
-
----
-
-#### Query 5: Get Filtered Winners (Silver Highlights)
-**Function:** `FILTERED_WINNERS_QUERY`
-
-**Purpose:** Find winners within filtered group (e.g., just Kindergarten students)
-
-**Returns:** Dict with 8 keys, each containing list of student names
-
-**SQL Requirements:**
-- Same as Query 3, but add WHERE clauses for grade/team filters
-- Only called when grade_filter != 'all' OR team_filter != 'all'
-
----
-
-### Phase 2: Flask Routes (app.py)
-
-**Estimated Time:** 30 minutes
-
-#### Route 1: `/students`
-**Methods:** GET
-**Template:** `templates/students.html`
-
-**Implementation Steps:**
-1. Get filters from query params (with sessionStorage defaults)
-2. Save filters to session for stickiness
-3. Get database instance
-4. Call 5 database methods (students_data, banner, school_winners, filtered_winners, teams)
-5. Render template with all data
-
-**Error Handling:**
-- Try/except around database calls
-- User-friendly error page if database error
-- Log errors for debugging
-
----
-
-#### Route 2: `/student/<student_name>`
-**Methods:** GET
-**Returns:** JSON (for AJAX modal)
-
-**Implementation Steps:**
-1. Get student_name from URL
-2. Get date_filter from query params
-3. Call get_student_detail()
-4. Call get_school_winners()
-5. Return JSON with both
-
----
-
-### Phase 3: Database Methods (database.py)
-
-**Estimated Time:** 30-45 minutes
-
-**5 Methods to Add to ReadathonDB class:**
-
-1. `get_students_master_data(date_filter, grade_filter, team_filter)` → List[Dict]
-2. `get_student_detail(student_name, date_filter)` → Dict
-3. `get_students_banner_metrics(date_filter, grade_filter, team_filter)` → Dict
-4. `get_school_winners(date_filter)` → Dict
-5. `get_filtered_winners(date_filter, grade_filter, team_filter)` → Dict
-
-**Plus helper method:**
-- `get_team_names()` → List[str]
-
----
-
-### Phase 4: Template (templates/students.html)
-
-**Estimated Time:** 45-60 minutes
-
-**Implementation Steps:**
-1. Copy HTML structure from `/prototypes/students_tab.html`
-2. Replace static data with Jinja2 templates
-3. Add sessionStorage JavaScript for filter stickiness
-4. Add AJAX for student detail modal
-5. Match header/footer from grade_level.html
-6. Verify CSS classes from UI_PATTERNS.md
-
-**Key Jinja2 Patterns:**
-- Banner: `{{ banner.fundraising | format_currency }}`
-- Student loop: `{% for student in students %}`
-- Gold highlighting: `{% if student.name in school_winners.fundraising %}`
-- Silver highlighting: `{% elif student.name in filtered_winners.fundraising %}`
-- Team badges: `team-badge-{{ student.team|lower }}`
-
----
-
-### Phase 5: Navigation (templates/base.html)
-
-**Estimated Time:** 5 minutes
-
-**Add Students Link:**
-```html
-<li class="nav-item">
-    <a class="nav-link {% if request.endpoint == 'students_page' %}active{% endif %}"
-       href="{{ url_for('students_page') }}">
-        👨‍🎓 Students
-    </a>
-</li>
-```
-
-**Position:** After "Grade Level", before "Reports"
-
----
-
-### Phase 6: Testing (test_students_page.py)
-
-**Estimated Time:** 60-90 minutes
-
-**Test File Structure:**
+### Winner Highlighting Logic
 ```python
-import pytest
-from app import app
-from database import ReadathonDB
+# Backend calculates:
+school_winners = db.get_students_school_winners(date_filter)  # Gold
+filtered_winners = db.get_students_filtered_winners(...)  # Silver
+grade_winners = db.get_students_grade_winners(date_filter)  # Silver for all-grades
 
-@pytest.fixture
-def client():
-    """Test client with sample database"""
-    # ... see production plan for full code
-
-@pytest.fixture
-def sample_db():
-    """Sample database instance"""
-    return ReadathonDB('readathon_sample.db')
+# Frontend applies (gold takes precedence):
+if value == school_winners.get('metric'):
+    GOLD (school-wide winner)
+elif value == filtered_winners.get('metric') or value == grade_winners.get(grade, {}).get('metric'):
+    SILVER (filtered or grade-level winner)
+else:
+    PLAIN
 ```
 
-**40+ Tests to Implement:**
+### Half-Circle Indicators
+```jinja2
+{# Only show when single day selected, not full contest #}
+{% if date_filter != 'all' %}
+    <span class="filter-indicator" data-bs-toggle="tooltip" title="Cumulative through {{ date_filter }}">◐</span>
+{% endif %}
+```
 
-**1. Page Load Tests (2 tests)**
-- test_page_loads_successfully
-- test_no_error_messages
+### Team Colors (Alphabetical Order)
+```python
+# Team 1 (alphabetically first) = blue (#1e3a5f)
+# Team 2 (alphabetically second) = yellow (#f59e0b)
+team_index_map = {}
+for idx, team_name in enumerate(sorted(team_names)):
+    team_index_map[team_name] = idx
+```
 
-**2. Data Format Tests (2 tests)**
-- test_percentage_formats
-- test_currency_formats
+---
 
-**3. Sample Data Integrity Tests (3 tests)**
-- test_sample_data_integrity
-- test_banner_metrics_correct
-- test_all_13_columns_present
+## 📊 DATABASE NOTES
 
-**4. UI Element Tests (6 tests)**
-- test_team_badges_present
-- test_winning_value_highlights
-- test_headline_banner
-- test_filter_buttons_present
-- test_team_filter_dropdown_present
-- test_legend_section_present
+### Databases
+- `readathon_prod.db` - Production (real student data)
+- `readathon_sample.db` - Sample (fictitious data for testing, 7 students)
 
-**5. Filter Tests (4 tests)**
-- test_grade_filter_works
-- test_team_filter_works
-- test_date_filter_works
-- test_combined_filters_work
+### Key Tables
+- `Roster` - 411 students (prod) or 7 students (sample)
+- `Daily_Logs` - Day-by-day reading minutes
+- `Reader_Cumulative` - Aggregated stats (fundraising, sponsors)
+- `Class_Info` - Teacher assignments, grade levels
+- `Grade_Rules` - Grade-specific reading goals
 
-**6. Student Detail Modal Tests (2 tests)**
-- test_student_detail_route_works
-- test_student_detail_has_daily_breakdown
+### Important Rules
+- Reading minutes capped at 120 per day for contest calculations
+- Database stores both capped and uncapped values
+- Sanctioned dates: Oct 10-15, 2025 (6-day window)
+- Two-team competition (alphabetical order determines colors)
 
-**7. Export Function Tests (2 tests)**
-- test_copy_button_present
-- test_export_csv_button_present
+---
 
-**8. Regression Tests (3 tests)**
-- test_no_pagination_controls
-- test_banner_honors_filters
-- test_team_badge_styling
+## 🧪 TESTING BEFORE COMMITTING
 
-**Test Execution:**
+**Automated tests:**
 ```bash
-# Run Students page tests
-pytest test_students_page.py -v
-
-# Run all tests
-pytest -v
-
-# With coverage
-pytest test_students_page.py --cov=app --cov=database --cov-report=html
+pytest test_students_page.py -v  # 50 tests
+pytest --tb=short -q             # All 235 tests
 ```
 
-**MANDATORY:** All tests must pass before commit
+**Manual browser testing:**
+```bash
+python3 app.py --db sample
+open http://127.0.0.1:5001/students
+```
+
+**Checklist:**
+- [ ] All automated tests pass
+- [ ] Page loads without errors
+- [ ] Filters work (grade, team, date)
+- [ ] Banner updates correctly
+- [ ] Gold and silver highlights appear
+- [ ] Student detail modal works
+- [ ] Filter persistence across tabs
+- [ ] Half-circles only on single-day views
 
 ---
 
-### Phase 7: Pre-Commit Checklist
+## 💡 TIPS FOR NEXT SESSION
 
-**BEFORE creating commit, verify ALL 26 items:**
-
-**Backend (7 items)**
-- [ ] All queries in `queries.py` tested with sample database
-- [ ] All database methods in `database.py` tested and working
-- [ ] Flask route `/students` loads successfully
-- [ ] Flask route `/student/<name>` returns correct JSON
-- [ ] No SQL injection vulnerabilities
-- [ ] No XSS vulnerabilities
-- [ ] Error handling works correctly
-
-**Frontend (10 items)**
-- [ ] Template renders without errors
-- [ ] All 13 columns display correct data
-- [ ] Grade filter works (buttons filter table)
-- [ ] Team filter works (dropdown filters table)
-- [ ] Date filter works (affects ◐ metrics)
-- [ ] Combined filters work (grade + team + date)
-- [ ] Gold highlighting appears for school winners
-- [ ] Silver highlighting appears when filters active
-- [ ] Team badges use proper oval styling (1.5rem border-radius)
-- [ ] Legend section is collapsible
-
-**Features (5 items)**
-- [ ] Banner shows correct 6 metrics
-- [ ] Banner recalculates when filters change
-- [ ] Student detail modal opens on click
-- [ ] Daily breakdown shows correct data
-- [ ] Copy and Export CSV buttons work
-
-**Testing (4 items)**
-- [ ] All 40+ tests pass (pytest test_students_page.py -v)
-- [ ] No error messages on page
-- [ ] No console errors in browser
-- [ ] Page matches prototype visually
-
-**Only after ALL 26 items checked:**
-- Create commit with descriptive message
-- Include testing summary
-- Update STUDENTS_PAGE_DESIGN.md status to "Production Complete"
-
----
-
-## 📁 KEY FILES TO REFERENCE
-
-**Production Plan:**
-- `/docs/STUDENTS_PAGE_DESIGN.md` (lines 752-1549) - Complete implementation plan
-
-**Prototype:**
-- `/prototypes/students_tab.html` - HTML structure to copy
-
-**Design Decisions:**
-- `/docs/STUDENTS_PAGE_DESIGN.md` (lines 246-627) - 12 documented decisions
-
-**Rules & Patterns:**
-- `/RULES.md` - Universal app rules (data sources, colors, calculations)
-- `/UI_PATTERNS.md` - Established UI patterns (components, styling)
-
-**Reference Pages:**
-- `/templates/school.html` - Banner pattern
-- `/templates/teams.html` - Filter pattern
-- `/templates/grade_level.html` - Combined pattern (closest match)
-
-**Backend:**
-- `/app.py` - Flask routes (add new routes here)
-- `/database.py` - ReadathonDB class (add new methods)
-- `/queries.py` - SQL queries (add 5 new queries)
-
-**Testing:**
-- `/test_school_page.py` - Test pattern reference
-- `/test_teams_page.py` - Test pattern reference
-- `/test_grade_level_page.py` - Test pattern reference
-
----
-
-## 📊 ESTIMATED TIMELINE
-
-**Session 1 (Backend): 2-2.5 hours**
-- Phase 1: Queries (60-90 min)
-- Phase 2: Flask routes (30 min)
-- Phase 3: Database methods (30-45 min)
-
-**Session 2 (Frontend + Testing): 2-3 hours**
-- Phase 4: Template (45-60 min)
-- Phase 5: Navigation (5 min)
-- Phase 6: Testing (60-90 min)
-- Phase 7: Pre-commit checklist (15-30 min)
-
-**Total: 3.5-5.5 hours**
-
----
-
-## ✅ SUCCESS CRITERIA
-
-**Students page is "done" when:**
-
-1. ✅ Page loads successfully in both sample and prod databases
-2. ✅ All 13 columns display accurate data
-3. ✅ All 3 filters work (date, grade, team) independently and combined
-4. ✅ Banner shows correct 6 metrics and recalculates with filters
-5. ✅ Gold/silver highlighting follows RULES.md exactly
-6. ✅ Team badges use proper oval styling (1.5rem border-radius)
-7. ✅ Student detail modal shows daily breakdown
-8. ✅ All 40+ automated tests pass
-9. ✅ Page matches approved HTML prototype visually
-10. ✅ No security vulnerabilities (SQL injection, XSS)
-11. ✅ Filters persist via sessionStorage (sticky across pages)
-12. ✅ Legend section is collapsible (collapsed by default)
-13. ✅ Copy and Export CSV work for filtered data
-14. ✅ User can successfully use page without errors or confusion
-
----
-
-## 🎯 CRITICAL REMINDERS
-
-**Testing Discipline (from RULES.md):**
-- Create tests DURING implementation, not after
-- Run tests BEFORE claiming "it's working"
-- Manual browser testing is MANDATORY
-- All tests must pass before commit
-
-**Documentation Discipline (from CLAUDE.md):**
-- Document decisions IMMEDIATELY when made
-- Update "Last Updated" dates
-- Save context before conversation compaction
-
-**Security Review:**
-- Use parameterized queries (ALWAYS)
-- No string formatting in SQL (NEVER)
-- Verify Jinja2 auto-escaping (CHECK)
-- No unsafe HTML rendering (AVOID `| safe`)
-
----
-
-**Last Updated:** 2025-11-01
-**Ready for:** Phase 1 - Database Queries (queries.py)
+1. **Before starting new work:** Read RULES.md and UI_PATTERNS.md
+2. **When implementing features:** Follow testing discipline (CLAUDE.md lines 228-320)
+3. **When making decisions:** Document immediately in appropriate files
+4. **When uncertain:** Ask user for clarification
+5. **Before committing:** Run full test suite and manual browser verification

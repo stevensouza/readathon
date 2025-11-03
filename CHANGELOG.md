@@ -5,6 +5,84 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.5.0] - 2025-11-03
+
+### Students Page - Final Fixes and Completion
+
+**Major Feature: Students Page Complete**
+- All 17 critical bugs fixed from initial production deployment
+- 50 automated tests passing (100% pass rate)
+- 235 total tests across entire application
+- 2 comprehensive regression tests added to lock in expected behavior
+- Production-ready with full filter persistence and gold/silver highlighting
+
+**Critical Bug Fixes:**
+
+1. **Half-circle indicators (◐)** - Conditional rendering based on date filter
+   - Now only appear when single day selected, NOT full contest
+   - Added to 3 banner metrics and 6 table headers
+   - Implemented Bootstrap tooltips with cumulative date context
+   - Fixed template logic in `templates/students.html` lines 560-698
+
+2. **Banner title correction** - Removed "(With Color)" from Avg. Participation
+   - Color war bonuses don't apply at individual student level
+   - Matches actual calculation (no color bonus in student-level participation)
+   - Fixed in `templates/students.html` line 576
+
+3. **Participation calculation** - Simplified from broken nested aggregates
+   - Before: `AVG(COUNT(...))` (SQL error: misuse of aggregate function)
+   - After: `COUNT(*) / (students × days) × 100` (direct calculation)
+   - User confirmed both methods mathematically equivalent
+   - Fixed in `queries.py` lines 1796-1804
+
+4. **Grade-level silver highlighting** - Fixed for all-grades view
+   - Created `get_students_grade_winners()` method in `database.py`
+   - Calculates max values per grade for all 8 metrics
+   - Each grade's top performers now get silver highlights when viewing all grades
+   - Gold (school-wide) always takes precedence over silver (grade-level)
+   - Fixed highlighting logic for all 8 table columns
+   - Added in `database.py` lines 1200-1327, `app.py` lines 1688-1696, 1783
+
+5. **Grade filter persistence bug** - Critical fix for filter restoration
+   - **Problem:** Grade filter was lost when navigating between pages
+   - **Root cause:** Code read date/team from DOM *before* sessionStorage populated them
+   - **Solution:** Read ALL filters from sessionStorage simultaneously
+   - Check if ANY filter needs restoration, then redirect with complete URL
+   - Prevents grade filter from being lost during School ↔ Students ↔ Grade Level navigation
+   - Fixed in `templates/students.html` lines 1324-1369
+
+**Regression Tests Added:**
+
+1. **student21 Detail Modal Test** (`test_student21_detail_regression`)
+   - Locks in 20+ exact values from user-verified screenshot
+   - Student info, fundraising, reading, participation, goal metrics
+   - Daily breakdown with exact dates and minutes
+   - Catches any unintended changes to student detail calculation logic
+
+2. **Complete Table Regression Test** (`test_complete_table_all_grades_all_teams_full_contest`)
+   - Verifies all 7 students with exact values from user-verified screenshot
+   - All fundraising values, sponsor counts, minutes, participation metrics
+   - Gold highlights (10+ instances) for school-wide winners
+   - Silver highlights (4+ instances) for grade-level winners
+   - Team badges and proper color assignments
+   - Catches any calculation or display changes
+
+**Files Modified:**
+- `templates/students.html` - Conditional rendering, filter restoration logic, grade-level highlighting
+- `queries.py` - Simplified participation calculation
+- `database.py` - Added `get_students_grade_winners()` method
+- `app.py` - Call grade_winners when viewing all grades
+- `test_students_page.py` - Added 2 comprehensive regression tests (50 tests total)
+- `VERSION` - v2026.4.0 → v2026.5.0
+- `docs/QUICK_START_NEXT_SESSION.md` - Updated with completion status
+- `docs/STUDENTS_PAGE_STATUS.md` - Marked as COMPLETE
+
+**Test Results:**
+- Students page: 50/50 tests passing ✅
+- Full suite: 235 tests passing ✅
+
+---
+
 ## [v2026.4.0] - 2025-11-01
 
 ### Development Process Improvements

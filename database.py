@@ -1197,6 +1197,137 @@ class ReadathonDB:
 
         return results[0] if results else {}
 
+    def get_students_grade_winners(self, date_filter: str = 'all') -> Dict[str, Dict[str, float]]:
+        """
+        Get grade-level winners for all grades (silver highlights when viewing all grades).
+
+        Used when grade_filter == 'all' AND team_filter == 'all' to show grade-level leaders.
+
+        Args:
+            date_filter: 'all' or specific date (cumulative through date)
+
+        Returns:
+            Dict mapping grade_level -> Dict[metric_name -> max_value]
+            Example: {'K': {'fundraising': 100, 'minutes_capped': 500, ...}, '1': {...}, ...}
+        """
+        date_where = f"AND dl.log_date <= '{date_filter}'" if date_filter != 'all' else ""
+
+        query = f"""
+        -- Get max values for each metric within each grade
+        SELECT
+            r.grade_level,
+            'fundraising' as metric,
+            MAX(COALESCE(rc.donation_amount, 0)) as max_value
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        GROUP BY r.grade_level
+
+        UNION ALL
+
+        SELECT
+            r.grade_level,
+            'sponsors' as metric,
+            MAX(COALESCE(rc.sponsors, 0)) as max_value
+        FROM Roster r
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        GROUP BY r.grade_level
+
+        UNION ALL
+
+        SELECT grade_level, 'minutes_capped' as metric, MAX(total_capped) as max_value
+        FROM (
+            SELECT r.grade_level, COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_capped
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            GROUP BY r.grade_level, r.student_name
+        )
+        GROUP BY grade_level
+
+        UNION ALL
+
+        SELECT grade_level, 'minutes_uncapped' as metric, MAX(total_uncapped) as max_value
+        FROM (
+            SELECT r.grade_level, COALESCE(SUM(dl.minutes_read), 0) as total_uncapped
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            GROUP BY r.grade_level, r.student_name
+        )
+        GROUP BY grade_level
+
+        UNION ALL
+
+        SELECT grade_level, 'days_participated' as metric, MAX(days_participated) as max_value
+        FROM (
+            SELECT r.grade_level, COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            GROUP BY r.grade_level, r.student_name
+        )
+        GROUP BY grade_level
+
+        UNION ALL
+
+        SELECT grade_level, 'participation_pct' as metric, MAX(participation_pct) as max_value
+        FROM (
+            SELECT
+                r.grade_level,
+                CASE
+                    WHEN (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE 1=1 {date_where}) > 0
+                    THEN ROUND(100.0 * COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) / (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE 1=1 {date_where}), 1)
+                    ELSE 0
+                END as participation_pct
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            GROUP BY r.grade_level, r.student_name
+        )
+        GROUP BY grade_level
+
+        UNION ALL
+
+        SELECT grade_level, 'days_met_goal' as metric, MAX(days_met_goal) as max_value
+        FROM (
+            SELECT r.grade_level, COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) as days_met_goal
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            GROUP BY r.grade_level, r.student_name
+        )
+        GROUP BY grade_level
+
+        UNION ALL
+
+        SELECT grade_level, 'goal_met_pct' as metric, MAX(goal_met_pct) as max_value
+        FROM (
+            SELECT
+                r.grade_level,
+                CASE
+                    WHEN COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) > 0
+                    THEN ROUND(100.0 * COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) / COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END), 1)
+                    ELSE 0
+                END as goal_met_pct
+            FROM Roster r
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            GROUP BY r.grade_level, r.student_name
+        )
+        GROUP BY grade_level
+        """
+
+        results = self.execute_query(query)
+
+        # Organize by grade -> metric -> value
+        grade_winners = {}
+        for row in results:
+            grade = row['grade_level']
+            metric = row['metric']
+            value = row['max_value']
+
+            if grade not in grade_winners:
+                grade_winners[grade] = {}
+            grade_winners[grade][metric] = value
+
+        return grade_winners
+
     def get_students_filtered_winners(self, date_filter: str = 'all', grade_filter: str = 'all',
                                      team_filter: str = 'all') -> Dict[str, float]:
         """

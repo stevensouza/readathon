@@ -1746,7 +1746,7 @@ def get_students_banner_query(date_where="", date_where_no_alias="", grade_where
     2. Fundraising - Total for filtered students (no date filter)
     3. Minutes Read - Total capped minutes for filtered students (honors date filter)
     4. Sponsors - Total sponsors for filtered students (no date filter)
-    5. Avg. Participation (With Color) - Filtered students (honors date filter, can exceed 100%)
+    5. Avg. Participation - Average of (days_participated / total_days * 100) across filtered students (honors date filter)
     6. Goal Met (≥1 Day) - Filtered students who met goal ≥1 day (honors date filter)
 
     Args:
@@ -1794,9 +1794,12 @@ def get_students_banner_query(date_where="", date_where_no_alias="", grade_where
         ),
         Participation AS (
             SELECT
-                COUNT(DISTINCT r.student_name) as participated_count
+                CASE WHEN (SELECT total_students FROM FilteredStudents) > 0 AND (SELECT total_days FROM TotalDays) > 0
+                    THEN ROUND(100.0 * COUNT(*) / ((SELECT total_students FROM FilteredStudents) * (SELECT total_days FROM TotalDays)), 1)
+                    ELSE 0
+                END as avg_participation_pct
             FROM Roster r
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            INNER JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
             WHERE dl.minutes_read > 0 {grade_where} {team_where}
         ),
         GoalMet AS (
@@ -1813,10 +1816,7 @@ def get_students_banner_query(date_where="", date_where_no_alias="", grade_where
             (SELECT total_fundraising FROM Fundraising) as total_fundraising,
             (SELECT total_minutes FROM Minutes) as total_minutes,
             (SELECT total_sponsors FROM Sponsors) as total_sponsors,
-            CASE WHEN (SELECT total_students FROM FilteredStudents) > 0 AND (SELECT total_days FROM TotalDays) > 0
-                THEN ROUND(100.0 * (SELECT participated_count FROM Participation) / (SELECT total_students FROM FilteredStudents), 1)
-                ELSE 0
-            END as avg_participation_pct,
+            ROUND(COALESCE((SELECT avg_participation_pct FROM Participation), 0), 1) as avg_participation_pct,
             CASE WHEN (SELECT total_students FROM FilteredStudents) > 0
                 THEN ROUND(100.0 * (SELECT goal_met_count FROM GoalMet) / (SELECT total_students FROM FilteredStudents), 1)
                 ELSE 0
