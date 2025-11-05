@@ -5,6 +5,58 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.9.0] - 2025-11-05
+
+### Pure Group-Based Tagging System
+
+**Core System Refactor:**
+- Replaced `item_type` and `report_type` fields with single `groups` array
+- Implemented hierarchical naming convention using periods (workflow.qa, requires.date)
+- Five group categories: structural, semantic, workflow, behavior, domain
+- All 35 items tagged (23 reports + 8 tables + 4 workflows)
+- Dynamic workflow execution based on group tags (no hardcoded lists)
+
+**Helper Functions:**
+- `get_items_by_group()` - Query items by single group with wildcard support
+- `get_items_by_groups()` - Query items by multiple groups (AND/OR logic)
+- `is_report()`, `is_table()`, `is_workflow()` - Type checking functions
+- `requires_date()`, `requires_group_by()` - Behavior checking functions
+- `get_workflow_reports()` - Get all reports in a workflow
+
+**UI Improvements:**
+- Custom CSS badge colors for group tags (high-contrast, accessible)
+- Added "GROUPS:" label above group badges for clarity
+- Changed "All Groups" to "All Items" label
+- Fixed group filter dropdown counts (workflow.qa, workflow.qd, etc.)
+- Fixed regression: Added missing items array for JavaScript report options
+
+**Testing & Documentation:**
+- Added `test_group_system.py` with 28 comprehensive regression tests
+- Added `test_export_all.py` for export functionality tests
+- Added `docs/GROUPS_SYSTEM.md` with complete system documentation
+- Updated `test_reports_page.py` to use new group system
+- All 305 tests passing (5 skipped)
+
+**Benefits:**
+- Flexible multi-group membership for items
+- No hardcoded workflow lists (easier to maintain)
+- Searchable across all group tags
+- Easy to add new groups or workflows
+- Self-documenting tags describe purpose and behavior
+
+**Files Modified:**
+- `app.py` - Added helper functions, updated routes for group system
+- `database.py` - Updated item definitions with groups array
+- `templates/reports.html` - Badge CSS, GROUPS label, JavaScript fix
+- `templates/workflows.html` - Dynamic counts for Run Group dropdown
+- `templates/admin.html` - Minor group system integration
+- `test_group_system.py` - NEW: Comprehensive regression tests
+- `test_export_all.py` - NEW: Export functionality tests
+- `test_reports_page.py` - Updated for group system
+- `docs/GROUPS_SYSTEM.md` - NEW: Complete system documentation
+- `VERSION` - v2026.8.0 → v2026.9.0
+- `CHANGELOG.md` - This file
+
 ## [v2026.8.0] - 2025-11-05
 
 ### Admin Page Data Management Enhancements
