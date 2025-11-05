@@ -8,6 +8,7 @@ from database import ReadathonDB, ReportGenerator
 from queries import get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query
 import csv
 import io
+import zipfile
 from datetime import datetime
 import os
 import argparse
@@ -73,63 +74,131 @@ def get_current_reports():
 
 def get_unified_items():
     """
-    Get unified list of all items (reports, tables, admin queries).
-    Each item has: id, name, description, groups (list of tags), item_type
+    Get unified list of all items (reports, tables, workflows).
+    Each item has: id, name, description, groups (list of tags)
+    Groups use hierarchical naming with periods: workflow.qa, requires.date
     """
     items = []
 
     # Main Reports (from /reports route)
     items.extend([
-        {'id': 'q2', 'name': 'Q2: Daily Summary Report', 'description': 'Daily summary by class or team with participation rates', 'groups': ['update', 'slides'], 'item_type': 'report', 'report_type': 'daily'},
-        {'id': 'q3', 'name': 'Q3: Reader Cumulative Enhanced', 'description': 'Complete cumulative stats with class, teacher, team, and participation metrics', 'groups': ['export'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q4', 'name': 'Q4/Slide 4: Prize Drawing', 'description': 'Random prize drawing - one winner per grade from students who met their goal', 'groups': ['prize', 'slides'], 'item_type': 'report', 'report_type': 'daily'},
-        {'id': 'q5', 'name': 'Q5: Student Cumulative Report', 'description': 'Student cumulative stats - Top Readers, Goal Getters, Top Fundraisers', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q6', 'name': 'Q6: Class Participation Winner', 'description': 'Class participation winner ranked by average daily participation rate', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q7', 'name': 'Q7: Complete Log', 'description': 'Complete denormalized log for export to Excel/CSV', 'groups': ['export'], 'item_type': 'report', 'report_type': 'export'},
-        {'id': 'q8', 'name': 'Q8: Student Reading Details', 'description': 'Individual student reading details - minutes read and days met goal', 'groups': ['export'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q9', 'name': 'Q9: Most Donations Per Grade', 'description': 'Student with highest donation amount in each grade', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q10', 'name': 'Q10: Most Minutes Per Grade', 'description': 'Student with most minutes read in each grade', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q11', 'name': 'Q11: Most Sponsors Per Grade', 'description': 'Student with most sponsors in each grade', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q12', 'name': 'Q12: Best Class Per Grade', 'description': 'Leading class in each grade by participation rate', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q13', 'name': 'Q13: Best Class in School', 'description': 'Overall best classroom by participation rate', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q14', 'name': 'Q14/Slide 3: Team Participation', 'description': 'Team participation winner by average participation rate', 'groups': ['update', 'slides'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q15', 'name': 'Q15: Goal Getters', 'description': 'Students who met their reading goal every day', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q16', 'name': 'Q16: Top Earner Per Team', 'description': 'Student with highest donation on each team', 'groups': ['prize'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q18', 'name': 'Q18/Slide 2: Lead Class by Grade', 'description': 'Leading class in each grade by average daily participation rate', 'groups': ['update', 'slides'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q19', 'name': 'Q19/Slide 5: Team Minutes', 'description': 'Total minutes read by each team', 'groups': ['update', 'slides'], 'item_type': 'report', 'report_type': 'cumulative'},
-        {'id': 'q20', 'name': 'Q20/Slide 6: Team Donations', 'description': 'Total donations raised by each team', 'groups': ['update', 'slides'], 'item_type': 'report', 'report_type': 'cumulative'},
+        {'id': 'q2', 'name': 'Q2: Daily Summary Report', 'description': 'Daily summary by class or team with participation rates', 'groups': ['report', 'daily', 'slides', 'workflow.qa', 'requires.date', 'requires.group_by']},
+        {'id': 'q3', 'name': 'Q3: Reader Cumulative Enhanced', 'description': 'Complete cumulative stats with class, teacher, team, and participation metrics', 'groups': ['report', 'cumulative', 'export', 'workflow.qa']},
+        {'id': 'q4', 'name': 'Q4/Slide 4: Prize Drawing', 'description': 'Random prize drawing - one winner per grade from students who met their goal', 'groups': ['report', 'prize', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qf', 'requires.date']},
+        {'id': 'q5', 'name': 'Q5: Student Cumulative Report', 'description': 'Student cumulative stats - Top Readers, Goal Getters, Top Fundraisers', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qc']},
+        {'id': 'q6', 'name': 'Q6: Class Participation Winner', 'description': 'Class participation winner ranked by average daily participation rate', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qc']},
+        {'id': 'q7', 'name': 'Q7: Complete Log', 'description': 'Complete denormalized log for export to Excel/CSV', 'groups': ['report', 'export', 'workflow.qa', 'requires.date']},
+        {'id': 'q8', 'name': 'Q8: Student Reading Details', 'description': 'Individual student reading details - minutes read and days met goal', 'groups': ['report', 'cumulative', 'export', 'workflow.qa']},
+        {'id': 'q9', 'name': 'Q9: Most Donations Per Grade', 'description': 'Student with highest donation amount in each grade', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q10', 'name': 'Q10: Most Minutes Per Grade', 'description': 'Student with most minutes read in each grade', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q11', 'name': 'Q11: Most Sponsors Per Grade', 'description': 'Student with most sponsors in each grade', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q12', 'name': 'Q12: Best Class Per Grade', 'description': 'Leading class in each grade by participation rate', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q13', 'name': 'Q13: Best Class in School', 'description': 'Overall best classroom by participation rate', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q14', 'name': 'Q14/Slide 3: Team Participation', 'description': 'Team participation winner by average participation rate', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc', 'workflow.qf']},
+        {'id': 'q15', 'name': 'Q15: Goal Getters', 'description': 'Students who met their reading goal every day', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q16', 'name': 'Q16: Top Earner Per Team', 'description': 'Student with highest donation on each team', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qf']},
+        {'id': 'q18', 'name': 'Q18/Slide 2: Lead Class by Grade', 'description': 'Leading class in each grade by average daily participation rate', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc']},
+        {'id': 'q19', 'name': 'Q19/Slide 5: Team Minutes', 'description': 'Total minutes read by each team', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc', 'workflow.qf']},
+        {'id': 'q20', 'name': 'Q20/Slide 6: Team Donations', 'description': 'Total donations raised by each team', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc']},
     ])
 
     # Admin Reports (from /admin route)
     items.extend([
-        {'id': 'q1', 'name': 'Q1: Table Row Counts', 'description': 'Database table row counts (utility report)', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
-        {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
-        {'id': 'q22', 'name': 'Q22: Student Name Sync Check', 'description': 'Verify students in Daily_Logs match Reader_Cumulative', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
-        {'id': 'q23', 'name': 'Q23: Roster Integrity Check', 'description': 'Verify all students exist in Roster table', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
-        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
+        {'id': 'q1', 'name': 'Q1: Table Row Counts', 'description': 'Database table row counts (utility report)', 'groups': ['report', 'utility', 'admin', 'workflow.qa']},
+        {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
+        {'id': 'q22', 'name': 'Q22: Student Name Sync Check', 'description': 'Verify students in Daily_Logs match Reader_Cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
+        {'id': 'q23', 'name': 'Q23: Roster Integrity Check', 'description': 'Verify all students exist in Roster table', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
+        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['report', 'utility', 'admin', 'workflow.qa', 'database']},
     ])
 
     # Database Tables (from /tables route)
     items.extend([
-        {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['tables'], 'item_type': 'table'},
-        {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['tables', 'export'], 'item_type': 'table'},
+        {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams', 'groups': ['table', 'tables', 'database']},
+        {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students', 'groups': ['table', 'tables', 'database']},
+        {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['table', 'tables', 'database']},
+        {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'tables', 'reading']},
+        {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'tables', 'fundraising']},
+        {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table', 'tables']},
+        {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'tables', 'database']},
+        {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'tables', 'export']},
     ])
 
     # Workflows (from /workflows route)
     items.extend([
-        {'id': 'qd', 'name': 'QD: Daily Slide Update', 'description': 'Runs all slide deck reports in sequence (Q18, Q14, Q4, Q19, Q20) - for daily update presentations', 'groups': ['workflows', 'workflow-daily-slide'], 'item_type': 'workflow'},
-        {'id': 'qc', 'name': 'QC: Cumulative Workflow', 'description': 'Runs all final prize reports in sequence (Q5, Q6, Q14, Q18, Q19, Q20) - comprehensive cumulative view', 'groups': ['workflows', 'workflow-cumulative'], 'item_type': 'workflow'},
-        {'id': 'qf', 'name': 'QF: Final Prize Winners', 'description': 'Runs all final prize winner reports (Q9-Q16, Q4, Q14, Q19, Q15) - determines all winners and prizes', 'groups': ['workflows', 'workflow-final-prize'], 'item_type': 'workflow'},
-        {'id': 'qa', 'name': 'QA: All Main Reports', 'description': 'Runs all 23 available reports in sequence (Q1-Q24) - comprehensive system report', 'groups': ['workflows', 'workflow-all-reports'], 'item_type': 'workflow'},
+        {'id': 'qd', 'name': 'QD: Daily Slide Update', 'description': 'Dynamically runs all reports tagged with workflow.qd - for daily update presentations', 'groups': ['workflow', 'workflows', 'featured']},
+        {'id': 'qc', 'name': 'QC: Cumulative Workflow', 'description': 'Dynamically runs all reports tagged with workflow.qc - comprehensive cumulative view', 'groups': ['workflow', 'workflows', 'featured']},
+        {'id': 'qf', 'name': 'QF: Final Prize Winners', 'description': 'Dynamically runs all reports tagged with workflow.qf - determines all winners and prizes', 'groups': ['workflow', 'workflows', 'featured']},
+        {'id': 'qa', 'name': 'QA: All Main Reports', 'description': 'Dynamically runs all reports tagged with workflow.qa - comprehensive system report', 'groups': ['workflow', 'workflows', 'featured']},
     ])
 
     return items
+
+
+# ========== Group Query Helper Functions ==========
+
+def get_items_by_group(group_tag, items=None):
+    """
+    Get all items that have a specific group tag.
+    Supports wildcards with startswith (e.g., 'workflow.*')
+    """
+    if items is None:
+        items = get_unified_items()
+
+    if group_tag.endswith('.*'):
+        # Wildcard: workflow.* matches workflow.qa, workflow.qd, etc.
+        prefix = group_tag[:-2]
+        return [item for item in items
+                if any(g.startswith(prefix + '.') for g in item['groups'])]
+    else:
+        return [item for item in items if group_tag in item['groups']]
+
+
+def get_items_by_groups(group_tags, match_all=False, items=None):
+    """
+    Get items matching multiple group tags.
+    match_all=False: item has ANY of the tags (OR logic)
+    match_all=True: item has ALL of the tags (AND logic)
+    """
+    if items is None:
+        items = get_unified_items()
+
+    if match_all:
+        return [item for item in items
+                if all(tag in item['groups'] for tag in group_tags)]
+    else:
+        return [item for item in items
+                if any(tag in item['groups'] for tag in group_tags)]
+
+
+def is_report(item):
+    """Check if item is a report"""
+    return 'report' in item['groups']
+
+
+def is_workflow(item):
+    """Check if item is a workflow"""
+    return 'workflow' in item['groups']
+
+
+def is_table(item):
+    """Check if item is a table"""
+    return 'table' in item['groups']
+
+
+def requires_date(item):
+    """Check if item requires date parameter"""
+    return 'requires.date' in item['groups']
+
+
+def requires_group_by(item):
+    """Check if item requires group_by parameter"""
+    return 'requires.group_by' in item['groups']
+
+
+def get_workflow_reports(workflow_id):
+    """Get all reports for a workflow by workflow ID"""
+    items = get_items_by_group(f'workflow.{workflow_id}')
+    return [item for item in items if is_report(item)]
 
 
 @app.route('/')
@@ -2427,19 +2496,19 @@ def reports_page():
     for item in all_items:
         all_groups.update(item['groups'])
 
-    # Define group display order and labels
+    # Define group display order and labels (using new group tag naming)
     group_options = [
-        {'value': 'all', 'label': 'All Groups', 'count': len(all_items)},
+        {'value': 'all', 'label': 'All Items', 'count': len(all_items)},
         {'value': 'prize', 'label': 'Prize Reports', 'count': len([i for i in all_items if 'prize' in i['groups']])},
         {'value': 'slides', 'label': 'Update Reports / Slides', 'count': len([i for i in all_items if 'slides' in i['groups']])},
         {'value': 'export', 'label': 'Export Reports', 'count': len([i for i in all_items if 'export' in i['groups']])},
         {'value': 'admin', 'label': 'Admin Reports', 'count': len([i for i in all_items if 'admin' in i['groups']])},
-        {'value': 'tables', 'label': 'Database Tables', 'count': len([i for i in all_items if 'tables' in i['groups']])},
-        {'value': 'workflows', 'label': 'Workflows', 'count': len([i for i in all_items if 'workflows' in i['groups']])},
-        {'value': 'workflow-daily-slide', 'label': '→ Daily Slide Update', 'count': len([i for i in all_items if 'workflow-daily-slide' in i['groups']])},
-        {'value': 'workflow-cumulative', 'label': '→ Cumulative Workflow', 'count': len([i for i in all_items if 'workflow-cumulative' in i['groups']])},
-        {'value': 'workflow-final-prize', 'label': '→ Final Prize Winners', 'count': len([i for i in all_items if 'workflow-final-prize' in i['groups']])},
-        {'value': 'workflow-all-reports', 'label': '→ All Main Reports', 'count': len([i for i in all_items if 'workflow-all-reports' in i['groups']])},
+        {'value': 'table', 'label': 'Database Tables', 'count': len([i for i in all_items if 'table' in i['groups']])},
+        {'value': 'workflow', 'label': 'Workflows', 'count': len([i for i in all_items if 'workflow' in i['groups'] and not any(g.startswith('workflow.') for g in i['groups'])])},
+        {'value': 'workflow.qd', 'label': '→ Daily Slide Update (QD)', 'count': len([i for i in all_items if 'workflow.qd' in i['groups']])},
+        {'value': 'workflow.qc', 'label': '→ Cumulative Workflow (QC)', 'count': len([i for i in all_items if 'workflow.qc' in i['groups']])},
+        {'value': 'workflow.qf', 'label': '→ Final Prize Winners (QF)', 'count': len([i for i in all_items if 'workflow.qf' in i['groups']])},
+        {'value': 'workflow.qa', 'label': '→ All Main Reports (QA)', 'count': len([i for i in all_items if 'workflow.qa' in i['groups']])},
     ]
 
     db = get_current_db()
@@ -2624,12 +2693,175 @@ def export_report(report_id):
 
 @app.route('/api/export_all')
 def export_all():
-    """Export all data as ZIP - Placeholder for now"""
+    """Export all data as ZIP file with all tables and README"""
     try:
-        # TODO: Implement full ZIP export in Phase 3
-        return jsonify({'error': 'Feature coming soon - Export All Data (ZIP)'}), 501
+        # Get current database
+        db = get_current_db()
+
+        # Get all table data
+        all_tables = db.export_all_tables()
+
+        # Get metadata for README
+        metadata = db.get_export_metadata()
+
+        # Read version from VERSION file
+        version = 'unknown'
+        if os.path.exists('VERSION'):
+            with open('VERSION', 'r') as f:
+                version = f.read().strip()
+
+        # Add version to metadata
+        metadata['version'] = version
+
+        # Create README content
+        readme_content = generate_export_readme(metadata)
+
+        # Create ZIP file in memory
+        zip_buffer = io.BytesIO()
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Add README
+            zip_file.writestr('README.md', readme_content)
+
+            # Add each table as CSV
+            for table_name, rows in all_tables.items():
+                if rows:  # Only create CSV if there's data
+                    csv_buffer = io.StringIO()
+
+                    # Get column names from first row
+                    fieldnames = list(rows[0].keys())
+
+                    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(rows)
+
+                    # Add to ZIP
+                    zip_file.writestr(f'{table_name}.csv', csv_buffer.getvalue())
+                else:
+                    # Create empty CSV with just headers based on table structure
+                    zip_file.writestr(f'{table_name}.csv', f'# No data in {table_name}\n')
+
+        # Prepare response
+        zip_buffer.seek(0)
+
+        # Get environment for filename
+        env = 'prod' if session.get('active_environment') == 'prod' else 'sample'
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # Include version in filename (remove 'v' prefix and replace dots with underscores)
+        version_str = version.replace('v', '').replace('.', '_')
+        filename = f'readathon_export_{env}_{version_str}_{timestamp}.zip'
+
+        return send_file(
+            zip_buffer,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=filename
+        )
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+def generate_export_readme(metadata: dict) -> str:
+    """Generate README.md content for export ZIP file"""
+
+    counts = metadata['counts']
+    date_range = metadata['date_range']
+    totals = metadata['totals']
+    version = metadata.get('version', 'unknown')
+
+    readme = f"""# Read-a-Thon Database Export
+
+## Export Information
+
+- **Software Version:** {version}
+- **Export Date:** {metadata['export_timestamp']}
+- **Database:** {metadata['database_path']}
+- **Date Range:** {date_range['min_date']} to {date_range['max_date']}
+- **Last Upload:** {metadata['last_upload']}
+
+## Summary Statistics
+
+### Overall Totals
+- **Total Donations:** ${totals['total_donations']:,.2f}
+- **Total Sponsors:** {totals['total_sponsors']:,}
+- **Total Reading Minutes (Capped):** {metadata['total_minutes']:,} minutes ({metadata['total_minutes'] / 60:.1f} hours)
+
+### Table Record Counts
+
+#### System Tables (Reference Data)
+- **Roster:** {counts['Roster']:,} students
+- **Class_Info:** {counts['Class_Info']:,} classes
+- **Grade_Rules:** {counts['Grade_Rules']:,} grade levels
+- **Database_Metadata:** {counts['Database_Metadata']:,} database(s)
+
+#### Transactional Tables (Event Data)
+- **Daily_Logs:** {counts['Daily_Logs']:,} reading log entries
+- **Reader_Cumulative:** {counts['Reader_Cumulative']:,} cumulative records
+- **Upload_History:** {counts['Upload_History']:,} upload events
+- **Team_Color_Bonus:** {counts['Team_Color_Bonus']:,} bonus records
+
+## Files Included
+
+### CSV Files
+
+1. **Roster.csv** - Student roster with class, teacher, grade, and team assignments
+2. **Class_Info.csv** - Class summary with teacher, grade, team, and student count
+3. **Grade_Rules.csv** - Grade-specific reading goals (min/max daily minutes)
+4. **Daily_Logs.csv** - Daily reading minutes per student (capped and uncapped)
+5. **Reader_Cumulative.csv** - Cumulative fundraising stats (donations, sponsors)
+6. **Upload_History.csv** - Audit trail of all CSV uploads
+7. **Team_Color_Bonus.csv** - Special team color day bonus records
+8. **Database_Metadata.csv** - Multi-year database registry
+
+## Data Notes
+
+### Reading Minutes
+- **Capped Minutes:** Official contest minutes (max 120 minutes/day)
+- **Uncapped Minutes:** Actual minutes read (may exceed 120)
+- Reports use **capped minutes** for contest calculations
+
+### Sanctioned Contest Dates
+- **Official Period:** October 10-15, 2025
+- Out-of-range dates may appear in data but don't count toward official totals
+
+### Team Competition
+- School divided into two teams for friendly competition
+- Team assignments in Roster.csv
+- Team stats tracked throughout contest period
+
+## Import Instructions
+
+### Excel/Google Sheets
+1. Open Excel or Google Sheets
+2. Import each CSV file as a separate sheet
+3. Use "File → Import → Upload" for Google Sheets
+4. Use "Data → From Text/CSV" for Excel
+
+### Database Tools
+1. Use any SQLite-compatible tool
+2. Import CSVs into new database
+3. Maintain same table names and structure
+4. Refer to CLAUDE.md in source repository for schema details
+
+## Data Privacy
+
+This export may contain personally identifiable information (student names, class assignments).
+Please handle with appropriate care and follow your organization's data privacy policies.
+
+## Support
+
+For questions about this data or the Read-a-Thon system:
+- See source repository: /Users/stevesouza/my/data/readathon/v2026_development
+- Review IMPLEMENTATION_PROMPT.md for complete system documentation
+- Check CLAUDE.md for development guidelines
+
+---
+
+Generated by Read-a-Thon System {version}
+"""
+
+    return readme
 
 
 # ========== Database Management Endpoints (Phase 2: Multi-Database) ==========
@@ -2856,11 +3088,41 @@ def clear_tables():
 
 @app.route('/workflows')
 def workflows_page():
-    """Workflow execution page"""
+    """Workflow execution page with dynamic workflow data"""
     env = session.get('environment', DEFAULT_DATABASE)
     db = get_current_db()
     dates = db.get_all_dates()
-    return render_template('workflows.html', dates=dates, environment=env)
+
+    # Get report counts and lists for each workflow
+    qa_reports = get_workflow_reports('qa')
+    qd_reports = get_workflow_reports('qd')
+    qc_reports = get_workflow_reports('qc')
+    qf_reports = get_workflow_reports('qf')
+
+    # Get counts for Run Group dropdown
+    all_items = get_unified_items()
+    prize_count = len([i for i in all_items if 'prize' in i['groups']])
+    slides_count = len([i for i in all_items if 'slides' in i['groups']])
+    export_count = len([i for i in all_items if 'export' in i['groups']])
+    admin_count = len([i for i in all_items if 'admin' in i['groups']])
+    table_count = len([i for i in all_items if 'table' in i['groups']])
+
+    return render_template('workflows.html',
+                         dates=dates,
+                         environment=env,
+                         qa_count=len(qa_reports),
+                         qd_count=len(qd_reports),
+                         qc_count=len(qc_reports),
+                         qf_count=len(qf_reports),
+                         qa_reports=qa_reports,
+                         qd_reports=qd_reports,
+                         qc_reports=qc_reports,
+                         qf_reports=qf_reports,
+                         prize_count=prize_count,
+                         slides_count=slides_count,
+                         export_count=export_count,
+                         admin_count=admin_count,
+                         table_count=table_count)
 
 
 @app.route('/tables')
@@ -2998,9 +3260,36 @@ def serve_prototype(filename):
         return "Prototype not found", 404
 
 
+@app.route('/api/group/<group_id>/items')
+def get_group_items_api(group_id):
+    """
+    Get all items for a specific group.
+    Returns: {success: true, items: [...]}
+    """
+    try:
+        items = get_items_by_group(group_id)
+
+        # Return essential info
+        result = [{
+            'id': item['id'],
+            'name': item['name'],
+            'description': item.get('description', ''),
+            'groups': item['groups']
+        } for item in items]
+
+        return jsonify({
+            'success': True,
+            'group': group_id,
+            'count': len(result),
+            'items': result
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/workflow/<workflow_id>')
 def run_workflow(workflow_id):
-    """Run a workflow (sequence of reports)"""
+    """Run a workflow (sequence of reports) - dynamically queries workflow.{id} tags"""
     try:
         log_date = request.args.get('date')
 
@@ -3008,21 +3297,19 @@ def run_workflow(workflow_id):
         reports = get_current_reports()
         db = get_current_db()
 
-        if workflow_id == 'qd':  # Daily Slide Update
-            report_ids = ['q18', 'q14', 'q4', 'q19', 'q20']
-            workflow_name = 'Daily Slide Update (Slides 2-6)'
-        elif workflow_id == 'qc':  # Cumulative
-            report_ids = ['q5', 'q6', 'q14', 'q18', 'q19', 'q20']
-            workflow_name = 'Cumulative Prize Reports'
-        elif workflow_id == 'qf':  # Final Prizes
-            report_ids = ['q9', 'q10', 'q11', 'q12', 'q13', 'q16', 'q4', 'q14', 'q19', 'q15']
-            workflow_name = 'Final Prize Winners'
-        elif workflow_id == 'qa':  # All Reports
-            # Updated to include new prize reports Q9-Q13, Q15-Q16, Q3, and Q24
-            report_ids = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q18', 'q19', 'q20', 'q21', 'q22', 'q23', 'q24']
-            workflow_name = 'All Main Reports (23 Reports)'
-        else:
-            return jsonify({'error': 'Unknown workflow'}), 404
+        # Get reports for this workflow dynamically
+        workflow_items = get_workflow_reports(workflow_id)
+
+        if not workflow_items:
+            return jsonify({'error': f'Workflow {workflow_id} not found or has no reports'}), 404
+
+        # Get workflow metadata
+        all_items = get_unified_items()
+        workflow_item = next((i for i in all_items if i['id'] == workflow_id and is_workflow(i)), None)
+        workflow_name = workflow_item['name'] if workflow_item else f'Workflow {workflow_id.upper()}'
+
+        # Extract report IDs from items
+        report_ids = [item['id'] for item in workflow_items]
 
         # Run all reports
         results = []

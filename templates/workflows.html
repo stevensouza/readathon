@@ -22,13 +22,11 @@
             </div>
             <div class="card-body">
                 <div class="collapse" id="collapseQD">
-                    <p>Runs all slide deck reports in sequence:</p>
+                    <p>Runs all slide deck reports in sequence ({{ qd_count }} reports):</p>
                     <ul class="small mb-3">
-                        <li>Slide 2 (Q18): Lead Class by Grade</li>
-                        <li>Slide 3 (Q14): Team Participation</li>
-                        <li>Slide 4 (Q4): Prize Drawing</li>
-                        <li>Slide 5 (Q19): Team Minutes</li>
-                        <li>Slide 6 (Q20): Team Donations</li>
+                        {% for report in qd_reports %}
+                        <li>{{ report.name }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
 
@@ -56,14 +54,11 @@
             </div>
             <div class="card-body">
                 <div class="collapse" id="collapseQC">
-                    <p>Runs all final prize reports in sequence:</p>
+                    <p>Runs all cumulative workflow reports ({{ qc_count }} reports):</p>
                     <ul class="small mb-3">
-                        <li>Q5: Student Cumulative Report</li>
-                        <li>Q6: Class Participation Winner</li>
-                        <li>Q14: Team Participation Winner</li>
-                        <li>Q18: Lead Class by Grade</li>
-                        <li>Q19: Team Minutes</li>
-                        <li>Q20: Team Donations</li>
+                        {% for report in qc_reports %}
+                        <li>{{ report.name }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
 
@@ -82,18 +77,11 @@
             </div>
             <div class="card-body">
                 <div class="collapse show" id="collapseQF">
-                    <p>Runs all final prize winner reports:</p>
+                    <p>Runs all final prize winner reports ({{ qf_count }} reports):</p>
                     <ul class="small mb-3">
-                        <li>Q9: Most Donations Per Grade (6 winners)</li>
-                        <li>Q10: Most Minutes Per Grade (6 winners)</li>
-                        <li>Q11: Most Sponsors Per Grade (6 winners)</li>
-                        <li>Q12: Best Class Per Grade (6 winners)</li>
-                        <li>Q13: Best Class in School (1 winner)</li>
-                        <li>Q16: Top Earner Per Team (2 winners)</li>
-                        <li>Q4: Daily Random Drawing (requires date)</li>
-                        <li>Q14: Team Participation Winner (1 winner - losing captain dresses in costume)</li>
-                        <li>Q19: Team Minutes (cumulative team reading with color bonus)</li>
-                        <li>Q15: Goal Getters (all qualifying - shows all 68 students)</li>
+                        {% for report in qf_reports %}
+                        <li>{{ report.name }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
 
@@ -121,29 +109,11 @@
             </div>
             <div class="card-body">
                 <div class="collapse" id="collapseQA">
-                    <p>Runs all 21 available reports in sequence:</p>
+                    <p>Runs all main reports in sequence ({{ qa_count }} reports):</p>
                     <ul class="small mb-3">
-                        <li>Q1: Table Counts</li>
-                        <li>Q2: Daily Summary</li>
-                        <li>Q4: Prize Drawing</li>
-                        <li>Q5: Student Cumulative</li>
-                        <li>Q6: Class Participation</li>
-                        <li>Q7: Complete Log</li>
-                        <li>Q8: Student Reading Details</li>
-                        <li>Q9: Most Donations Per Grade</li>
-                        <li>Q10: Most Minutes Per Grade</li>
-                        <li>Q11: Most Sponsors Per Grade</li>
-                        <li>Q12: Best Class Per Grade</li>
-                        <li>Q13: Best Class in School</li>
-                        <li>Q14: Team Participation</li>
-                        <li>Q15: Goal Getters</li>
-                        <li>Q16: Top Earner Per Team</li>
-                        <li>Q18: Lead Class by Grade</li>
-                        <li>Q19: Team Minutes</li>
-                        <li>Q20: Team Donations</li>
-                        <li>Q21: Data Integrity Check</li>
-                        <li>Q22: Name Sync Check</li>
-                        <li>Q23: Roster Integrity Check</li>
+                        {% for report in qa_reports %}
+                        <li>{{ report.name }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
 
@@ -185,11 +155,11 @@
                 <div class="mb-3">
                     <label for="runGroupSelect" class="form-label">Select Group</label>
                     <select class="form-select" id="runGroupSelect">
-                        <option value="prize">Prize Reports (11 items)</option>
-                        <option value="slides">Update Reports / Slides (5 items)</option>
-                        <option value="export">Export Reports (3 items)</option>
-                        <option value="admin">Admin Reports (4 items)</option>
-                        <option value="tables">Database Tables (8 items)</option>
+                        <option value="prize">Prize Reports ({{ prize_count }} items)</option>
+                        <option value="slides">Update Reports / Slides ({{ slides_count }} items)</option>
+                        <option value="export">Export Reports ({{ export_count }} items)</option>
+                        <option value="admin">Admin Reports ({{ admin_count }} items)</option>
+                        <option value="table">Database Tables ({{ table_count }} items)</option>
                     </select>
                 </div>
 
@@ -396,20 +366,22 @@ async function runGroup() {
     const selectedGroup = document.getElementById('runGroupSelect').value;
     const date = document.getElementById('runGroupDate').value;
 
-    // Group to report ID mappings
-    const groupMappings = {
-        'prize': ['q4', 'q5', 'q6', 'q9', 'q10', 'q11', 'q12', 'q13', 'q15', 'q16'],
-        'slides': ['q2', 'q14', 'q18', 'q19', 'q20'],
-        'export': ['q3', 'q7', 'q8'],
-        'admin': ['q1', 'q21', 'q22', 'q23'],
-        'tables': ['roster', 'class_info', 'grade_rules', 'daily_logs', 'reader_cumulative', 'team_color_bonus', 'upload_history', 'complete_log']
-    };
+    // Fetch items from the group dynamically using the API
+    let groupData;
+    try {
+        const groupResponse = await fetch(`/api/group/${selectedGroup}/items`);
+        groupData = await groupResponse.json();
 
-    const items = groupMappings[selectedGroup];
-    if (!items || items.length === 0) {
-        alert('No items found in selected group');
+        if (!groupData.success || !groupData.items || groupData.items.length === 0) {
+            alert(`No items found in group: ${selectedGroup}`);
+            return;
+        }
+    } catch (error) {
+        alert(`Error fetching group data: ${error.message}`);
         return;
     }
+
+    const items = groupData.items.map(item => item.id);
 
     // Show loading
     document.getElementById('workflowResults').innerHTML = `
@@ -418,7 +390,7 @@ async function runGroup() {
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-3">Running ${items.length} items from ${selectedGroup} group...</p>
+                <p class="mt-3">Running ${groupData.count} items from ${selectedGroup} group...</p>
                 <small class="text-muted">This may take a moment</small>
             </div>
         </div>
@@ -429,15 +401,16 @@ async function runGroup() {
         let successCount = 0;
         let errorCount = 0;
 
-        // Determine if this is a table group
-        const isTables = selectedGroup === 'tables';
+        for (let i = 0; i < groupData.items.length; i++) {
+            const item = groupData.items[i];
+            const itemId = item.id;
 
-        for (let i = 0; i < items.length; i++) {
-            const itemId = items[i];
+            // Determine if this is a table or report based on groups
+            const isTable = item.groups && item.groups.includes('table');
 
             try {
                 let url;
-                if (isTables) {
+                if (isTable) {
                     url = `/api/table/${itemId}`;
                 } else {
                     url = `/api/report/${itemId}?`;
@@ -464,7 +437,7 @@ async function runGroup() {
                         columns: result.columns,
                         row_count: result.data ? result.data.length : 0,
                         success: true,
-                        isTable: isTables
+                        isTable: isTable
                     });
                 }
             } catch (error) {
@@ -484,10 +457,10 @@ async function runGroup() {
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="mt-3">Running ${selectedGroup} group: ${i + 1}/${items.length} complete</p>
+                        <p class="mt-3">Running ${selectedGroup} group: ${i + 1}/${groupData.count} complete</p>
                         <div class="progress" style="height: 20px;">
-                            <div class="progress-bar" role="progressbar" style="width: ${((i + 1) / items.length) * 100}%">
-                                ${Math.round(((i + 1) / items.length) * 100)}%
+                            <div class="progress-bar" role="progressbar" style="width: ${((i + 1) / groupData.count) * 100}%">
+                                ${Math.round(((i + 1) / groupData.count) * 100)}%
                             </div>
                         </div>
                     </div>

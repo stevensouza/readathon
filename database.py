@@ -1525,6 +1525,92 @@ class ReadathonDB:
 
         return winners
 
+    def export_all_tables(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Export all database tables for ZIP backup.
+        Returns a dictionary with table names as keys and lists of row dicts as values.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # All 8 tables to export
+        tables = [
+            'Roster',
+            'Class_Info',
+            'Grade_Rules',
+            'Daily_Logs',
+            'Reader_Cumulative',
+            'Upload_History',
+            'Team_Color_Bonus',
+            'Database_Metadata'
+        ]
+
+        export_data = {}
+
+        for table in tables:
+            cursor.execute(f"SELECT * FROM {table}")
+            rows = cursor.fetchall()
+
+            # Convert sqlite3.Row objects to dictionaries
+            export_data[table] = [dict(row) for row in rows]
+
+        return export_data
+
+    def get_export_metadata(self) -> Dict[str, Any]:
+        """
+        Get metadata about the current database for export README.
+        Returns counts, timestamps, and other useful context.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # Get table counts
+        counts = {}
+        for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs',
+                      'Reader_Cumulative', 'Upload_History', 'Team_Color_Bonus', 'Database_Metadata']:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            counts[table] = cursor.fetchone()[0]
+
+        # Get date range from Daily_Logs
+        cursor.execute("SELECT MIN(log_date), MAX(log_date) FROM Daily_Logs")
+        date_row = cursor.fetchone()
+        date_range = {
+            'min_date': date_row[0] if date_row[0] else 'N/A',
+            'max_date': date_row[1] if date_row[1] else 'N/A'
+        }
+
+        # Get last upload timestamp
+        cursor.execute("SELECT MAX(upload_timestamp) FROM Upload_History")
+        last_upload = cursor.fetchone()[0] or 'N/A'
+
+        # Get totals
+        cursor.execute("SELECT SUM(donation_amount), SUM(sponsors) FROM Reader_Cumulative")
+        totals_row = cursor.fetchone()
+        totals = {
+            'total_donations': totals_row[0] if totals_row[0] else 0.0,
+            'total_sponsors': totals_row[1] if totals_row[1] else 0
+        }
+
+        # Get total minutes (capped)
+        cursor.execute("""
+            SELECT SUM(CASE
+                WHEN minutes_read > 120 THEN 120
+                ELSE minutes_read
+            END) as total_capped_minutes
+            FROM Daily_Logs
+        """)
+        total_minutes = cursor.fetchone()[0] or 0
+
+        return {
+            'counts': counts,
+            'date_range': date_range,
+            'last_upload': last_upload,
+            'totals': totals,
+            'total_minutes': total_minutes,
+            'export_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'database_path': self.db_path
+        }
+
 
 # Report generation functions
 class ReportGenerator:

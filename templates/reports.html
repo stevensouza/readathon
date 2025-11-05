@@ -2,6 +2,40 @@
 
 {% block title %}Reports & Data - Read-a-Thon System{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Custom badge colors for group tags */
+.badge-workflow {
+    background-color: #6f42c1 !important; /* Purple */
+    color: white !important;
+}
+.badge-requires {
+    background-color: #fd7e14 !important; /* Orange */
+    color: white !important;
+}
+.badge-cumulative {
+    background-color: #20c997 !important; /* Teal */
+    color: white !important;
+}
+.badge-daily {
+    background-color: #0dcaf0 !important; /* Cyan */
+    color: black !important;
+}
+.badge-utility {
+    background-color: #6c757d !important; /* Gray */
+    color: white !important;
+}
+.badge-integrity {
+    background-color: #d63384 !important; /* Pink */
+    color: white !important;
+}
+.badge-database {
+    background-color: #495057 !important; /* Dark gray */
+    color: white !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -59,7 +93,6 @@
                 {% for item in items %}
                 <a href="#" class="list-group-item list-group-item-action item-link"
                    data-item-id="{{ item.id }}"
-                   data-item-type="{{ item.item_type }}"
                    data-name="{{ item.name }}"
                    data-description="{{ item.description }}"
                    data-groups="{{ item.groups|join(' ') }}"
@@ -72,16 +105,32 @@
                                 <span style="color: #6c757d; font-size: 0.9rem;"> - {{ item.description }}</span>
                             </div>
                         </div>
-                        <small class="badge ms-2
-                            {% if item.item_type == 'table' %}bg-secondary
-                            {% elif item.item_type == 'workflow' %}bg-dark
-                            {% elif item.report_type == 'utility' %}bg-info
-                            {% elif item.report_type == 'daily' %}bg-primary
-                            {% elif item.report_type == 'cumulative' %}bg-success
-                            {% elif item.report_type == 'export' %}bg-warning text-dark
-                            {% else %}bg-secondary{% endif %}">
-                            {{ item.item_type }}
-                        </small>
+                        <div style="max-width: 220px; text-align: right;">
+                            <div style="font-size: 0.65rem; color: #6c757d; font-weight: 600; margin-bottom: 2px;">GROUPS:</div>
+                            <div class="d-flex gap-1 flex-wrap" style="justify-content: flex-end;">
+                                {% for group in item.groups %}
+                                <small class="badge
+                                    {% if group == 'report' %}bg-primary text-white
+                                    {% elif group == 'table' %}bg-secondary text-white
+                                    {% elif group == 'workflow' %}bg-dark text-white
+                                    {% elif group == 'admin' %}bg-danger text-white
+                                    {% elif group == 'prize' %}bg-warning text-dark
+                                    {% elif group == 'slides' %}bg-info text-white
+                                    {% elif group == 'export' %}bg-success text-white
+                                    {% elif group == 'cumulative' %}badge-cumulative
+                                    {% elif group == 'daily' %}badge-daily
+                                    {% elif group == 'utility' %}badge-utility
+                                    {% elif group == 'integrity' %}badge-integrity
+                                    {% elif group == 'database' %}badge-database
+                                    {% elif group.startswith('workflow.') %}badge-workflow
+                                    {% elif group.startswith('requires.') %}badge-requires
+                                    {% else %}bg-light text-dark{% endif %}"
+                                    style="font-size: 0.7rem;">
+                                    {{ group }}
+                                </small>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </a>
                 {% endfor %}
@@ -154,6 +203,9 @@
 
 {% block extra_js %}
 <script>
+// Convert Flask items to JavaScript
+const items = {{ all_items|tojson|safe }};
+
 let currentItemId = null;
 let currentItemType = null;
 let allItems = []; // Store all items for client-side filtering
@@ -225,11 +277,12 @@ function filterItemsClientSide(searchText) {
     let visibleIndex = 1;
 
     allItems.forEach(item => {
+        // Search across name, description, and all groups
+        const groupsMatch = item.groups && item.groups.split(' ').some(g => g.includes(search));
         const matches = !search ||
                        item.name.includes(search) ||
                        item.description.includes(search) ||
-                       item.type.includes(search) ||
-                       item.groups.includes(search);
+                       groupsMatch;
 
         item.element.style.display = matches ? '' : 'none';
 
@@ -253,7 +306,16 @@ document.querySelectorAll('.item-link').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();
         currentItemId = this.dataset.itemId;
-        currentItemType = this.dataset.itemType;
+
+        // Determine item type from groups
+        const groups = this.dataset.groups ? this.dataset.groups.split(' ') : [];
+        if (groups.includes('report')) {
+            currentItemType = 'report';
+        } else if (groups.includes('table')) {
+            currentItemType = 'table';
+        } else if (groups.includes('workflow')) {
+            currentItemType = 'workflow';
+        }
 
         // Highlight selected item
         document.querySelectorAll('.item-link').forEach(l => l.classList.remove('active'));
@@ -283,13 +345,22 @@ function showReportOptions(reportId) {
     document.getElementById('sortByOption').style.display = 'none';
     document.getElementById('limitOption').style.display = 'none';
 
-    // Show relevant options
-    if (reportId === 'q2') {
+    // Find the item by ID from the global items array
+    const item = items.find(i => i.id === reportId);
+    if (!item || !item.groups) {
+        return;
+    }
+
+    // Show options based on group tags
+    if (item.groups.includes('requires.date')) {
         document.getElementById('dateOption').style.display = 'block';
+    }
+    if (item.groups.includes('requires.group_by')) {
         document.getElementById('groupByOption').style.display = 'block';
-    } else if (reportId === 'q4' || reportId === 'q7') {
-        document.getElementById('dateOption').style.display = 'block';
-    } else if (reportId === 'q5') {
+    }
+
+    // Show sort/limit for cumulative reports (Q5 behavior)
+    if (reportId === 'q5') {
         document.getElementById('sortByOption').style.display = 'block';
         document.getElementById('limitOption').style.display = 'block';
     }

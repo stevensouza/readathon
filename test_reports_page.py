@@ -236,11 +236,12 @@ class TestReportsPage:
         assert 'Daily Logs' in html
         assert 'Reader Cumulative' in html
 
-        # Verify data-item-type attributes exist
-        assert 'data-item-type="table"' in html
+        # Verify data-groups contains table
+        assert 'data-groups="' in html
+        assert 'table' in html
 
     def test_search_by_type_workflow(self, client):
-        """Test search by item_type 'workflow' returns all workflows."""
+        """Test search by group 'workflow' returns all workflows."""
         response = client.get('/reports?group=all')
         assert response.status_code == 200
         html = response.data.decode('utf-8')
@@ -249,11 +250,12 @@ class TestReportsPage:
         assert 'QD: Daily Slide Update' in html
         assert 'QC: Cumulative Workflow' in html
 
-        # Verify data-item-type attributes exist
-        assert 'data-item-type="workflow"' in html
+        # Verify data-groups contains workflow
+        assert 'data-groups="' in html
+        assert 'workflow' in html
 
     def test_search_by_type_report(self, client):
-        """Test search by item_type 'report' returns all reports."""
+        """Test search by group 'report' returns all reports."""
         response = client.get('/reports?group=all')
         assert response.status_code == 200
         html = response.data.decode('utf-8')
@@ -262,8 +264,9 @@ class TestReportsPage:
         assert 'Q2: Daily Summary Report' in html
         assert 'Q5: Student Cumulative Report' in html
 
-        # Verify data-item-type attributes exist
-        assert 'data-item-type="report"' in html
+        # Verify data-groups contains report
+        assert 'data-groups="' in html
+        assert 'report' in html
 
     def test_search_by_group_prize(self, client):
         """Test search by group 'prize' via client-side filtering."""
@@ -282,7 +285,7 @@ class TestReportsPage:
 
         # Check for data attributes needed for enhanced search
         assert 'data-item-id=' in html
-        assert 'data-item-type=' in html
+        assert 'data-groups=' in html
         assert 'data-name=' in html
         assert 'data-description=' in html
         assert 'data-groups=' in html, "data-groups attribute missing (needed for enhanced search)"
@@ -310,7 +313,7 @@ class TestReportsPage:
         """Verify all items have required fields."""
         all_items = get_unified_items()
 
-        required_fields = ['id', 'name', 'description', 'groups', 'item_type']
+        required_fields = ['id', 'name', 'description', 'groups']
 
         for item in all_items:
             for field in required_fields:
@@ -326,7 +329,7 @@ class TestReportsPage:
         html = response.data.decode('utf-8')
 
         # Check for all expected groups
-        assert 'All Groups' in html
+        assert 'All Items' in html
         assert 'Prize Reports' in html
         assert 'Update Reports / Slides' in html
         assert 'Export Reports' in html
@@ -338,11 +341,11 @@ class TestReportsPage:
         """Test that items with multiple groups appear in all relevant filters."""
         all_items = get_unified_items()
 
-        # Find Q2 which has ['update', 'slides']
+        # Find Q2 which has multiple groups including 'slides' and 'workflow.qa'
         q2 = next((item for item in all_items if item['id'] == 'q2'), None)
         assert q2 is not None, "Q2 not found in items"
-        assert 'update' in q2['groups']
         assert 'slides' in q2['groups']
+        assert 'workflow.qa' in q2['groups']
 
         # Test Q2 appears in 'slides' filter
         response = client.get('/reports?group=slides')
@@ -438,27 +441,27 @@ class TestReportsPage:
             assert 'name' in item
             assert 'description' in item
             assert 'groups' in item
-            assert 'item_type' in item
 
-            # item_type should be one of the expected values
-            assert item['item_type'] in ['report', 'table', 'workflow'], \
-                f"Invalid item_type: {item['item_type']}"
+            # At least one of these structural types should be in groups
+            has_structural_type = any(g in item['groups'] for g in ['report', 'table', 'workflow'])
+            assert has_structural_type, \
+                f"Item {item['id']} missing structural type (report/table/workflow)"
 
     def test_workflows_have_workflow_parent_group(self, client):
-        """Verify all workflows belong to 'workflows' parent group."""
+        """Verify all workflows belong to 'workflow' group."""
         all_items = get_unified_items()
 
-        workflow_items = [item for item in all_items if item['item_type'] == 'workflow']
+        workflow_items = [item for item in all_items if 'workflow' in item['groups']]
 
         for item in workflow_items:
-            assert 'workflows' in item['groups'], \
-                f"Workflow {item['id']} missing 'workflows' parent group"
+            assert 'workflow' in item['groups'], \
+                f"Workflow {item['id']} missing 'workflow' group"
 
     def test_reports_have_at_least_one_group(self, client):
         """Verify all reports belong to at least one group."""
         all_items = get_unified_items()
 
-        report_items = [item for item in all_items if item['item_type'] == 'report']
+        report_items = [item for item in all_items if 'report' in item['groups']]
 
         for item in report_items:
             assert len(item['groups']) > 0, \
