@@ -5,44 +5,33 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h1 class="mb-4">
+        <h1 class="mb-3">
             <i class="bi bi-database"></i> Reports & Data
         </h1>
-    </div>
-</div>
 
-<div class="row">
-    <!-- Report List -->
-    <div class="col-md-4">
-        <!-- Filter Controls -->
-        <div class="card mb-3">
-            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseFilters">
-                <h6 class="mb-0">
-                    <i class="bi bi-funnel"></i> Filters
-                    <i class="bi bi-chevron-down float-end" id="filtersChevron"></i>
-                </h6>
-            </div>
-            <div class="collapse show" id="collapseFilters">
-                <div class="card-body">
+        <!-- Compact Filter Controls - Horizontal Layout -->
+        <div class="card mb-3" style="border: 1px solid #dee2e6;">
+            <div class="card-body py-2" style="background-color: #f8f9fa;">
+                <div class="row g-3 align-items-end">
                     <!-- Search Box -->
-                    <div class="mb-3">
-                        <label for="searchBox" class="form-label">Search</label>
-                        <div class="input-group">
+                    <div class="col-md-6">
+                        <label for="searchBox" class="form-label mb-1 fw-semibold" style="font-size: 0.9rem;">Search:</label>
+                        <div class="input-group input-group-sm">
                             <input type="text" class="form-control" id="searchBox"
                                    placeholder="Search reports, tables..."
-                                   value="{{ search_query or '' }}">
+                                   value="{{ search_query or '' }}"
+                                   style="font-size: 0.9rem;">
                             <button class="btn btn-outline-secondary" type="button" id="clearSearch"
                                     style="{% if not search_query %}display: none;{% endif %}">
                                 <i class="bi bi-x"></i>
                             </button>
                         </div>
-                        <small class="text-muted">Live filter by name or description</small>
                     </div>
 
                     <!-- Group Filter -->
-                    <div class="mb-0">
-                        <label for="groupFilter" class="form-label">Group</label>
-                        <select class="form-select" id="groupFilter">
+                    <div class="col-md-6">
+                        <label for="groupFilter" class="form-label mb-1 fw-semibold" style="font-size: 0.9rem;">Group:</label>
+                        <select class="form-select form-select-sm" id="groupFilter" style="font-size: 0.9rem;">
                             {% for opt in group_options %}
                             <option value="{{ opt.value }}"
                                     {% if opt.value == selected_group %}selected{% endif %}>
@@ -54,6 +43,12 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Report List -->
+    <div class="col-md-4">
 
         <!-- Items List -->
         <div class="card">
@@ -67,13 +62,14 @@
                    data-item-type="{{ item.item_type }}"
                    data-name="{{ item.name }}"
                    data-description="{{ item.description }}"
+                   data-groups="{{ item.groups|join(' ') }}"
                    data-row-number="{{ loop.index }}">
-                    <div class="d-flex w-100 justify-content-between align-items-start">
-                        <div class="d-flex align-items-start" style="flex: 1;">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="flex: 1;">
                             <span class="badge bg-secondary me-2" style="min-width: 35px; font-size: 0.85rem;">{{ loop.index }}</span>
-                            <div>
-                                <h6 class="mb-1">{{ item.name }}</h6>
-                                <small class="text-muted">{{ item.description }}</small>
+                            <div style="line-height: 1.4;">
+                                <strong style="font-size: 0.95rem;">{{ item.name }}</strong>
+                                <span style="color: #6c757d; font-size: 0.9rem;"> - {{ item.description }}</span>
                             </div>
                         </div>
                         <small class="badge ms-2
@@ -167,35 +163,15 @@ document.querySelectorAll('.item-link').forEach(link => {
     allItems.push({
         element: link,
         id: link.dataset.itemId,
-        type: link.dataset.itemType,
+        type: (link.dataset.itemType || '').toLowerCase(),
         name: link.dataset.name.toLowerCase(),
-        description: link.dataset.description.toLowerCase()
+        description: link.dataset.description.toLowerCase(),
+        groups: (link.dataset.groups || '').toLowerCase()
     });
 });
 
 // Restore filters from sessionStorage on page load
 window.addEventListener('DOMContentLoaded', function() {
-    // Handle filters collapse chevron rotation
-    const filtersCollapse = document.getElementById('collapseFilters');
-    const filtersChevron = document.getElementById('filtersChevron');
-
-    if (filtersCollapse && filtersChevron) {
-        filtersCollapse.addEventListener('show.bs.collapse', function() {
-            filtersChevron.style.transform = 'rotate(180deg)';
-            filtersChevron.style.transition = 'transform 0.3s ease';
-        });
-
-        filtersCollapse.addEventListener('hide.bs.collapse', function() {
-            filtersChevron.style.transform = 'rotate(0deg)';
-            filtersChevron.style.transition = 'transform 0.3s ease';
-        });
-
-        // Set initial chevron state (expanded by default)
-        if (filtersCollapse.classList.contains('show')) {
-            filtersChevron.style.transform = 'rotate(180deg)';
-        }
-    }
-
     const savedGroup = sessionStorage.getItem('reportsSelectedGroup');
     const savedSearch = sessionStorage.getItem('reportsSearchText');
 
@@ -251,7 +227,9 @@ function filterItemsClientSide(searchText) {
     allItems.forEach(item => {
         const matches = !search ||
                        item.name.includes(search) ||
-                       item.description.includes(search);
+                       item.description.includes(search) ||
+                       item.type.includes(search) ||
+                       item.groups.includes(search);
 
         item.element.style.display = matches ? '' : 'none';
 
