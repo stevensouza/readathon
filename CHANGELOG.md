@@ -5,6 +5,40 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.8.0] - 2025-11-05
+
+### Admin Page Data Management Enhancements
+
+**Transactional vs System Tables Grouping:**
+- Renamed "Clear Data Tables" → "Data Management"
+- Added explanatory info panel distinguishing transactional from system tables
+- Transactional Tables section: 4 clearable tables (Upload_History, Reader_Cumulative, Daily_Logs, Team_Color_Bonus)
+- System Tables section: 3 reference-only tables (Roster, Class_Info, Grade_Rules)
+- Added Team_Color_Bonus to clear data functionality (previously missing)
+
+**Collapsible Sections:**
+- Database Tables Overview: Collapsible, collapsed by default
+- Transactional Tables: Collapsible, expanded by default
+- System Tables: Collapsible, expanded by default
+- Chevron icons automatically toggle on expand/collapse
+
+**Table Count Display:**
+- All 7 tables now show record counts
+- System tables use contextual labels: "students", "classes", "grade levels"
+- Transactional tables use generic "records" label
+
+**Backend Updates:**
+- `/api/table_counts` now returns all 7 tables (4 transactional + 3 system)
+- `/api/clear_tables` validates only transactional tables (security)
+- `clear_all_data.py` script updated to include Team_Color_Bonus
+
+**Files Modified:**
+- `app.py` - Updated `/api/table_counts` route to include system tables
+- `templates/admin.html` - Added collapsible sections, system tables section, chevron toggle JavaScript
+- `clear_all_data.py` - Added Team_Color_Bonus to clear operations
+- `VERSION` - v2026.7.0 → v2026.8.0
+- `CHANGELOG.md` - This file
+
 ## [v2026.7.0] - 2025-11-05
 
 ### Reports & Data Page Enhancements

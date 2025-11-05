@@ -19,6 +19,7 @@ def clear_all_data():
     print("  ❌ ALL Daily_Logs records (all dates, all students)")
     print("  ❌ ALL Reader_Cumulative records (donations, sponsors, cumulative minutes)")
     print("  ❌ ALL Upload_History records (both daily AND cumulative)")
+    print("  ❌ ALL Team_Color_Bonus records (team color day bonuses)")
     print("\n✅ This will PRESERVE:")
     print("  ✓ Roster (all student records)")
     print("  ✓ Class_Info")
@@ -58,15 +59,19 @@ def clear_all_data():
         cursor.execute("SELECT COUNT(*) FROM Upload_History")
         upload_history_count = cursor.fetchone()[0]
 
+        cursor.execute("SELECT COUNT(*) FROM Team_Color_Bonus")
+        team_color_bonus_count = cursor.fetchone()[0]
+
         cursor.execute("SELECT COUNT(*) FROM Roster")
         roster_count = cursor.fetchone()[0]
 
         print(f"Daily_Logs: {daily_logs_count} records ({unique_dates_count} unique dates)")
         print(f"Reader_Cumulative: {reader_cumulative_count} records (${total_donations:,.2f} total donations)")
         print(f"Upload_History: {upload_history_count} records")
+        print(f"Team_Color_Bonus: {team_color_bonus_count} records")
         print(f"Roster: {roster_count} students (will be PRESERVED)")
 
-        if daily_logs_count == 0 and reader_cumulative_count == 0 and upload_history_count == 0:
+        if daily_logs_count == 0 and reader_cumulative_count == 0 and upload_history_count == 0 and team_color_bonus_count == 0:
             print("\n⚠️  Database already empty - nothing to delete")
             db.close()
             return True
@@ -90,6 +95,11 @@ def clear_all_data():
         cursor.execute("DELETE FROM Upload_History")
         deleted_history = cursor.rowcount
 
+        # Delete all Team_Color_Bonus
+        print("🗑️  Deleting Team_Color_Bonus...")
+        cursor.execute("DELETE FROM Team_Color_Bonus")
+        deleted_team_color_bonus = cursor.rowcount
+
         conn.commit()
 
         # Verify deletion
@@ -101,6 +111,9 @@ def clear_all_data():
 
         cursor.execute("SELECT COUNT(*) FROM Upload_History")
         remaining_history = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM Team_Color_Bonus")
+        remaining_team_color_bonus = cursor.fetchone()[0]
 
         cursor.execute("SELECT COUNT(*) FROM Roster")
         preserved_roster = cursor.fetchone()[0]
@@ -118,10 +131,12 @@ def clear_all_data():
         print(f"  ❌ Daily_Logs: {deleted_daily} records")
         print(f"  ❌ Reader_Cumulative: {deleted_cumulative} records")
         print(f"  ❌ Upload_History: {deleted_history} records")
+        print(f"  ❌ Team_Color_Bonus: {deleted_team_color_bonus} records")
         print(f"\n📊 CLEARED (verified 0 records):")
         print(f"  ✓ Daily_Logs: {remaining_daily} records")
         print(f"  ✓ Reader_Cumulative: {remaining_cumulative} records")
         print(f"  ✓ Upload_History: {remaining_history} records")
+        print(f"  ✓ Team_Color_Bonus: {remaining_team_color_bonus} records")
         print(f"\n📊 PRESERVED SYSTEM TABLES:")
         print(f"  ✓ Roster: {preserved_roster} students")
         print(f"  ✓ Class_Info: {preserved_class_info} classes")

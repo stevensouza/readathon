@@ -2761,7 +2761,12 @@ def get_table_counts():
         cursor = conn.cursor()
 
         counts = {}
-        tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs']
+        # Transactional tables (clearable)
+        transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs', 'Team_Color_Bonus']
+        # System tables (reference only)
+        system_tables = ['Roster', 'Class_Info', 'Grade_Rules']
+
+        tables = transactional_tables + system_tables
 
         for table in tables:
             cursor.execute(f"SELECT COUNT(*) as count FROM {table}")
@@ -2785,7 +2790,7 @@ def clear_tables():
         tables = data.get('tables', [])
 
         # Validate table names
-        valid_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs']
+        valid_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs', 'Team_Color_Bonus']
         for table in tables:
             if table not in valid_tables:
                 return jsonify({

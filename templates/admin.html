@@ -148,22 +148,39 @@
                 <div class="card">
                     <div class="card-header card-header-blue">
                         <h5 class="mb-0">
-                            <i class="bi bi-trash"></i> Clear Data Tables
+                            <i class="bi bi-database"></i> Data Management
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-warning border-warning">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <strong>Warning:</strong> Clearing tables permanently deletes data. This action cannot be undone!
+                        <!-- Database Tables Overview (Collapsible - Collapsed by Default) -->
+                        <div class="alert alert-info border-info mb-4">
+                            <h6 class="alert-heading mb-0" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#overviewCollapse" aria-expanded="false">
+                                <i class="bi bi-info-circle-fill"></i> Database Tables Overview
+                                <i class="bi bi-chevron-down float-end"></i>
+                            </h6>
+                            <div class="collapse mt-3" id="overviewCollapse">
+                                <p class="mb-2">This database contains two types of tables:</p>
+                                <ul class="mb-2">
+                                    <li><strong>Transactional Tables:</strong> Event data that changes during the read-a-thon (reading logs, donations, uploads, bonuses) - can be cleared below</li>
+                                    <li><strong>System Tables:</strong> School structure data that stays constant (students, classes, grade rules) - managed via Database Creation tool</li>
+                                </ul>
+                                <p class="mb-0 small text-muted">
+                                    <i class="bi bi-lightbulb"></i> To update system tables for a new school year, use the Database Creation tool in the Database tab.
+                                </p>
+                            </div>
                         </div>
 
-                        <p class="text-muted mb-4">
-                            Selectively clear records from transactional data tables. Use this to reset data for a new event or clean up test data.
-                        </p>
+                        <!-- ========== TRANSACTIONAL TABLES (CLEARABLE) ========== -->
+                        <h6 class="text-uppercase text-muted mb-1 mt-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#transactionalCollapse" aria-expanded="true">
+                            <i class="bi bi-trash"></i> Transactional Tables (Clearable)
+                            <i class="bi bi-chevron-up float-end"></i>
+                        </h6>
+                        <div class="collapse show" id="transactionalCollapse">
+                            <p class="text-muted small mb-3">Select tables to clear. This permanently deletes event data and cannot be undone.</p>
 
-                        <!-- Table Selection Cards -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
+                            <!-- Transactional Table Cards -->
+                            <div class="row g-3 mb-4">
+                            <div class="col-md-3">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -180,7 +197,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -197,7 +214,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -209,6 +226,23 @@
                                         <p class="small text-muted mb-2">Clear all daily reading minutes data</p>
                                         <p class="mb-0">
                                             <span class="badge bg-secondary" id="countDailyLogs">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearTeamColorBonus" value="Team_Color_Bonus">
+                                            <label class="form-check-label" for="clearTeamColorBonus">
+                                                <h6 class="mb-1">Team_Color_Bonus</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear all team color day bonus records</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countTeamColorBonus">Loading...</span>
                                         </p>
                                     </div>
                                 </div>
@@ -230,6 +264,56 @@
                                 <i class="bi bi-trash"></i> Clear Selected Tables
                             </button>
                         </div>
+                        </div><!-- End Transactional Tables Collapse -->
+
+                        <!-- ========== SYSTEM TABLES (REFERENCE ONLY) ========== -->
+                        <hr class="my-5">
+                        <h6 class="text-uppercase text-muted mb-1" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#systemCollapse" aria-expanded="true">
+                            <i class="bi bi-shield-lock"></i> System Tables (Reference Only)
+                            <i class="bi bi-chevron-up float-end"></i>
+                        </h6>
+                        <div class="collapse show" id="systemCollapse">
+                            <p class="text-muted small mb-3">These tables define school structure. To update for a new year, use the Database Creation tool.</p>
+
+                            <!-- System Table Cards -->
+                            <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="card h-100 border-2 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="mb-1"><i class="bi bi-people-fill"></i> Roster</h6>
+                                        <p class="small text-muted mb-2">All students with their class assignments, teachers, grades, and teams</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countRoster">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card h-100 border-2 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="mb-1"><i class="bi bi-door-open-fill"></i> Class_Info</h6>
+                                        <p class="small text-muted mb-2">Summary of each class including home room, teacher, grade, team, and total students</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countClassInfo">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card h-100 border-2 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="mb-1"><i class="bi bi-award-fill"></i> Grade_Rules</h6>
+                                        <p class="small text-muted mb-2">Minimum and maximum daily reading minutes by grade level</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countGradeRules">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </div><!-- End System Tables Collapse -->
                     </div>
                 </div>
             </div>
@@ -1000,14 +1084,43 @@ async function loadTableCounts() {
         const result = await response.json();
 
         if (result.success) {
+            // Transactional tables
             document.getElementById('countUploadHistory').textContent = `${result.counts.Upload_History} records`;
             document.getElementById('countReaderCumulative').textContent = `${result.counts.Reader_Cumulative} records`;
             document.getElementById('countDailyLogs').textContent = `${result.counts.Daily_Logs} records`;
+            document.getElementById('countTeamColorBonus').textContent = `${result.counts.Team_Color_Bonus} records`;
+
+            // System tables
+            document.getElementById('countRoster').textContent = `${result.counts.Roster} students`;
+            document.getElementById('countClassInfo').textContent = `${result.counts.Class_Info} classes`;
+            document.getElementById('countGradeRules').textContent = `${result.counts.Grade_Rules} grade levels`;
         }
     } catch (error) {
         console.error('Error loading table counts:', error);
     }
 }
+
+// Toggle chevron icons when collapsible sections are toggled
+document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(trigger => {
+    const targetId = trigger.getAttribute('data-bs-target');
+    const targetElement = document.querySelector(targetId);
+
+    targetElement.addEventListener('show.bs.collapse', function () {
+        const chevron = trigger.querySelector('.bi-chevron-down, .bi-chevron-up');
+        if (chevron) {
+            chevron.classList.remove('bi-chevron-down');
+            chevron.classList.add('bi-chevron-up');
+        }
+    });
+
+    targetElement.addEventListener('hide.bs.collapse', function () {
+        const chevron = trigger.querySelector('.bi-chevron-down, .bi-chevron-up');
+        if (chevron) {
+            chevron.classList.remove('bi-chevron-up');
+            chevron.classList.add('bi-chevron-down');
+        }
+    });
+});
 
 // Select all tables
 function selectAllTables() {
