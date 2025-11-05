@@ -5,6 +5,46 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.7.0] - 2025-11-05
+
+### Reports & Data Page Enhancements
+
+**UI Improvements:**
+- Redesigned filter layout: compact horizontal design saves vertical space
+- Search and Group filters now side-by-side below header
+- Report items display title and description on single line (bold + dash separator)
+- Removed collapsible Filters card for always-visible access
+- More reports visible on screen without scrolling
+
+**Enhanced Search Functionality:**
+- Search now includes item type (report, table, workflow)
+- Search now includes group tags (prize, slides, export, admin, tables)
+- Searching "table" shows all database tables
+- Searching "workflow" shows all workflows
+- Searching "prize", "export", "slides" shows respective group items
+- Added data-groups attribute to HTML for client-side filtering
+
+**Comprehensive Test Suite:**
+- Created test_reports_page.py with 31 tests (all passing)
+- Group filter tests (7): all, prize, slides, export, admin, tables, workflows
+- Search functionality tests (7): name, description, type, groups, attributes
+- Structure & regression tests (13): counts, multi-group, UI elements, data integrity
+- Mandatory tests (4): page loads, no errors, sample data verification
+- **Total test suite: 246 tests (up from 215)**
+
+**Critical Documentation:**
+- Added prominent section in RULES.md about updating pre-commit hook when creating new test files
+- Documents requirement to add new test files to `.git/hooks/pre-commit`
+- Prevents future context loss by making this requirement explicit and searchable
+
+**Files Modified:**
+- `templates/reports.html` - Compact filters, enhanced search
+- `test_reports_page.py` - New comprehensive test suite
+- `.git/hooks/pre-commit` - Updated to include test_reports_page.py (246 tests)
+- `RULES.md` - Added critical pre-commit hook documentation
+- `VERSION` - v2026.6.1 → v2026.7.0
+- `CHANGELOG.md` - This file
+
 ## [v2026.6.1] - 2025-11-03
 
 ### Documentation Enhancements
