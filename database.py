@@ -2444,6 +2444,41 @@ Calculation Rules:<br>
             'analysis': generate_q23_analysis(results)
         }
 
+    def q24_database_metadata(self) -> Dict[str, Any]:
+        """Q24: Database_Metadata - Multi-Year Database Registry"""
+        from queries import QUERY_Q24_DATABASE_METADATA
+
+        results = self.db.execute_query(QUERY_Q24_DATABASE_METADATA)
+
+        return {
+            'title': 'Q24: Database_Metadata - Multi-Year Database Registry',
+            'description': 'All registered databases with year, filename, active status, and summary statistics',
+            'columns': ['db_id', 'year', 'db_filename', 'description', 'created_timestamp', 'status',
+                       'student_count', 'total_days', 'total_donations'],
+            'data': results,
+            'sort': 'year (desc)',
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Database_Metadata',
+                'columns': {
+                    'db_id': 'Unique database identifier (auto-increment)',
+                    'year': 'School year for this database',
+                    'db_filename': 'Database filename (e.g., readathon_2026.db)',
+                    'description': 'Optional description of database',
+                    'created_timestamp': 'When database was registered',
+                    'status': 'ACTIVE or INACTIVE',
+                    'student_count': 'Number of students in Roster',
+                    'total_days': 'Number of reading days recorded',
+                    'total_donations': 'Total fundraising dollars'
+                },
+                'terms': {
+                    'Active Database': 'The currently selected database in use',
+                    'Registry': 'Central table tracking all year databases',
+                    'Multi-Year': 'System supports managing multiple school years'
+                }
+            }
+        }
+
     def q9_most_donations_by_grade(self) -> Dict[str, Any]:
         """Q9: Most Donations by Grade - Per Grade Level (1 winner per grade)"""
 

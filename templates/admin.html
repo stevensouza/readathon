@@ -277,7 +277,7 @@
 
                             <!-- System Table Cards -->
                             <div class="row g-3 mb-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card h-100 border-2 bg-light">
                                     <div class="card-body">
                                         <h6 class="mb-1"><i class="bi bi-people-fill"></i> Roster</h6>
@@ -289,7 +289,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card h-100 border-2 bg-light">
                                     <div class="card-body">
                                         <h6 class="mb-1"><i class="bi bi-door-open-fill"></i> Class_Info</h6>
@@ -301,13 +301,25 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card h-100 border-2 bg-light">
                                     <div class="card-body">
                                         <h6 class="mb-1"><i class="bi bi-award-fill"></i> Grade_Rules</h6>
                                         <p class="small text-muted mb-2">Minimum and maximum daily reading minutes by grade level</p>
                                         <p class="mb-0">
                                             <span class="badge bg-secondary" id="countGradeRules">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card h-100 border-2 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="mb-1"><i class="bi bi-hdd-stack"></i> Database_Metadata</h6>
+                                        <p class="small text-muted mb-2">Multi-year database registry tracking year, filename, and statistics</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countDatabaseMetadata">Loading...</span>
                                         </p>
                                     </div>
                                 </div>
@@ -1094,6 +1106,7 @@ async function loadTableCounts() {
             document.getElementById('countRoster').textContent = `${result.counts.Roster} students`;
             document.getElementById('countClassInfo').textContent = `${result.counts.Class_Info} classes`;
             document.getElementById('countGradeRules').textContent = `${result.counts.Grade_Rules} grade levels`;
+            document.getElementById('countDatabaseMetadata').textContent = `${result.counts.Database_Metadata} databases`;
         }
     } catch (error) {
         console.error('Error loading table counts:', error);

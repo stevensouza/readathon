@@ -106,6 +106,7 @@ def get_unified_items():
         {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
         {'id': 'q22', 'name': 'Q22: Student Name Sync Check', 'description': 'Verify students in Daily_Logs match Reader_Cumulative', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
         {'id': 'q23', 'name': 'Q23: Roster Integrity Check', 'description': 'Verify all students exist in Roster table', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
+        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['admin'], 'item_type': 'report', 'report_type': 'utility'},
     ])
 
     # Database Tables (from /tables route)
@@ -125,7 +126,7 @@ def get_unified_items():
         {'id': 'qd', 'name': 'QD: Daily Slide Update', 'description': 'Runs all slide deck reports in sequence (Q18, Q14, Q4, Q19, Q20) - for daily update presentations', 'groups': ['workflows', 'workflow-daily-slide'], 'item_type': 'workflow'},
         {'id': 'qc', 'name': 'QC: Cumulative Workflow', 'description': 'Runs all final prize reports in sequence (Q5, Q6, Q14, Q18, Q19, Q20) - comprehensive cumulative view', 'groups': ['workflows', 'workflow-cumulative'], 'item_type': 'workflow'},
         {'id': 'qf', 'name': 'QF: Final Prize Winners', 'description': 'Runs all final prize winner reports (Q9-Q16, Q4, Q14, Q19, Q15) - determines all winners and prizes', 'groups': ['workflows', 'workflow-final-prize'], 'item_type': 'workflow'},
-        {'id': 'qa', 'name': 'QA: All Main Reports', 'description': 'Runs all 21 available reports in sequence (Q1-Q23) - comprehensive system report', 'groups': ['workflows', 'workflow-all-reports'], 'item_type': 'workflow'},
+        {'id': 'qa', 'name': 'QA: All Main Reports', 'description': 'Runs all 23 available reports in sequence (Q1-Q24) - comprehensive system report', 'groups': ['workflows', 'workflow-all-reports'], 'item_type': 'workflow'},
     ])
 
     return items
@@ -2526,6 +2527,8 @@ def run_report(report_id):
             result = reports.q15_goal_getters()
         elif report_id == 'q16':
             result = reports.q16_top_earner_per_team()
+        elif report_id == 'q24':
+            result = reports.q24_database_metadata()
         else:
             return jsonify({'error': 'Unknown report'}), 404
 
@@ -2596,6 +2599,8 @@ def export_report(report_id):
             result = reports.q15_goal_getters()
         elif report_id == 'q16':
             result = reports.q16_top_earner_per_team()
+        elif report_id == 'q24':
+            result = reports.q24_database_metadata()
         else:
             return jsonify({'error': 'Unknown report'}), 404
 
@@ -2764,7 +2769,7 @@ def get_table_counts():
         # Transactional tables (clearable)
         transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs', 'Team_Color_Bonus']
         # System tables (reference only)
-        system_tables = ['Roster', 'Class_Info', 'Grade_Rules']
+        system_tables = ['Roster', 'Class_Info', 'Grade_Rules', 'Database_Metadata']
 
         tables = transactional_tables + system_tables
 
@@ -3013,9 +3018,9 @@ def run_workflow(workflow_id):
             report_ids = ['q9', 'q10', 'q11', 'q12', 'q13', 'q16', 'q4', 'q14', 'q19', 'q15']
             workflow_name = 'Final Prize Winners'
         elif workflow_id == 'qa':  # All Reports
-            # Updated to include new prize reports Q9-Q13, Q15-Q16, and Q3
-            report_ids = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q18', 'q19', 'q20', 'q21', 'q22', 'q23']
-            workflow_name = 'All Main Reports (22 Reports)'
+            # Updated to include new prize reports Q9-Q13, Q15-Q16, Q3, and Q24
+            report_ids = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q18', 'q19', 'q20', 'q21', 'q22', 'q23', 'q24']
+            workflow_name = 'All Main Reports (23 Reports)'
         else:
             return jsonify({'error': 'Unknown workflow'}), 404
 
@@ -3065,6 +3070,8 @@ def run_workflow(workflow_id):
                 results.append(reports.q22_student_name_sync_check())
             elif rid == 'q23':
                 results.append(reports.q23_roster_integrity_check())
+            elif rid == 'q24':
+                results.append(reports.q24_database_metadata())
             elif rid == 'q9':
                 results.append(reports.q9_most_donations_by_grade())
             elif rid == 'q10':

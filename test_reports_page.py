@@ -159,11 +159,12 @@ class TestReportsPage:
         assert 'Q21' in html  # Data Sync
         assert 'Q22' in html  # Student Name Sync
         assert 'Q23' in html  # Roster Integrity
+        assert 'Q24' in html  # Database_Metadata
 
         # Get all items to verify count
         all_items = get_unified_items()
         admin_items = [i for i in all_items if 'admin' in i['groups']]
-        assert len(admin_items) == 4, "Expected exactly 4 admin reports"
+        assert len(admin_items) == 5, "Expected exactly 5 admin reports"
 
     def test_group_filter_tables(self, client):
         """Test 'Database Tables' filter shows only database tables."""

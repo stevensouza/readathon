@@ -2092,3 +2092,19 @@ def get_school_wide_leaders_query(date_where="", grade=None, team=None):
             LIMIT 1
         )
     """
+
+# Q24 - Database_Metadata (Multi-Year Database Registry)
+QUERY_Q24_DATABASE_METADATA = """
+    SELECT
+        db_id,
+        year,
+        db_filename,
+        description,
+        created_timestamp,
+        CASE WHEN is_active = 1 THEN 'ACTIVE' ELSE 'INACTIVE' END as status,
+        student_count,
+        total_days,
+        total_donations
+    FROM Database_Metadata
+    ORDER BY year DESC
+"""
