@@ -339,27 +339,66 @@ In addition to mandatory tests, each page should have tests for:
 ### Running Tests Before Commit
 **MANDATORY:** All tests MUST pass before creating a commit.
 
+### ⚠️ CRITICAL: When Creating New Test Files
+
+**YOU MUST UPDATE THE PRE-COMMIT HOOK FILE IMMEDIATELY!**
+
+When you create a new test file (e.g., `test_reports_page.py`), you MUST:
+
+1. **Add the test file to `.git/hooks/pre-commit`**
+2. **Update the test count comment in the pre-commit hook**
+3. **Run the pre-commit hook manually to verify it works**
+
+**Location:** `.git/hooks/pre-commit` (lines 11-22)
+
+**Example of what to update:**
+```bash
+# Old (before adding test_reports_page.py):
+# Updated: 2025-11-03 - All tests including Students page (240 tests total)
+python3 -m pytest \
+  test_school_page.py \
+  test_teams_page.py \
+  test_grade_level_page.py \
+  test_students_page.py \
+  test_data_accuracy.py \
+  ...
+
+# New (after adding test_reports_page.py):
+# Updated: 2025-11-05 - All tests including Reports & Data page (246 tests total)
+python3 -m pytest \
+  test_school_page.py \
+  test_teams_page.py \
+  test_grade_level_page.py \
+  test_students_page.py \
+  test_reports_page.py \    # ← ADD NEW TEST FILE HERE
+  test_data_accuracy.py \
+  ...
+```
+
+**Why this is critical:**
+- Pre-commit hook has **hardcoded list** of test files
+- New test files won't run automatically unless explicitly added
+- Forgetting this step means tests pass locally but may fail in CI/CD
+
+**Verification steps:**
+```bash
+# After updating .git/hooks/pre-commit:
+1. Run: python3 -m pytest test_reports_page.py -v
+2. Count tests: Should see NEW test count in output
+3. Test hook: git commit (will run all tests including new file)
+```
+
 #### Pre-Commit Test Command
 ```bash
 # Run all page tests
-pytest test_school_page.py test_teams_page.py test_grade_level_page.py -v
+pytest test_school_page.py test_teams_page.py test_grade_level_page.py test_reports_page.py -v
 
 # Or run all tests
 pytest -v
 ```
 
-#### Git Commit Pre-Commit Hook (Recommended)
-Add to `.git/hooks/pre-commit`:
-```bash
-#!/bin/bash
-echo "Running tests before commit..."
-pytest test_school_page.py test_teams_page.py test_grade_level_page.py -v
-if [ $? -ne 0 ]; then
-    echo "❌ Tests failed! Commit aborted."
-    exit 1
-fi
-echo "✅ All tests passed!"
-```
+#### Git Commit Pre-Commit Hook Location
+**File:** `.git/hooks/pre-commit` (this file is NOT tracked in git - must be updated manually)
 
 ### Test Fixtures
 All page tests should use these standard fixtures:
