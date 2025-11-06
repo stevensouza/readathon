@@ -2905,6 +2905,137 @@ def register_database():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/create_database', methods=['POST'])
+def create_database():
+    """Create a new read-a-thon database from CSV files"""
+    try:
+        # Get form data
+        year = request.form.get('year')
+        filename = request.form.get('filename')
+        description = request.form.get('description', '')
+
+        # Get uploaded CSV files
+        roster_csv = request.files.get('roster_csv')
+        class_info_csv = request.files.get('class_info_csv')
+        grade_rules_csv = request.files.get('grade_rules_csv')
+
+        # Validation
+        if not year or not filename:
+            return jsonify({
+                'success': False,
+                'error': 'Year and filename are required'
+            }), 400
+
+        if not all([roster_csv, class_info_csv, grade_rules_csv]):
+            return jsonify({
+                'success': False,
+                'error': 'All three CSV files are required (roster, class_info, grade_rules)'
+            }), 400
+
+        # Validate filename
+        if not filename.endswith('.db'):
+            return jsonify({
+                'success': False,
+                'error': 'Database filename must end with .db'
+            }), 400
+
+        # Prepend db/ if not already present
+        if not filename.startswith('db/'):
+            db_path = f'db/{filename}'
+        else:
+            db_path = filename
+
+        # Check if database file already exists
+        if os.path.exists(db_path):
+            return jsonify({
+                'success': False,
+                'error': f'Database file {db_path} already exists. Please use a different filename or delete the existing file first.'
+            }), 400
+
+        # Read CSV file contents
+        roster_content = roster_csv.read().decode('utf-8')
+        class_info_content = class_info_csv.read().decode('utf-8')
+        grade_rules_content = grade_rules_csv.read().decode('utf-8')
+
+        # Validate CSV headers
+        def validate_csv_headers(content, required_columns, csv_name):
+            """Validate that CSV has required columns"""
+            lines = content.strip().split('\n')
+            if not lines:
+                raise ValueError(f'{csv_name} is empty')
+
+            header = lines[0].strip()
+            columns = [col.strip() for col in header.split(',')]
+
+            missing = [col for col in required_columns if col not in columns]
+            if missing:
+                raise ValueError(f'{csv_name} is missing required columns: {", ".join(missing)}')
+
+            return True
+
+        # Validate each CSV
+        try:
+            validate_csv_headers(roster_content,
+                               ['student_name', 'class_name', 'home_room', 'teacher_name', 'grade_level', 'team_name'],
+                               'Roster CSV')
+            validate_csv_headers(class_info_content,
+                               ['class_name', 'home_room', 'teacher_name', 'grade_level', 'team_name', 'total_students'],
+                               'Class Info CSV')
+            validate_csv_headers(grade_rules_content,
+                               ['grade_level', 'min_daily_minutes', 'max_daily_minutes_credit'],
+                               'Grade Rules CSV')
+        except ValueError as e:
+            return jsonify({
+                'success': False,
+                'error': 'CSV validation failed',
+                'details': str(e)
+            }), 400
+
+        # Create new database
+        new_db = ReadathonDB(db_path)
+
+        # Load data from CSV files
+        class_info_count = new_db.load_class_info_data(class_info_content)
+        grade_rules_count = new_db.load_grade_rules_data(grade_rules_content)
+        roster_count = new_db.load_roster_data(roster_content)
+
+        # Register the database in Database_Metadata
+        new_db.register_database(
+            year=int(year),
+            db_filename=filename if not filename.startswith('db/') else filename.replace('db/', ''),
+            description=description
+        )
+
+        new_db.close()
+
+        # Return success response
+        return jsonify({
+            'success': True,
+            'db_path': db_path,
+            'year': int(year),
+            'counts': {
+                'roster': roster_count,
+                'class_info': class_info_count,
+                'grade_rules': grade_rules_count
+            },
+            'message': f'Database for year {year} created successfully'
+        })
+
+    except Exception as e:
+        # Clean up database file if it was created
+        if 'db_path' in locals() and os.path.exists(db_path):
+            try:
+                os.remove(db_path)
+            except:
+                pass
+
+        return jsonify({
+            'success': False,
+            'error': 'Database creation failed',
+            'details': str(e)
+        }), 500
+
+
 @app.route('/api/databases/<int:year>', methods=['GET'])
 def get_database_info(year):
     """Get information about a specific year database"""

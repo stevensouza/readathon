@@ -5,6 +5,78 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [v2026.10.0] - 2025-11-06
+
+### Database Creation Feature
+
+**Admin Page Reorganization:**
+- Reorganized Admin page tabs: Actions, Data Management, Database Creation (NEW), Database Comparison (renamed from "Database")
+- Changed tab order to prioritize workflow: manage data before comparing databases
+- "Database" tab renamed to "Database Comparison" for clarity
+
+**New Database Creation Tab:**
+- Complete UI for creating new read-a-thon databases from scratch
+- Year selection input with validation (2000-2100 range)
+- Database filename input with auto-generate button (creates `readathon_YYYY.db` format)
+- Optional description field for database metadata
+- Three CSV file upload inputs with visual card design:
+  - Roster CSV: Student roster with names, grades, teachers, team assignments
+  - Class Info CSV: Class information with teachers, grade levels, teams
+  - Grade Rules CSV: Reading goals - min/max daily minutes by grade level
+- Each upload card shows required column names for validation
+- Clear form button and create database button with loading states
+- Success/error feedback with detailed statistics
+
+**Backend API:**
+- New `/api/create_database` POST endpoint for database creation
+- CSV file validation - checks for required columns before processing
+- Duplicate filename detection - prevents overwriting existing databases
+- Creates new database file with all required tables
+- Loads data from three CSV files using existing `load_*_data()` methods
+- Automatically registers new database in Database_Metadata table
+- Error handling with detailed messages and automatic cleanup on failure
+- Returns success response with record counts for verification
+
+**JavaScript Functions:**
+- `autoGenerateFilename()` - Auto-generates filename from year (e.g., 2027 → readathon_2027.db)
+- `resetCreateForm()` - Clears all form inputs
+- `createDatabase(event)` - Handles form submission, validates inputs, calls API, shows status
+
+**Testing:**
+- New `test_database_creation.py` with 11 comprehensive tests
+- Tests admin page loads with all four tabs in correct order
+- Tests database creation tab has complete form structure
+- Tests successful database creation with valid CSV files
+- Tests validation for missing year, missing CSV files, invalid filename
+- Tests CSV column validation (missing required columns)
+- Tests duplicate filename prevention
+- Tests JavaScript functions presence (autoGenerateFilename, resetCreateForm)
+- All 316 tests passing (11 new, 305 existing, 5 skipped)
+
+**User Workflow:**
+1. Navigate to Admin → Database Creation tab
+2. Enter school year (e.g., 2027)
+3. Auto-generate or manually enter database filename
+4. (Optional) Add description
+5. Upload three CSV files (roster, class info, grade rules)
+6. Click "Create Database"
+7. New database is created, data loaded, and registered in Database_Metadata
+8. Switch to new database via Database Comparison tab or header dropdown
+
+**Benefits:**
+- Streamlined process for creating databases for new school years
+- No need for command-line tools or manual database initialization
+- Built-in CSV validation prevents data loading errors
+- Automatic registration makes new databases immediately available
+- Clear feedback during and after creation process
+
+**Files Modified:**
+- `templates/admin.html` - Reorganized tabs, added Database Creation tab UI and JavaScript functions
+- `app.py` - Added `/api/create_database` route with CSV validation
+- `tests/test_database_creation.py` - NEW: 11 comprehensive tests for database creation feature
+- `VERSION` - v2026.9.0 → v2026.10.0
+- `md/CHANGELOG.md` - This file
+
 ## [v2026.9.0] - 2025-11-05
 
 ### Pure Group-Based Tagging System
