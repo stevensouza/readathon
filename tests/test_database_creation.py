@@ -80,7 +80,7 @@ class TestDatabaseCreation:
         assert 'Actions' in data
         assert 'Data Management' in data
         assert 'Database Creation' in data
-        assert 'Database Comparison' in data
+        assert 'Database Registry' in data
 
         # Verify tab order by checking positions
         actions_pos = data.find('id="actions-tab"')

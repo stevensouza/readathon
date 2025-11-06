@@ -30,7 +30,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="db-comparison-tab" data-bs-toggle="tab" data-bs-target="#db-comparison" type="button" role="tab">
-            <i class="bi bi-database"></i> Database Comparison
+            <i class="bi bi-hdd-stack"></i> Database Registry
         </button>
     </li>
 </ul>
@@ -442,13 +442,13 @@
         </div>
     </div>
 
-    <!-- ========== DATABASE COMPARISON TAB ========== -->
+    <!-- ========== DATABASE REGISTRY TAB ========== -->
     <div class="tab-pane fade" id="db-comparison" role="tabpanel">
         <div class="card">
             <div class="card-header card-header-blue">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
-                        <i class="bi bi-database"></i> Database Management
+                        <i class="bi bi-hdd-stack"></i> Database Registry
                     </h5>
                     <button class="btn btn-sm btn-success" onclick="showRegisterForm()">
                         <i class="bi bi-plus-circle"></i> Register Existing Database
@@ -457,7 +457,7 @@
             </div>
             <div class="card-body">
                 <p class="text-muted mb-3">
-                    Manage multiple year databases for read-a-thon events. Register, activate, and maintain databases for different years or events.
+                    Registry of all read-a-thon databases. Register existing databases, switch between years, and maintain metadata for historical events.
                 </p>
 
                 <!-- Register Form (hidden by default) -->
@@ -1506,7 +1506,7 @@ async function createDatabase(event) {
                     </ul>
                     <p class="mb-0">
                         <i class="bi bi-info-circle"></i> The new database has been registered in Database_Metadata.
-                        Switch to it using the "Database Comparison" tab or the database selector in the header.
+                        Switch to it using the "Database Registry" tab or the database selector in the header.
                     </p>
                 </div>
             `;

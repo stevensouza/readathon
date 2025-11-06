@@ -5,14 +5,39 @@ All notable changes to the Read-a-Thon Management System will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
+## [Unreleased]
+
+### Admin Page Tab Clarity
+
+**Tab Rename:**
+- Renamed "Database Comparison" tab to "Database Registry" for clarity
+- Current tab functionality is about registering/managing databases, not comparing them
+- Actual database comparison tool (Feature 34) will be implemented as separate tab
+- Updated tab icon from `bi-database` to `bi-hdd-stack` (registry icon)
+
+**Improved Descriptions:**
+- Updated tab description: "Registry of all read-a-thon databases. Register existing databases, switch between years, and maintain metadata for historical events."
+- Makes it clear this tab is for database management, not year-over-year metric comparison
+
+**Pre-commit Hook Enhancement:**
+- Added `test_database_creation.py` to pre-commit hook
+- Now runs 17 test files (398 tests total) before allowing commits
+- Ensures database registry functionality is regression-tested
+
+**Files Modified:**
+- `templates/admin.html` - Renamed tab, updated icons and descriptions
+- `tests/test_database_creation.py` - Updated test assertion
+- `.git/hooks/pre-commit` - Added database creation tests
+- `md/CHANGELOG.md` - This file
+
 ## [v2026.10.0] - 2025-11-06
 
 ### Database Creation Feature
 
 **Admin Page Reorganization:**
-- Reorganized Admin page tabs: Actions, Data Management, Database Creation (NEW), Database Comparison (renamed from "Database")
-- Changed tab order to prioritize workflow: manage data before comparing databases
-- "Database" tab renamed to "Database Comparison" for clarity
+- Reorganized Admin page tabs: Actions, Data Management, Database Creation (NEW), Database Registry (renamed from "Database")
+- Changed tab order to prioritize workflow: manage data before managing databases
+- "Database" tab renamed to "Database Registry" for database management
 
 **New Database Creation Tab:**
 - Complete UI for creating new read-a-thon databases from scratch
@@ -61,7 +86,7 @@ and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 5. Upload three CSV files (roster, class info, grade rules)
 6. Click "Create Database"
 7. New database is created, data loaded, and registered in Database_Metadata
-8. Switch to new database via Database Comparison tab or header dropdown
+8. Switch to new database via Database Registry tab or header dropdown
 
 **Benefits:**
 - Streamlined process for creating databases for new school years
