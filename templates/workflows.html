@@ -406,7 +406,9 @@ async function runGroup() {
             const itemId = item.id;
 
             // Determine if this is a table or report based on groups
-            const isTable = item.groups && item.groups.includes('table');
+            // Reports take priority (they're executable), tables are just data views
+            const isReport = item.groups && item.groups.includes('report');
+            const isTable = item.groups && item.groups.includes('table') && !isReport;
 
             try {
                 let url;

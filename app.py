@@ -108,13 +108,14 @@ def get_unified_items():
         {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
         {'id': 'q22', 'name': 'Q22: Student Name Sync Check', 'description': 'Verify students in Daily_Logs match Reader_Cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
         {'id': 'q23', 'name': 'Q23: Roster Integrity Check', 'description': 'Verify all students exist in Roster table', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
-        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['report', 'table', 'utility', 'admin', 'workflow.qa', 'database']},
+        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['report', 'utility', 'admin', 'workflow.qa', 'database']},
     ])
 
     # Database Tables (from /tables route)
     items.extend([
         {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams', 'groups': ['table', 'database']},
         {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students', 'groups': ['table', 'database']},
+        {'id': 'database_metadata', 'name': 'Database Metadata', 'description': 'Multi-year database registry tracking year, filename, active status, and creation dates', 'groups': ['table', 'database']},
         {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['table', 'database']},
         {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'reading']},
         {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
