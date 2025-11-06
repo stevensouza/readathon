@@ -37,7 +37,7 @@ def initialize_sample_database():
     """Load simple sample data into the sample database"""
     print("Initializing SAMPLE database with simple test data...")
 
-    db = ReadathonDB('readathon_sample.db')
+    db = ReadathonDB('db/readathon_sample.db')
 
     # Load Class Info
     print("Loading Class Info data...")

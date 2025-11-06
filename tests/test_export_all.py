@@ -157,7 +157,7 @@ def test_export_readme_has_version(client):
 
 def test_export_metadata_method():
     """Test the get_export_metadata() method directly"""
-    db = ReadathonDB('readathon_sample.db')
+    db = ReadathonDB('db/readathon_sample.db')
 
     metadata = db.get_export_metadata()
 
@@ -182,7 +182,7 @@ def test_export_metadata_method():
 
 def test_export_all_tables_method():
     """Test the export_all_tables() method directly"""
-    db = ReadathonDB('readathon_sample.db')
+    db = ReadathonDB('db/readathon_sample.db')
 
     all_tables = db.export_all_tables()
 

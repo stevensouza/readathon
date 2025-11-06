@@ -31,7 +31,7 @@ def client():
 @pytest.fixture
 def sample_db():
     """Get sample database instance for verification queries."""
-    return ReadathonDB('readathon_sample.db')
+    return ReadathonDB('db/readathon_sample.db')
 
 
 class TestPhase1CampaignDay:

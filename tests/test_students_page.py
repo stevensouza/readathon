@@ -26,7 +26,7 @@ def client():
 @pytest.fixture
 def sample_db():
     """Get sample database instance for verification queries."""
-    return ReadathonDB('readathon_sample.db')
+    return ReadathonDB('db/readathon_sample.db')
 
 
 class TestStudentsPage:
@@ -195,7 +195,7 @@ class TestStudentsPage:
     def test_team_filter_functionality(self, client):
         """Verify team filter parameter works."""
         # Get team names from database
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         teams = sample_db.execute_query("SELECT DISTINCT team_name FROM Roster ORDER BY team_name")
 
         if len(teams) > 0:
@@ -215,7 +215,7 @@ class TestStudentsPage:
         assert response.status_code == 200
 
         # Get a specific date from database
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         dates = sample_db.get_all_dates()
 
         if len(dates) > 0:
@@ -361,7 +361,7 @@ class TestStudentDetailAPI:
     def test_student_detail_endpoint_exists(self, client):
         """Verify /student/<name> endpoint exists."""
         # Get a student name from database
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         students = sample_db.execute_query("SELECT student_name FROM Roster LIMIT 1")
 
         if len(students) > 0:
@@ -374,7 +374,7 @@ class TestStudentDetailAPI:
 
     def test_student_detail_returns_json(self, client):
         """Verify student detail endpoint returns JSON data."""
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         students = sample_db.execute_query("SELECT student_name FROM Roster LIMIT 1")
 
         if len(students) > 0:
@@ -388,7 +388,7 @@ class TestStudentDetailAPI:
 
     def test_student_detail_summary_structure(self, client):
         """Verify summary section has correct structure."""
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         students = sample_db.execute_query("SELECT student_name FROM Roster LIMIT 1")
 
         if len(students) > 0:
@@ -407,7 +407,7 @@ class TestStudentDetailAPI:
 
     def test_student_detail_daily_structure(self, client):
         """Verify daily section is a list."""
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         students = sample_db.execute_query("SELECT student_name FROM Roster LIMIT 1")
 
         if len(students) > 0:
@@ -421,7 +421,7 @@ class TestStudentDetailAPI:
 
     def test_student_detail_with_date_filter(self, client):
         """Verify student detail endpoint honors date filter."""
-        sample_db = ReadathonDB('readathon_sample.db')
+        sample_db = ReadathonDB('db/readathon_sample.db')
         students = sample_db.execute_query("SELECT student_name FROM Roster LIMIT 1")
         dates = sample_db.get_all_dates()
 

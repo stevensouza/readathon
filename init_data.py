@@ -31,7 +31,7 @@ def read_csv_file(filename):
         return f.read()
 
 
-def initialize_database_from_files(db_name='readathon_prod.db'):
+def initialize_database_from_files(db_name='db/readathon_prod.db'):
     """Load data from CSV files into the database"""
     print("="*60)
     print("Read-a-Thon Database Initialization")

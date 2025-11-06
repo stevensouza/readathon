@@ -33,9 +33,9 @@ def initialize_sample_database():
     print("\n" + "="*60)
     print("INITIALIZING SAMPLE DATABASE")
     print("="*60)
-    print("\nLoading simple test data into readathon_sample.db...")
+    print("\nLoading simple test data into db/readathon_sample.db...")
 
-    db = ReadathonDB('readathon_sample.db')
+    db = ReadathonDB('db/readathon_sample.db')
 
     # Load Class Info
     print("\nLoading Class Info data...")
@@ -72,9 +72,9 @@ def initialize_sample_database():
 
     print("\nTo upload sample data:")
     print("  1. Switch to 'Sample' environment in the web app")
-    print("  2. Upload 'sample_day1_minutes.csv' for date 2024-01-15")
-    print("  3. Upload 'sample_day2_minutes.csv' for date 2024-01-16")
-    print("  4. Upload 'sample_cumulative.csv' (no date needed)")
+    print("  2. Upload 'csv/sample_day1_minutes.csv' for date 2024-01-15")
+    print("  3. Upload 'csv/sample_day2_minutes.csv' for date 2024-01-16")
+    print("  4. Upload 'csv/sample_cumulative.csv' (no date needed)")
 
     print("\nExpected Results:")
     print("  Day 1: All 7 students have data")

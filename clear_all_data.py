@@ -24,7 +24,7 @@ def clear_all_data():
     print("  ✓ Roster (all student records)")
     print("  ✓ Class_Info")
     print("  ✓ Grade_Rules")
-    print("\n🎯 Database: readathon_prod.db")
+    print("\n🎯 Database: db/readathon_prod.db")
     print("="*70)
 
     confirm = input("\n⚠️  Type 'reset' to confirm: ")
@@ -34,7 +34,7 @@ def clear_all_data():
         return False
 
     # Connect to PROD database
-    db = ReadathonDB('/Users/stevesouza/my/data/readathon/v2026_development/readathon_prod.db')
+    db = ReadathonDB('db/readathon_prod.db')
     conn = db.get_connection()
     cursor = conn.cursor()
 

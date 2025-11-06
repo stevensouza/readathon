@@ -1,9 +1,9 @@
 # Database files - BLOCK REAL DATA
 *.db
-!readathon_sample.db
+!db/readathon_sample.db
 # Specifically block production databases
-readathon_prod.db
-readathon.db
+db/readathon_prod.db
+db/readathon.db
 
 # CSV files with real student data - BLOCK
 class_info.csv
@@ -14,8 +14,8 @@ ROSTER_CSV.csv
 CLASS_INFO_CSV.csv
 GRADE_RULES_CSV.csv
 test_*.csv
-# Allow sample CSV files
-!sample_*.csv
+# Allow sample CSV files in csv/ directory
+!csv/sample_*.csv
 
 # Utility scripts with real data - BLOCK
 compare_rosters.py
@@ -23,11 +23,16 @@ generate_init_data.py
 
 # Uploaded files directory (if it exists)
 uploads/
-data/
 
 # Python cache
 *.pyc
 __pycache__/
+tests/__pycache__/
+
+# Testing artifacts
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Environment
 venv/

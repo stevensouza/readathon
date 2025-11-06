@@ -59,8 +59,8 @@ else:
     print(f"   (Using remembered preference from {CONFIG_FILE})")
 
 # Initialize databases for both environments
-db_prod = ReadathonDB('readathon_prod.db')
-db_sample = ReadathonDB('readathon_sample.db')
+db_prod = ReadathonDB('db/readathon_prod.db')
+db_sample = ReadathonDB('db/readathon_sample.db')
 
 def get_current_db():
     """Get the database based on current environment selection"""

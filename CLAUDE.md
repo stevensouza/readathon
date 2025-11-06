@@ -109,8 +109,20 @@ report_metadata.py        # Column metadata, terms, analysis for reports
 init_data.py              # DB initialization with student roster
 requirements.txt          # Flask==3.0.0
 VERSION                   # Current version number (vYYYY.MINOR.PATCH)
-CHANGELOG.md              # Version history and release notes
+README.md                 # Project README
 CLAUDE.md                 # This file - project guidance for Claude Code
+md/                       # Markdown documentation
+  ├─ CHANGELOG.md         # Version history and release notes
+  ├─ RULES.md             # Universal rules for all pages
+  ├─ UI_PATTERNS.md       # Established UI patterns
+  ├─ IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
+  └─ ...                  # Other markdown docs
+db/                       # SQLite databases
+  ├─ readathon_prod.db    # Production database
+  ├─ readathon_sample.db  # Sample database
+  └─ readathon.db         # Default/working database
+csv/                      # Sample CSV files for initialization
+tests/                    # All test files
 templates/                # Jinja2 HTML (base, index, upload, reports, admin, workflows)
 prototypes/               # HTML prototypes (sanitized with fictitious data)
 docs/                     # Feature documentation (31 features + architecture)
@@ -118,20 +130,19 @@ docs/                     # Feature documentation (31 features + architecture)
   ├─ QUICK_START_NEXT_SESSION.md  # Current work status
   └─ features/            # Individual feature specs
   └─ screenshots/         # Screenshots (sanitized for privacy)
-IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
 ```
 
 ## Universal Rules & UI Patterns
 
 **MANDATORY READING before implementing ANY feature:**
 
-1. **[RULES.md](RULES.md)** - Universal rules that apply across all pages
+1. **[RULES.md](md/RULES.md)** - Universal rules that apply across all pages
    - Data source rules (which tables for what data)
    - Team color assignments (alphabetical order: team 1 = blue, team 2 = yellow)
    - Winner highlighting rules (gold = school-wide, silver = grade/team level)
    - Banner metric order, state management, consistency principles
 
-2. **[UI_PATTERNS.md](UI_PATTERNS.md)** - Established UI patterns from existing pages
+2. **[UI_PATTERNS.md](md/UI_PATTERNS.md)** - Established UI patterns from existing pages
    - Color palette (hex codes for all colors)
    - Component patterns (filters, banners, badges, tables, footers)
    - Layout templates and implementation checklists
@@ -148,16 +159,16 @@ IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
 **MANDATORY process when implementing features from prototypes:**
 
 ### Step 1: Before Starting Implementation
-- [ ] Read RULES.md completely
+- [ ] Read md/RULES.md completely
 - [ ] Read the prototype HTML file completely
 - [ ] Create element inventory: List ALL visual/functional features in prototype
 - [ ] Check 2-3 existing pages (school.html, teams.html, grade_level.html) for similar patterns
-- [ ] Consult UI_PATTERNS.md for styling, colors, component structures
+- [ ] Consult md/UI_PATTERNS.md for styling, colors, component structures
 - [ ] Plan implementation: Map each prototype element → production code
 
 ### Step 2: During Implementation
-- [ ] Reference RULES.md for every data calculation
-- [ ] Use UI_PATTERNS.md for consistent styling
+- [ ] Reference md/RULES.md for every data calculation
+- [ ] Use md/UI_PATTERNS.md for consistent styling
 - [ ] Check school/teams/grade pages when uncertain about patterns
 - [ ] Add code comments for complex logic or rule applications
 
@@ -166,17 +177,17 @@ IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
 - [ ] Open page in browser and compare side-by-side with prototype
 - [ ] Test ALL interactive elements (buttons, filters, sorting, dropdowns)
 - [ ] Verify calculations against database queries
-- [ ] Check RULES.md checklist (data sources, colors, consistency)
+- [ ] Check md/RULES.md checklist (data sources, colors, consistency)
 
 ### Step 4: Testing Discipline
 Instead of saying *"The banner now shows correct values"*, do this:
 1. Read prototype banner section
 2. Identify exact elements: 4 metrics? which ones? what order?
-3. Implement using correct data sources (per RULES.md)
+3. Implement using correct data sources (per md/RULES.md)
 4. Test: Load actual URL in browser
 5. Verify: Banner shows same 4 metrics as prototype, same order
 6. Verify: Numbers match database (run SQL to confirm)
-7. Status: ✅ Matches prototype, ✅ Follows RULES.md
+7. Status: ✅ Matches prototype, ✅ Follows md/RULES.md
 
 ---
 
@@ -191,7 +202,7 @@ Instead of saying *"The banner now shows correct values"*, do this:
 # Create test file while implementing, not after
 test_students_page.py
 
-# Mandatory tests for ALL pages (see RULES.md lines 228-320):
+# Mandatory tests for ALL pages (see md/RULES.md lines 228-320):
 - test_page_loads_successfully (HTTP 200)
 - test_no_error_messages (scan for exceptions)
 - test_percentage_formats (validate all %)
@@ -250,8 +261,8 @@ test_students_page.py
 **User asks important question → Document answer NOW:**
 ```
 User: "Should fundraising be capped or uncapped?"
-Claude: [Immediately edits RULES.md]
-        "✅ Documented in RULES.md line 82-85: Fundraising is NEVER capped,
+Claude: [Immediately edits md/RULES.md]
+        "✅ Documented in md/RULES.md line 82-85: Fundraising is NEVER capped,
             always from Reader_Cumulative table"
 ```
 
@@ -263,21 +274,21 @@ Claude: [Immediately updates docs/STUDENTS_PAGE_DESIGN.md]
             Reading column uses capped minutes (max 120/day)"
 ```
 
-**New pattern discovered → Update UI_PATTERNS.md NOW:**
+**New pattern discovered → Update md/UI_PATTERNS.md NOW:**
 ```
 Claude: "I notice all pages use the same filter dropdown pattern"
         [Immediately updates UI_PATTERNS.md]
-        "✅ Added Filter Period Selector pattern to UI_PATTERNS.md lines 50-109"
+        "✅ Added Filter Period Selector pattern to md/UI_PATTERNS.md lines 50-109"
 ```
 
 ### Which Files to Update
 
 | Decision Type | File to Update | Example |
 |---------------|----------------|---------|
-| Data source rule | `RULES.md` | "Fundraising always from Reader_Cumulative" |
-| Calculation rule | `RULES.md` | "Participation can exceed 100% with color bonus" |
-| Visual pattern | `UI_PATTERNS.md` | "Team badges use rounded rectangles" |
-| Color assignment | `UI_PATTERNS.md` or `RULES.md` | "Team 1 (alphabetically first) = blue" |
+| Data source rule | `md/RULES.md` | "Fundraising always from Reader_Cumulative" |
+| Calculation rule | `md/RULES.md` | "Participation can exceed 100% with color bonus" |
+| Visual pattern | `md/UI_PATTERNS.md` | "Team badges use rounded rectangles" |
+| Color assignment | `md/UI_PATTERNS.md` or `md/RULES.md` | "Team 1 (alphabetically first) = blue" |
 | Feature design | `docs/STUDENTS_PAGE_DESIGN.md` | "Detail view shows daily breakdown" |
 | Open questions | `docs/STUDENTS_PAGE_DESIGN.md` | "TBD: Export to CSV or Excel?" |
 
@@ -306,7 +317,7 @@ Claude: "I notice all pages use the same filter dropdown pattern"
 
 ### Phase 1: Design - Master View (Table)
 **ASCII Prototype:**
-- [ ] Review RULES.md, UI_PATTERNS.md, existing pages
+- [ ] Review md/RULES.md, md/UI_PATTERNS.md, existing pages
 - [ ] Create ASCII prototype for Students table view (all 411 students)
 - [ ] Define columns: Name, Grade, Team, Class, Fundraising, Reading (capped), Sponsors, Participation
 - [ ] Document design decisions in `docs/STUDENTS_PAGE_DESIGN.md`
@@ -314,7 +325,7 @@ Claude: "I notice all pages use the same filter dropdown pattern"
 
 **HTML Prototype:**
 - [ ] Create `/prototypes/students_tab.html` with fictitious data
-- [ ] Match color palette, component patterns from UI_PATTERNS.md
+- [ ] Match color palette, component patterns from md/UI_PATTERNS.md
 - [ ] Verify sortable table headers (#1e3a5f background, white text)
 - [ ] Verify team colors (alphabetical rule: blue/yellow)
 - [ ] Verify 6-metric banner (same order as School/Teams/Grade pages)
@@ -383,9 +394,9 @@ Claude: "I notice all pages use the same filter dropdown pattern"
 ## Critical Context
 
 ### Before Starting Work
-1. **Read [RULES.md](RULES.md)** - Universal app rules
-2. **Read [UI_PATTERNS.md](UI_PATTERNS.md)** - Established patterns from existing pages
-3. **Read IMPLEMENTATION_PROMPT.md** - Complete requirements document
+1. **Read [RULES.md](md/RULES.md)** - Universal app rules
+2. **Read [UI_PATTERNS.md](md/UI_PATTERNS.md)** - Established patterns from existing pages
+3. **Read md/IMPLEMENTATION_PROMPT.md** - Complete requirements document
 4. **Check docs/QUICK_START_NEXT_SESSION.md** - Current development status
 5. **Consult docs/00-INDEX.md** - Searchable feature index
 
