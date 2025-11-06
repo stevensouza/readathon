@@ -3170,6 +3170,7 @@ def view_table(table_id):
         table_map = {
             'roster': 'Roster',
             'class_info': 'Class_Info',
+            'database_metadata': 'Database_Metadata',
             'grade_rules': 'Grade_Rules',
             'daily_logs': 'Daily_Logs',
             'reader_cumulative': 'Reader_Cumulative',
@@ -3196,6 +3197,8 @@ def view_table(table_id):
             query += " ORDER BY team_name ASC, grade_level ASC, class_name ASC, student_name ASC"
         elif table_id == 'class_info':
             query += " ORDER BY team_name ASC, grade_level ASC, class_name ASC"
+        elif table_id == 'database_metadata':
+            query += " ORDER BY year DESC"
 
         data = db.execute_query(query)
 
