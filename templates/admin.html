@@ -57,7 +57,7 @@
                         </div>
                         <div class="mt-3">
                             <small class="text-muted">
-                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Upload_History, Team_Color_Bonus, Database_Metadata, and README with export details
+                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Upload_History, Team_Color_Bonus, and README with export details (Database_Registry excluded)
                             </small>
                         </div>
                     </div>
@@ -259,19 +259,30 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-md-3">
-                                <div class="card h-100 border-2 bg-light">
+                        <!-- Database Registry (Separate Database File) -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card border-2" style="border-color: #4a90e2 !important;">
                                     <div class="card-body">
-                                        <h6 class="mb-1"><i class="bi bi-hdd-stack"></i> Database_Metadata</h6>
-                                        <p class="small text-muted mb-2">Multi-year database registry tracking year, filename, and statistics</p>
+                                        <h6 class="mb-1">
+                                            <i class="bi bi-hdd-stack"></i> Database_Registry
+                                            <span class="badge bg-info ms-2">Separate Database</span>
+                                        </h6>
+                                        <p class="small text-muted mb-2">
+                                            Multi-year database registry tracking all databases
+                                            <br>
+                                            <strong>Location:</strong> <code>db/readathon_registry.db</code> (not in current contest database)
+                                        </p>
                                         <p class="mb-0">
-                                            <span class="badge bg-secondary" id="countDatabaseMetadata">Loading...</span>
+                                            <span class="badge bg-secondary" id="countDatabaseRegistry">Loading...</span>
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         </div><!-- End System Tables Collapse -->
                     </div>
                 </div>
@@ -297,7 +308,7 @@
                                 <li>Create a new database file (e.g., <code>readathon_2027.db</code>)</li>
                                 <li>Initialize all required tables (Roster, Class_Info, Grade_Rules, Daily_Logs, etc.)</li>
                                 <li>Load your school data from the three CSV files you provide</li>
-                                <li>Register the new database in Database_Metadata for easy switching</li>
+                                <li>Register the new database in the central Database_Registry for easy switching</li>
                             </ul>
                             <p class="mb-0">
                                 <i class="bi bi-folder"></i> <strong>Sample CSV files</strong> are available in the <code>csv/</code> directory for reference.
@@ -456,9 +467,27 @@
                 </div>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-3">
-                    Registry of all read-a-thon databases. Register existing databases, switch between years, and maintain metadata for historical events.
-                </p>
+                <!-- Explanation Box -->
+                <div class="alert alert-info mb-3">
+                    <h6 class="mb-2"><i class="bi bi-info-circle"></i> About the Database Registry</h6>
+                    <p class="small mb-2">
+                        The <strong>Database Registry</strong> tracks all read-a-thon databases in a separate registry database
+                        (<code>db/readathon_registry.db</code> → <code>Database_Registry</code> table). Each contest database
+                        (like <code>readathon_2025.db</code>) stores its own student/reading data.
+                    </p>
+                    <ul class="small mb-2">
+                        <li><strong>Active Database:</strong> The currently-in-use database. Only ONE database can be active at a time.
+                            Activating a database automatically deactivates the previous one.</li>
+                        <li><strong>Switching Databases:</strong> Use the dropdown in the header (top-right) OR click "Activate" below.
+                            Both methods update the active database and reload the page with the new database's data.</li>
+                        <li><strong>Update Stats:</strong> Recalculates summary statistics (student count, days, donations) from the
+                            contest database and updates the registry. Run this after uploading new data.</li>
+                        <li><strong>Register:</strong> Add an existing database file to the registry so it appears in the dropdown.</li>
+                    </ul>
+                    <p class="small mb-0 text-muted">
+                        <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Display names below match the database selector in the header.
+                    </p>
+                </div>
 
                 <!-- Register Form (hidden by default) -->
                 <div id="registerForm" class="alert alert-light border" style="display: none;">
@@ -1044,13 +1073,14 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadDatabases() {
     try {
         const response = await fetch('/api/databases');
-        const result = await response.json();
+        const databases = await response.json();
 
-        if (!result.success) {
-            throw new Error(result.error);
+        // New format: /api/databases returns array directly
+        if (!Array.isArray(databases)) {
+            throw new Error('Invalid response format from server');
         }
 
-        displayDatabases(result.databases);
+        displayDatabases(databases);
     } catch (error) {
         document.getElementById('databaseList').innerHTML = `
             <div class="alert alert-danger alert-sm">
@@ -1087,7 +1117,7 @@ function displayDatabases(databases) {
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="mb-0">
-                                <i class="bi bi-calendar"></i> ${db.year}
+                                <i class="bi bi-database"></i> ${db.display_name}
                             </h5>
                             ${activeBadge}
                         </div>
@@ -1110,13 +1140,13 @@ function displayDatabases(databases) {
                             </div>
                         </div>
                         <div class="d-grid gap-1">
-                            ${!isActive ? `<button class="btn btn-sm btn-success" onclick="activateDatabase(${db.year})">
+                            ${!isActive ? `<button class="btn btn-sm btn-success" onclick="activateDatabase(${db.db_id})">
                                 <i class="bi bi-check-circle"></i> Activate
                             </button>` : ''}
-                            <button class="btn btn-sm btn-outline-primary" onclick="updateStats(${db.year})">
+                            <button class="btn btn-sm btn-outline-primary" onclick="updateStats(${db.db_id})">
                                 <i class="bi bi-arrow-clockwise"></i> Update Stats
                             </button>
-                            ${!isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteDatabase(${db.year})">
+                            ${!isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteDatabase(${db.db_id})">
                                 <i class="bi bi-trash"></i> Delete
                             </button>` : ''}
                         </div>
@@ -1179,13 +1209,9 @@ async function submitRegistration() {
     }
 }
 
-async function activateDatabase(year) {
-    if (!confirm(`Switch to database for year ${year}?`)) {
-        return;
-    }
-
+async function activateDatabase(dbId) {
     try {
-        const response = await fetch(`/api/databases/${year}/activate`, {
+        const response = await fetch(`/api/databases/${dbId}/activate`, {
             method: 'PUT'
         });
 
@@ -1195,17 +1221,18 @@ async function activateDatabase(year) {
             throw new Error(result.error);
         }
 
-        showSuccess(`Database for year ${year} is now active`);
-        loadDatabases();
+        showSuccess(`Switched to database: ${result.database.display_name}`);
+        // Reload page to show new database data
+        setTimeout(() => location.reload(), 500);
 
     } catch (error) {
         alert('Activation failed: ' + error.message);
     }
 }
 
-async function updateStats(year) {
+async function updateStats(dbId) {
     try {
-        const response = await fetch(`/api/databases/${year}/stats`, {
+        const response = await fetch(`/api/databases/${dbId}/stats`, {
             method: 'PUT'
         });
 
@@ -1215,7 +1242,7 @@ async function updateStats(year) {
             throw new Error(result.error);
         }
 
-        showSuccess(`Stats updated for year ${year}: ${result.student_count} students, ${result.total_days} days, $${result.total_donations.toFixed(2)} donations`);
+        showSuccess(`Stats recalculated for ${result.display_name}: ${result.student_count} students, ${result.total_days} days, $${result.total_donations.toFixed(2)} donations`);
         loadDatabases();
 
     } catch (error) {
@@ -1223,13 +1250,17 @@ async function updateStats(year) {
     }
 }
 
-async function deleteDatabase(year) {
-    if (!confirm(`Delete database registration for year ${year}?\n\nThis will NOT delete the actual .db file, only the registration.`)) {
+async function deleteDatabase(dbId) {
+    // Get database info for confirmation message
+    const databases = await (await fetch('/api/databases')).json();
+    const db = databases.find(d => d.db_id === dbId);
+
+    if (!confirm(`Delete database registration for "${db?.display_name || 'this database'}"?\n\nThis will NOT delete the actual .db file, only remove it from the registry.`)) {
         return;
     }
 
     try {
-        const response = await fetch(`/api/databases/${year}`, {
+        const response = await fetch(`/api/databases/${dbId}`, {
             method: 'DELETE'
         });
 
@@ -1239,7 +1270,7 @@ async function deleteDatabase(year) {
             throw new Error(result.error);
         }
 
-        showSuccess(`Database registration for year ${year} deleted`);
+        showSuccess(result.message || `Database registration deleted`);
         loadDatabases();
 
     } catch (error) {
@@ -1277,8 +1308,15 @@ async function loadTableCounts() {
             document.getElementById('countRoster').textContent = `${result.counts.Roster} students`;
             document.getElementById('countClassInfo').textContent = `${result.counts.Class_Info} classes`;
             document.getElementById('countGradeRules').textContent = `${result.counts.Grade_Rules} grade levels`;
-            document.getElementById('countDatabaseMetadata').textContent = `${result.counts.Database_Metadata} databases`;
         }
+
+        // Load Database_Registry count from separate database
+        const regResponse = await fetch('/api/databases');
+        const databases = await regResponse.json();
+        if (databases && Array.isArray(databases)) {
+            document.getElementById('countDatabaseRegistry').textContent = `${databases.length} databases`;
+        }
+
     } catch (error) {
         console.error('Error loading table counts:', error);
     }
@@ -1505,7 +1543,7 @@ async function createDatabase(event) {
                         <li>Grade Rules: ${result.counts.grade_rules} grade levels</li>
                     </ul>
                     <p class="mb-0">
-                        <i class="bi bi-info-circle"></i> The new database has been registered in Database_Metadata.
+                        <i class="bi bi-info-circle"></i> The new database has been registered in the central Database_Registry.
                         Switch to it using the "Database Registry" tab or the database selector in the header.
                     </p>
                 </div>

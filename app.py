@@ -4,7 +4,7 @@ Flask-based browser interface for managing and reporting on read-a-thon data
 """
 
 from flask import Flask, render_template, request, jsonify, send_file, Response, session, redirect, url_for
-from database import ReadathonDB, ReportGenerator
+from database import ReadathonDB, ReportGenerator, DatabaseRegistry
 from queries import get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query
 import csv
 import io
@@ -13,6 +13,7 @@ from datetime import datetime
 import os
 import argparse
 import json
+import sys
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -22,54 +23,129 @@ app.secret_key = 'readathon-secret-key-change-in-production'  # For session mana
 CONFIG_FILE = '.readathon_config'
 
 def read_config():
-    """Read configuration from file"""
+    """Read active database ID from config file"""
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r') as f:
                 config = json.load(f)
-                return config.get('default_database', 'sample')
+                return config.get('active_database_id')
         except:
-            return 'sample'
-    return 'sample'
+            return None
+    return None
 
-def write_config(database):
-    """Write configuration to file"""
+def write_config(db_id, db_filename):
+    """Write active database to config file"""
     try:
         with open(CONFIG_FILE, 'w') as f:
-            json.dump({'default_database': database}, f)
+            json.dump({
+                'active_database_id': db_id,
+                'active_database_filename': db_filename
+            }, f, indent=2)
     except:
         pass  # Silently fail if can't write config
 
-# Parse command line arguments
+# Temporary compatibility - will be removed when all routes are updated
+DEFAULT_DATABASE = "sample"  # Fallback for legacy session.get('environment', DEFAULT_DATABASE)
+
+# Parse command line arguments - HYBRID APPROACH
 parser = argparse.ArgumentParser(description='Read-a-Thon Management System')
-parser.add_argument('--db', choices=['sample', 'prod'],
-                   help='Database to use (sample or prod). Overrides config file.')
+parser.add_argument('--db',
+                   help='Database to use: display name ("2025 Read-a-Thon"), '
+                        'filename (readathon_2025.db), or alias ("sample"). '
+                        'Case-insensitive.')
 args, unknown = parser.parse_known_args()
 
-# Determine default database: CLI > Config File > 'sample'
-DEFAULT_DATABASE = args.db if args.db else read_config()
+# Initialize registry
+registry = DatabaseRegistry()
 
-# Persist the database choice for next startup
-write_config(DEFAULT_DATABASE)
-
-print(f"🗄️  Starting with database: {DEFAULT_DATABASE}")
+# Determine startup database
 if args.db:
+    # Command-line argument provided - match against display_name, filename, or alias
+    db_match = registry.get_database_by_name(args.db)
+
+    if not db_match:
+        print(f"\n❌ Database not found: {args.db}")
+        print("\nAvailable databases:")
+        for db in registry.list_databases():
+            active_marker = " (ACTIVE)" if db['is_active'] else ""
+            print(f"  - {db['display_name']}{active_marker}")
+            print(f"    Filename: {db['db_filename']}")
+        sys.exit(1)
+
+    DEFAULT_DATABASE_ID = db_match['db_id']
+    print(f"🗄️  Starting with database: {db_match['display_name']}")
     print(f"   (Specified via command line: --db {args.db})")
 else:
-    print(f"   (Using remembered preference from {CONFIG_FILE})")
+    # No CLI arg - check config file or use active database from registry
+    config_db_id = read_config()
 
-# Initialize databases for both environments
-db_prod = ReadathonDB('db/readathon_prod.db')
-db_sample = ReadathonDB('db/readathon_sample.db')
+    if config_db_id:
+        # Use database from config file
+        db_info = registry.get_database(config_db_id)
+        if db_info:
+            DEFAULT_DATABASE_ID = config_db_id
+            print(f"🗄️  Starting with database: {db_info['display_name']}")
+            print(f"   (Using remembered preference from {CONFIG_FILE})")
+        else:
+            # Config references non-existent database - fall back to active
+            active_db = registry.get_active_database()
+            DEFAULT_DATABASE_ID = active_db['db_id']
+            print(f"🗄️  Starting with database: {active_db['display_name']}")
+            print(f"   (Config database not found, using active database)")
+    else:
+        # No config - use active database from registry
+        active_db = registry.get_active_database()
+        if not active_db:
+            print("\n❌ No active database found in registry!")
+            sys.exit(1)
+
+        DEFAULT_DATABASE_ID = active_db['db_id']
+        print(f"🗄️  Starting with database: {active_db['display_name']}")
+        print(f"   (No config file found, using active database from registry)")
+
+# Cache for loaded databases
+database_cache = {}
+
+def get_database(db_id: int):
+    """Load database by ID (with caching)"""
+    if db_id not in database_cache:
+        db_info = registry.get_database(db_id)
+        if not db_info:
+            raise ValueError(f"Database ID {db_id} not found in registry")
+
+        db_path = f"db/{db_info['db_filename']}"
+        database_cache[db_id] = ReadathonDB(db_path)
+
+    return database_cache[db_id]
 
 def get_current_db():
-    """Get the database based on current environment selection"""
-    env = session.get('environment', DEFAULT_DATABASE)
-    return db_prod if env == 'prod' else db_sample
+    """Get currently active database"""
+    db_id = session.get('active_database_id', DEFAULT_DATABASE_ID)
+    return get_database(db_id)
 
 def get_current_reports():
     """Get report generator for current environment"""
     return ReportGenerator(get_current_db())
+
+@app.context_processor
+def inject_database_info():
+    """Inject database information into all templates"""
+    db_id = session.get('active_database_id', DEFAULT_DATABASE_ID)
+    db_info = registry.get_database(db_id)
+
+    if db_info:
+        # Check if this is the sample database (either by display name or filename)
+        is_sample = 'sample' in db_info['display_name'].lower() or 'sample' in db_info['db_filename'].lower()
+
+        return {
+            'current_database': db_info,
+            'is_sample_database': is_sample
+        }
+
+    return {
+        'current_database': None,
+        'is_sample_database': False
+    }
 
 
 def get_unified_items():
@@ -108,14 +184,13 @@ def get_unified_items():
         {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
         {'id': 'q22', 'name': 'Q22: Student Name Sync Check', 'description': 'Verify students in Daily_Logs match Reader_Cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
         {'id': 'q23', 'name': 'Q23: Roster Integrity Check', 'description': 'Verify all students exist in Roster table', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
-        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['report', 'utility', 'admin', 'workflow.qa', 'database']},
+        {'id': 'q24', 'name': 'Q24: Database_Registry', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics (from central registry database)', 'groups': ['report', 'utility', 'admin', 'workflow.qa', 'database']},
     ])
 
     # Database Tables (from /tables route)
     items.extend([
         {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams', 'groups': ['table', 'database']},
         {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students', 'groups': ['table', 'database']},
-        {'id': 'database_metadata', 'name': 'Database Metadata', 'description': 'Multi-year database registry tracking year, filename, active status, and creation dates', 'groups': ['table', 'database']},
         {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['table', 'database']},
         {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'reading']},
         {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
@@ -2235,16 +2310,31 @@ def upload_page():
     return render_template('upload.html', environment=env)
 
 
-@app.route('/api/set_environment', methods=['POST'])
-def set_environment():
-    """Set the current environment (sample or prod)"""
-    env = request.json.get('environment', DEFAULT_DATABASE)
-    if env in ['sample', 'prod']:
-        session['environment'] = env
-        # Save preference to config file for next startup
-        write_config(env)
-        return jsonify({'success': True, 'environment': env})
-    return jsonify({'success': False, 'error': 'Invalid environment'}), 400
+@app.route('/api/set_active_database', methods=['POST'])
+def set_active_database():
+    """Switch to a different database"""
+    db_id = request.json.get('database_id')
+
+    if not db_id:
+        return jsonify({'success': False, 'error': 'database_id required'}), 400
+
+    # Update registry (sets is_active flag)
+    result = registry.set_active_database(db_id)
+
+    if not result['success']:
+        return jsonify(result), 400
+
+    # Update session
+    session['active_database_id'] = db_id
+
+    # Save to config file for next startup
+    db_info = registry.get_database(db_id)
+    write_config(db_id, db_info['db_filename'])
+
+    return jsonify({
+        'success': True,
+        'database': db_info
+    })
 
 
 @app.route('/api/upload_history')
@@ -2714,6 +2804,18 @@ def export_all():
         # Add version to metadata
         metadata['version'] = version
 
+        # Get registry info for current database
+        db_id = session.get('active_database_id', DEFAULT_DATABASE_ID)
+        db_info = registry.get_database(db_id)
+        if db_info:
+            metadata['database_info'] = {
+                'db_id': db_info['db_id'],
+                'display_name': db_info['display_name'],
+                'filename': db_info['db_filename'],
+                'year': db_info['year'],
+                'description': db_info['description']
+            }
+
         # Create README content
         readme_content = generate_export_readme(metadata)
 
@@ -2770,6 +2872,20 @@ def generate_export_readme(metadata: dict) -> str:
     date_range = metadata['date_range']
     totals = metadata['totals']
     version = metadata.get('version', 'unknown')
+    db_info = metadata.get('database_info', {})
+
+    # Build database info section if available
+    db_info_section = ""
+    if db_info:
+        db_info_section = f"""
+## Database Information
+
+- **Database ID:** {db_info.get('db_id', 'N/A')}
+- **Display Name:** {db_info.get('display_name', 'N/A')}
+- **Filename:** {db_info.get('filename', 'N/A')}
+- **Year:** {db_info.get('year', 'N/A')}
+- **Description:** {db_info.get('description', 'N/A')}
+"""
 
     readme = f"""# Read-a-Thon Database Export
 
@@ -2780,7 +2896,7 @@ def generate_export_readme(metadata: dict) -> str:
 - **Database:** {metadata['database_path']}
 - **Date Range:** {date_range['min_date']} to {date_range['max_date']}
 - **Last Upload:** {metadata['last_upload']}
-
+{db_info_section}
 ## Summary Statistics
 
 ### Overall Totals
@@ -2794,7 +2910,6 @@ def generate_export_readme(metadata: dict) -> str:
 - **Roster:** {counts['Roster']:,} students
 - **Class_Info:** {counts['Class_Info']:,} classes
 - **Grade_Rules:** {counts['Grade_Rules']:,} grade levels
-- **Database_Metadata:** {counts['Database_Metadata']:,} database(s)
 
 #### Transactional Tables (Event Data)
 - **Daily_Logs:** {counts['Daily_Logs']:,} reading log entries
@@ -2813,7 +2928,6 @@ def generate_export_readme(metadata: dict) -> str:
 5. **Reader_Cumulative.csv** - Cumulative fundraising stats (donations, sponsors)
 6. **Upload_History.csv** - Audit trail of all CSV uploads
 7. **Team_Color_Bonus.csv** - Special team color day bonus records
-8. **Database_Metadata.csv** - Multi-year database registry
 
 ## Data Notes
 
@@ -2869,14 +2983,10 @@ Generated by Read-a-Thon System {version}
 
 @app.route('/api/databases', methods=['GET'])
 def list_databases():
-    """List all registered year databases"""
+    """List all registered databases from central registry"""
     try:
-        db = get_current_db()
-        databases = db.list_databases()
-        return jsonify({
-            'success': True,
-            'databases': databases
-        })
+        databases = registry.list_databases()
+        return jsonify(databases)
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -2999,14 +3109,26 @@ def create_database():
         grade_rules_count = new_db.load_grade_rules_data(grade_rules_content)
         roster_count = new_db.load_roster_data(roster_content)
 
-        # Register the database in Database_Metadata
-        new_db.register_database(
+        new_db.close()
+
+        # Register the database in the central registry
+        db_filename_only = filename if not filename.startswith('db/') else filename.replace('db/', '')
+        display_name = description if description else f"{year} Read-a-Thon"
+
+        db_id = registry.register_database(
+            filename=db_filename_only,
+            name=display_name,
             year=int(year),
-            db_filename=filename if not filename.startswith('db/') else filename.replace('db/', ''),
             description=description
         )
 
-        new_db.close()
+        # Update statistics in registry
+        registry.update_stats(
+            db_id=db_id,
+            student_count=roster_count,
+            total_days=0,  # No data yet
+            total_donations=0.0  # No data yet
+        )
 
         # Return success response
         return jsonify({
@@ -3058,25 +3180,33 @@ def get_database_info(year):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/databases/<int:year>/stats', methods=['PUT'])
-def update_database_stats(year):
-    """Update statistics for a year database"""
+@app.route('/api/databases/<int:db_id>/stats', methods=['PUT'])
+def update_database_stats(db_id):
+    """Recalculate statistics for a database by querying its data tables"""
     try:
-        db = get_current_db()
-        result = db.update_database_stats(year)
-
+        result = registry.recalculate_stats_from_file(db_id)
         return jsonify(result)
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/databases/<int:year>/activate', methods=['PUT'])
-def activate_database(year):
+@app.route('/api/databases/<int:db_id>/activate', methods=['PUT'])
+def activate_database(db_id):
     """Set a database as active"""
     try:
-        db = get_current_db()
-        result = db.set_active_database(year)
+        # Update registry
+        result = registry.set_active_database(db_id)
+
+        if not result['success']:
+            return jsonify(result), 400
+
+        # Update session
+        session['active_database_id'] = db_id
+
+        # Save to config
+        db_info = registry.get_database(db_id)
+        write_config(db_id, db_info['db_filename'])
 
         return jsonify(result)
 
@@ -3106,13 +3236,11 @@ def get_active_database():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/databases/<int:year>', methods=['DELETE'])
-def delete_database_registration(year):
-    """Delete a database registration"""
+@app.route('/api/databases/<int:db_id>', methods=['DELETE'])
+def delete_database_registration(db_id):
+    """Delete a database registration (does not delete the actual .db file)"""
     try:
-        db = get_current_db()
-        result = db.delete_database_registration(year)
-
+        result = registry.delete_database(db_id)
         return jsonify(result)
 
     except Exception as e:
@@ -3133,7 +3261,7 @@ def get_table_counts():
         # Transactional tables (clearable)
         transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs', 'Team_Color_Bonus']
         # System tables (reference only)
-        system_tables = ['Roster', 'Class_Info', 'Grade_Rules', 'Database_Metadata']
+        system_tables = ['Roster', 'Class_Info', 'Grade_Rules']
 
         tables = transactional_tables + system_tables
 
@@ -3301,7 +3429,6 @@ def view_table(table_id):
         table_map = {
             'roster': 'Roster',
             'class_info': 'Class_Info',
-            'database_metadata': 'Database_Metadata',
             'grade_rules': 'Grade_Rules',
             'daily_logs': 'Daily_Logs',
             'reader_cumulative': 'Reader_Cumulative',
@@ -3328,8 +3455,6 @@ def view_table(table_id):
             query += " ORDER BY team_name ASC, grade_level ASC, class_name ASC, student_name ASC"
         elif table_id == 'class_info':
             query += " ORDER BY team_name ASC, grade_level ASC, class_name ASC"
-        elif table_id == 'database_metadata':
-            query += " ORDER BY year DESC"
 
         data = db.execute_query(query)
 

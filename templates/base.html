@@ -846,7 +846,7 @@
 </head>
 <body>
     <!-- Navigation -->
-    <div class="top-nav {% if environment == 'sample' %}sample-mode{% endif %}">
+    <div class="top-nav {% if is_sample_database %}sample-mode{% endif %}">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <a href="/" class="brand">
@@ -885,9 +885,8 @@
                 </div>
             </div>
 
-            <select class="env-selector" id="envSelector" onchange="switchEnvironment()">
-                <option value="prod">Production</option>
-                <option value="sample">Sample</option>
+            <select class="env-selector" id="databaseSelector" onchange="switchDatabase()">
+                <!-- Dynamically populated from registry -->
             </select>
         </div>
     </div>
@@ -956,27 +955,45 @@
             setTimeout(() => alert.remove(), 3000);
         }
 
-        // Environment switcher
-        async function switchEnvironment() {
-            const env = document.getElementById('envSelector').value;
+        // Database switcher
+        async function switchDatabase() {
+            const dbId = parseInt(document.getElementById('databaseSelector').value);
             try {
-                const response = await fetch('/api/set_environment', {
+                const response = await fetch('/api/set_active_database', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({environment: env})
+                    body: JSON.stringify({database_id: dbId})
                 });
                 if (response.ok) {
                     location.reload();
                 }
             } catch (error) {
-                console.error('Error switching environment:', error);
+                console.error('Error switching database:', error);
             }
         }
 
-        // Set the current environment selection on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const env = '{{ environment if environment is defined else "prod" }}';
-            document.getElementById('envSelector').value = env;
+        // Load and populate database selector on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/databases');
+                const databases = await response.json();
+
+                const selector = document.getElementById('databaseSelector');
+                selector.innerHTML = ''; // Clear loading message
+
+                // Populate dropdown with databases from registry
+                databases.forEach(db => {
+                    const option = document.createElement('option');
+                    option.value = db.db_id;
+                    option.textContent = db.display_name;
+                    if (db.is_active) {
+                        option.selected = true;
+                    }
+                    selector.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading databases:', error);
+            }
         });
     </script>
 

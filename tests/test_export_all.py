@@ -64,8 +64,7 @@ def test_export_all_contains_all_tables(client):
         'Daily_Logs.csv',
         'Reader_Cumulative.csv',
         'Upload_History.csv',
-        'Team_Color_Bonus.csv',
-        'Database_Metadata.csv'
+        'Team_Color_Bonus.csv'
     ]
 
     with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
@@ -114,7 +113,6 @@ def test_export_readme_has_table_counts(client):
         assert 'Reader_Cumulative:' in readme_content
         assert 'Upload_History:' in readme_content
         assert 'Team_Color_Bonus:' in readme_content
-        assert 'Database_Metadata:' in readme_content
 
         # Should include statistics
         assert 'students' in readme_content.lower()
@@ -177,7 +175,6 @@ def test_export_metadata_method():
     assert 'Reader_Cumulative' in metadata['counts']
     assert 'Upload_History' in metadata['counts']
     assert 'Team_Color_Bonus' in metadata['counts']
-    assert 'Database_Metadata' in metadata['counts']
 
 
 def test_export_all_tables_method():
@@ -186,7 +183,7 @@ def test_export_all_tables_method():
 
     all_tables = db.export_all_tables()
 
-    # Check all 8 tables are present
+    # Check all 7 tables are present
     expected_tables = [
         'Roster',
         'Class_Info',
@@ -194,8 +191,7 @@ def test_export_all_tables_method():
         'Daily_Logs',
         'Reader_Cumulative',
         'Upload_History',
-        'Team_Color_Bonus',
-        'Database_Metadata'
+        'Team_Color_Bonus'
     ]
 
     for table in expected_tables:
@@ -217,8 +213,26 @@ def test_export_zip_structure_integrity(client):
         bad_files = zip_file.testzip()
         assert bad_files is None, f"ZIP contains corrupted files: {bad_files}"
 
-        # Should have exactly 9 files (8 CSVs + 1 README)
-        assert len(zip_file.namelist()) == 9
+        # Should have exactly 8 files (7 CSVs + 1 README)
+        assert len(zip_file.namelist()) == 8
+
+
+def test_export_readme_has_database_info(client):
+    """Test that README includes database registry information"""
+    response = client.get('/api/export_all')
+
+    zip_buffer = io.BytesIO(response.data)
+
+    with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
+        readme_content = zip_file.read('README.md').decode('utf-8')
+
+        # Should have Database Information section
+        assert '## Database Information' in readme_content
+        assert 'Database ID:' in readme_content
+        assert 'Display Name:' in readme_content
+        assert 'Filename:' in readme_content
+        assert 'Year:' in readme_content
+        assert 'Description:' in readme_content
 
 
 def test_export_filename_format(client):

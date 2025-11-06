@@ -25,8 +25,9 @@ class TestGroupSystemStructure:
     def test_total_item_count(self):
         """Verify total number of items is correct"""
         all_items = get_unified_items()
-        # 23 reports + 9 tables + 4 workflows = 36 items
-        assert len(all_items) == 36, f"Expected 36 items, got {len(all_items)}"
+        # 23 reports + 8 tables + 4 workflows = 35 items
+        # Note: Database_Metadata removed, now external registry database
+        assert len(all_items) == 35, f"Expected 35 items, got {len(all_items)}"
 
     def test_report_count(self):
         """Verify number of reports"""
@@ -37,9 +38,10 @@ class TestGroupSystemStructure:
     def test_table_count(self):
         """Verify number of tables"""
         tables = [item for item in get_unified_items() if is_table(item)]
-        # 9 tables: Roster, Class_Info, Database_Metadata, Grade_Rules, Daily_Logs,
+        # 8 tables: Roster, Class_Info, Grade_Rules, Daily_Logs,
         #           Reader_Cumulative, Team_Color_Bonus, Upload_History, Complete_Log
-        assert len(tables) == 9, f"Expected 9 tables, got {len(tables)}"
+        # Note: Database_Metadata removed, replaced with external registry database
+        assert len(tables) == 8, f"Expected 8 tables, got {len(tables)}"
 
     def test_workflow_count(self):
         """Verify number of workflows"""

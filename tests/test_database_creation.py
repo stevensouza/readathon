@@ -10,7 +10,7 @@ import pytest
 import tempfile
 import io
 from werkzeug.datastructures import FileStorage
-from database import ReadathonDB
+from database import ReadathonDB, DatabaseRegistry
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -154,15 +154,21 @@ class TestDatabaseCreation:
         assert os.path.exists(TEST_DB_PATH)
         print("✓ Database file exists on disk")
 
-        # Verify database is registered in Database_Metadata
-        db = ReadathonDB(TEST_DB_PATH)
-        metadata = db.execute_query("SELECT * FROM Database_Metadata WHERE year = 2027")
-        assert len(metadata) == 1
-        assert metadata[0]['year'] == 2027
-        assert metadata[0]['db_filename'] == TEST_DB_NAME
-        assert metadata[0]['description'] == '2027 Test Read-a-Thon'
-        db.close()
-        print("✓ Database registered in Database_Metadata")
+        # Verify database is registered in Database_Registry
+        registry = DatabaseRegistry()
+        databases = registry.list_databases()
+        test_db = None
+        for db_entry in databases:
+            if db_entry['db_filename'] == TEST_DB_NAME:
+                test_db = db_entry
+                break
+
+        assert test_db is not None, f"Database {TEST_DB_NAME} not found in registry"
+        assert test_db['year'] == 2027
+        assert test_db['db_filename'] == TEST_DB_NAME
+        assert test_db['description'] == '2027 Test Read-a-Thon'
+        registry.close()
+        print("✓ Database registered in Database_Registry")
 
     def test_database_creation_missing_year(self, client):
         """Test that database creation fails when year is missing"""

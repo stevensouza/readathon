@@ -21,20 +21,23 @@ python3 app.py
 
 # Explicitly use sample database
 python3 app.py --db sample
-# OR
-./run_sample.sh
 
-# Explicitly use production database
-python3 app.py --db prod
-# OR
-./run_prod.sh
+# Use specific database by name (case-insensitive)
+python3 app.py --db "2025 Read-a-Thon"
+
+# Use specific database by filename
+python3 app.py --db readathon_2025.db
 ```
 
 **Database Selection:**
+- App uses **Database Registry** (`db/readathon_registry.db`) to manage multiple year databases
+- CLI argument supports: display name, filename, or alias ("sample")
+- Case-insensitive matching for all CLI arguments
 - App remembers last database choice in `.readathon_config` (gitignored)
 - Priority: CLI argument > Config file > Default (sample)
-- Can switch databases via UI dropdown (persists to config file)
+- Can switch databases via UI dropdown in header (persists to config file)
 - Startup shows which database is active and why
+- Sample database displays with yellow/amber banner for visual distinction
 
 ### Testing
 ```bash
@@ -50,11 +53,24 @@ python3 clear_all_data.py         # Reset database tables (keeps schema)
 
 ### Technology Stack
 - **Backend:** Flask 3.0.0 (pure Python, no build tools)
-- **Database:** SQLite 3 (local files: `readathon_prod.db` and `readathon_sample.db`)
+- **Database:** SQLite 3 with multi-database architecture:
+  - **Registry Database:** `db/readathon_registry.db` - Centralized database catalog
+  - **Contest Databases:** `db/readathon_2025.db`, `db/readathon_sample.db`, etc.
 - **Frontend:** Bootstrap 5.3.0 + Bootstrap Icons (CDN-loaded)
 - **No npm/webpack:** Static HTML templates with Jinja2
 
-### Core Data Model
+### Database Architecture
+
+**Registry Database** (`db/readathon_registry.db`):
+```
+Database_Registry table:
+  - Tracks all available contest databases
+  - Stores metadata: display_name, year, description, filename
+  - Manages active database selection (only one active at a time)
+  - Maintains summary statistics (student_count, total_days, total_donations)
+```
+
+**Contest Database** (e.g., `db/readathon_2025.db`):
 ```
 Roster (411 students)
   ├─> Daily_Logs (day-by-day reading minutes per student)
@@ -64,7 +80,14 @@ Supporting Tables:
   - Class_Info (teacher assignments, grade levels)
   - Grade_Rules (grade-specific reading goals)
   - Upload_History (audit trail for CSV imports)
+  - Team_Color_Bonus (bonus minutes for team color day participation)
 ```
+
+**Key Architecture Principles:**
+- **Separation of Concerns:** Registry metadata separate from contest data
+- **Multi-Year Support:** Each school year has its own contest database
+- **Dynamic Loading:** Databases loaded on-demand based on registry configuration
+- **Single Source of Truth:** Registry database defines available databases
 
 ### Key Design Decisions
 
@@ -92,6 +115,14 @@ Supporting Tables:
    - Cleaner separation between database operations and query definitions
    - Easier to maintain and review SQL logic
 
+6. **Database Registry System**
+   - External registry database (`readathon_registry.db`) tracks all contest databases
+   - Replaces old embedded `Database_Metadata` table approach
+   - Enables true multi-year database management
+   - Q24 report now queries central registry instead of contest database
+   - Admin page includes "Database Registry" tab for managing databases
+   - Supports dynamic database registration, activation, and statistics updates
+
 ### Application Flow
 1. **Data Entry:** CSV uploads via `/upload` (from PledgeReg online system)
 2. **Processing:** Flask routes in `app.py` → DB operations in `database.py`
@@ -118,11 +149,13 @@ md/                       # Markdown documentation
   ├─ IMPLEMENTATION_PROMPT.md  # SOURCE OF TRUTH (130KB requirements doc)
   └─ ...                  # Other markdown docs
 db/                       # SQLite databases
-  ├─ readathon_prod.db    # Production database
-  ├─ readathon_sample.db  # Sample database
-  └─ readathon.db         # Default/working database
+  ├─ readathon_registry.db  # Registry database (tracks all contest databases)
+  ├─ readathon_2025.db    # 2025 contest database (production)
+  └─ readathon_sample.db  # Sample database (fictitious data for testing)
 csv/                      # Sample CSV files for initialization
-tests/                    # All test files
+tests/                    # All test files (18 files, 411 tests)
+  ├─ test_database_registry.py  # Database registry tests (13 tests)
+  └─ ...                  # Other test files
 templates/                # Jinja2 HTML (base, index, upload, reports, admin, workflows)
 prototypes/               # HTML prototypes (sanitized with fictitious data)
 docs/                     # Feature documentation (31 features + architecture)
@@ -406,9 +439,16 @@ Claude: "I notice all pages use the same filter dropdown pattern"
 See `VERSION` file for current version and `CHANGELOG.md` for release history.
 
 ### Recent Completions
-- ✅ Database selection with persistent preference (v2026.1.1)
-- ✅ Command-line arguments for database selection (--db sample/prod)
-- ✅ Launcher scripts (run_sample.sh, run_prod.sh)
+- ✅ **Database Registry Architecture** (v2026.2.0) - Major redesign:
+  - Moved from embedded Database_Metadata table to external registry database
+  - Implemented DatabaseRegistry class for centralized database management
+  - Updated CLI to support display name, filename, or alias matching
+  - Renamed readathon_prod.db → readathon_2025.db
+  - Admin page now includes "Database Registry" tab
+  - Q24 report queries central registry
+  - Export includes database registry info in README
+  - Sample database shows yellow/amber banner
+  - All 18 test files updated (411 tests passing)
 - ✅ Enhanced metadata implemented for all 22 reports (Q1-Q23)
 - ✅ Analysis modal working with automated insights
 - ✅ SQL queries extracted to queries.py module
@@ -420,12 +460,13 @@ See `VERSION` file for current version and `CHANGELOG.md` for release history.
 - **Local-only application:** No server deployment, runs on user's Mac
 - **Offline-capable:** Works without internet (after Bootstrap CDN loads once)
 - **CSV-based data entry:** All data imported from PledgeReg system
-- **Multi-environment support:**
-  - `readathon_prod.db` (production - real student data)
-  - `readathon_sample.db` (sample - fictitious data for testing)
+- **Multi-database architecture:**
+  - Registry database: `db/readathon_registry.db` (tracks all contest databases)
+  - Contest databases: `db/readathon_2025.db` (production), `db/readathon_sample.db` (testing)
   - Persistent database preference stored in `.readathon_config`
   - Default: sample database (safer for development)
-  - Override via CLI: `--db prod` or `--db sample`
+  - CLI supports: display name, filename, or alias (`--db sample`, `--db "2025 Read-a-Thon"`, `--db readathon_2025.db`)
+  - Sample database displays with yellow/amber visual banner
 
 ### Report Numbering (Non-Sequential)
 The system has 22 reports with non-sequential numbers:

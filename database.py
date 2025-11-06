@@ -19,6 +19,389 @@ from report_metadata import (
 from queries import *
 
 
+class DatabaseRegistry:
+    """
+    Central registry for managing multiple read-a-thon databases.
+
+    The registry database (readathon_registry.db) tracks all available databases,
+    which one is active, and maintains summary statistics for each.
+    """
+
+    def __init__(self, registry_path: str = "db/readathon_registry.db"):
+        """Initialize registry database connection"""
+        self.registry_path = registry_path
+        self.conn = sqlite3.connect(registry_path, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row
+
+    def close(self):
+        """Close registry database connection"""
+        if self.conn:
+            self.conn.close()
+
+    def list_databases(self) -> List[Dict[str, Any]]:
+        """
+        Get all registered databases.
+
+        Returns:
+            List of database dictionaries with all fields
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT db_id, db_filename, display_name, year, description,
+                   is_active, created_timestamp, student_count,
+                   total_days, total_donations
+            FROM Database_Registry
+            ORDER BY year DESC, display_name ASC
+        ''')
+
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                'db_id': row['db_id'],
+                'db_filename': row['db_filename'],
+                'display_name': row['display_name'],
+                'year': row['year'],
+                'description': row['description'],
+                'is_active': row['is_active'],
+                'created_timestamp': row['created_timestamp'],
+                'student_count': row['student_count'],
+                'total_days': row['total_days'],
+                'total_donations': row['total_donations']
+            })
+
+        return results
+
+    def get_database(self, db_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a single database by ID.
+
+        Args:
+            db_id: Database ID
+
+        Returns:
+            Database dictionary or None if not found
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT db_id, db_filename, display_name, year, description,
+                   is_active, created_timestamp, student_count,
+                   total_days, total_donations
+            FROM Database_Registry
+            WHERE db_id = ?
+        ''', (db_id,))
+
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        return {
+            'db_id': row['db_id'],
+            'db_filename': row['db_filename'],
+            'display_name': row['display_name'],
+            'year': row['year'],
+            'description': row['description'],
+            'is_active': row['is_active'],
+            'created_timestamp': row['created_timestamp'],
+            'student_count': row['student_count'],
+            'total_days': row['total_days'],
+            'total_donations': row['total_donations']
+        }
+
+    def get_database_by_name(self, name: str) -> Optional[Dict[str, Any]]:
+        """
+        Get database by display_name or filename (case-insensitive).
+
+        Args:
+            name: Display name, filename, or special alias ("sample")
+
+        Returns:
+            Database dictionary or None if not found
+        """
+        cursor = self.conn.cursor()
+
+        # Try exact match on display_name or filename (case-insensitive)
+        cursor.execute('''
+            SELECT db_id, db_filename, display_name, year, description,
+                   is_active, created_timestamp, student_count,
+                   total_days, total_donations
+            FROM Database_Registry
+            WHERE LOWER(display_name) = LOWER(?)
+               OR db_filename = ?
+        ''', (name, name))
+
+        row = cursor.fetchone()
+        if row:
+            return {
+                'db_id': row['db_id'],
+                'db_filename': row['db_filename'],
+                'display_name': row['display_name'],
+                'year': row['year'],
+                'description': row['description'],
+                'is_active': row['is_active'],
+                'created_timestamp': row['created_timestamp'],
+                'student_count': row['student_count'],
+                'total_days': row['total_days'],
+                'total_donations': row['total_donations']
+            }
+
+        # Special case: "sample" alias matches any database with "sample" in display_name
+        if name.lower() == 'sample':
+            cursor.execute('''
+                SELECT db_id, db_filename, display_name, year, description,
+                       is_active, created_timestamp, student_count,
+                       total_days, total_donations
+                FROM Database_Registry
+                WHERE LOWER(display_name) LIKE '%sample%'
+                LIMIT 1
+            ''')
+
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'db_id': row['db_id'],
+                    'db_filename': row['db_filename'],
+                    'display_name': row['display_name'],
+                    'year': row['year'],
+                    'description': row['description'],
+                    'is_active': row['is_active'],
+                    'created_timestamp': row['created_timestamp'],
+                    'student_count': row['student_count'],
+                    'total_days': row['total_days'],
+                    'total_donations': row['total_donations']
+                }
+
+        return None
+
+    def get_active_database(self) -> Optional[Dict[str, Any]]:
+        """
+        Get the currently active database.
+
+        Returns:
+            Active database dictionary or None if no active database
+        """
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT db_id, db_filename, display_name, year, description,
+                   is_active, created_timestamp, student_count,
+                   total_days, total_donations
+            FROM Database_Registry
+            WHERE is_active = 1
+            LIMIT 1
+        ''')
+
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        return {
+            'db_id': row['db_id'],
+            'db_filename': row['db_filename'],
+            'display_name': row['display_name'],
+            'year': row['year'],
+            'description': row['description'],
+            'is_active': row['is_active'],
+            'created_timestamp': row['created_timestamp'],
+            'student_count': row['student_count'],
+            'total_days': row['total_days'],
+            'total_donations': row['total_donations']
+        }
+
+    def set_active_database(self, db_id: int) -> Dict[str, Any]:
+        """
+        Set a database as active (deactivates all others).
+
+        Args:
+            db_id: Database ID to activate
+
+        Returns:
+            Result dictionary with success status
+        """
+        cursor = self.conn.cursor()
+
+        # Check if database exists
+        db = self.get_database(db_id)
+        if not db:
+            return {'success': False, 'error': f'Database ID {db_id} not found'}
+
+        # Deactivate all databases
+        cursor.execute('UPDATE Database_Registry SET is_active = 0')
+
+        # Activate the specified database
+        cursor.execute('UPDATE Database_Registry SET is_active = 1 WHERE db_id = ?', (db_id,))
+
+        self.conn.commit()
+
+        return {
+            'success': True,
+            'message': f'Activated database: {db["display_name"]}',
+            'database': db
+        }
+
+    def register_database(self, filename: str, name: str, year: Optional[int],
+                         description: str = '') -> int:
+        """
+        Register a new database in the registry.
+
+        Args:
+            filename: Database filename (e.g., "readathon_2026.db")
+            name: Display name (e.g., "2026 Read-a-Thon")
+            year: School year or None for non-year databases
+            description: Optional description
+
+        Returns:
+            New database ID
+        """
+        cursor = self.conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO Database_Registry
+            (db_filename, display_name, year, description, is_active, created_timestamp,
+             student_count, total_days, total_donations)
+            VALUES (?, ?, ?, ?, 0, ?, 0, 0, 0.0)
+        ''', (filename, name, year, description, datetime.now().isoformat()))
+
+        self.conn.commit()
+
+        return cursor.lastrowid
+
+    def update_stats(self, db_id: int, student_count: int = None,
+                    total_days: int = None, total_donations: float = None) -> Dict[str, Any]:
+        """
+        Update statistics for a database.
+
+        Args:
+            db_id: Database ID
+            student_count: Number of students (optional)
+            total_days: Number of contest days (optional)
+            total_donations: Total fundraising amount (optional)
+
+        Returns:
+            Result dictionary with success status
+        """
+        cursor = self.conn.cursor()
+
+        # Check if database exists
+        db = self.get_database(db_id)
+        if not db:
+            return {'success': False, 'error': f'Database ID {db_id} not found'}
+
+        # Build update query dynamically based on provided values
+        updates = []
+        values = []
+
+        if student_count is not None:
+            updates.append('student_count = ?')
+            values.append(student_count)
+
+        if total_days is not None:
+            updates.append('total_days = ?')
+            values.append(total_days)
+
+        if total_donations is not None:
+            updates.append('total_donations = ?')
+            values.append(total_donations)
+
+        if not updates:
+            return {'success': True, 'message': 'No updates provided'}
+
+        values.append(db_id)
+        query = f"UPDATE Database_Registry SET {', '.join(updates)} WHERE db_id = ?"
+
+        cursor.execute(query, values)
+        self.conn.commit()
+
+        return {'success': True, 'message': 'Statistics updated'}
+
+    def recalculate_stats_from_file(self, db_id: int) -> Dict[str, Any]:
+        """
+        Recalculate statistics by querying the actual contest database file.
+
+        This opens the contest database, queries Roster, Daily_Logs, and Reader_Cumulative,
+        then updates the registry with the calculated values.
+
+        Args:
+            db_id: Database ID
+
+        Returns:
+            Result dictionary with success status and calculated values
+        """
+        # Get database info from registry
+        db = self.get_database(db_id)
+        if not db:
+            return {'success': False, 'error': f'Database ID {db_id} not found'}
+
+        db_path = f"db/{db['db_filename']}"
+
+        try:
+            # Open the contest database file
+            contest_conn = sqlite3.connect(db_path)
+            cursor = contest_conn.cursor()
+
+            # Get student count from Roster
+            cursor.execute("SELECT COUNT(*) FROM Roster")
+            student_count = cursor.fetchone()[0]
+
+            # Get total days from Daily_Logs
+            cursor.execute("SELECT COUNT(DISTINCT log_date) FROM Daily_Logs")
+            total_days = cursor.fetchone()[0]
+
+            # Get total donations from Reader_Cumulative
+            cursor.execute("SELECT COALESCE(SUM(donation_amount), 0.0) FROM Reader_Cumulative")
+            total_donations = cursor.fetchone()[0]
+
+            contest_conn.close()
+
+            # Update registry with calculated values
+            result = self.update_stats(db_id, student_count, total_days, total_donations)
+
+            if result['success']:
+                return {
+                    'success': True,
+                    'message': f'Statistics recalculated for {db["display_name"]}',
+                    'student_count': student_count,
+                    'total_days': total_days,
+                    'total_donations': total_donations,
+                    'display_name': db['display_name']
+                }
+            else:
+                return result
+
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'Failed to recalculate stats: {str(e)}'
+            }
+
+    def delete_database(self, db_id: int) -> Dict[str, Any]:
+        """
+        Delete a database registration (does NOT delete the actual .db file).
+
+        Args:
+            db_id: Database ID
+
+        Returns:
+            Result dictionary with success status
+        """
+        cursor = self.conn.cursor()
+
+        # Check if database exists
+        db = self.get_database(db_id)
+        if not db:
+            return {'success': False, 'error': f'Database ID {db_id} not found'}
+
+        # Don't allow deleting the active database
+        if db['is_active']:
+            return {'success': False, 'error': 'Cannot delete active database. Activate another database first.'}
+
+        cursor.execute('DELETE FROM Database_Registry WHERE db_id = ?', (db_id,))
+        self.conn.commit()
+
+        return {
+            'success': True,
+            'message': f'Unregistered database: {db["display_name"]} (file not deleted)'
+        }
+
+
 class ReadathonDB:
     """Main database class for Read-a-Thon system"""
 
@@ -1533,7 +1916,7 @@ class ReadathonDB:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # All 8 tables to export
+        # All 7 tables to export (Database_Registry excluded - separate database file)
         tables = [
             'Roster',
             'Class_Info',
@@ -1541,8 +1924,7 @@ class ReadathonDB:
             'Daily_Logs',
             'Reader_Cumulative',
             'Upload_History',
-            'Team_Color_Bonus',
-            'Database_Metadata'
+            'Team_Color_Bonus'
         ]
 
         export_data = {}
@@ -1567,7 +1949,7 @@ class ReadathonDB:
         # Get table counts
         counts = {}
         for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs',
-                      'Reader_Cumulative', 'Upload_History', 'Team_Color_Bonus', 'Database_Metadata']:
+                      'Reader_Cumulative', 'Upload_History', 'Team_Color_Bonus']:
             cursor.execute(f"SELECT COUNT(*) FROM {table}")
             counts[table] = cursor.fetchone()[0]
 
@@ -2531,21 +2913,36 @@ Calculation Rules:<br>
         }
 
     def q24_database_metadata(self) -> Dict[str, Any]:
-        """Q24: Database_Metadata - Multi-Year Database Registry"""
-        from queries import QUERY_Q24_DATABASE_METADATA
+        """Q24: Database_Registry - Multi-Year Database Registry"""
+        # Query the central registry database (separate from contest databases)
+        registry = DatabaseRegistry()
+        databases = registry.list_databases()
 
-        results = self.db.execute_query(QUERY_Q24_DATABASE_METADATA)
+        # Format results for report display
+        results = []
+        for db in databases:
+            results.append([
+                db['db_id'],
+                db['year'],
+                db['db_filename'],
+                db['description'],
+                db['created_timestamp'],
+                'ACTIVE' if db['is_active'] else 'INACTIVE',
+                db['student_count'],
+                db['total_days'],
+                db['total_donations']
+            ])
 
         return {
-            'title': 'Q24: Database_Metadata - Multi-Year Database Registry',
-            'description': 'All registered databases with year, filename, active status, and summary statistics',
+            'title': 'Q24: Database_Registry - Multi-Year Database Registry',
+            'description': 'All registered databases with year, filename, active status, and summary statistics (from central registry database)',
             'columns': ['db_id', 'year', 'db_filename', 'description', 'created_timestamp', 'status',
                        'student_count', 'total_days', 'total_donations'],
             'data': results,
             'sort': 'year (desc)',
             'last_updated': self._get_report_timestamp(),
             'metadata': {
-                'source_tables': 'Database_Metadata',
+                'source_tables': 'Database_Registry (db/readathon_registry.db - separate database file)',
                 'columns': {
                     'db_id': 'Unique database identifier (auto-increment)',
                     'year': 'School year for this database',
@@ -2559,7 +2956,7 @@ Calculation Rules:<br>
                 },
                 'terms': {
                     'Active Database': 'The currently selected database in use',
-                    'Registry': 'Central table tracking all year databases',
+                    'Registry': 'Central table in separate database tracking all year databases',
                     'Multi-Year': 'System supports managing multiple school years'
                 }
             }
