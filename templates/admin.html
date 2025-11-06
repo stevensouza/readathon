@@ -293,12 +293,15 @@
                         <div class="alert alert-info">
                             <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Database Creation Overview</h6>
                             <p class="mb-2">Create a brand new read-a-thon database for a new school year. This process will:</p>
-                            <ul class="mb-0">
+                            <ul class="mb-2">
                                 <li>Create a new database file (e.g., <code>readathon_2027.db</code>)</li>
                                 <li>Initialize all required tables (Roster, Class_Info, Grade_Rules, Daily_Logs, etc.)</li>
                                 <li>Load your school data from the three CSV files you provide</li>
                                 <li>Register the new database in Database_Metadata for easy switching</li>
                             </ul>
+                            <p class="mb-0">
+                                <i class="bi bi-folder"></i> <strong>Sample CSV files</strong> are available in the <code>csv/</code> directory for reference.
+                            </p>
                         </div>
 
                         <form id="createDatabaseForm" onsubmit="createDatabase(event)">
@@ -361,7 +364,11 @@
                                                    id="rosterCsv" accept=".csv" required>
                                             <small class="text-muted d-block mt-2">
                                                 <strong>Required columns:</strong><br>
-                                                student_name, class_name, home_room, teacher_name, grade_level, team_name
+                                                <code>student_name, class_name, home_room, teacher_name, grade_level, team_name</code>
+                                            </small>
+                                            <small class="text-muted d-block mt-1">
+                                                <strong>Sample row:</strong><br>
+                                                <code>Alice Anderson,Class A,Room 101,Ms. Adams,3,Team Phoenix</code>
                                             </small>
                                         </div>
                                     </div>
@@ -381,7 +388,11 @@
                                                    id="classInfoCsv" accept=".csv" required>
                                             <small class="text-muted d-block mt-2">
                                                 <strong>Required columns:</strong><br>
-                                                class_name, home_room, teacher_name, grade_level, team_name, total_students
+                                                <code>class_name, home_room, teacher_name, grade_level, team_name, total_students</code>
+                                            </small>
+                                            <small class="text-muted d-block mt-1">
+                                                <strong>Sample row:</strong><br>
+                                                <code>Class A,Room 101,Ms. Adams,3,Team Phoenix,25</code>
                                             </small>
                                         </div>
                                     </div>
@@ -401,7 +412,11 @@
                                                    id="gradeRulesCsv" accept=".csv" required>
                                             <small class="text-muted d-block mt-2">
                                                 <strong>Required columns:</strong><br>
-                                                grade_level, min_daily_minutes, max_daily_minutes_credit
+                                                <code>grade_level, min_daily_minutes, max_daily_minutes_credit</code>
+                                            </small>
+                                            <small class="text-muted d-block mt-1">
+                                                <strong>Sample row:</strong><br>
+                                                <code>3,20,120</code>
                                             </small>
                                         </div>
                                     </div>
