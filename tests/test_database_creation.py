@@ -41,7 +41,17 @@ GRADE_RULES_CSV = """grade_level,min_daily_minutes,max_daily_minutes_credit
 5,30,120"""
 
 def cleanup():
-    """Remove test database if it exists"""
+    """Remove test database and registry entry if they exist"""
+    # Remove registry entry
+    registry = DatabaseRegistry()
+    databases = registry.list_databases()
+    for db in databases:
+        if 'test_readathon' in db['db_filename'] or db['year'] == 2027:
+            registry.delete_database(db['db_id'])
+            print(f"✓ Removed registry entry: {db['display_name']}")
+    registry.close()
+
+    # Remove physical database file
     if os.path.exists(TEST_DB_PATH):
         os.remove(TEST_DB_PATH)
         print(f"✓ Cleaned up test database: {TEST_DB_PATH}")
