@@ -182,12 +182,12 @@ class TestReportsPage:
 
         # Get all items to verify count
         all_items = get_unified_items()
-        table_items = [i for i in all_items if 'tables' in i['groups']]
+        table_items = [i for i in all_items if 'table' in i['groups']]
         assert len(table_items) >= 7, "Expected at least 7 database tables"
 
     def test_group_filter_workflows(self, client):
         """Test 'Workflows' filter shows only workflows."""
-        response = client.get('/reports?group=workflows')
+        response = client.get('/reports?group=workflow')
         assert response.status_code == 200
         html = response.data.decode('utf-8')
 
@@ -199,7 +199,7 @@ class TestReportsPage:
 
         # Get all items to verify count
         all_items = get_unified_items()
-        workflow_items = [i for i in all_items if 'workflows' in i['groups']]
+        workflow_items = [i for i in all_items if 'workflow' in i['groups']]
         assert len(workflow_items) == 4, "Expected exactly 4 workflows"
 
     # ============================================================================
@@ -361,14 +361,14 @@ class TestReportsPage:
         """Test that Complete Log appears in both tables and export groups."""
         all_items = get_unified_items()
 
-        # Find Complete Log which has ['tables', 'export']
+        # Find Complete Log which has ['table', 'export']
         complete_log = next((item for item in all_items if item['id'] == 'complete_log'), None)
         assert complete_log is not None, "Complete Log not found"
-        assert 'tables' in complete_log['groups']
+        assert 'table' in complete_log['groups']
         assert 'export' in complete_log['groups']
 
-        # Test appears in 'tables' filter
-        response = client.get('/reports?group=tables')
+        # Test appears in 'table' filter
+        response = client.get('/reports?group=table')
         html = response.data.decode('utf-8')
         assert 'Complete Log' in html
 
@@ -481,7 +481,7 @@ class TestReportsPage:
             f"Prize Reports count mismatch"
 
         # Check tables group count
-        table_items = [i for i in all_items if 'tables' in i['groups']]
+        table_items = [i for i in all_items if 'table' in i['groups']]
         table_count = len(table_items)
         assert f'Database Tables ({table_count})' in html, \
             f"Database Tables count mismatch"

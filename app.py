@@ -108,27 +108,27 @@ def get_unified_items():
         {'id': 'q21', 'name': 'Q21: Data Sync & Minutes Integrity Check', 'description': 'Verify students are synced between tables and daily minutes match cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
         {'id': 'q22', 'name': 'Q22: Student Name Sync Check', 'description': 'Verify students in Daily_Logs match Reader_Cumulative', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
         {'id': 'q23', 'name': 'Q23: Roster Integrity Check', 'description': 'Verify all students exist in Roster table', 'groups': ['report', 'integrity', 'admin', 'workflow.qa']},
-        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['report', 'utility', 'admin', 'workflow.qa', 'database']},
+        {'id': 'q24', 'name': 'Q24: Database_Metadata', 'description': 'Multi-year database registry with year, filename, active status, and summary statistics', 'groups': ['report', 'table', 'utility', 'admin', 'workflow.qa', 'database']},
     ])
 
     # Database Tables (from /tables route)
     items.extend([
-        {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams', 'groups': ['table', 'tables', 'database']},
-        {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students', 'groups': ['table', 'tables', 'database']},
-        {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['table', 'tables', 'database']},
-        {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'tables', 'reading']},
-        {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'tables', 'fundraising']},
-        {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table', 'tables']},
-        {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'tables', 'database']},
-        {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'tables', 'export']},
+        {'id': 'roster', 'name': 'Roster', 'description': 'All students with their class assignments, teachers, grades, and teams', 'groups': ['table', 'database']},
+        {'id': 'class_info', 'name': 'Class Info', 'description': 'Summary of each class including home room, teacher, grade, team, and total students', 'groups': ['table', 'database']},
+        {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['table', 'database']},
+        {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'reading']},
+        {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
+        {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table']},
+        {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'database']},
+        {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'export']},
     ])
 
     # Workflows (from /workflows route)
     items.extend([
-        {'id': 'qd', 'name': 'QD: Daily Slide Update', 'description': 'Dynamically runs all reports tagged with workflow.qd - for daily update presentations', 'groups': ['workflow', 'workflows', 'featured']},
-        {'id': 'qc', 'name': 'QC: Cumulative Workflow', 'description': 'Dynamically runs all reports tagged with workflow.qc - comprehensive cumulative view', 'groups': ['workflow', 'workflows', 'featured']},
-        {'id': 'qf', 'name': 'QF: Final Prize Winners', 'description': 'Dynamically runs all reports tagged with workflow.qf - determines all winners and prizes', 'groups': ['workflow', 'workflows', 'featured']},
-        {'id': 'qa', 'name': 'QA: All Main Reports', 'description': 'Dynamically runs all reports tagged with workflow.qa - comprehensive system report', 'groups': ['workflow', 'workflows', 'featured']},
+        {'id': 'qd', 'name': 'QD: Daily Slide Update', 'description': 'Dynamically runs all reports tagged with workflow.qd - for daily update presentations', 'groups': ['workflow', 'featured']},
+        {'id': 'qc', 'name': 'QC: Cumulative Workflow', 'description': 'Dynamically runs all reports tagged with workflow.qc - comprehensive cumulative view', 'groups': ['workflow', 'featured']},
+        {'id': 'qf', 'name': 'QF: Final Prize Winners', 'description': 'Dynamically runs all reports tagged with workflow.qf - determines all winners and prizes', 'groups': ['workflow', 'featured']},
+        {'id': 'qa', 'name': 'QA: All Main Reports', 'description': 'Dynamically runs all reports tagged with workflow.qa - comprehensive system report', 'groups': ['workflow', 'featured']},
     ])
 
     return items
