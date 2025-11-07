@@ -754,6 +754,68 @@ function exportToCSV() {
 // Initialize with entity level sort on load
 window.addEventListener('DOMContentLoaded', function() {
     sortTable(0); // Sort by Entity (hierarchical)
+
+    // Filter stickiness - restore from sessionStorage
+    restoreFilters();
+
+    // Add change listeners to save selections
+    const db1Select = document.getElementById('database1');
+    const db2Select = document.getElementById('database2');
+    const filterSelect = document.getElementById('filterPeriod');
+
+    if (db1Select) db1Select.addEventListener('change', saveFilters);
+    if (db2Select) db2Select.addEventListener('change', saveFilters);
+    if (filterSelect) filterSelect.addEventListener('change', saveFilters);
 });
+
+// Save filter selections to sessionStorage
+function saveFilters() {
+    const db1 = document.getElementById('database1')?.value || '';
+    const db2 = document.getElementById('database2')?.value || '';
+    const filter = document.getElementById('filterPeriod')?.value || 'all';
+
+    sessionStorage.setItem('dbComparison_db1', db1);
+    sessionStorage.setItem('dbComparison_db2', db2);
+    sessionStorage.setItem('dbComparison_filter', filter);
+}
+
+// Restore filter selections from sessionStorage
+function restoreFilters() {
+    const db1Saved = sessionStorage.getItem('dbComparison_db1');
+    const db2Saved = sessionStorage.getItem('dbComparison_db2');
+    const filterSaved = sessionStorage.getItem('dbComparison_filter');
+
+    const db1Select = document.getElementById('database1');
+    const db2Select = document.getElementById('database2');
+    const filterSelect = document.getElementById('filterPeriod');
+
+    // Only restore if no URL parameters present (avoid overriding URL params)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasUrlParams = urlParams.has('db1') || urlParams.has('db2');
+
+    if (!hasUrlParams) {
+        // Restore saved values
+        if (db1Saved && db1Select) {
+            db1Select.value = db1Saved;
+        }
+        if (db2Saved && db2Select) {
+            db2Select.value = db2Saved;
+        }
+        if (filterSaved && filterSelect) {
+            filterSelect.value = filterSaved;
+        }
+
+        // Auto-submit if both databases are selected and no results shown yet
+        if (db1Saved && db2Saved && db1Select && db2Select) {
+            const hasResults = document.querySelector('#comparisonTable tbody tr');
+            if (!hasResults) {
+                document.getElementById('dbComparisonForm')?.submit();
+            }
+        }
+    } else {
+        // URL params present, save them to sessionStorage for next time
+        saveFilters();
+    }
+}
 </script>
 {% endblock %}

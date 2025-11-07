@@ -42,7 +42,29 @@ python3 app.py --db readathon_2025.db
 ### Testing
 ```bash
 python3 test_audit_trail.py       # Test audit trail functionality
+pytest                             # Run all tests (335 tests)
+pytest tests/test_specific.py      # Run specific test file
 ```
+
+**⚠️ CRITICAL: Stop Flask Before Running Tests**
+```bash
+# Kill all Flask instances before running tests
+lsof -ti:5001 | xargs kill
+
+# Then run tests
+pytest
+```
+
+**Why this is important:**
+- Running tests while Flask is active causes **database locking errors**
+- Tests may **fail intermittently** with Flask running (observed 36+ failures)
+- Same tests **pass consistently** when Flask is stopped (all 335 pass)
+- Flask holds database connections that conflict with test database operations
+
+**Before running pre-commit tests:**
+1. Stop Flask: `lsof -ti:5001 | xargs kill`
+2. Run tests: `pytest` (or let pre-commit hook run them)
+3. All 335 tests should pass
 
 ### Database Operations
 ```bash
