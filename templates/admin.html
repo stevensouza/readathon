@@ -829,16 +829,20 @@
                 <!-- Database Selection Form -->
                 <div class="database-selection">
                     <h5><i class="bi bi-database"></i> Select Databases to Compare</h5>
-                    <form method="get" action="/admin#db-comparison" id="dbComparisonForm">
+                    <form method="get" action="/admin" id="dbComparisonForm">
                         <div class="db-selector-row">
                             <label for="db1">Database 1:</label>
                             <select id="db1" name="db1" class="form-select form-select-sm" style="flex: 1; max-width: 280px;" required>
                                 <option value="">-- Select Database --</option>
                                 {% if active_database %}
-                                <option value="{{ active_database.db_filename }}">Active (Currently: {{ active_database.display_name }})</option>
+                                <option value="{{ active_database.db_filename }}" {% if db1_filename == active_database.db_filename %}selected{% endif %}>
+                                    Active (Currently: {{ active_database.display_name }})
+                                </option>
                                 {% endif %}
                                 {% for db in databases %}
-                                <option value="{{ db.db_filename }}">{{ db.display_name }}</option>
+                                <option value="{{ db.db_filename }}" {% if db1_filename == db.db_filename %}selected{% endif %}>
+                                    {{ db.display_name }}
+                                </option>
                                 {% endfor %}
                             </select>
 
@@ -846,19 +850,21 @@
                             <select id="db2" name="db2" class="form-select form-select-sm" style="flex: 1; max-width: 280px;" required>
                                 <option value="">-- Select Database --</option>
                                 {% for db in databases %}
-                                <option value="{{ db.db_filename }}">{{ db.display_name }}</option>
+                                <option value="{{ db.db_filename }}" {% if db2_filename == db.db_filename %}selected{% endif %}>
+                                    {{ db.display_name }}
+                                </option>
                                 {% endfor %}
                             </select>
 
                             <label for="filterPeriod"><i class="bi bi-calendar3"></i> Filter Period:</label>
                             <select id="filterPeriod" name="filter" class="form-select form-select-sm" style="flex: 1; max-width: 220px;">
-                                <option value="all" selected>Full Contest Period</option>
-                                <option value="day1">Day 1</option>
-                                <option value="day2">Day 2</option>
-                                <option value="day3">Day 3</option>
-                                <option value="day4">Day 4</option>
-                                <option value="day5">Day 5</option>
-                                <option value="day6">Day 6</option>
+                                <option value="all" {% if filter_period == 'all' or not filter_period %}selected{% endif %}>Full Contest Period</option>
+                                <option value="day1" {% if filter_period == 'day1' %}selected{% endif %}>Day 1</option>
+                                <option value="day2" {% if filter_period == 'day2' %}selected{% endif %}>Day 2</option>
+                                <option value="day3" {% if filter_period == 'day3' %}selected{% endif %}>Day 3</option>
+                                <option value="day4" {% if filter_period == 'day4' %}selected{% endif %}>Day 4</option>
+                                <option value="day5" {% if filter_period == 'day5' %}selected{% endif %}>Day 5</option>
+                                <option value="day6" {% if filter_period == 'day6' %}selected{% endif %}>Day 6</option>
                             </select>
 
                             <button type="submit" class="btn-compare">
@@ -866,6 +872,155 @@
                             </button>
                         </div>
                     </form>
+
+                    <script>
+                        // Sticky filters for database comparison
+                        (function() {
+                            // Save filter selections to sessionStorage
+                            function saveDbComparisonFilters() {
+                                const db1 = document.getElementById('db1')?.value || '';
+                                const db2 = document.getElementById('db2')?.value || '';
+                                const filter = document.getElementById('filterPeriod')?.value || 'all';
+
+                                sessionStorage.setItem('dbComparison_db1', db1);
+                                sessionStorage.setItem('dbComparison_db2', db2);
+                                sessionStorage.setItem('dbComparison_filter', filter);
+                            }
+
+                            // Save table search/filter to sessionStorage
+                            function saveTableFilters() {
+                                const searchBox = document.getElementById('searchBox');
+                                const entityFilter = document.getElementById('entityFilter');
+
+                                if (searchBox) {
+                                    sessionStorage.setItem('dbComparison_search', searchBox.value);
+                                }
+                                if (entityFilter) {
+                                    sessionStorage.setItem('dbComparison_entity', entityFilter.value);
+                                }
+                            }
+
+                            // Restore filter selections from sessionStorage
+                            function restoreDbComparisonFilters() {
+                                const db1Saved = sessionStorage.getItem('dbComparison_db1');
+                                const db2Saved = sessionStorage.getItem('dbComparison_db2');
+                                const filterSaved = sessionStorage.getItem('dbComparison_filter');
+
+                                const db1Select = document.getElementById('db1');
+                                const db2Select = document.getElementById('db2');
+                                const filterSelect = document.getElementById('filterPeriod');
+
+                                // Only restore if no URL parameters present (avoid overriding URL params)
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const hasUrlParams = urlParams.has('db1') || urlParams.has('db2');
+
+                                if (!hasUrlParams) {
+                                    // Restore saved values
+                                    if (db1Saved && db1Select && !db1Select.value) {
+                                        db1Select.value = db1Saved;
+                                    }
+                                    if (db2Saved && db2Select && !db2Select.value) {
+                                        db2Select.value = db2Saved;
+                                    }
+                                    if (filterSaved && filterSelect && !urlParams.has('filter')) {
+                                        filterSelect.value = filterSaved;
+                                    }
+
+                                    // Auto-submit if both databases are selected
+                                    if (db1Saved && db2Saved && db1Select && db2Select) {
+                                        const form = document.getElementById('dbComparisonForm');
+                                        if (form) {
+                                            // Check if we're already showing results
+                                            const hasResults = document.getElementById('comparisonTable');
+                                            if (!hasResults) {
+                                                form.submit();
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // URL params present, save them to sessionStorage for next time
+                                    saveDbComparisonFilters();
+                                }
+                            }
+
+                            // Restore table search/filter from sessionStorage
+                            function restoreTableFilters() {
+                                const searchSaved = sessionStorage.getItem('dbComparison_search');
+                                const entitySaved = sessionStorage.getItem('dbComparison_entity');
+
+                                const searchBox = document.getElementById('searchBox');
+                                const entityFilter = document.getElementById('entityFilter');
+
+                                if (searchSaved && searchBox) {
+                                    searchBox.value = searchSaved;
+                                }
+                                if (entitySaved && entityFilter) {
+                                    entityFilter.value = entitySaved;
+                                }
+
+                                // Apply the filter if the function exists
+                                if (typeof filterComparisonTable === 'function') {
+                                    filterComparisonTable();
+                                }
+                            }
+
+                            // Add change listeners to save selections
+                            const db1Select = document.getElementById('db1');
+                            const db2Select = document.getElementById('db2');
+                            const filterSelect = document.getElementById('filterPeriod');
+
+                            if (db1Select) db1Select.addEventListener('change', saveDbComparisonFilters);
+                            if (db2Select) db2Select.addEventListener('change', saveDbComparisonFilters);
+                            if (filterSelect) filterSelect.addEventListener('change', saveDbComparisonFilters);
+
+                            // Add listeners for table filters (use event delegation since elements may not exist yet)
+                            document.addEventListener('input', function(e) {
+                                if (e.target && e.target.id === 'searchBox') {
+                                    saveTableFilters();
+                                }
+                            });
+
+                            document.addEventListener('change', function(e) {
+                                if (e.target && e.target.id === 'entityFilter') {
+                                    saveTableFilters();
+                                }
+                            });
+
+                            // Restore on page load
+                            restoreDbComparisonFilters();
+
+                            // Restore table filters if results are present
+                            if (document.getElementById('comparisonTable')) {
+                                restoreTableFilters();
+                            }
+
+                            // Handle form submission - navigate to #db-comparison tab
+                            const form = document.getElementById('dbComparisonForm');
+                            if (form) {
+                                form.addEventListener('submit', function() {
+                                    saveDbComparisonFilters();
+                                    // Add hash to URL for tab navigation
+                                    setTimeout(() => {
+                                        window.location.hash = '#db-comparison';
+                                    }, 100);
+                                });
+                            }
+
+                            // Listen for tab shown event to restore table filters when returning to this tab
+                            const dbComparisonTab = document.getElementById('db-comparison-tab');
+                            if (dbComparisonTab) {
+                                dbComparisonTab.addEventListener('shown.bs.tab', function() {
+                                    // Small delay to ensure DOM is ready
+                                    setTimeout(function() {
+                                        // Restore table filters when tab is shown
+                                        if (document.getElementById('comparisonTable')) {
+                                            restoreTableFilters();
+                                        }
+                                    }, 50);
+                                });
+                            }
+                        })();
+                    </script>
                 </div>
 
                 <!-- Comparison Results -->
