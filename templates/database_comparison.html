@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block title %}Database Comparison - Read-a-Thon System{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<!-- Database Comparison Styles - Inline to work with Admin page embedding -->
+<style>
+    /* Database Comparison Page Styles - Updated Layout v4 */
+    .page-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+
+    .page-header .subtitle {
+        font-size: 0.95rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+
+    /* Database Selection - Compact Layout with Clear Separation */
+    .database-selection {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .database-selection h5 {
+        color: #1e3a5f;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .db-selector-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .db-selector-row label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        margin: 0;
+        text-align: right;
+    }
+
+    .db-selector-row select {
+        font-size: 0.85rem;
+        min-width: 200px;
+    }
+
+    .btn-compare {
+        background: #1e3a5f;
+        color: white;
+        font-weight: 700;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        margin-left: 0.5rem;
+    }
+
+    .btn-compare:hover {
+        background: #2c3e50;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+    }
+
+    /* Table Controls - Integrated with Table */
+    .table-controls {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        border-bottom: none !important;
+        padding: 1rem 1.25rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 1rem !important;
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+
+    .search-filter-group {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+
+    .search-filter-group input {
+        font-size: 0.9rem;
+        min-width: 280px;
+    }
+
+    .search-filter-group select {
+        min-width: 130px;
+        font-size: 0.85rem;
+    }
+
+    .results-count {
+        font-size: 0.85rem;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Comparison Table */
+    .comparison-table-wrapper {
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .comparison-table {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 1.25rem;
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+
+    .comparison-table .table {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    .comparison-table .table thead th {
+        background: #2c3e50 !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.65rem 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #1e3a5f;
+        border-top: none;
+        position: relative;
+    }
+
+    .comparison-table .table thead th::after {
+        content: ' ↕';
+        opacity: 0.3;
+        font-size: 0.8rem;
+    }
+
+    .comparison-table .table thead th.sorted-asc::after {
+        content: ' ↑';
+        opacity: 1;
+    }
+
+    .comparison-table .table thead th.sorted-desc::after {
+        content: ' ↓';
+        opacity: 1;
+    }
+
+    .comparison-table .table tbody td {
+        padding: 0.65rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+        background-color: white !important;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(even) {
+        background-color: #f1f3f5 !important;
+    }
+
+    .comparison-table .table tbody tr:hover {
+        background-color: rgba(30, 58, 95, 0.05) !important;
+        cursor: pointer;
+    }
+
+    /* Entity and Metric Icons */
+    .entity-icon {
+        font-size: 1rem;
+        margin-right: 0.35rem;
+    }
+
+    .metric-icon {
+        font-size: 0.9rem;
+        margin-right: 0.25rem;
+    }
+
+    /* Winning Value Highlights - Team Colors */
+    .winning-value {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 1.2rem;
+        font-weight: 700;
+    }
+
+    .winning-value-db1 {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .winning-value-db2 {
+        background: #f59e0b;
+        color: #1e3a5f;
+    }
+
+    /* Winner Context */
+    .winner-name {
+        font-weight: 600;
+        color: #1e3a5f;
+        font-size: 0.9rem;
+    }
+
+    .winner-context {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.15rem;
+    }
+
+    /* Change Column */
+    .change-positive {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .change-negative {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .change-neutral {
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    /* Filter Indicator */
+    .filter-indicator {
+        font-size: 0.85rem;
+        color: #17a2b8;
+        cursor: help;
+        margin-left: 0.2rem;
+    }
+
+    /* Data Sources Footer */
+    .data-sources-footer {
+        margin-top: 3rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .data-sources-footer h6 {
+        color: #1e3a5f;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .data-source-item {
+        padding: 0.5rem 0;
+        font-size: 0.85rem;
+    }
+
+    .data-source-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .data-source-value {
+        color: #6c757d;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .db-selector-row {
+            grid-template-columns: auto 1fr;
+            gap: 0.5rem 0.75rem;
+        }
+
+        .btn-compare {
+            grid-column: 1 / -1;
+            margin-left: 0;
+            justify-self: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .search-filter-group {
+            grid-template-columns: 1fr;
+        }
+
+        .search-filter-group input,
+        .search-filter-group select {
+            min-width: 100%;
+            width: 100%;
+        }
+
+        .table-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .export-buttons {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .db-selector-row select {
+            min-width: 100%;
+        }
+    }
+</style>
+<!-- Page Header (skip if embedded in admin page) -->
+{% if not request.args.get('embedded') %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="bi bi-bar-chart-line"></i> Database Comparison</h1>
+        <div class="subtitle">Year-over-year analysis of read-a-thon performance</div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container">
+    <!-- Database Selection - Compact One Row -->
+    <div class="database-selection">
+        <h5><i class="bi bi-database"></i> Select Databases to Compare</h5>
+
+        <form method="get" action="/database-comparison" id="dbComparisonForm">
+            <div class="db-selector-row">
+                <label for="database1">Database 1:</label>
+                <select id="database1" name="db1" class="form-select form-select-sm" style="flex: 1; max-width: 280px;" required>
+                    <option value="">-- Select Database --</option>
+                    {% if active_database %}
+                    <option value="{{ active_database.filename }}" {% if db1_filename == active_database.filename %}selected{% endif %}>
+                        Active (Currently: {{ active_database.display_name }})
+                    </option>
+                    {% endif %}
+                    {% for db in databases %}
+                    <option value="{{ db.filename }}" {% if db1_filename == db.filename %}selected{% endif %}>
+                        {{ db.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <label for="database2">Database 2:</label>
+                <select id="database2" name="db2" class="form-select form-select-sm" style="flex: 1; max-width: 280px;" required>
+                    <option value="">-- Select Database --</option>
+                    {% for db in databases %}
+                    <option value="{{ db.filename }}" {% if db2_filename == db.filename %}selected{% endif %}>
+                        {{ db.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <label for="filterPeriod"><i class="bi bi-calendar3"></i> Filter Period:</label>
+                <select id="filterPeriod" name="filter" class="form-select form-select-sm" style="flex: 1; max-width: 220px;">
+                    <option value="all" {% if filter_period == 'all' %}selected{% endif %}>Full Contest Period</option>
+                    <option value="day1" {% if filter_period == 'day1' %}selected{% endif %}>Day 1</option>
+                    <option value="day2" {% if filter_period == 'day2' %}selected{% endif %}>Day 2</option>
+                    <option value="day3" {% if filter_period == 'day3' %}selected{% endif %}>Day 3</option>
+                    <option value="day4" {% if filter_period == 'day4' %}selected{% endif %}>Day 4</option>
+                    <option value="day5" {% if filter_period == 'day5' %}selected{% endif %}>Day 5</option>
+                    <option value="day6" {% if filter_period == 'day6' %}selected{% endif %}>Day 6</option>
+                </select>
+
+                <button type="submit" class="btn-compare">
+                    <i class="bi bi-play-circle"></i> Compare
+                </button>
+            </div>
+        </form>
+
+        <script>
+            // Handle form submission when embedded in admin page
+            (function() {
+                const form = document.getElementById('dbComparisonForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        // Check if we're embedded in admin page
+                        const isEmbedded = window.location.search.includes('embedded=true') ||
+                                          document.getElementById('dbComparisonContent');
+
+                        if (isEmbedded && document.getElementById('dbComparisonContent')) {
+                            e.preventDefault();
+
+                            // Get form data
+                            const formData = new FormData(this);
+                            const params = new URLSearchParams(formData);
+                            params.set('embedded', 'true');
+
+                            // Show loading state
+                            const contentDiv = document.getElementById('dbComparisonContent');
+                            const originalContent = contentDiv.innerHTML;
+                            contentDiv.innerHTML = '<div class="text-center my-5"><div class="spinner-border" role="status"></div><p class="mt-2">Loading comparison...</p></div>';
+
+                            // Reload embedded content with new parameters
+                            fetch('/database-comparison?' + params.toString())
+                                .then(response => response.text())
+                                .then(html => {
+                                    const parser = new DOMParser();
+                                    const doc = parser.parseFromString(html, 'text/html');
+                                    const container = doc.querySelector('.container');
+
+                                    if (container) {
+                                        contentDiv.innerHTML = container.innerHTML;
+
+                                        // Re-run scripts
+                                        const scripts = container.querySelectorAll('script');
+                                        scripts.forEach(script => {
+                                            const newScript = document.createElement('script');
+                                            newScript.textContent = script.textContent;
+                                            contentDiv.appendChild(newScript);
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    contentDiv.innerHTML = '<div class="alert alert-danger">Error loading comparison. Please try again.</div>';
+                                });
+                        }
+                        // If not embedded, let the form submit normally
+                    });
+                }
+            })();
+        </script>
+    </div>
+
+    {% if comparison_data %}
+    {% if comparison_data.error %}
+    <!-- Error Message -->
+    <div class="alert alert-danger">
+        <strong>Error:</strong> {{ comparison_data.error }}
+    </div>
+    {% else %}
+    <!-- Results Section with Integrated Controls -->
+    <div class="comparison-table-wrapper">
+        <!-- Table Controls -->
+        <div class="table-controls">
+            <div class="search-filter-group">
+                <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="🔍 Search metrics, entities, or names..." oninput="filterTable()">
+                <select id="entityFilter" class="form-select form-select-sm" onchange="filterTable()">
+                    <option value="all">All Entities</option>
+                    <option value="School">School</option>
+                    <option value="Team">Team</option>
+                    <option value="Grade">Grade</option>
+                    <option value="Class">Class</option>
+                    <option value="Student">Student</option>
+                </select>
+                <span class="results-count" id="resultsCount">{{ comparison_data.comparisons|length }} comparisons</span>
+            </div>
+            <div class="export-buttons">
+                <button class="btn btn-sm btn-primary" onclick="copyTableToClipboard()">
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="exportToCSV()">
+                    <i class="bi bi-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="comparison-table">
+            <table class="table table-striped" id="comparisonTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Entity</th>
+                    <th onclick="sortTable(1)">Metric</th>
+                    <th onclick="sortTable(2)">{{ comparison_data.db1_info.display_name if comparison_data.db1_info else 'Database 1' }}</th>
+                    <th onclick="sortTable(3)">{{ comparison_data.db2_info.display_name if comparison_data.db2_info else 'Database 2' }}</th>
+                    <th onclick="sortTable(4)">Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comparison in comparison_data.comparisons %}
+                <tr data-sort-key="{{ loop.index }}" data-entity="{{ comparison.entity_level }}">
+                    <td>
+                        <span class="entity-icon">
+                            {% if comparison.entity_level == 'School' %}🏫
+                            {% elif comparison.entity_level == 'Team' %}🔷
+                            {% elif comparison.entity_level == 'Grade' %}🎓
+                            {% elif comparison.entity_level == 'Class' %}🏛️
+                            {% elif comparison.entity_level == 'Student' %}👤
+                            {% endif %}
+                        </span>
+                        {{ comparison.entity_level }}
+                    </td>
+                    <td>
+                        <i class="bi bi-{% if 'Fundraising' in comparison.metric %}currency-dollar{% elif 'Minutes' in comparison.metric %}book{% elif 'Sponsors' in comparison.metric %}people{% elif 'Participating' in comparison.metric %}person-check{% elif 'Size' in comparison.metric %}person-badge{% else %}graph-up{% endif %} metric-icon"></i>
+                        {{ comparison.metric }}
+                        {% if comparison.honors_filter %}
+                        <span class="filter-indicator" title="Honors filter period">◐</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div {% if comparison.winner == 'db1' %}class="winning-value winning-value-db1"{% endif %}>
+                            {% if comparison.format == 'currency' %}
+                            ${{ "{:,.0f}".format(comparison.db1_value.value) }}
+                            {% elif comparison.format == 'minutes' %}
+                            {{ "{:,.0f}".format(comparison.db1_value.value / 60) }} hours
+                            {% elif comparison.format == 'percentage' %}
+                            {{ "%.1f"|format(comparison.db1_value.value) }}%
+                            {% else %}
+                            {{ "{:,.0f}".format(comparison.db1_value.value) }}
+                            {% endif %}
+                        </div>
+                        {% if comparison.db1_value.winner_name %}
+                        <div class="winner-name">Winner: {{ comparison.db1_value.winner_name }}</div>
+                        {% endif %}
+                        <div class="winner-context">{{ comparison.db1_value.context }}</div>
+                    </td>
+                    <td>
+                        <div {% if comparison.winner == 'db2' %}class="winning-value winning-value-db2"{% endif %}>
+                            {% if comparison.format == 'currency' %}
+                            ${{ "{:,.0f}".format(comparison.db2_value.value) }}
+                            {% elif comparison.format == 'minutes' %}
+                            {{ "{:,.0f}".format(comparison.db2_value.value / 60) }} hours
+                            {% elif comparison.format == 'percentage' %}
+                            {{ "%.1f"|format(comparison.db2_value.value) }}%
+                            {% else %}
+                            {{ "{:,.0f}".format(comparison.db2_value.value) }}
+                            {% endif %}
+                        </div>
+                        {% if comparison.db2_value.winner_name %}
+                        <div class="winner-name">Winner: {{ comparison.db2_value.winner_name }}</div>
+                        {% endif %}
+                        <div class="winner-context">{{ comparison.db2_value.context }}</div>
+                    </td>
+                    <td class="change-{{ comparison.change.direction }}">
+                        {% if comparison.change.direction == 'neutral' %}
+                        No change
+                        {% else %}
+                        {% if comparison.format == 'currency' %}
+                        {{ "+" if comparison.change.direction == 'up' else "" }}${{ "{:,.0f}".format(comparison.change.absolute|abs) }}
+                        {% elif comparison.format == 'minutes' %}
+                        {{ "+" if comparison.change.direction == 'up' else "" }}{{ "{:,.0f}".format((comparison.change.absolute|abs) / 60) }} hours
+                        {% elif comparison.format == 'percentage' %}
+                        {{ "+" if comparison.change.direction == 'up' else "" }}{{ "%.1f"|format(comparison.change.absolute) }} pts
+                        {% else %}
+                        {{ "+" if comparison.change.direction == 'up' else "" }}{{ "{:,.0f}".format(comparison.change.absolute) }}
+                        {% endif %}
+                        <br>
+                        {% if comparison.change.percent is not none %}
+                        ({{ "+" if comparison.change.direction == 'up' else "" }}{{ "%.1f"|format(comparison.change.percent) }}%)
+                        {% endif %}
+                        <i class="bi bi-arrow-{{ 'up' if comparison.change.direction == 'up' else 'down' }}-short"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Data Sources Footer -->
+    <div class="data-sources-footer">
+        <h6><i class="bi bi-info-circle"></i> Data Sources & Notes</h6>
+        <div class="data-source-item">
+            <span class="data-source-label">• Database 1:</span>
+            <span class="data-source-value">{{ comparison_data.db1_info.display_name if comparison_data.db1_info else 'N/A' }} ({{ comparison_data.db1_info.filename if comparison_data.db1_info else 'N/A' }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Database 2:</span>
+            <span class="data-source-value">{{ comparison_data.db2_info.display_name if comparison_data.db2_info else 'N/A' }} ({{ comparison_data.db2_info.filename if comparison_data.db2_info else 'N/A' }})</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Filter Period:</span>
+            <span class="data-source-value">{{ filter_period|title if filter_period != 'all' else 'Full Contest Period' }} - ◐ indicates metrics that honor date filter</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Top Performer Logic:</span>
+            <span class="data-source-value">Compares each year's #1 performer (not same individual tracked across years)</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Minutes:</span>
+            <span class="data-source-value">Capped at 120 minutes/day (Daily_Logs.capped_minutes)</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Fundraising:</span>
+            <span class="data-source-value">Never capped (Reader_Cumulative.donation_amount)</span>
+        </div>
+        <div class="data-source-item">
+            <span class="data-source-label">• Winning Highlights:</span>
+            <span class="data-source-value">Blue = DB1 winner, Yellow = DB2 winner</span>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<script>
+// Filter table
+function filterTable() {
+    const searchBox = document.getElementById('searchBox').value.toLowerCase();
+    const entityFilter = document.getElementById('entityFilter').value;
+    const table = document.getElementById('comparisonTable');
+    const rows = table.querySelectorAll('tbody tr');
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const entityType = row.getAttribute('data-entity');
+        const text = row.textContent.toLowerCase();
+
+        const matchesSearch = text.includes(searchBox);
+        const matchesEntity = entityFilter === 'all' || entityType === entityFilter;
+
+        if (matchesSearch && matchesEntity) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('resultsCount').textContent = `${visibleCount} comparisons`;
+}
+
+// Sort table - Matching teams.html pattern
+let currentSort = { column: -1, ascending: true };
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('comparisonTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const headers = table.querySelectorAll('thead th');
+
+    // Toggle direction if same column
+    const ascending = currentSort.column === columnIndex ? !currentSort.ascending : true;
+    currentSort = { column: columnIndex, ascending };
+
+    // Sort rows
+    const sortedRows = rows.slice().sort((a, b) => {
+        let aValue, bValue;
+
+        // Special handling for Entity column (use sort key)
+        if (columnIndex === 0) {
+            aValue = parseInt(a.getAttribute('data-sort-key'));
+            bValue = parseInt(b.getAttribute('data-sort-key'));
+        } else {
+            aValue = a.cells[columnIndex].textContent.trim();
+            bValue = b.cells[columnIndex].textContent.trim();
+
+            // Extract numeric values for comparison
+            const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+            const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+
+            // If both are numbers, use numeric comparison
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                aValue = aNum;
+                bValue = bNum;
+            }
+        }
+
+        const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        return ascending ? comparison : -comparison;
+    });
+
+    // Clear and re-append sorted rows
+    tbody.innerHTML = '';
+    sortedRows.forEach(row => tbody.appendChild(row));
+
+    // Update header indicators
+    headers.forEach(h => {
+        h.classList.remove('sorted-asc', 'sorted-desc');
+    });
+    headers[columnIndex].classList.add(ascending ? 'sorted-asc' : 'sorted-desc');
+}
+
+// Export functions
+function copyTableToClipboard() {
+    const table = document.getElementById('comparisonTable');
+    let text = '';
+
+    // Get headers
+    const headers = table.querySelectorAll('thead th');
+    headers.forEach((header, index) => {
+        if (index > 0) text += '\t';
+        text += header.textContent.trim().replace(/[↕↑↓]/g, '');
+    });
+    text += '\n';
+
+    // Get visible rows
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            cells.forEach((cell, index) => {
+                if (index > 0) text += '\t';
+                text += cell.textContent.trim().replace(/\s+/g, ' ');
+            });
+            text += '\n';
+        }
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+    });
+}
+
+function exportToCSV() {
+    const table = document.getElementById('comparisonTable');
+    let csv = '';
+
+    // Get headers
+    const headers = table.querySelectorAll('thead th');
+    const headerRow = [];
+    headers.forEach(header => {
+        headerRow.push('"' + header.textContent.trim().replace(/[↕↑↓]/g, '').replace(/"/g, '""') + '"');
+    });
+    csv += headerRow.join(',') + '\n';
+
+    // Get visible rows
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            const rowData = [];
+            cells.forEach(cell => {
+                rowData.push('"' + cell.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""') + '"');
+            });
+            csv += rowData.join(',') + '\n';
+        }
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'database_comparison.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Initialize with entity level sort on load
+window.addEventListener('DOMContentLoaded', function() {
+    sortTable(0); // Sort by Entity (hierarchical)
+});
+</script>
+{% endblock %}

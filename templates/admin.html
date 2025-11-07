@@ -3,6 +3,242 @@
 {% block title %}Admin - Read-a-Thon System{% endblock %}
 
 {% block content %}
+<style>
+    /* Admin Tab Styling - Match main menu dark blue */
+    .nav-tabs .nav-link {
+        color: #495057;
+        border: 1px solid transparent;
+        border-radius: 0.5rem 0.5rem 0 0;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #1e3a5f;
+        background-color: #f8f9fa;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: white;
+        background-color: #1e3a5f;
+        border-color: #1e3a5f #1e3a5f #fff;
+    }
+
+    /* Database Comparison Styling - Updated Layout */
+    /* Database Selection Section */
+    .database-selection {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .database-selection h5 {
+        color: #1e3a5f;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .db-selector-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .db-selector-row label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        margin: 0;
+        text-align: right;
+    }
+
+    .db-selector-row select {
+        font-size: 0.85rem;
+        min-width: 200px;
+    }
+
+    .btn-compare {
+        background: #1e3a5f;
+        color: white;
+        font-weight: 700;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        margin-left: 0.5rem;
+    }
+
+    /* Table Controls - Integrated with Table */
+    .comparison-table-wrapper {
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .table-controls,
+    .results-header {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        border-bottom: none !important;
+        padding: 1rem 1.25rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 1rem !important;
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+
+    .search-filter-group {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+
+    .search-filter-group input {
+        font-size: 0.9rem;
+        min-width: 280px;
+    }
+
+    .search-filter-group select {
+        min-width: 130px;
+        font-size: 0.85rem;
+    }
+
+    .results-count {
+        font-size: 0.85rem;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Comparison Results Table */
+    .comparison-table {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 1.25rem;
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+
+    .comparison-table .table {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    .comparison-table .table thead th {
+        background: #2c3e50 !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.65rem 0.5rem;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 2px solid #1e3a5f;
+        border-top: none;
+        position: relative;
+    }
+
+    .comparison-table .table thead th::after {
+        content: ' ↕';
+        opacity: 0.3;
+        font-size: 0.8rem;
+    }
+
+    .comparison-table .table thead th.sorted-asc::after {
+        content: ' ↑';
+        opacity: 1;
+    }
+
+    .comparison-table .table thead th.sorted-desc::after {
+        content: ' ↓';
+        opacity: 1;
+    }
+
+    .comparison-table .table tbody td {
+        padding: 0.65rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+        background-color: white !important;
+    }
+
+    .comparison-table .table-striped tbody tr:nth-of-type(even) {
+        background-color: #f1f3f5 !important;
+    }
+
+    .comparison-table .table tbody tr:hover {
+        background-color: rgba(30, 58, 95, 0.05) !important;
+        cursor: pointer;
+    }
+
+    /* Entity & Metric Icons */
+    .entity-icon {
+        font-size: 1rem;
+        margin-right: 0.35rem;
+    }
+
+    .metric-icon {
+        font-size: 0.9rem;
+        margin-right: 0.25rem;
+    }
+
+    /* Winning Value Highlights */
+    .winning-value {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 1.2rem;
+        font-weight: 700;
+    }
+
+    .winning-value-db1 {
+        background: #1e3a5f;
+        color: white;
+    }
+
+    .winning-value-db2 {
+        background: #f59e0b;
+        color: #1e3a5f;
+    }
+
+    /* Winner Context */
+    .winner-context {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.15rem;
+    }
+
+    /* Change Styling */
+    .change-positive {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .change-negative {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .change-neutral {
+        color: #6c757d;
+        font-weight: 600;
+    }
+</style>
+
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">
@@ -29,8 +265,13 @@
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="db-comparison-tab" data-bs-toggle="tab" data-bs-target="#db-comparison" type="button" role="tab">
+        <button class="nav-link" id="db-registry-tab" data-bs-toggle="tab" data-bs-target="#db-registry" type="button" role="tab">
             <i class="bi bi-hdd-stack"></i> Database Registry
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="db-comparison-tab" data-bs-toggle="tab" data-bs-target="#db-comparison" type="button" role="tab">
+            <i class="bi bi-bar-chart-line"></i> Database Comparison
         </button>
     </li>
 </ul>
@@ -454,7 +695,7 @@
     </div>
 
     <!-- ========== DATABASE REGISTRY TAB ========== -->
-    <div class="tab-pane fade" id="db-comparison" role="tabpanel">
+    <div class="tab-pane fade" id="db-registry" role="tabpanel">
         <div class="card">
             <div class="card-header card-header-blue">
                 <div class="d-flex justify-content-between align-items-center">
@@ -528,6 +769,227 @@
                         <p class="small mb-0 mt-2">Loading databases...</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== DATABASE COMPARISON TAB ========== -->
+    <div class="tab-pane fade" id="db-comparison" role="tabpanel">
+        <style>
+            /* Database Comparison Styles */
+            .db-selector-row {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex-wrap: wrap;
+            }
+            .db-selector-row label {
+                font-weight: 600;
+                color: #495057;
+                font-size: 0.85rem;
+                white-space: nowrap;
+                margin: 0;
+            }
+            .db-selector-row select {
+                font-size: 0.85rem;
+            }
+            .btn-compare {
+                background: #1e3a5f;
+                color: white;
+                font-weight: 700;
+                padding: 0.5rem 1.5rem;
+                border: none;
+                border-radius: 0.5rem;
+                transition: all 0.2s;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+            .btn-compare:hover {
+                background: #2c3e50;
+            }
+        </style>
+
+        <div class="card">
+            <div class="card-header card-header-blue">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart-line"></i> Database Comparison - Year-over-Year Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Explanation Box -->
+                <div class="alert alert-info mb-4">
+                    <h6 class="mb-2"><i class="bi bi-info-circle"></i> About Database Comparison</h6>
+                    <p class="small mb-0">
+                        Compare any two databases from the registry to analyze year-over-year performance trends.
+                        This tool shows top performers at each entity level (School, Team, Grade, Class, Student) for
+                        all key metrics (fundraising, minutes, sponsors, participation, etc.).
+                    </p>
+                </div>
+
+                <!-- Database Selection Form -->
+                <div class="database-selection">
+                    <h5><i class="bi bi-database"></i> Select Databases to Compare</h5>
+                    <form method="get" action="/admin#db-comparison" id="dbComparisonForm">
+                        <div class="db-selector-row">
+                            <label for="db1">Database 1:</label>
+                            <select id="db1" name="db1" class="form-select form-select-sm" style="flex: 1; max-width: 280px;" required>
+                                <option value="">-- Select Database --</option>
+                                {% if active_database %}
+                                <option value="{{ active_database.db_filename }}">Active (Currently: {{ active_database.display_name }})</option>
+                                {% endif %}
+                                {% for db in databases %}
+                                <option value="{{ db.db_filename }}">{{ db.display_name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="db2">Database 2:</label>
+                            <select id="db2" name="db2" class="form-select form-select-sm" style="flex: 1; max-width: 280px;" required>
+                                <option value="">-- Select Database --</option>
+                                {% for db in databases %}
+                                <option value="{{ db.db_filename }}">{{ db.display_name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="filterPeriod"><i class="bi bi-calendar3"></i> Filter Period:</label>
+                            <select id="filterPeriod" name="filter" class="form-select form-select-sm" style="flex: 1; max-width: 220px;">
+                                <option value="all" selected>Full Contest Period</option>
+                                <option value="day1">Day 1</option>
+                                <option value="day2">Day 2</option>
+                                <option value="day3">Day 3</option>
+                                <option value="day4">Day 4</option>
+                                <option value="day5">Day 5</option>
+                                <option value="day6">Day 6</option>
+                            </select>
+
+                            <button type="submit" class="btn-compare">
+                                <i class="bi bi-play-circle"></i> Compare
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Comparison Results -->
+                {% if comparison_data %}
+                    {% if comparison_data.error %}
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> {{ comparison_data.error }}
+                    </div>
+                    {% else %}
+                    <!-- Results Section -->
+                    <div class="results-header">
+                        <div class="search-filter-group">
+                            <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="🔍 Search metrics, entities, or names..." oninput="filterComparisonTable()">
+                            <select id="entityFilter" class="form-select form-select-sm" onchange="filterComparisonTable()">
+                                <option value="all">All Entities</option>
+                                <option value="School">School</option>
+                                <option value="Team">Team</option>
+                                <option value="Grade">Grade</option>
+                                <option value="Class">Class</option>
+                                <option value="Student">Student</option>
+                            </select>
+                            <span class="results-count" id="resultsCount">{{ comparison_data.comparisons|length }} comparisons</span>
+                            <span class="winner-context" style="margin-left: 1rem;">Note: pp = percentage points</span>
+                        </div>
+                        <div class="export-buttons">
+                            <button class="btn btn-sm btn-primary" onclick="copyComparisonTableToClipboard()">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="exportComparisonToCSV()">
+                                <i class="bi bi-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="comparison-table">
+                        <table class="table table-striped" id="comparisonTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortComparisonTable(0)">Entity</th>
+                                    <th onclick="sortComparisonTable(1)">Metric</th>
+                                    <th onclick="sortComparisonTable(2)">{{ comparison_data.db1_info.display_name if comparison_data.db1_info else 'Database 1' }}</th>
+                                    <th onclick="sortComparisonTable(3)">{{ comparison_data.db2_info.display_name if comparison_data.db2_info else 'Database 2' }}</th>
+                                    <th onclick="sortComparisonTable(4)">Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comparison in comparison_data.comparisons %}
+                                {% set entity_sort_key = {'School': 1, 'Team': 2, 'Grade': 3, 'Class': 4, 'Student': 5}[comparison.entity_level] %}
+                                <tr data-sort-key="{{ entity_sort_key }}" data-entity="{{ comparison.entity_level }}">
+                                    <td>
+                                        <span class="entity-icon">
+                                            {% if comparison.entity_level == 'School' %}🏫
+                                            {% elif comparison.entity_level == 'Team' %}🔷
+                                            {% elif comparison.entity_level == 'Grade' %}🎓
+                                            {% elif comparison.entity_level == 'Class' %}🏛️
+                                            {% elif comparison.entity_level == 'Student' %}👤
+                                            {% endif %}
+                                        </span>
+                                        {{ comparison.entity_level }}
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-{% if 'Fundraising' in comparison.metric %}currency-dollar{% elif 'Minutes' in comparison.metric %}book{% elif 'Sponsors' in comparison.metric %}people{% elif 'Participating' in comparison.metric %}person-check{% elif 'Size' in comparison.metric %}person-badge{% else %}graph-up{% endif %} metric-icon"></i>
+                                        {{ comparison.metric }}
+                                    </td>
+                                    <td>
+                                        <div class="{% if comparison.winner == 'db1' %}winning-value winning-value-db1{% endif %}">
+                                            {% if comparison.format == 'currency' %}
+                                            ${{ "{:,.0f}".format(comparison.db1_value.value) }}
+                                            {% elif comparison.format == 'minutes' %}
+                                            {{ "{:,.0f}".format(comparison.db1_value.value / 60) }} hours
+                                            {% elif comparison.format == 'percentage' %}
+                                            {{ "%.1f"|format(comparison.db1_value.value) }}%
+                                            {% else %}
+                                            {{ "{:,.0f}".format(comparison.db1_value.value) }}
+                                            {% endif %}
+                                        </div>
+                                        {% if comparison.db1_value.winner_name %}
+                                        <div class="winner-context">Winner: {{ comparison.db1_value.winner_name }}</div>
+                                        {% endif %}
+                                        <div class="winner-context">{{ comparison.db1_value.context }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="{% if comparison.winner == 'db2' %}winning-value winning-value-db2{% endif %}">
+                                            {% if comparison.format == 'currency' %}
+                                            ${{ "{:,.0f}".format(comparison.db2_value.value) }}
+                                            {% elif comparison.format == 'minutes' %}
+                                            {{ "{:,.0f}".format(comparison.db2_value.value / 60) }} hours
+                                            {% elif comparison.format == 'percentage' %}
+                                            {{ "%.1f"|format(comparison.db2_value.value) }}%
+                                            {% else %}
+                                            {{ "{:,.0f}".format(comparison.db2_value.value) }}
+                                            {% endif %}
+                                        </div>
+                                        {% if comparison.db2_value.winner_name %}
+                                        <div class="winner-context">Winner: {{ comparison.db2_value.winner_name }}</div>
+                                        {% endif %}
+                                        <div class="winner-context">{{ comparison.db2_value.context }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="change-{% if comparison.change.direction == 'up' %}positive{% elif comparison.change.direction == 'down' %}negative{% else %}neutral{% endif %}">
+                                            {% if comparison.format == 'currency' %}
+                                            {{ "+" if comparison.change.absolute > 0 else "" }}${{ "{:,.0f}".format(comparison.change.absolute) }}
+                                            {% elif comparison.format == 'minutes' %}
+                                            {{ "+" if comparison.change.absolute > 0 else "" }}{{ "{:,.0f}".format(comparison.change.absolute / 60) }} hours
+                                            {% elif comparison.format == 'percentage' %}
+                                            {{ "+" if comparison.change.absolute > 0 else "" }}{{ "%.1f"|format(comparison.change.absolute) }}pp
+                                            {% else %}
+                                            {{ "+" if comparison.change.absolute > 0 else "" }}{{ "{:,.0f}".format(comparison.change.absolute) }}
+                                            {% endif %}
+                                        </div>
+                                        {% if comparison.change.percent is not none %}
+                                        <div class="winner-context">
+                                            ({{ "+" if comparison.change.percent > 0 else "" }}{{ "%.1f"|format(comparison.change.percent) }}%)
+                                            {% if comparison.change.direction == 'up' %}↑{% elif comparison.change.direction == 'down' %}↓{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
     </div>
@@ -1585,6 +2047,177 @@ async function createDatabase(event) {
         btn.innerHTML = originalContent;
     }
 }
+
+// Database Comparison Table Functions
+function filterComparisonTable() {
+    const searchBox = document.getElementById('searchBox');
+    const entityFilter = document.getElementById('entityFilter');
+    const table = document.getElementById('comparisonTable');
+    const resultsCount = document.getElementById('resultsCount');
+
+    if (!searchBox || !entityFilter || !table) return;
+
+    const searchTerm = searchBox.value.toLowerCase();
+    const selectedEntity = entityFilter.value;
+    const rows = table.querySelectorAll('tbody tr');
+
+    let visibleCount = 0;
+    rows.forEach(row => {
+        const entity = row.dataset.entity;
+        const text = row.textContent.toLowerCase();
+
+        const matchesSearch = searchTerm === '' || text.includes(searchTerm);
+        const matchesEntity = selectedEntity === 'all' || entity === selectedEntity;
+
+        if (matchesSearch && matchesEntity) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    if (resultsCount) {
+        resultsCount.textContent = `${visibleCount} comparison${visibleCount !== 1 ? 's' : ''}`;
+    }
+}
+
+function sortComparisonTable(columnIndex) {
+    const table = document.getElementById('comparisonTable');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    // Determine sort direction
+    const headers = table.querySelectorAll('th');
+    const header = headers[columnIndex];
+    const currentDirection = header.classList.contains('sorted-asc') ? 'asc' :
+                           header.classList.contains('sorted-desc') ? 'desc' : 'none';
+    const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+
+    // Clear all sort indicators
+    headers.forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+    });
+
+    // Set new sort direction
+    header.classList.add(`sorted-${newDirection}`);
+
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue, bValue;
+
+        // For Entity column (column 0), use data-sort-key for hierarchical sorting
+        if (columnIndex === 0) {
+            aValue = parseInt(a.dataset.sortKey);
+            bValue = parseInt(b.dataset.sortKey);
+            const comparison = aValue - bValue;
+            return newDirection === 'asc' ? comparison : -comparison;
+        }
+
+        // For other columns, use text content
+        aValue = a.cells[columnIndex].textContent.trim();
+        bValue = b.cells[columnIndex].textContent.trim();
+
+        // Extract numeric values if present
+        const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+        const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+
+        let comparison = 0;
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            comparison = aNum - bNum;
+        } else {
+            comparison = aValue.localeCompare(bValue);
+        }
+
+        return newDirection === 'asc' ? comparison : -comparison;
+    });
+
+    // Re-append rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+function copyComparisonTableToClipboard() {
+    const table = document.getElementById('comparisonTable');
+    if (!table) return;
+
+    let text = '';
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('th, td');
+            const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join('\t');
+            text += rowText + '\n';
+        }
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+    });
+}
+
+function exportComparisonToCSV() {
+    const table = document.getElementById('comparisonTable');
+    if (!table) return;
+
+    let csv = '';
+
+    // Headers
+    const headers = table.querySelectorAll('thead th');
+    const headerRow = [];
+    headers.forEach(header => {
+        headerRow.push('"' + header.textContent.trim().replace(/[↕↑↓]/g, '').replace(/"/g, '""') + '"');
+    });
+    csv += headerRow.join(',') + '\n';
+
+    // Visible rows
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            const rowData = [];
+            cells.forEach(cell => {
+                rowData.push('"' + cell.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""') + '"');
+            });
+            csv += rowData.join(',') + '\n';
+        }
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'database_comparison.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Auto-activate Database Comparison tab if comparison data present
+document.addEventListener('DOMContentLoaded', function() {
+    {% if comparison_data and not comparison_data.error %}
+    const dbComparisonTab = document.getElementById('db-comparison-tab');
+    if (dbComparisonTab) {
+        const tab = new bootstrap.Tab(dbComparisonTab);
+        tab.show();
+
+        // Scroll to results after a brief delay
+        setTimeout(() => {
+            const resultsHeader = document.querySelector('.results-header');
+            if (resultsHeader) {
+                resultsHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+
+        // Set default sort: Entity column ascending (School → Team → Grade → Class → Student)
+        const entityHeader = document.querySelector('#comparisonTable th');
+        if (entityHeader) {
+            entityHeader.classList.add('sorted-asc');
+        }
+    }
+    {% endif %}
+});
 </script>
 
 {% endblock %}
