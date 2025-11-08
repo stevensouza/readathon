@@ -23,14 +23,15 @@
                 </ol>
 
                 <h5 class="mt-4">Navigation Overview</h5>
-                <p>The application has 5 main tabs:</p>
+                <p>The application has 6 main tabs:</p>
                 <ul>
                     <li><strong>School:</strong> School-wide overview with team competition</li>
                     <li><strong>Teams:</strong> Head-to-head team comparison metrics</li>
                     <li><strong>Grade Level:</strong> Grade-by-grade and class-by-class breakdown</li>
                     <li><strong>Students:</strong> Individual student performance (master-detail view)</li>
                     <li><strong>Upload:</strong> Import daily reading and cumulative stats</li>
-                    <li><strong>Reports & Data:</strong> 22 pre-configured reports, table views, and admin tools</li>
+                    <li><strong>Reports & Data:</strong> 22 pre-configured reports, table views, and workflows</li>
+                    <li><strong>Admin:</strong> Database management, creation, registry, and comparison tools</li>
                 </ul>
 
                 <div class="alert alert-info mt-3">
@@ -345,13 +346,171 @@
                     <li>All tables support sorting, copy to clipboard, and CSV export</li>
                 </ul>
 
-                <h6 class="mt-4">3. Admin Section</h6>
-                <p>Database management tools:</p>
-                <ul>
-                    <li>Selective table clearing (clear specific tables without affecting others)</li>
-                    <li>Upload history viewer</li>
-                    <li>Database integrity tools</li>
-                </ul>
+                <h6 class="mt-4">3. Admin Section (NEW - Significantly Expanded)</h6>
+                <p>Comprehensive database management and analytics tools organized in 5 tabs:</p>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-info"><i class="bi bi-gear"></i> Tab 1: Actions</h6>
+                                <ul class="small">
+                                    <li>Selective table clearing (clear specific tables without affecting others)</li>
+                                    <li>Upload history viewer</li>
+                                    <li>Database integrity tools</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success"><i class="bi bi-folder"></i> Tab 2: Data Management</h6>
+                                <ul class="small">
+                                    <li>View and manage all database tables</li>
+                                    <li>Export data to CSV</li>
+                                    <li>View table statistics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary"><i class="bi bi-plus-circle"></i> Tab 3: Database Creation (NEW v2026.10.0)</h6>
+                                <p class="small"><strong>Create new read-a-thon databases for future years:</strong></p>
+                                <ul class="small">
+                                    <li>Enter school year (e.g., 2027)</li>
+                                    <li>Auto-generate filename (e.g., readathon_2027.db)</li>
+                                    <li>Upload 3 CSV files: Roster, Class Info, Grade Rules</li>
+                                    <li>Automatic database creation with data loading</li>
+                                    <li>Built-in CSV validation</li>
+                                    <li>Automatic registry in Database_Metadata</li>
+                                </ul>
+                                <div class="alert alert-info small mb-0">
+                                    <strong>Use Case:</strong> At the start of each new school year, create a new database with updated rosters and rules.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-warning mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning"><i class="bi bi-hdd-stack"></i> Tab 4: Database Registry (v2026.11.0)</h6>
+                                <p class="small"><strong>Manage all read-a-thon databases across years:</strong></p>
+                                <ul class="small">
+                                    <li>View all registered databases (2025, 2026, Sample, etc.)</li>
+                                    <li>Switch active database via dropdown selector</li>
+                                    <li>View database metadata (year, description, statistics)</li>
+                                    <li>Register existing databases</li>
+                                    <li>Maintain historical event records</li>
+                                </ul>
+                                <div class="alert alert-warning small mb-0">
+                                    <strong>Note:</strong> Only ONE database is active at a time. Switch between years using the header dropdown.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-danger"><i class="bi bi-graph-up-arrow"></i> Tab 5: Database Comparison (NEW v2026.12.0)</h6>
+                                <p class="small"><strong>Year-over-year analysis tool with 50 comprehensive metrics:</strong></p>
+                                <ul class="small">
+                                    <li><strong>50 metrics</strong> across 5 entity levels (School, Team, Grade, Class, Student)</li>
+                                    <li>Compare any two databases side-by-side</li>
+                                    <li>Date filtering (All Dates, specific date ranges)</li>
+                                    <li>Sortable comparison table</li>
+                                    <li>Search box for quick metric lookup</li>
+                                    <li>Entity type filter (show only School, Team, Grade, Class, or Student metrics)</li>
+                                    <li>Export to CSV for analysis</li>
+                                    <li>Color-coded winners (blue/orange ovals)</li>
+                                    <li>Sticky filter selections via sessionStorage</li>
+                                </ul>
+                                <div class="alert alert-danger small mb-0">
+                                    <strong>Example Use Case:</strong> Compare 2025 vs. 2026 fundraising totals, reading minutes, participation rates, and more to track year-over-year growth.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="mt-3">Database Comparison Metrics Breakdown (50 total)</h6>
+                <div class="accordion" id="dbComparisonMetrics">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metricsSchool">
+                                School Level (10 metrics)
+                            </button>
+                        </h2>
+                        <div id="metricsSchool" class="accordion-collapse collapse" data-bs-parent="#dbComparisonMetrics">
+                            <div class="accordion-body">
+                                <ol class="small">
+                                    <li>Fundraising Total</li>
+                                    <li>Reading Minutes Total</li>
+                                    <li>Sponsor Count</li>
+                                    <li>Total Participating (≥1 Day)</li>
+                                    <li>School Size (Total Students)</li>
+                                    <li>Average Participation % (With Color War Bonus)</li>
+                                    <li>Goal Met (≥1 Day)</li>
+                                    <li>All N Days Active %</li>
+                                    <li>Goal Met All Days %</li>
+                                    <li>Color War Points</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metricsOther">
+                                Team, Grade, Class (10 metrics each = 30 total)
+                            </button>
+                        </h2>
+                        <div id="metricsOther" class="accordion-collapse collapse" data-bs-parent="#dbComparisonMetrics">
+                            <div class="accordion-body">
+                                <p class="small">Same 10 metrics as School level, but calculated per Team/Grade/Class:</p>
+                                <ol class="small">
+                                    <li>Fundraising Total</li>
+                                    <li>Reading Minutes Total</li>
+                                    <li>Sponsor Count</li>
+                                    <li>Total Participating (≥1 Day)</li>
+                                    <li>Size (Total Students)</li>
+                                    <li>Average Participation % (With Color War Bonus)</li>
+                                    <li>Goal Met (≥1 Day)</li>
+                                    <li>All N Days Active %</li>
+                                    <li>Goal Met All Days %</li>
+                                    <li>Color War Points</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metricsStudent">
+                                Student Level (10 metrics)
+                            </button>
+                        </h2>
+                        <div id="metricsStudent" class="accordion-collapse collapse" data-bs-parent="#dbComparisonMetrics">
+                            <div class="accordion-body">
+                                <ol class="small">
+                                    <li>Top Fundraiser</li>
+                                    <li>Top Reader (Minutes)</li>
+                                    <li>Top Sponsor Count</li>
+                                    <li>Total Participating (≥1 Day) - N/A for individuals</li>
+                                    <li>Top Participation %</li>
+                                    <li>Goal Met (≥1 Day)</li>
+                                    <li>All N Days Active %</li>
+                                    <li>Goal Met All Days %</li>
+                                    <li>Average Minutes Per Day</li>
+                                    <li>Total Days Active</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <h5 class="mt-3">Report Options</h5>
                 <ul>
@@ -631,6 +790,9 @@
                     <li><strong>Run Reports Multiple Times:</strong> Reports don't change your data - run them as often as you like</li>
                     <li><strong>Prize Drawing Randomness:</strong> Q4 picks different winners each time - run it until you're ready to announce</li>
                     <li><strong>Workflows Save Time:</strong> Use QD workflow every day instead of running 5 separate reports</li>
+                    <li><strong>Database Comparison for Trends:</strong> Use Admin → Database Comparison to track year-over-year growth across all 50 metrics</li>
+                    <li><strong>Prepare for Next Year:</strong> Use Admin → Database Creation to set up next year's database in advance</li>
+                    <li><strong>Multi-Year Planning:</strong> Keep all your historical databases in the Database Registry for easy access to past years' data</li>
                 </ul>
             </div>
         </div>
