@@ -7,6 +7,55 @@ and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
 
 ## [Unreleased]
 
+## [v2026.12.0] - 2025-11-07
+
+### Database Comparison Feature Complete (50 Metrics)
+
+**Feature Expansion:**
+- Expanded database comparison from 17 to 50 comprehensive metrics across all 5 entity levels
+- School: 10 metrics (Fundraising, Minutes, Sponsors, Participation, Size, Avg Participation, Goal Met, All Days Active, Goal Met All Days, Color War Points)
+- Team: 10 metrics (same as School)
+- Grade: 10 metrics (same as School)
+- Class: 10 metrics (same as School)
+- Student: 10 metrics (Fundraising, Minutes, Sponsors, Total Participating, Avg Participation, Goal Met, All Days Active, Goal Met All Days, Top Participation, Avg Minutes Per Day, Total Days)
+
+**Code Additions:**
+- Added 38 new query functions to queries.py for missing metrics (+1516 lines)
+- Updated database.py get_database_comparison() with 38 new comparison blocks (+1276 lines)
+- Added traceback printing to app.py for better error diagnostics (+72 lines)
+- Total: 2863 lines of new code
+
+**Robust Error Handling:**
+- Added comprehensive error handling for 13 query pairs that may return empty results
+- Handles edge cases: perfect attendance scenarios, all-days goal achievement, zero participation
+- Returns placeholder values ("None", 0) instead of crashing when no data matches criteria
+
+**Bug Fixes:**
+- Fixed SQL syntax error in get_db_comparison_student_top_participation (date_filter → date_where)
+- Fixed two test failures (test_filter_by_entity_type, test_search_box_sizing) - tests now load comparison data with URL parameters
+
+**Testing:**
+- Created comprehensive regression test suite: test_database_comparison.py (38 tests)
+- Tests cover: page loading, UI structure, all 50 metrics, data accuracy, error handling, filtering, searching, exporting
+- All 38 database comparison tests passing
+- Added to pre-commit hook (now 19 test files, 449 total tests)
+- Updated pre-commit hook header with new counts
+
+**New Files:**
+- docs/features/feature-32-database-comparison.md - Complete feature documentation
+- prototypes/database_comparison.html - HTML prototype with full functionality
+- tests/test_database_comparison.py - Comprehensive regression test suite (38 tests)
+
+**Files Modified:**
+- app.py - Added error traceback printing (+72 lines)
+- database.py - Expanded get_database_comparison() (+1276 lines)
+- queries.py - Added 38 new query functions (+1516 lines)
+- .git/hooks/pre-commit - Added test_database_comparison.py to test suite
+
+**Known Issues Identified (To Be Addressed):**
+1. Half-filled circle indicators needed for date-dependent metrics (metrics based on Daily_Logs table)
+2. Tie handling needed - show multiple winners and indicate if more exist (e.g., "and 8 more")
+
 ### Admin Page Tab Clarity
 
 **Tab Rename:**
