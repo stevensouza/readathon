@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Comparison - Read-a-Thon</title>
+
+    <!-- Bootstrap 5.3.0 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* Color Palette - Matching UI_PATTERNS.md */
+        :root {
+            --primary-blue: #1e3a5f;
+            --medium-blue: #2c3e50;
+            --light-blue: #dbeafe;
+            --team1-blue: #1e3a5f;
+            --team2-yellow: #f59e0b;
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --gray-light: #f8f9fa;
+            --gray-medium: #e9ecef;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding-bottom: 3rem;
+        }
+
+        /* Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--medium-blue) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .page-header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        /* Database Selection Section - COMPACT */
+        .database-selection {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .database-selection h5 {
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .db-selector-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .db-selector-row label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .db-selector-row select {
+            font-size: 0.85rem;
+        }
+
+        .btn-compare {
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn-compare:hover {
+            background: var(--medium-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+        }
+
+        /* Results Section */
+        .results-header {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .search-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .search-filter-group input {
+            flex: 1;
+            max-width: 700px;
+            font-size: 0.9rem;
+        }
+
+        .search-filter-group select {
+            min-width: 120px;
+            max-width: 130px;
+            font-size: 0.85rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .results-count {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-left: 1rem;
+            white-space: nowrap;
+        }
+
+        /* Comparison Table - Matching teams.html */
+        .comparison-table {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid #1e3a5f;
+        }
+
+        .comparison-table .table {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table .table thead th {
+            background: #2c3e50 !important;
+            color: white !important;
+            font-weight: 600;
+            padding: 0.65rem 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid #1e3a5f;
+            border-top: none;
+            position: relative;
+        }
+
+        .comparison-table .table thead th::after {
+            content: ' ↕';
+            opacity: 0.3;
+            font-size: 0.8rem;
+        }
+
+        .comparison-table .table thead th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .comparison-table .table thead th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .comparison-table .table tbody td {
+            padding: 0.65rem 0.5rem;
+            vertical-align: middle;
+        }
+
+        .comparison-table .table-striped tbody tr:nth-of-type(odd) {
+            background-color: white !important;
+        }
+
+        .comparison-table .table-striped tbody tr:nth-of-type(even) {
+            background-color: #f1f3f5 !important;
+        }
+
+        .comparison-table .table tbody tr:hover {
+            background-color: rgba(30, 58, 95, 0.05) !important;
+            cursor: pointer;
+        }
+
+        /* Entity Level Icons */
+        .entity-icon {
+            font-size: 1rem;
+            margin-right: 0.35rem;
+        }
+
+        /* Metric Icons */
+        .metric-icon {
+            font-size: 0.9rem;
+            margin-right: 0.25rem;
+        }
+
+        /* Winning value highlights - Using team colors */
+        .winning-value {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1.2rem;
+            font-weight: 700;
+        }
+
+        .winning-value-2025 {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .winning-value-2024 {
+            background: #f59e0b;
+            color: #1e3a5f;
+        }
+
+        /* Winner Context Styling */
+        .winner-name {
+            font-weight: 600;
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+        }
+
+        .winner-context {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.15rem;
+        }
+
+        /* Change Column Styling */
+        .change-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .change-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .change-neutral {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        /* Filter Indicator (half-circle) */
+        .filter-indicator {
+            font-size: 0.85rem;
+            color: #17a2b8;
+            cursor: help;
+            margin-left: 0.2rem;
+        }
+
+        /* Footer */
+        .data-sources-footer {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .data-sources-footer h6 {
+            color: var(--primary-blue);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .data-sources-footer .data-source-item {
+            padding: 0.5rem 0;
+            font-size: 0.85rem;
+        }
+
+        .data-source-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-source-value {
+            color: #6c757d;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .db-selector-row {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-filter-group {
+                flex-direction: column;
+            }
+
+            .search-filter-group input,
+            .search-filter-group select {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .export-buttons {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="bi bi-bar-chart-line"></i> Database Comparison</h1>
+            <div class="subtitle">Year-over-year analysis of read-a-thon performance</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Database Selection - COMPACT ONE ROW -->
+        <div class="database-selection">
+            <h5><i class="bi bi-database"></i> Select Databases to Compare</h5>
+
+            <div class="db-selector-row">
+                <label for="database1">Database 1:</label>
+                <select id="database1" class="form-select form-select-sm" style="flex: 1; max-width: 280px;">
+                    <option value="active" selected>Active (Currently: 2025 Read-a-Thon)</option>
+                    <option value="2025">2025 Read-a-Thon</option>
+                    <option value="2024">2024 Read-a-Thon</option>
+                    <option value="2023">2023 Read-a-Thon</option>
+                    <option value="sample">Sample Database</option>
+                </select>
+
+                <label for="database2">Database 2:</label>
+                <select id="database2" class="form-select form-select-sm" style="flex: 1; max-width: 280px;">
+                    <option value="2024" selected>2024 Read-a-Thon</option>
+                    <option value="2025">2025 Read-a-Thon</option>
+                    <option value="2023">2023 Read-a-Thon</option>
+                    <option value="2022">2022 Read-a-Thon</option>
+                    <option value="sample">Sample Database</option>
+                </select>
+
+                <label for="filterPeriod"><i class="bi bi-calendar3"></i> Filter Period:</label>
+                <select id="filterPeriod" class="form-select form-select-sm" style="flex: 1; max-width: 220px;">
+                    <option value="all" selected>Full Contest Period</option>
+                    <option value="day1">Day 1</option>
+                    <option value="day2">Day 2</option>
+                    <option value="day3">Day 3</option>
+                    <option value="day4">Day 4</option>
+                    <option value="day5">Day 5</option>
+                    <option value="day6">Day 6</option>
+                </select>
+
+                <button class="btn-compare" onclick="runComparison()">
+                    <i class="bi bi-play-circle"></i> Compare
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" style="display: block;">
+            <div class="results-header">
+                <div class="search-filter-group">
+                    <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="🔍 Search metrics, entities, or names..." oninput="filterTable()">
+                    <select id="entityFilter" class="form-select form-select-sm" onchange="filterTable()">
+                        <option value="all">All Entities</option>
+                        <option value="School">School</option>
+                        <option value="Team">Team</option>
+                        <option value="Grade">Grade</option>
+                        <option value="Class">Class</option>
+                        <option value="Student">Student</option>
+                    </select>
+                    <span class="results-count" id="resultsCount">55 comparisons</span>
+                </div>
+                <div class="export-buttons">
+                    <button class="btn btn-sm btn-primary" onclick="exportCSV()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <a href="#" class="btn btn-sm btn-primary" download>
+                        <i class="bi bi-download"></i> Export
+                    </a>
+                </div>
+            </div>
+
+            <div class="comparison-table">
+                <table class="table table-striped" id="comparisonTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Entity</th>
+                            <th onclick="sortTable(1)">Metric</th>
+                            <th onclick="sortTable(2)">2025 Read-a-Thon<br><small style="font-weight:400;">(Oct 10-19)</small></th>
+                            <th onclick="sortTable(3)">2024 Read-a-Thon<br><small style="font-weight:400;">(Oct 8-17)</small></th>
+                            <th onclick="sortTable(4)">Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- SCHOOL LEVEL (11 metrics) -->
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-currency-dollar metric-icon"></i> Fundraising</td>
+                            <td>
+                                <div class="winning-value winning-value-2025">$45,678</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4, Team 1)</div>
+                            </td>
+                            <td>
+                                <div>$38,234</div>
+                                <div class="winner-context">Top class: Ms. Lee (Grade 2, Team 2)</div>
+                            </td>
+                            <td class="change-positive">
+                                +$7,444<br>(+19.5%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-book metric-icon"></i> Minutes <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>8,234 hours</div>
+                                <div class="winner-context">Top class: Ms. Park (Grade 5, Team 2)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">8,456 hours</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4, Team 1)</div>
+                            </td>
+                            <td class="change-negative">
+                                -222 hours<br>(-2.6%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-people metric-icon"></i> Sponsors</td>
+                            <td>
+                                <div>28 sponsors</div>
+                                <div class="winner-context">Top class: Ms. Park (Grade 5, Team 2)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">31 sponsors</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4, Team 1)</div>
+                            </td>
+                            <td class="change-negative">
+                                -3 sponsors<br>(-9.7%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-person-check metric-icon"></i> Total Participating (≥1 Day) <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">100% (411/411)</div>
+                                <div class="winner-context">Top class: Ms. Smith (Grade 3, Team 1)</div>
+                            </td>
+                            <td>
+                                <div>99.2% (395/398)</div>
+                                <div class="winner-context">Top class: Ms. Lee (Grade 2, Team 2)</div>
+                            </td>
+                            <td class="change-positive">
+                                +0.8 pts<br>(+0.8%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-graph-up metric-icon"></i> Avg Part.% (With Color) <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>78.5%</div>
+                                <div class="winner-context">Top class: Ms. Brown (Grade 2, Team 2)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">81.3%</div>
+                                <div class="winner-context">Top class: Mr. Taylor (Grade 1, Team 1)</div>
+                            </td>
+                            <td class="change-negative">
+                                -2.8 pts<br>(-3.4%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-bullseye metric-icon"></i> Goal Met (≥1 Day) <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">65.2%</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4, Team 1)</div>
+                            </td>
+                            <td>
+                                <div>58.9%</div>
+                                <div class="winner-context">Top class: Ms. Smith (Grade 3, Team 1)</div>
+                            </td>
+                            <td class="change-positive">
+                                +6.3 pts<br>(+10.7%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-check-circle metric-icon"></i> All N Days Active % <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>72.8%</div>
+                                <div class="winner-context">Top class: Ms. Smith (Grade 3, Team 1)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">75.1%</div>
+                                <div class="winner-context">Top class: Ms. Brown (Grade 2, Team 2)</div>
+                            </td>
+                            <td class="change-negative">
+                                -2.3 pts<br>(-3.1%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-trophy metric-icon"></i> Goal Met All Days % <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">61.5%</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4, Team 1)</div>
+                            </td>
+                            <td>
+                                <div>56.2%</div>
+                                <div class="winner-context">Top class: Ms. Smith (Grade 3, Team 1)</div>
+                            </td>
+                            <td class="change-positive">
+                                +5.3 pts<br>(+9.4%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-palette metric-icon"></i> Color War Points <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>12,679 points</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4, Team 1)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">13,220 points</div>
+                                <div class="winner-context">Top class: Ms. Lee (Grade 2, Team 2)</div>
+                            </td>
+                            <td class="change-negative">
+                                -541 points<br>(-4.1%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="1" data-entity="School">
+                            <td><span class="entity-icon">🏫</span> School</td>
+                            <td><i class="bi bi-person-badge metric-icon"></i> School Size</td>
+                            <td>
+                                <div class="winning-value winning-value-2025">411 students</div>
+                                <div class="winner-context">(22 classes)</div>
+                            </td>
+                            <td>
+                                <div>398 students</div>
+                                <div class="winner-context">(21 classes)</div>
+                            </td>
+                            <td class="change-positive">
+                                +13 students<br>(+3.3%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <!-- TEAM LEVEL (11 metrics × 2 teams = 22 rows, showing sample) -->
+                        <tr data-sort-key="2" data-entity="Team">
+                            <td><span class="entity-icon">🔷</span> Team</td>
+                            <td><i class="bi bi-currency-dollar metric-icon"></i> Fundraising</td>
+                            <td>
+                                <div class="winning-value winning-value-2025">$24,300</div>
+                                <div class="winner-name">Winner: Team 1 (Phoenix)</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4)</div>
+                            </td>
+                            <td>
+                                <div>$20,100</div>
+                                <div class="winner-name">Winner: Team 2 (Dragons)</div>
+                                <div class="winner-context">Top class: Ms. Lee (Grade 2)</div>
+                            </td>
+                            <td class="change-positive">
+                                +$4,200<br>(+20.9%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="2" data-entity="Team">
+                            <td><span class="entity-icon">🔷</span> Team</td>
+                            <td><i class="bi bi-book metric-icon"></i> Minutes <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>4,567 hours</div>
+                                <div class="winner-name">Winner: Team 1 (Phoenix)</div>
+                                <div class="winner-context">Top class: Ms. Smith (Grade 3)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">4,890 hours</div>
+                                <div class="winner-name">Winner: Team 1 (Phoenix)</div>
+                                <div class="winner-context">Top class: Mr. Chen (Grade 4)</div>
+                            </td>
+                            <td class="change-negative">
+                                -323 hours<br>(-6.6%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="2" data-entity="Team">
+                            <td><span class="entity-icon">🔷</span> Team</td>
+                            <td><i class="bi bi-person-badge metric-icon"></i> Team Size</td>
+                            <td>
+                                <div class="winning-value winning-value-2025">215 students</div>
+                                <div class="winner-name">Winner: Team 1 (Phoenix)</div>
+                                <div class="winner-context">(11 classes)</div>
+                            </td>
+                            <td>
+                                <div>208 students</div>
+                                <div class="winner-name">Winner: Team 1 (Phoenix)</div>
+                                <div class="winner-context">(11 classes)</div>
+                            </td>
+                            <td class="change-positive">
+                                +7 students<br>(+3.4%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <!-- GRADE LEVEL (11 metrics × 6 grades = 66 rows, showing sample) -->
+                        <tr data-sort-key="3" data-entity="Grade">
+                            <td><span class="entity-icon">🎓</span> Grade</td>
+                            <td><i class="bi bi-currency-dollar metric-icon"></i> Fundraising</td>
+                            <td>
+                                <div>$9,200</div>
+                                <div class="winner-name">Winner: Grade 4</div>
+                                <div class="winner-context">Top class: Mr. Chen (Team 1)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">$9,800</div>
+                                <div class="winner-name">Winner: Grade 3</div>
+                                <div class="winner-context">Top class: Ms. Lee (Team 2)</div>
+                            </td>
+                            <td class="change-negative">
+                                -$600<br>(-6.1%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="3" data-entity="Grade">
+                            <td><span class="entity-icon">🎓</span> Grade</td>
+                            <td><i class="bi bi-book metric-icon"></i> Minutes <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">1,560 hours</div>
+                                <div class="winner-name">Winner: Grade 5</div>
+                                <div class="winner-context">Top class: Ms. Park (Team 2)</div>
+                            </td>
+                            <td>
+                                <div>1,320 hours</div>
+                                <div class="winner-name">Winner: Grade 4</div>
+                                <div class="winner-context">Top class: Mr. Chen (Team 1)</div>
+                            </td>
+                            <td class="change-positive">
+                                +240 hours<br>(+18.2%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="3" data-entity="Grade">
+                            <td><span class="entity-icon">🎓</span> Grade</td>
+                            <td><i class="bi bi-person-badge metric-icon"></i> Grade Size</td>
+                            <td>
+                                <div>75 students</div>
+                                <div class="winner-name">Winner: Grade 3</div>
+                                <div class="winner-context">(3 classes)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">78 students</div>
+                                <div class="winner-name">Winner: Grade 2</div>
+                                <div class="winner-context">(3 classes)</div>
+                            </td>
+                            <td class="change-negative">
+                                -3 students<br>(-3.8%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <!-- CLASS LEVEL (11 metrics, showing sample) -->
+                        <tr data-sort-key="4" data-entity="Class">
+                            <td><span class="entity-icon">🏛️</span> Class</td>
+                            <td><i class="bi bi-currency-dollar metric-icon"></i> Fundraising</td>
+                            <td>
+                                <div class="winning-value winning-value-2025">$3,200</div>
+                                <div class="winner-name">Winner: Ms. Smith</div>
+                                <div class="winner-context">Grade 3, Team 1</div>
+                            </td>
+                            <td>
+                                <div>$2,800</div>
+                                <div class="winner-name">Winner: Mr. Lee</div>
+                                <div class="winner-context">Grade 2, Team 2</div>
+                            </td>
+                            <td class="change-positive">
+                                +$400<br>(+14.3%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="4" data-entity="Class">
+                            <td><span class="entity-icon">🏛️</span> Class</td>
+                            <td><i class="bi bi-book metric-icon"></i> Minutes <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>540 hours</div>
+                                <div class="winner-name">Winner: Ms. Smith</div>
+                                <div class="winner-context">Grade 3, Team 1</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">590 hours</div>
+                                <div class="winner-name">Winner: Mr. Chen</div>
+                                <div class="winner-context">Grade 4, Team 1</div>
+                            </td>
+                            <td class="change-negative">
+                                -50 hours<br>(-8.5%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="4" data-entity="Class">
+                            <td><span class="entity-icon">🏛️</span> Class</td>
+                            <td><i class="bi bi-person-badge metric-icon"></i> Class Size</td>
+                            <td>
+                                <div class="winning-value winning-value-2025">28 students</div>
+                                <div class="winner-name">Winner: Ms. Smith</div>
+                                <div class="winner-context">Grade 3, Team 1</div>
+                            </td>
+                            <td>
+                                <div>26 students</div>
+                                <div class="winner-name">Winner: Mr. Lee</div>
+                                <div class="winner-context">Grade 2, Team 2</div>
+                            </td>
+                            <td class="change-positive">
+                                +2 students<br>(+7.7%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <!-- STUDENT LEVEL (11 metrics) -->
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-currency-dollar metric-icon"></i> Fundraising</td>
+                            <td>
+                                <div>$850</div>
+                                <div class="winner-name">Winner: Johnny S.</div>
+                                <div class="winner-context">Grade 3, Ms. Smith, Team 1</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">$920</div>
+                                <div class="winner-name">Winner: Emma K.</div>
+                                <div class="winner-context">Grade 4, Mr. Chen, Team 1</div>
+                            </td>
+                            <td class="change-negative">
+                                -$70<br>(-7.6%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-book metric-icon"></i> Minutes <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">720 mins</div>
+                                <div class="winner-name">(2-way tie)</div>
+                                <div class="winner-context">Johnny S. (Gr 3), Sarah M. (Gr 2)</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">720 mins</div>
+                                <div class="winner-name">Winner: Emma K.</div>
+                                <div class="winner-context">Grade 4, Mr. Chen, Team 1</div>
+                            </td>
+                            <td class="change-neutral">
+                                No change<br>(Both capped)
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-people metric-icon"></i> Sponsors</td>
+                            <td>
+                                <div>8 sponsors</div>
+                                <div class="winner-name">(3-way tie)</div>
+                                <div class="winner-context">Johnny S., Sarah M., and 1 more</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">9 sponsors</div>
+                                <div class="winner-name">Winner: Alex P.</div>
+                                <div class="winner-context">Grade 5, Ms. Lee, Team 2</div>
+                            </td>
+                            <td class="change-negative">
+                                -1 sponsor<br>(-11.1%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-person-check metric-icon"></i> Total Participating (≥1 Day) <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">100% (6/6 days)</div>
+                                <div class="winner-name">(15 students)</div>
+                                <div class="winner-context">Johnny S., Emma K., and 13 more</div>
+                            </td>
+                            <td>
+                                <div>83.3% (5/6 days)</div>
+                                <div class="winner-name">(8 students)</div>
+                                <div class="winner-context">Sarah M., Alex P., and 6 more</div>
+                            </td>
+                            <td class="change-positive">
+                                +16.7 pts<br>(+20.0%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-graph-up metric-icon"></i> Avg Part.% (With Color) <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>95.2%</div>
+                                <div class="winner-name">Winner: Maria L.</div>
+                                <div class="winner-context">Grade 2, Ms. Brown, Team 2</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">96.8%</div>
+                                <div class="winner-name">Winner: David K.</div>
+                                <div class="winner-context">Grade 1, Ms. Taylor, Team 1</div>
+                            </td>
+                            <td class="change-negative">
+                                -1.6 pts<br>(-1.7%) <i class="bi bi-arrow-down-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-bullseye metric-icon"></i> Goal Met (≥1 Day) <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">100%</div>
+                                <div class="winner-name">(12 students)</div>
+                                <div class="winner-context">Johnny S., Emma K., and 10 more</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">100%</div>
+                                <div class="winner-name">(8 students)</div>
+                                <div class="winner-context">Sarah M., Alex P., and 6 more</div>
+                            </td>
+                            <td class="change-neutral">
+                                No change
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-check-circle metric-icon"></i> All N Days Active % <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">100%</div>
+                                <div class="winner-name">(15 students)</div>
+                                <div class="winner-context">Johnny S., Emma K., and 13 more</div>
+                            </td>
+                            <td>
+                                <div>85.7%</div>
+                                <div class="winner-name">(6 students)</div>
+                                <div class="winner-context">Sarah M., Alex P., and 4 more</div>
+                            </td>
+                            <td class="change-positive">
+                                +14.3 pts<br>(+16.7%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-trophy metric-icon"></i> Goal Met All Days % <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div>100%</div>
+                                <div class="winner-name">(8 students)</div>
+                                <div class="winner-context">Johnny S., Emma K., and 6 more</div>
+                            </td>
+                            <td>
+                                <div class="winning-value winning-value-2024">100%</div>
+                                <div class="winner-name">(10 students)</div>
+                                <div class="winner-context">Sarah M., Alex P., and 8 more</div>
+                            </td>
+                            <td class="change-neutral">
+                                No change
+                            </td>
+                        </tr>
+
+                        <tr data-sort-key="5" data-entity="Student">
+                            <td><span class="entity-icon">👤</span> Student</td>
+                            <td><i class="bi bi-palette metric-icon"></i> Color War Points <span class="filter-indicator" title="Honors filter period">◐</span></td>
+                            <td>
+                                <div class="winning-value winning-value-2025">85 points</div>
+                                <div class="winner-name">Winner: Johnny S.</div>
+                                <div class="winner-context">Grade 3, Ms. Smith, Team 1</div>
+                            </td>
+                            <td>
+                                <div>72 points</div>
+                                <div class="winner-name">Winner: Emma K.</div>
+                                <div class="winner-context">Grade 4, Mr. Chen, Team 1</div>
+                            </td>
+                            <td class="change-positive">
+                                +13 points<br>(+18.1%) <i class="bi bi-arrow-up-short"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Sources Footer -->
+        <div class="data-sources-footer">
+            <h6><i class="bi bi-info-circle"></i> Data Sources & Notes</h6>
+            <div class="data-source-item">
+                <span class="data-source-label">• Database 1:</span>
+                <span class="data-source-value">2025 Read-a-Thon (db/readathon_2025.db) - Contest Period: Oct 10-19, 2025</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Database 2:</span>
+                <span class="data-source-value">2024 Read-a-Thon (db/readathon_2024.db) - Contest Period: Oct 8-17, 2024</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Filter Period:</span>
+                <span class="data-source-value">Full Contest Period (all days) - ◐ indicates metrics that honor date filter</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Top Performer Logic:</span>
+                <span class="data-source-value">Compares 2025's #1 vs 2024's #1 (not same individual tracked across years)</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Minutes:</span>
+                <span class="data-source-value">Capped at 120 minutes/day (Daily_Logs.capped_minutes)</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Fundraising:</span>
+                <span class="data-source-value">Never capped (Reader_Cumulative.amount_raised)</span>
+            </div>
+            <div class="data-source-item">
+                <span class="data-source-label">• Winning Highlights:</span>
+                <span class="data-source-value">Blue = 2025 winner, Yellow = 2024 winner</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Run comparison (placeholder)
+        function runComparison() {
+            const db1 = document.getElementById('database1').value;
+            const db2 = document.getElementById('database2').value;
+            const period = document.getElementById('filterPeriod').value;
+
+            alert(`Comparing: ${db1} vs ${db2}\nFilter Period: ${period}\n\n(In production, this would fetch real data)`);
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // Filter table
+        function filterTable() {
+            const searchBox = document.getElementById('searchBox').value.toLowerCase();
+            const entityFilter = document.getElementById('entityFilter').value;
+            const table = document.getElementById('comparisonTable');
+            const rows = table.querySelectorAll('tbody tr');
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const entityType = row.getAttribute('data-entity');
+                const text = row.textContent.toLowerCase();
+
+                const matchesSearch = text.includes(searchBox);
+                const matchesEntity = entityFilter === 'all' || entityType === entityFilter;
+
+                if (matchesSearch && matchesEntity) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.getElementById('resultsCount').textContent = `${visibleCount} comparisons`;
+        }
+
+        // Sort table - Matching teams.html pattern
+        let currentSort = { column: -1, ascending: true };
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('comparisonTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const headers = table.querySelectorAll('thead th');
+
+            // Toggle direction if same column
+            const ascending = currentSort.column === columnIndex ? !currentSort.ascending : true;
+            currentSort = { column: columnIndex, ascending };
+
+            // Sort rows
+            const sortedRows = rows.slice().sort((a, b) => {
+                let aValue, bValue;
+
+                // Special handling for Entity column (hierarchical)
+                if (columnIndex === 0) {
+                    aValue = parseInt(a.getAttribute('data-sort-key'));
+                    bValue = parseInt(b.getAttribute('data-sort-key'));
+                } else {
+                    aValue = a.cells[columnIndex].textContent.trim();
+                    bValue = b.cells[columnIndex].textContent.trim();
+
+                    // Extract numeric values for comparison
+                    const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+                    const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+
+                    // If both are numbers, use numeric comparison
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        aValue = aNum;
+                        bValue = bNum;
+                    }
+                }
+
+                const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                return ascending ? comparison : -comparison;
+            });
+
+            // Clear and re-append sorted rows
+            tbody.innerHTML = '';
+            sortedRows.forEach(row => tbody.appendChild(row));
+
+            // Update header indicators
+            headers.forEach(h => {
+                h.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            headers[columnIndex].classList.add(ascending ? 'sorted-asc' : 'sorted-desc');
+        }
+
+        // Export functions (placeholders)
+        function exportCSV() {
+            alert('Copy to clipboard would be implemented in production');
+        }
+
+        // Initialize with hierarchical sort on load
+        window.addEventListener('DOMContentLoaded', function() {
+            sortTable(0); // Sort by Entity (hierarchical)
+        });
+    </script>
+</body>
+</html>

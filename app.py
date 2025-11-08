@@ -2619,8 +2619,78 @@ def reports_page():
 def admin_page():
     """Administration page - administrative operations only (no reports tab)"""
     env = session.get('environment', DEFAULT_DATABASE)
+
+    # Get database registry for database comparison tab
+    registry = DatabaseRegistry()
+    databases = registry.list_databases()
+    active_db = registry.get_active_database()
+
+    # Check if database comparison parameters are present
+    db1_filename = request.args.get('db1')
+    db2_filename = request.args.get('db2')
+    filter_period = request.args.get('filter', 'all')
+
+    comparison_data = None
+    if db1_filename and db2_filename:
+        try:
+            reports = get_current_reports()
+            comparison_data = reports.get_database_comparison(db1_filename, db2_filename, filter_period)
+        except Exception as e:
+            import traceback
+            print(f"Error performing database comparison: {e}")
+            print("Full traceback:")
+            traceback.print_exc()
+            comparison_data = {'error': str(e)}
+
     # Note: Admin reports (Q1, Q21-Q23) now accessible via Reports & Data page (group=admin)
-    return render_template('admin.html', environment=env)
+    return render_template('admin.html',
+                         environment=env,
+                         databases=databases,
+                         active_database=active_db,
+                         comparison_data=comparison_data,
+                         db1_filename=db1_filename,
+                         db2_filename=db2_filename,
+                         filter_period=filter_period)
+
+
+@app.route('/database-comparison')
+def database_comparison():
+    """Database comparison page - year-over-year analysis"""
+    env = session.get('environment', DEFAULT_DATABASE)
+
+    # Get database registry to populate dropdowns
+    registry = DatabaseRegistry()
+    databases = registry.list_databases()
+    active_db = registry.get_active_database()
+
+    # Get comparison parameters from request
+    db1_filename = request.args.get('db1')
+    db2_filename = request.args.get('db2')
+    filter_period = request.args.get('filter', 'all')
+
+    # Initialize comparison data as None
+    comparison_data = None
+
+    # If both databases selected, perform comparison
+    if db1_filename and db2_filename:
+        try:
+            reports = get_current_reports()
+            comparison_data = reports.get_database_comparison(db1_filename, db2_filename, filter_period)
+        except Exception as e:
+            import traceback
+            print(f"Error performing database comparison: {e}")
+            print("Full traceback:")
+            traceback.print_exc()
+            comparison_data = {'error': str(e)}
+
+    return render_template('database_comparison.html',
+                           environment=env,
+                           databases=databases,
+                           active_database=active_db,
+                           comparison_data=comparison_data,
+                           db1_filename=db1_filename,
+                           db2_filename=db2_filename,
+                           filter_period=filter_period)
 
 
 @app.route('/api/report/<report_id>')
