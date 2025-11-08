@@ -3342,6 +3342,46 @@ Calculation Rules:<br>
             }
         }
 
+    def _format_tied_winners(self, winners: List[Dict], name_field: str = 'student_name') -> Dict[str, Any]:
+        """
+        Format a list of tied winners into a display string and metadata.
+
+        Args:
+            winners: List of winner dicts from query results
+            name_field: Field name containing the winner's name (default: 'student_name')
+
+        Returns:
+            Dict with:
+            - names: Formatted string like "Alice, Bob, Charlie and 10 others"
+            - tie_count: Number of tied winners
+            - grade_context: "Grade X" or "Various" if multiple grades
+        """
+        if not winners:
+            return {
+                'names': 'N/A',
+                'tie_count': 0,
+                'grade_context': ''
+            }
+
+        # Format names (show first 3, then "and X others")
+        if len(winners) <= 3:
+            names = ", ".join([w[name_field] for w in winners])
+        else:
+            names = ", ".join([w[name_field] for w in winners[:3]]) + f" and {len(winners) - 3} others"
+
+        # Determine grade context
+        grades = set([w.get('grade_level', '') for w in winners if w.get('grade_level')])
+        if len(grades) == 1:
+            grade_context = f"Grade {winners[0].get('grade_level', '')}"
+        else:
+            grade_context = "Various"
+
+        return {
+            'names': names,
+            'tie_count': len(winners),
+            'grade_context': grade_context
+        }
+
     def get_database_comparison(self, db1_filename: str, db2_filename: str, filter_period: str = 'all') -> Dict[str, Any]:
         """
         Compare two databases and return comparison data for all metrics and entity levels.
@@ -3388,7 +3428,6 @@ Calculation Rules:<br>
             get_db_comparison_student_goal_met,
             get_db_comparison_student_all_days_active,
             get_db_comparison_student_goal_met_all_days,
-            get_db_comparison_student_color_war_points,
             get_db_comparison_student_avg_minutes_per_day,
             get_db_comparison_student_total_days,
             get_db_comparison_team_top,
@@ -3553,71 +3592,95 @@ Calculation Rules:<br>
 
         # Student-level comparisons
         # Student - Fundraising
-        db1_student_fundraising = db1.execute_query(get_db_comparison_student_top_fundraiser())[0]
-        db2_student_fundraising = db2.execute_query(get_db_comparison_student_top_fundraiser())[0]
+        db1_student_fundraising_list = db1.execute_query(get_db_comparison_student_top_fundraiser())
+        db2_student_fundraising_list = db2.execute_query(get_db_comparison_student_top_fundraiser())
+
+        db1_fundraising_fmt = self._format_tied_winners(db1_student_fundraising_list)
+        db2_fundraising_fmt = self._format_tied_winners(db2_student_fundraising_list)
+
+        db1_fundraising_value = db1_student_fundraising_list[0]['fundraising'] if db1_student_fundraising_list else 0
+        db2_fundraising_value = db2_student_fundraising_list[0]['fundraising'] if db2_student_fundraising_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Fundraising',
             'honors_filter': False,
             'db1_value': {
-                'value': db1_student_fundraising['fundraising'],
-                'winner_name': db1_student_fundraising['student_name'],
-                'context': f"Grade {db1_student_fundraising['grade_level']}, {db1_student_fundraising['teacher_name']}, {db1_student_fundraising['team_name']}"
+                'value': db1_fundraising_value,
+                'winner_name': db1_fundraising_fmt['names'],
+                'tie_count': db1_fundraising_fmt['tie_count'],
+                'context': db1_fundraising_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_fundraising['fundraising'],
-                'winner_name': db2_student_fundraising['student_name'],
-                'context': f"Grade {db2_student_fundraising['grade_level']}, {db2_student_fundraising['teacher_name']}, {db2_student_fundraising['team_name']}"
+                'value': db2_fundraising_value,
+                'winner_name': db2_fundraising_fmt['names'],
+                'tie_count': db2_fundraising_fmt['tie_count'],
+                'context': db2_fundraising_fmt['grade_context']
             },
-            'change': calc_change(db1_student_fundraising['fundraising'], db2_student_fundraising['fundraising']),
-            'winner': 'db1' if db1_student_fundraising['fundraising'] > db2_student_fundraising['fundraising'] else ('db2' if db1_student_fundraising['fundraising'] < db2_student_fundraising['fundraising'] else 'tie'),
+            'change': calc_change(db1_fundraising_value, db2_fundraising_value),
+            'winner': 'db1' if db1_fundraising_value > db2_fundraising_value else ('db2' if db1_fundraising_value < db2_fundraising_value else 'tie'),
             'format': 'currency'
         })
 
         # Student - Minutes
-        db1_student_minutes = db1.execute_query(get_db_comparison_student_top_reader(filter_period))[0]
-        db2_student_minutes = db2.execute_query(get_db_comparison_student_top_reader(filter_period))[0]
+        db1_student_minutes_list = db1.execute_query(get_db_comparison_student_top_reader(filter_period))
+        db2_student_minutes_list = db2.execute_query(get_db_comparison_student_top_reader(filter_period))
+
+        db1_minutes_fmt = self._format_tied_winners(db1_student_minutes_list)
+        db2_minutes_fmt = self._format_tied_winners(db2_student_minutes_list)
+
+        db1_minutes_value = db1_student_minutes_list[0]['total_minutes'] if db1_student_minutes_list else 0
+        db2_minutes_value = db2_student_minutes_list[0]['total_minutes'] if db2_student_minutes_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Minutes Read',
             'honors_filter': True,
             'db1_value': {
-                'value': db1_student_minutes['total_minutes'],
-                'winner_name': db1_student_minutes['student_name'],
-                'context': f"Grade {db1_student_minutes['grade_level']}, {db1_student_minutes['teacher_name']}, {db1_student_minutes['team_name']}"
+                'value': db1_minutes_value,
+                'winner_name': db1_minutes_fmt['names'],
+                'tie_count': db1_minutes_fmt['tie_count'],
+                'context': db1_minutes_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_minutes['total_minutes'],
-                'winner_name': db2_student_minutes['student_name'],
-                'context': f"Grade {db2_student_minutes['grade_level']}, {db2_student_minutes['teacher_name']}, {db2_student_minutes['team_name']}"
+                'value': db2_minutes_value,
+                'winner_name': db2_minutes_fmt['names'],
+                'tie_count': db2_minutes_fmt['tie_count'],
+                'context': db2_minutes_fmt['grade_context']
             },
-            'change': calc_change(db1_student_minutes['total_minutes'], db2_student_minutes['total_minutes']),
-            'winner': 'db1' if db1_student_minutes['total_minutes'] > db2_student_minutes['total_minutes'] else ('db2' if db1_student_minutes['total_minutes'] < db2_student_minutes['total_minutes'] else 'tie'),
+            'change': calc_change(db1_minutes_value, db2_minutes_value),
+            'winner': 'db1' if db1_minutes_value > db2_minutes_value else ('db2' if db1_minutes_value < db2_minutes_value else 'tie'),
             'format': 'minutes'
         })
 
         # Student - Sponsors
-        db1_student_sponsors = db1.execute_query(get_db_comparison_student_top_sponsors())[0]
-        db2_student_sponsors = db2.execute_query(get_db_comparison_student_top_sponsors())[0]
+        db1_student_sponsors_list = db1.execute_query(get_db_comparison_student_top_sponsors())
+        db2_student_sponsors_list = db2.execute_query(get_db_comparison_student_top_sponsors())
+
+        db1_sponsors_fmt = self._format_tied_winners(db1_student_sponsors_list)
+        db2_sponsors_fmt = self._format_tied_winners(db2_student_sponsors_list)
+
+        db1_sponsors_value = db1_student_sponsors_list[0]['sponsor_count'] if db1_student_sponsors_list else 0
+        db2_sponsors_value = db2_student_sponsors_list[0]['sponsor_count'] if db2_student_sponsors_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Sponsors',
             'honors_filter': False,
             'db1_value': {
-                'value': db1_student_sponsors['sponsor_count'],
-                'winner_name': db1_student_sponsors['student_name'],
-                'context': f"Grade {db1_student_sponsors['grade_level']}, {db1_student_sponsors['teacher_name']}, {db1_student_sponsors['team_name']}"
+                'value': db1_sponsors_value,
+                'winner_name': db1_sponsors_fmt['names'],
+                'tie_count': db1_sponsors_fmt['tie_count'],
+                'context': db1_sponsors_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_sponsors['sponsor_count'],
-                'winner_name': db2_student_sponsors['student_name'],
-                'context': f"Grade {db2_student_sponsors['grade_level']}, {db2_student_sponsors['teacher_name']}, {db2_student_sponsors['team_name']}"
+                'value': db2_sponsors_value,
+                'winner_name': db2_sponsors_fmt['names'],
+                'tie_count': db2_sponsors_fmt['tie_count'],
+                'context': db2_sponsors_fmt['grade_context']
             },
-            'change': calc_change(db1_student_sponsors['sponsor_count'], db2_student_sponsors['sponsor_count']),
-            'winner': 'db1' if db1_student_sponsors['sponsor_count'] > db2_student_sponsors['sponsor_count'] else ('db2' if db1_student_sponsors['sponsor_count'] < db2_student_sponsors['sponsor_count'] else 'tie'),
+            'change': calc_change(db1_sponsors_value, db2_sponsors_value),
+            'winner': 'db1' if db1_sponsors_value > db2_sponsors_value else ('db2' if db1_sponsors_value < db2_sponsors_value else 'tie'),
             'format': 'number'
         })
 
@@ -3630,36 +3693,45 @@ Calculation Rules:<br>
         ]
 
         for metric_key, metric_name, honors_filter, format_type in team_metrics:
-            db1_team = db1.execute_query(get_db_comparison_team_top(metric_key, filter_period if honors_filter else None))[0]
-            db2_team = db2.execute_query(get_db_comparison_team_top(metric_key, filter_period if honors_filter else None))[0]
+            # Get all tied winners for tie counting
+            db1_team_list = db1.execute_query(get_db_comparison_team_top(metric_key, filter_period if honors_filter else None))
+            db2_team_list = db2.execute_query(get_db_comparison_team_top(metric_key, filter_period if honors_filter else None))
+
+            # Count ties and pick first winner
+            db1_tie_count = len(db1_team_list)
+            db2_tie_count = len(db2_team_list)
+            db1_team = db1_team_list[0] if db1_team_list else {}
+            db2_team = db2_team_list[0] if db2_team_list else {}
 
             # Determine the value field name based on metric
             value_field = f'total_{metric_key}' if metric_key != 'size' else 'student_count'
 
             # For size metric, context is different (no class_name returned)
             if metric_key == 'size':
-                db1_context = f"({db1_team['class_count']} classes)"
-                db2_context = f"({db2_team['class_count']} classes)"
+                db1_context = f"({db1_team['class_count']} classes)" if db1_team else "N/A"
+                db2_context = f"({db2_team['class_count']} classes)" if db2_team else "N/A"
             else:
-                db1_context = f"Top class: {db1_team['class_name']} (Grade {db1_team['grade_level']})"
-                db2_context = f"Top class: {db2_team['class_name']} (Grade {db2_team['grade_level']})"
+                db1_context = f"Top class: {db1_team['class_name']} (Grade {db1_team['grade_level']})" if db1_team else "N/A"
+                db2_context = f"Top class: {db2_team['class_name']} (Grade {db2_team['grade_level']})" if db2_team else "N/A"
 
             comparisons.append({
                 'entity_level': 'Team',
                 'metric': metric_name,
                 'honors_filter': honors_filter,
                 'db1_value': {
-                    'value': db1_team[value_field],
-                    'winner_name': db1_team['team_name'],
+                    'value': db1_team.get(value_field, 0),
+                    'winner_name': db1_team.get('team_name', 'N/A'),
+                    'tie_count': db1_tie_count,
                     'context': db1_context
                 },
                 'db2_value': {
-                    'value': db2_team[value_field],
-                    'winner_name': db2_team['team_name'],
+                    'value': db2_team.get(value_field, 0),
+                    'winner_name': db2_team.get('team_name', 'N/A'),
+                    'tie_count': db2_tie_count,
                     'context': db2_context
                 },
-                'change': calc_change(db1_team[value_field], db2_team[value_field]),
-                'winner': 'db1' if db1_team[value_field] > db2_team[value_field] else ('db2' if db1_team[value_field] < db2_team[value_field] else 'tie'),
+                'change': calc_change(db1_team.get(value_field, 0), db2_team.get(value_field, 0)),
+                'winner': 'db1' if db1_team.get(value_field, 0) > db2_team.get(value_field, 0) else ('db2' if db1_team.get(value_field, 0) < db2_team.get(value_field, 0) else 'tie'),
                 'format': format_type
             })
 
@@ -3672,36 +3744,45 @@ Calculation Rules:<br>
         ]
 
         for metric_key, metric_name, honors_filter, format_type in grade_metrics:
-            db1_grade = db1.execute_query(get_db_comparison_grade_top(metric_key, filter_period if honors_filter else None))[0]
-            db2_grade = db2.execute_query(get_db_comparison_grade_top(metric_key, filter_period if honors_filter else None))[0]
+            # Get all tied winners for tie counting
+            db1_grade_list = db1.execute_query(get_db_comparison_grade_top(metric_key, filter_period if honors_filter else None))
+            db2_grade_list = db2.execute_query(get_db_comparison_grade_top(metric_key, filter_period if honors_filter else None))
+
+            # Count ties and pick first winner
+            db1_tie_count = len(db1_grade_list)
+            db2_tie_count = len(db2_grade_list)
+            db1_grade = db1_grade_list[0] if db1_grade_list else {}
+            db2_grade = db2_grade_list[0] if db2_grade_list else {}
 
             # Determine the value field name based on metric
             value_field = f'total_{metric_key}' if metric_key != 'size' else 'student_count'
 
             # For size metric, context is different (no class_name returned)
             if metric_key == 'size':
-                db1_context = f"({db1_grade['class_count']} classes)"
-                db2_context = f"({db2_grade['class_count']} classes)"
+                db1_context = f"({db1_grade['class_count']} classes)" if db1_grade else "N/A"
+                db2_context = f"({db2_grade['class_count']} classes)" if db2_grade else "N/A"
             else:
-                db1_context = f"Top class: {db1_grade['class_name']} ({db1_grade['team_name']})"
-                db2_context = f"Top class: {db2_grade['class_name']} ({db2_grade['team_name']})"
+                db1_context = f"Top class: {db1_grade['class_name']} ({db1_grade['team_name']})" if db1_grade else "N/A"
+                db2_context = f"Top class: {db2_grade['class_name']} ({db2_grade['team_name']})" if db2_grade else "N/A"
 
             comparisons.append({
                 'entity_level': 'Grade',
                 'metric': metric_name,
                 'honors_filter': honors_filter,
                 'db1_value': {
-                    'value': db1_grade[value_field],
-                    'winner_name': f"Grade {db1_grade['grade_level']}",
+                    'value': db1_grade.get(value_field, 0),
+                    'winner_name': f"Grade {db1_grade.get('grade_level', 'N/A')}",
+                    'tie_count': db1_tie_count,
                     'context': db1_context
                 },
                 'db2_value': {
-                    'value': db2_grade[value_field],
-                    'winner_name': f"Grade {db2_grade['grade_level']}",
+                    'value': db2_grade.get(value_field, 0),
+                    'winner_name': f"Grade {db2_grade.get('grade_level', 'N/A')}",
+                    'tie_count': db2_tie_count,
                     'context': db2_context
                 },
-                'change': calc_change(db1_grade[value_field], db2_grade[value_field]),
-                'winner': 'db1' if db1_grade[value_field] > db2_grade[value_field] else ('db2' if db1_grade[value_field] < db2_grade[value_field] else 'tie'),
+                'change': calc_change(db1_grade.get(value_field, 0), db2_grade.get(value_field, 0)),
+                'winner': 'db1' if db1_grade.get(value_field, 0) > db2_grade.get(value_field, 0) else ('db2' if db1_grade.get(value_field, 0) < db2_grade.get(value_field, 0) else 'tie'),
                 'format': format_type
             })
 
@@ -3714,40 +3795,49 @@ Calculation Rules:<br>
         ]
 
         for metric_key, metric_name, honors_filter, format_type in class_metrics:
-            db1_class = db1.execute_query(get_db_comparison_class_top(metric_key, filter_period if honors_filter else None))[0]
-            db2_class = db2.execute_query(get_db_comparison_class_top(metric_key, filter_period if honors_filter else None))[0]
+            # Get all tied winners for tie counting
+            db1_class_list = db1.execute_query(get_db_comparison_class_top(metric_key, filter_period if honors_filter else None))
+            db2_class_list = db2.execute_query(get_db_comparison_class_top(metric_key, filter_period if honors_filter else None))
+
+            # Count ties and pick first winner
+            db1_tie_count = len(db1_class_list)
+            db2_tie_count = len(db2_class_list)
+            db1_class = db1_class_list[0] if db1_class_list else {}
+            db2_class = db2_class_list[0] if db2_class_list else {}
 
             # Determine the value field name based on metric
             value_field = f'total_{metric_key}' if metric_key != 'size' else 'total_students'
 
             # For size metric, context is different
             if metric_key == 'size':
-                db1_winner_name = db1_class['class_name']
-                db2_winner_name = db2_class['class_name']
-                db1_context = f"Grade {db1_class['grade_level']}, {db1_class['team_name']}"
-                db2_context = f"Grade {db2_class['grade_level']}, {db2_class['team_name']}"
+                db1_winner_name = db1_class.get('class_name', 'N/A')
+                db2_winner_name = db2_class.get('class_name', 'N/A')
+                db1_context = f"Grade {db1_class.get('grade_level', 'N/A')}, {db1_class.get('team_name', 'N/A')}" if db1_class else "N/A"
+                db2_context = f"Grade {db2_class.get('grade_level', 'N/A')}, {db2_class.get('team_name', 'N/A')}" if db2_class else "N/A"
             else:
-                db1_winner_name = db1_class['class_name']
-                db2_winner_name = db2_class['class_name']
-                db1_context = f"Grade {db1_class['grade_level']}, {db1_class['team_name']}"
-                db2_context = f"Grade {db2_class['grade_level']}, {db2_class['team_name']}"
+                db1_winner_name = db1_class.get('class_name', 'N/A')
+                db2_winner_name = db2_class.get('class_name', 'N/A')
+                db1_context = f"Grade {db1_class.get('grade_level', 'N/A')}, {db1_class.get('team_name', 'N/A')}" if db1_class else "N/A"
+                db2_context = f"Grade {db2_class.get('grade_level', 'N/A')}, {db2_class.get('team_name', 'N/A')}" if db2_class else "N/A"
 
             comparisons.append({
                 'entity_level': 'Class',
                 'metric': metric_name,
                 'honors_filter': honors_filter,
                 'db1_value': {
-                    'value': db1_class[value_field],
+                    'value': db1_class.get(value_field, 0),
                     'winner_name': db1_winner_name,
+                    'tie_count': db1_tie_count,
                     'context': db1_context
                 },
                 'db2_value': {
-                    'value': db2_class[value_field],
+                    'value': db2_class.get(value_field, 0),
                     'winner_name': db2_winner_name,
+                    'tie_count': db2_tie_count,
                     'context': db2_context
                 },
-                'change': calc_change(db1_class[value_field], db2_class[value_field]),
-                'winner': 'db1' if db1_class[value_field] > db2_class[value_field] else ('db2' if db1_class[value_field] < db2_class[value_field] else 'tie'),
+                'change': calc_change(db1_class.get(value_field, 0), db2_class.get(value_field, 0)),
+                'winner': 'db1' if db1_class.get(value_field, 0) > db2_class.get(value_field, 0) else ('db2' if db1_class.get(value_field, 0) < db2_class.get(value_field, 0) else 'tie'),
                 'format': format_type
             })
 
@@ -3774,13 +3864,13 @@ Calculation Rules:<br>
         })
 
         # School - Goal Met (≥1 Day)
-        db1_school_goal = db1.execute_query(get_db_comparison_school_goal_met())[0]
-        db2_school_goal = db2.execute_query(get_db_comparison_school_goal_met())[0]
+        db1_school_goal = db1.execute_query(get_db_comparison_school_goal_met(filter_period))[0]
+        db2_school_goal = db2.execute_query(get_db_comparison_school_goal_met(filter_period))[0]
 
         comparisons.append({
             'entity_level': 'School',
             'metric': 'Goal Met (≥1 Day)',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_school_goal['goal_met_pct'],
                 'context': f"{db1_school_goal['students_who_met_goal']}/{db1_school_goal['total_students']} students"
@@ -3824,8 +3914,8 @@ Calculation Rules:<br>
         })
 
         # School - Goal Met All Days %
-        db1_school_goal_all_result = db1.execute_query(get_db_comparison_school_goal_met_all_days())
-        db2_school_goal_all_result = db2.execute_query(get_db_comparison_school_goal_met_all_days())
+        db1_school_goal_all_result = db1.execute_query(get_db_comparison_school_goal_met_all_days(filter_period))
+        db2_school_goal_all_result = db2.execute_query(get_db_comparison_school_goal_met_all_days(filter_period))
 
         # Handle case where no students met goal every day
         db1_school_goal_all = db1_school_goal_all_result[0] if db1_school_goal_all_result else {
@@ -3838,7 +3928,7 @@ Calculation Rules:<br>
         comparisons.append({
             'entity_level': 'School',
             'metric': 'Goal Met All Days %',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_school_goal_all['goal_met_all_days_pct'],
                 'context': f"{db1_school_goal_all['students_goal_all_days']}/{db1_school_goal_all['total_students']} students ({db1_school_goal_all['total_days']} days)"
@@ -3944,13 +4034,13 @@ Calculation Rules:<br>
         })
 
         # Team - Goal Met (≥1 Day)
-        db1_team_goal = db1.execute_query(get_db_comparison_team_goal_met())[0]
-        db2_team_goal = db2.execute_query(get_db_comparison_team_goal_met())[0]
+        db1_team_goal = db1.execute_query(get_db_comparison_team_goal_met(filter_period))[0]
+        db2_team_goal = db2.execute_query(get_db_comparison_team_goal_met(filter_period))[0]
 
         comparisons.append({
             'entity_level': 'Team',
             'metric': 'Goal Met (≥1 Day)',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_team_goal['goal_met_pct'],
                 'winner_name': db1_team_goal['team_name'],
@@ -3998,8 +4088,8 @@ Calculation Rules:<br>
         })
 
         # Team - Goal Met All Days %
-        db1_team_goal_all_result = db1.execute_query(get_db_comparison_team_goal_met_all_days())
-        db2_team_goal_all_result = db2.execute_query(get_db_comparison_team_goal_met_all_days())
+        db1_team_goal_all_result = db1.execute_query(get_db_comparison_team_goal_met_all_days(filter_period))
+        db2_team_goal_all_result = db2.execute_query(get_db_comparison_team_goal_met_all_days(filter_period))
 
         # Handle case where no team has students who met goal every day
         db1_team_goal_all = db1_team_goal_all_result[0] if db1_team_goal_all_result else {
@@ -4012,7 +4102,7 @@ Calculation Rules:<br>
         comparisons.append({
             'entity_level': 'Team',
             'metric': 'Goal Met All Days %',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_team_goal_all['goal_met_all_days_pct'],
                 'winner_name': db1_team_goal_all['team_name'],
@@ -4122,13 +4212,13 @@ Calculation Rules:<br>
         })
 
         # Grade - Goal Met (≥1 Day)
-        db1_grade_goal = db1.execute_query(get_db_comparison_grade_goal_met())[0]
-        db2_grade_goal = db2.execute_query(get_db_comparison_grade_goal_met())[0]
+        db1_grade_goal = db1.execute_query(get_db_comparison_grade_goal_met(filter_period))[0]
+        db2_grade_goal = db2.execute_query(get_db_comparison_grade_goal_met(filter_period))[0]
 
         comparisons.append({
             'entity_level': 'Grade',
             'metric': 'Goal Met (≥1 Day)',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_grade_goal['goal_met_pct'],
                 'winner_name': f"Grade {db1_grade_goal['grade_level']}",
@@ -4176,8 +4266,8 @@ Calculation Rules:<br>
         })
 
         # Grade - Goal Met All Days %
-        db1_grade_goal_all_result = db1.execute_query(get_db_comparison_grade_goal_met_all_days())
-        db2_grade_goal_all_result = db2.execute_query(get_db_comparison_grade_goal_met_all_days())
+        db1_grade_goal_all_result = db1.execute_query(get_db_comparison_grade_goal_met_all_days(filter_period))
+        db2_grade_goal_all_result = db2.execute_query(get_db_comparison_grade_goal_met_all_days(filter_period))
 
         # Handle case where no grade has students who met goal every day
         db1_grade_goal_all = db1_grade_goal_all_result[0] if db1_grade_goal_all_result else {
@@ -4190,7 +4280,7 @@ Calculation Rules:<br>
         comparisons.append({
             'entity_level': 'Grade',
             'metric': 'Goal Met All Days %',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_grade_goal_all['goal_met_all_days_pct'],
                 'winner_name': f"Grade {db1_grade_goal_all['grade_level']}",
@@ -4300,13 +4390,13 @@ Calculation Rules:<br>
         })
 
         # Class - Goal Met (≥1 Day)
-        db1_class_goal = db1.execute_query(get_db_comparison_class_goal_met())[0]
-        db2_class_goal = db2.execute_query(get_db_comparison_class_goal_met())[0]
+        db1_class_goal = db1.execute_query(get_db_comparison_class_goal_met(filter_period))[0]
+        db2_class_goal = db2.execute_query(get_db_comparison_class_goal_met(filter_period))[0]
 
         comparisons.append({
             'entity_level': 'Class',
             'metric': 'Goal Met (≥1 Day)',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_class_goal['goal_met_pct'],
                 'winner_name': db1_class_goal['class_name'],
@@ -4356,8 +4446,8 @@ Calculation Rules:<br>
         })
 
         # Class - Goal Met All Days %
-        db1_class_goal_all_result = db1.execute_query(get_db_comparison_class_goal_met_all_days())
-        db2_class_goal_all_result = db2.execute_query(get_db_comparison_class_goal_met_all_days())
+        db1_class_goal_all_result = db1.execute_query(get_db_comparison_class_goal_met_all_days(filter_period))
+        db2_class_goal_all_result = db2.execute_query(get_db_comparison_class_goal_met_all_days(filter_period))
 
         # Handle case where no class has students who met goal every day
         db1_class_goal_all = db1_class_goal_all_result[0] if db1_class_goal_all_result else {
@@ -4372,7 +4462,7 @@ Calculation Rules:<br>
         comparisons.append({
             'entity_level': 'Class',
             'metric': 'Goal Met All Days %',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
                 'value': db1_class_goal_all['goal_met_all_days_pct'],
                 'winner_name': db1_class_goal_all['class_name'],
@@ -4412,202 +4502,189 @@ Calculation Rules:<br>
         })
 
         # Additional Student-level comparisons
-        # Student - Participation
-        db1_student_part_result = db1.execute_query(get_db_comparison_student_top_participation(filter_period))
-        db2_student_part_result = db2.execute_query(get_db_comparison_student_top_participation(filter_period))
+        # Student - Participation %
+        db1_student_part_list = db1.execute_query(get_db_comparison_student_top_participation(filter_period))
+        db2_student_part_list = db2.execute_query(get_db_comparison_student_top_participation(filter_period))
 
-        # Handle case where no students have participation data
-        db1_student_part = db1_student_part_result[0] if db1_student_part_result else {
-            'student_name': 'None', 'participation_pct': 0, 'days_active': 0, 'grade_level': 'N/A',
-            'teacher_name': 'N/A', 'team_name': 'N/A'
-        }
-        db2_student_part = db2_student_part_result[0] if db2_student_part_result else {
-            'student_name': 'None', 'participation_pct': 0, 'days_active': 0, 'grade_level': 'N/A',
-            'teacher_name': 'N/A', 'team_name': 'N/A'
-        }
+        db1_part_fmt = self._format_tied_winners(db1_student_part_list)
+        db2_part_fmt = self._format_tied_winners(db2_student_part_list)
+
+        db1_part_value = db1_student_part_list[0]['participation_pct'] if db1_student_part_list else 0
+        db2_part_value = db2_student_part_list[0]['participation_pct'] if db2_student_part_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Participation %',
             'honors_filter': True,
             'db1_value': {
-                'value': db1_student_part['participation_pct'],
-                'winner_name': db1_student_part['student_name'],
-                'context': f"Grade {db1_student_part['grade_level']}, {db1_student_part['teacher_name']}, {db1_student_part['team_name']} ({db1_student_part['days_active']} days)"
+                'value': db1_part_value,
+                'winner_name': db1_part_fmt['names'],
+                'tie_count': db1_part_fmt['tie_count'],
+                'context': db1_part_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_part['participation_pct'],
-                'winner_name': db2_student_part['student_name'],
-                'context': f"Grade {db2_student_part['grade_level']}, {db2_student_part['teacher_name']}, {db2_student_part['team_name']} ({db2_student_part['days_active']} days)"
+                'value': db2_part_value,
+                'winner_name': db2_part_fmt['names'],
+                'tie_count': db2_part_fmt['tie_count'],
+                'context': db2_part_fmt['grade_context']
             },
-            'change': calc_change(db1_student_part['participation_pct'], db2_student_part['participation_pct']),
-            'winner': 'db1' if db1_student_part['participation_pct'] > db2_student_part['participation_pct'] else ('db2' if db1_student_part['participation_pct'] < db2_student_part['participation_pct'] else 'tie'),
+            'change': calc_change(db1_part_value, db2_part_value),
+            'winner': 'db1' if db1_part_value > db2_part_value else ('db2' if db1_part_value < db2_part_value else 'tie'),
             'format': 'percentage'
         })
 
-        # Student - Goal Met
-        db1_student_goal = db1.execute_query(get_db_comparison_student_goal_met())[0]
-        db2_student_goal = db2.execute_query(get_db_comparison_student_goal_met())[0]
+        # Student - Goal Met (Days)
+        db1_student_goal_list = db1.execute_query(get_db_comparison_student_goal_met(filter_period))
+        db2_student_goal_list = db2.execute_query(get_db_comparison_student_goal_met(filter_period))
+
+        db1_goal_fmt = self._format_tied_winners(db1_student_goal_list)
+        db2_goal_fmt = self._format_tied_winners(db2_student_goal_list)
+
+        db1_goal_value = db1_student_goal_list[0]['days_met_goal'] if db1_student_goal_list else 0
+        db2_goal_value = db2_student_goal_list[0]['days_met_goal'] if db2_student_goal_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Goal Met (Days)',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
-                'value': db1_student_goal['days_met_goal'],
-                'winner_name': db1_student_goal['student_name'],
-                'context': f"Grade {db1_student_goal['grade_level']}, {db1_student_goal['teacher_name']}, {db1_student_goal['team_name']} ({db1_student_goal['goal_met_pct']}%)"
+                'value': db1_goal_value,
+                'winner_name': db1_goal_fmt['names'],
+                'tie_count': db1_goal_fmt['tie_count'],
+                'context': db1_goal_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_goal['days_met_goal'],
-                'winner_name': db2_student_goal['student_name'],
-                'context': f"Grade {db2_student_goal['grade_level']}, {db2_student_goal['teacher_name']}, {db2_student_goal['team_name']} ({db2_student_goal['goal_met_pct']}%)"
+                'value': db2_goal_value,
+                'winner_name': db2_goal_fmt['names'],
+                'tie_count': db2_goal_fmt['tie_count'],
+                'context': db2_goal_fmt['grade_context']
             },
-            'change': calc_change(db1_student_goal['days_met_goal'], db2_student_goal['days_met_goal']),
-            'winner': 'db1' if db1_student_goal['days_met_goal'] > db2_student_goal['days_met_goal'] else ('db2' if db1_student_goal['days_met_goal'] < db2_student_goal['days_met_goal'] else 'tie'),
+            'change': calc_change(db1_goal_value, db2_goal_value),
+            'winner': 'db1' if db1_goal_value > db2_goal_value else ('db2' if db1_goal_value < db2_goal_value else 'tie'),
             'format': 'number'
         })
 
-        # Student - All Days Active
-        db1_student_all_result = db1.execute_query(get_db_comparison_student_all_days_active(filter_period))
-        db2_student_all_result = db2.execute_query(get_db_comparison_student_all_days_active(filter_period))
+        # Student - All Days Active (100%)
+        db1_student_all_list = db1.execute_query(get_db_comparison_student_all_days_active(filter_period))
+        db2_student_all_list = db2.execute_query(get_db_comparison_student_all_days_active(filter_period))
 
-        # Handle case where no students logged every day
-        db1_student_all = db1_student_all_result[0] if db1_student_all_result else {'student_name': 'None', 'days_active': 0, 'grade_level': 'N/A', 'teacher_name': 'N/A', 'team_name': 'N/A', 'total_days': 0}
-        db2_student_all = db2_student_all_result[0] if db2_student_all_result else {'student_name': 'None', 'days_active': 0, 'grade_level': 'N/A', 'teacher_name': 'N/A', 'team_name': 'N/A', 'total_days': 0}
+        db1_all_fmt = self._format_tied_winners(db1_student_all_list)
+        db2_all_fmt = self._format_tied_winners(db2_student_all_list)
+
+        db1_all_value = db1_student_all_list[0]['days_active'] if db1_student_all_list else 0
+        db2_all_value = db2_student_all_list[0]['days_active'] if db2_student_all_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'All Days Active (100%)',
             'honors_filter': True,
             'db1_value': {
-                'value': db1_student_all['days_active'],
-                'winner_name': db1_student_all['student_name'],
-                'context': f"Grade {db1_student_all['grade_level']}, {db1_student_all['teacher_name']}, {db1_student_all['team_name']} ({db1_student_all['total_days']} total days)"
+                'value': db1_all_value,
+                'winner_name': db1_all_fmt['names'],
+                'tie_count': db1_all_fmt['tie_count'],
+                'context': db1_all_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_all['days_active'],
-                'winner_name': db2_student_all['student_name'],
-                'context': f"Grade {db2_student_all['grade_level']}, {db2_student_all['teacher_name']}, {db2_student_all['team_name']} ({db2_student_all['total_days']} total days)"
+                'value': db2_all_value,
+                'winner_name': db2_all_fmt['names'],
+                'tie_count': db2_all_fmt['tie_count'],
+                'context': db2_all_fmt['grade_context']
             },
-            'change': calc_change(db1_student_all['days_active'], db2_student_all['days_active']),
-            'winner': 'db1' if db1_student_all['days_active'] > db2_student_all['days_active'] else ('db2' if db1_student_all['days_active'] < db2_student_all['days_active'] else 'tie'),
+            'change': calc_change(db1_all_value, db2_all_value),
+            'winner': 'db1' if db1_all_value > db2_all_value else ('db2' if db1_all_value < db2_all_value else 'tie'),
             'format': 'number'
         })
 
         # Student - Goal Met All Days
-        db1_student_goal_all_result = db1.execute_query(get_db_comparison_student_goal_met_all_days())
-        db2_student_goal_all_result = db2.execute_query(get_db_comparison_student_goal_met_all_days())
+        db1_student_goal_all_list = db1.execute_query(get_db_comparison_student_goal_met_all_days(filter_period))
+        db2_student_goal_all_list = db2.execute_query(get_db_comparison_student_goal_met_all_days(filter_period))
 
-        # Handle case where no students met goal every day
-        db1_student_goal_all = db1_student_goal_all_result[0] if db1_student_goal_all_result else {'student_name': 'None', 'days_met_goal': 0, 'grade_level': 'N/A', 'teacher_name': 'N/A', 'team_name': 'N/A', 'total_days': 0}
-        db2_student_goal_all = db2_student_goal_all_result[0] if db2_student_goal_all_result else {'student_name': 'None', 'days_met_goal': 0, 'grade_level': 'N/A', 'teacher_name': 'N/A', 'team_name': 'N/A', 'total_days': 0}
+        db1_goal_all_fmt = self._format_tied_winners(db1_student_goal_all_list)
+        db2_goal_all_fmt = self._format_tied_winners(db2_student_goal_all_list)
+
+        db1_goal_all_value = db1_student_goal_all_list[0]['days_met_goal'] if db1_student_goal_all_list else 0
+        db2_goal_all_value = db2_student_goal_all_list[0]['days_met_goal'] if db2_student_goal_all_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Goal Met All Days',
-            'honors_filter': False,
+            'honors_filter': True,
             'db1_value': {
-                'value': db1_student_goal_all['days_met_goal'],
-                'winner_name': db1_student_goal_all['student_name'],
-                'context': f"Grade {db1_student_goal_all['grade_level']}, {db1_student_goal_all['teacher_name']}, {db1_student_goal_all['team_name']} ({db1_student_goal_all['total_days']} total days)"
+                'value': db1_goal_all_value,
+                'winner_name': db1_goal_all_fmt['names'],
+                'tie_count': db1_goal_all_fmt['tie_count'],
+                'context': db1_goal_all_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_goal_all['days_met_goal'],
-                'winner_name': db2_student_goal_all['student_name'],
-                'context': f"Grade {db2_student_goal_all['grade_level']}, {db2_student_goal_all['teacher_name']}, {db2_student_goal_all['team_name']} ({db2_student_goal_all['total_days']} total days)"
+                'value': db2_goal_all_value,
+                'winner_name': db2_goal_all_fmt['names'],
+                'tie_count': db2_goal_all_fmt['tie_count'],
+                'context': db2_goal_all_fmt['grade_context']
             },
-            'change': calc_change(db1_student_goal_all['days_met_goal'], db2_student_goal_all['days_met_goal']),
-            'winner': 'db1' if db1_student_goal_all['days_met_goal'] > db2_student_goal_all['days_met_goal'] else ('db2' if db1_student_goal_all['days_met_goal'] < db2_student_goal_all['days_met_goal'] else 'tie'),
-            'format': 'number'
-        })
-
-        # Student - Color War Points
-        db1_student_points = db1.execute_query(get_db_comparison_student_color_war_points())[0]
-        db2_student_points = db2.execute_query(get_db_comparison_student_color_war_points())[0]
-
-        comparisons.append({
-            'entity_level': 'Student',
-            'metric': 'Color War Points',
-            'honors_filter': False,
-            'db1_value': {
-                'value': db1_student_points['total_points'],
-                'winner_name': db1_student_points['student_name'],
-                'context': f"Grade {db1_student_points['grade_level']}, {db1_student_points['teacher_name']}, {db1_student_points['team_name']}"
-            },
-            'db2_value': {
-                'value': db2_student_points['total_points'],
-                'winner_name': db2_student_points['student_name'],
-                'context': f"Grade {db2_student_points['grade_level']}, {db2_student_points['teacher_name']}, {db2_student_points['team_name']}"
-            },
-            'change': calc_change(db1_student_points['total_points'], db2_student_points['total_points']),
-            'winner': 'db1' if db1_student_points['total_points'] > db2_student_points['total_points'] else ('db2' if db1_student_points['total_points'] < db2_student_points['total_points'] else 'tie'),
+            'change': calc_change(db1_goal_all_value, db2_goal_all_value),
+            'winner': 'db1' if db1_goal_all_value > db2_goal_all_value else ('db2' if db1_goal_all_value < db2_goal_all_value else 'tie'),
             'format': 'number'
         })
 
         # Student - Avg Minutes Per Day
-        db1_student_avg_result = db1.execute_query(get_db_comparison_student_avg_minutes_per_day(filter_period))
-        db2_student_avg_result = db2.execute_query(get_db_comparison_student_avg_minutes_per_day(filter_period))
+        db1_student_avg_list = db1.execute_query(get_db_comparison_student_avg_minutes_per_day(filter_period))
+        db2_student_avg_list = db2.execute_query(get_db_comparison_student_avg_minutes_per_day(filter_period))
 
-        # Handle case where no students have reading data
-        db1_student_avg = db1_student_avg_result[0] if db1_student_avg_result else {
-            'student_name': 'None', 'avg_minutes_per_day': 0, 'days_active': 0, 'grade_level': 'N/A',
-            'teacher_name': 'N/A', 'team_name': 'N/A'
-        }
-        db2_student_avg = db2_student_avg_result[0] if db2_student_avg_result else {
-            'student_name': 'None', 'avg_minutes_per_day': 0, 'days_active': 0, 'grade_level': 'N/A',
-            'teacher_name': 'N/A', 'team_name': 'N/A'
-        }
+        db1_avg_fmt = self._format_tied_winners(db1_student_avg_list)
+        db2_avg_fmt = self._format_tied_winners(db2_student_avg_list)
+
+        db1_avg_value = db1_student_avg_list[0]['avg_minutes_per_day'] if db1_student_avg_list else 0
+        db2_avg_value = db2_student_avg_list[0]['avg_minutes_per_day'] if db2_student_avg_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Avg Minutes Per Day',
             'honors_filter': True,
             'db1_value': {
-                'value': db1_student_avg['avg_minutes_per_day'],
-                'winner_name': db1_student_avg['student_name'],
-                'context': f"Grade {db1_student_avg['grade_level']}, {db1_student_avg['teacher_name']}, {db1_student_avg['team_name']} ({db1_student_avg['days_active']} days)"
+                'value': db1_avg_value,
+                'winner_name': db1_avg_fmt['names'],
+                'tie_count': db1_avg_fmt['tie_count'],
+                'context': db1_avg_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_avg['avg_minutes_per_day'],
-                'winner_name': db2_student_avg['student_name'],
-                'context': f"Grade {db2_student_avg['grade_level']}, {db2_student_avg['teacher_name']}, {db2_student_avg['team_name']} ({db2_student_avg['days_active']} days)"
+                'value': db2_avg_value,
+                'winner_name': db2_avg_fmt['names'],
+                'tie_count': db2_avg_fmt['tie_count'],
+                'context': db2_avg_fmt['grade_context']
             },
-            'change': calc_change(db1_student_avg['avg_minutes_per_day'], db2_student_avg['avg_minutes_per_day']),
-            'winner': 'db1' if db1_student_avg['avg_minutes_per_day'] > db2_student_avg['avg_minutes_per_day'] else ('db2' if db1_student_avg['avg_minutes_per_day'] < db2_student_avg['avg_minutes_per_day'] else 'tie'),
+            'change': calc_change(db1_avg_value, db2_avg_value),
+            'winner': 'db1' if db1_avg_value > db2_avg_value else ('db2' if db1_avg_value < db2_avg_value else 'tie'),
             'format': 'decimal'
         })
 
-        # Student - Total Days
-        db1_student_days_result = db1.execute_query(get_db_comparison_student_total_days(filter_period))
-        db2_student_days_result = db2.execute_query(get_db_comparison_student_total_days(filter_period))
+        # Student - Total Days Active
+        db1_student_days_list = db1.execute_query(get_db_comparison_student_total_days(filter_period))
+        db2_student_days_list = db2.execute_query(get_db_comparison_student_total_days(filter_period))
 
-        # Handle case where no students have reading data
-        db1_student_days = db1_student_days_result[0] if db1_student_days_result else {
-            'student_name': 'None', 'total_days': 0, 'grade_level': 'N/A',
-            'teacher_name': 'N/A', 'team_name': 'N/A'
-        }
-        db2_student_days = db2_student_days_result[0] if db2_student_days_result else {
-            'student_name': 'None', 'total_days': 0, 'grade_level': 'N/A',
-            'teacher_name': 'N/A', 'team_name': 'N/A'
-        }
+        db1_days_fmt = self._format_tied_winners(db1_student_days_list)
+        db2_days_fmt = self._format_tied_winners(db2_student_days_list)
+
+        db1_days_value = db1_student_days_list[0]['total_days'] if db1_student_days_list else 0
+        db2_days_value = db2_student_days_list[0]['total_days'] if db2_student_days_list else 0
 
         comparisons.append({
             'entity_level': 'Student',
             'metric': 'Total Days Active',
             'honors_filter': True,
             'db1_value': {
-                'value': db1_student_days['total_days'],
-                'winner_name': db1_student_days['student_name'],
-                'context': f"Grade {db1_student_days['grade_level']}, {db1_student_days['teacher_name']}, {db1_student_days['team_name']}"
+                'value': db1_days_value,
+                'winner_name': db1_days_fmt['names'],
+                'tie_count': db1_days_fmt['tie_count'],
+                'context': db1_days_fmt['grade_context']
             },
             'db2_value': {
-                'value': db2_student_days['total_days'],
-                'winner_name': db2_student_days['student_name'],
-                'context': f"Grade {db2_student_days['grade_level']}, {db2_student_days['teacher_name']}, {db2_student_days['team_name']}"
+                'value': db2_days_value,
+                'winner_name': db2_days_fmt['names'],
+                'tie_count': db2_days_fmt['tie_count'],
+                'context': db2_days_fmt['grade_context']
             },
-            'change': calc_change(db1_student_days['total_days'], db2_student_days['total_days']),
-            'winner': 'db1' if db1_student_days['total_days'] > db2_student_days['total_days'] else ('db2' if db1_student_days['total_days'] < db2_student_days['total_days'] else 'tie'),
+            'change': calc_change(db1_days_value, db2_days_value),
+            'winner': 'db1' if db1_days_value > db2_days_value else ('db2' if db1_days_value < db2_days_value else 'tie'),
             'format': 'number'
         })
 

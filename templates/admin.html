@@ -222,6 +222,28 @@
         margin-top: 0.15rem;
     }
 
+    /* Tie Note */
+    .tie-note {
+        font-size: 0.7rem;
+        color: #856404;
+        margin-top: 0.3rem;
+        font-style: italic;
+    }
+
+    /* Filter Indicator Icon */
+    .filter-indicator {
+        font-size: 0.85rem;
+        color: #17a2b8;
+        cursor: help;
+        vertical-align: middle;
+        margin-left: 0.25rem;
+        display: inline-block;
+    }
+
+    .filter-indicator:hover {
+        color: #138496;
+    }
+
     /* Change Styling */
     .change-positive {
         color: #28a745;
@@ -1084,6 +1106,7 @@
                                     <td>
                                         <i class="bi bi-{% if 'Fundraising' in comparison.metric %}currency-dollar{% elif 'Minutes' in comparison.metric %}book{% elif 'Sponsors' in comparison.metric %}people{% elif 'Participating' in comparison.metric %}person-check{% elif 'Size' in comparison.metric %}person-badge{% else %}graph-up{% endif %} metric-icon"></i>
                                         {{ comparison.metric }}
+                                        {% if comparison.honors_filter %}<span class="filter-indicator" data-bs-toggle="tooltip" data-bs-placement="top" title="Metric honors filter period selection">◐</span>{% endif %}
                                     </td>
                                     <td>
                                         <div class="{% if comparison.winner == 'db1' %}winning-value winning-value-db1{% endif %}">
@@ -1101,6 +1124,9 @@
                                         <div class="winner-context">Winner: {{ comparison.db1_value.winner_name }}</div>
                                         {% endif %}
                                         <div class="winner-context">{{ comparison.db1_value.context }}</div>
+                                        {% if comparison.db1_value.tie_count and comparison.db1_value.tie_count > 1 %}
+                                        <div class="tie-note">* {{ comparison.db1_value.tie_count }}-way tie for 1st place</div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="{% if comparison.winner == 'db2' %}winning-value winning-value-db2{% endif %}">
@@ -1118,6 +1144,9 @@
                                         <div class="winner-context">Winner: {{ comparison.db2_value.winner_name }}</div>
                                         {% endif %}
                                         <div class="winner-context">{{ comparison.db2_value.context }}</div>
+                                        {% if comparison.db2_value.tie_count and comparison.db2_value.tie_count > 1 %}
+                                        <div class="tie-note">* {{ comparison.db2_value.tie_count }}-way tie for 1st place</div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="change-{% if comparison.change.direction == 'up' %}positive{% elif comparison.change.direction == 'down' %}negative{% else %}neutral{% endif %}">

@@ -310,7 +310,7 @@ class TestDatabaseComparison:
         assert 'compare' in html.lower()
 
     def test_50_metrics_total(self, sample_db):
-        """Verify exactly 50 comparisons are returned (5 entities × 10 metrics)."""
+        """Verify exactly 49 comparisons are returned (School/Team/Grade/Class: 10 each, Student: 9)."""
         from database import ReportGenerator, ReadathonDB
         db = ReadathonDB('db/readathon_sample.db')
 
@@ -318,8 +318,8 @@ class TestDatabaseComparison:
         reports = ReportGenerator(db)
         result = reports.get_database_comparison('readathon_sample.db', 'readathon_sample.db', 'all')
 
-        # Should have exactly 50 comparisons
-        assert len(result['comparisons']) == 50, f"Expected 50 comparisons, got {len(result['comparisons'])}"
+        # Should have exactly 49 comparisons (Student Color War Points removed)
+        assert len(result['comparisons']) == 49, f"Expected 49 comparisons, got {len(result['comparisons'])}"
 
     def test_school_level_10_metrics(self, sample_db):
         """Verify School level has exactly 10 metrics."""
@@ -392,7 +392,7 @@ class TestDatabaseComparison:
         assert len(class_comparisons) == 10, f"Expected 10 Class metrics, got {len(class_comparisons)}"
 
     def test_student_level_10_metrics(self, sample_db):
-        """Verify Student level has exactly 10 metrics."""
+        """Verify Student level has exactly 9 metrics (Color War Points removed)."""
         from database import ReportGenerator, ReadathonDB
         db = ReadathonDB('db/readathon_sample.db')
 
@@ -401,12 +401,12 @@ class TestDatabaseComparison:
 
         # Count Student-level comparisons
         student_comparisons = [c for c in result['comparisons'] if c['entity_level'] == 'Student']
-        assert len(student_comparisons) == 10, f"Expected 10 Student metrics, got {len(student_comparisons)}"
+        assert len(student_comparisons) == 9, f"Expected 9 Student metrics, got {len(student_comparisons)}"
 
-        # Verify expected metrics
+        # Verify expected metrics (Color War Points removed - doesn't apply to student level)
         expected_metrics = [
             'Fundraising', 'Minutes Read', 'Sponsors', 'Participation %', 'Goal Met (Days)',
-            'All Days Active (100%)', 'Goal Met All Days', 'Color War Points',
+            'All Days Active (100%)', 'Goal Met All Days',
             'Avg Minutes Per Day', 'Total Days Active'
         ]
         actual_metrics = [c['metric'] for c in student_comparisons]
@@ -541,3 +541,112 @@ class TestDatabaseComparison:
         expected_levels = {'School', 'Team', 'Grade', 'Class', 'Student'}
 
         assert entity_levels == expected_levels, f"Missing entity levels: {expected_levels - entity_levels}"
+
+    def test_tie_count_field_present(self, sample_db):
+        """Verify tie_count field is present in student-level comparisons."""
+        from database import ReportGenerator, ReadathonDB
+        db = ReadathonDB('db/readathon_sample.db')
+
+        reports = ReportGenerator(db)
+        result = reports.get_database_comparison('readathon_sample.db', 'readathon_sample.db', 'all')
+
+        # Check Student-level comparisons have tie_count
+        student_comparisons = [c for c in result['comparisons'] if c['entity_level'] == 'Student']
+
+        for comparison in student_comparisons:
+            assert 'tie_count' in comparison['db1_value'], f"Missing tie_count in db1_value for {comparison['metric']}"
+            assert 'tie_count' in comparison['db2_value'], f"Missing tie_count in db2_value for {comparison['metric']}"
+
+    def test_tied_winners_formatted_correctly(self, sample_db):
+        """Verify tied winners are formatted as 'Name1, Name2, Name3 and X others'."""
+        from database import ReportGenerator, ReadathonDB
+        db = ReadathonDB('db/readathon_sample.db')
+
+        reports = ReportGenerator(db)
+        result = reports.get_database_comparison('readathon_sample.db', 'readathon_sample.db', 'all')
+
+        # Check Student-level comparisons for proper name formatting
+        student_comparisons = [c for c in result['comparisons'] if c['entity_level'] == 'Student']
+
+        for comparison in student_comparisons:
+            winner_name = comparison['db1_value'].get('winner_name', '')
+            tie_count = comparison['db1_value'].get('tie_count', 0)
+
+            # If there's a tie, names should be formatted properly
+            if tie_count > 1:
+                # Should have commas or "and X others"
+                assert ',' in winner_name or 'and' in winner_name or 'others' in winner_name, \
+                    f"Tie with {tie_count} winners should be formatted with commas or 'and X others'"
+
+    def test_half_circle_indicator_for_daily_metrics(self, client):
+        """Verify half circle (◐) indicator is shown for metrics that depend on daily data."""
+        response = client.get('/database-comparison?db1=readathon_sample.db&db2=readathon_sample.db&filter=all')
+        html = response.data.decode('utf-8')
+
+        # Check for half circle indicator presence (◐ character with filter-indicator class)
+        assert '◐' in html, "Half circle indicator should be present for daily data metrics"
+        assert 'filter-indicator' in html, "Filter indicator CSS class should be present"
+
+        # Verify it appears near "Minutes Read" which is a daily data metric
+        # Find all instances of Minutes Read
+        minutes_sections = re.findall(r'Minutes Read.*?(?=<td|</tr)', html, re.DOTALL)
+        if minutes_sections:
+            # At least one should have the half circle
+            has_indicator = any('◐' in section for section in minutes_sections)
+            assert has_indicator, "Half circle should appear with Minutes Read metric"
+
+    def test_tie_note_displayed_in_html(self, client):
+        """Verify tie notes are displayed in HTML when tie_count > 1."""
+        response = client.get('/database-comparison?db1=readathon_sample.db&db2=readathon_sample.db&filter=all')
+        html = response.data.decode('utf-8')
+
+        # Check for tie-note class or tie indication text
+        # May not always be present, but if there are ties, should see the pattern
+        if 'way tie' in html.lower():
+            # Should have the proper formatting
+            tie_matches = re.findall(r'(\d+)-way tie for 1st place', html)
+            for tie_match in tie_matches:
+                # Each should be a valid number
+                assert int(tie_match) > 1, "Tie count should be greater than 1"
+
+    def test_format_tied_winners_helper(self, sample_db):
+        """Test the _format_tied_winners helper function."""
+        from database import ReportGenerator, ReadathonDB
+        db = ReadathonDB('db/readathon_sample.db')
+        reports = ReportGenerator(db)
+
+        # Test with empty list
+        result = reports._format_tied_winners([])
+        assert result['names'] == 'N/A'
+        assert result['tie_count'] == 0
+        assert result['grade_context'] == ''
+
+        # Test with single winner
+        single_winner = [{'student_name': 'Alice', 'grade_level': '3'}]
+        result = reports._format_tied_winners(single_winner)
+        assert result['names'] == 'Alice'
+        assert result['tie_count'] == 1
+        assert result['grade_context'] == 'Grade 3'
+
+        # Test with 2 winners (same grade)
+        two_winners = [
+            {'student_name': 'Alice', 'grade_level': '3'},
+            {'student_name': 'Bob', 'grade_level': '3'}
+        ]
+        result = reports._format_tied_winners(two_winners)
+        assert 'Alice' in result['names'] and 'Bob' in result['names']
+        assert result['tie_count'] == 2
+        assert result['grade_context'] == 'Grade 3'
+
+        # Test with 5 winners (should show "and 2 others")
+        five_winners = [
+            {'student_name': 'Alice', 'grade_level': '3'},
+            {'student_name': 'Bob', 'grade_level': '4'},
+            {'student_name': 'Charlie', 'grade_level': '5'},
+            {'student_name': 'David', 'grade_level': '3'},
+            {'student_name': 'Eve', 'grade_level': '4'}
+        ]
+        result = reports._format_tied_winners(five_winners)
+        assert 'and 2 others' in result['names']
+        assert result['tie_count'] == 5
+        assert result['grade_context'] == 'Various'  # Multiple grades

@@ -2130,12 +2130,12 @@ QUERY_DB_REGISTRY_LIST = """
 """
 
 def get_db_comparison_school_fundraising(date_filter=None):
-    """Get school-wide fundraising total and top class"""
-    date_where = ""
-    if date_filter and date_filter != 'all':
-        date_where = f"AND dl.log_date <= '{date_filter}'"
+    """Get school-wide fundraising total and top class
 
-    return f"""
+    Note: Fundraising is cumulative (from Reader_Cumulative table) and does not support date filtering.
+    The date_filter parameter is ignored.
+    """
+    return """
         WITH SchoolTotal AS (
             SELECT COALESCE(SUM(donation_amount), 0) as total_fundraising
             FROM Reader_Cumulative
@@ -2148,7 +2148,8 @@ def get_db_comparison_school_fundraising(date_filter=None):
                 ci.team_name,
                 COALESCE(SUM(rc.donation_amount), 0) as class_fundraising
             FROM Class_Info ci
-            LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
+            LEFT JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
             ORDER BY class_fundraising DESC
             LIMIT 1
@@ -2215,7 +2216,8 @@ def get_db_comparison_school_sponsors(date_filter=None):
                 ci.team_name,
                 COALESCE(SUM(rc.sponsors), 0) as class_sponsors
             FROM Class_Info ci
-            LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
+            LEFT JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
             ORDER BY class_sponsors DESC
             LIMIT 1
@@ -2283,7 +2285,7 @@ def get_db_comparison_school_size():
     """
 
 def get_db_comparison_student_top_fundraiser():
-    """Get top student fundraiser"""
+    """Get top student fundraiser (returns all tied winners)"""
     return """
         SELECT
             r.student_name,
@@ -2294,15 +2296,20 @@ def get_db_comparison_student_top_fundraiser():
             COALESCE(rc.donation_amount, 0) as fundraising
         FROM Roster r
         LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-        ORDER BY fundraising DESC
-        LIMIT 1
+        WHERE COALESCE(rc.donation_amount, 0) = (
+            SELECT MAX(COALESCE(donation_amount, 0))
+            FROM Reader_Cumulative
+        )
+        ORDER BY r.student_name
     """
 
 def get_db_comparison_student_top_reader(date_filter=None):
-    """Get top student reader (capped minutes)"""
+    """Get top student reader (capped minutes, returns all tied winners)"""
     date_where = ""
+    date_where_no_alias = ""
     if date_filter and date_filter != 'all':
-        date_where = f"AND log_date <= '{date_filter}'"
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+        date_where_no_alias = f"AND log_date <= '{date_filter}'"
 
     return f"""
         SELECT
@@ -2316,12 +2323,19 @@ def get_db_comparison_student_top_reader(date_filter=None):
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
         WHERE dl.minutes_read > 0 {date_where}
         GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name
-        ORDER BY total_minutes DESC
-        LIMIT 1
+        HAVING total_minutes = (
+            SELECT MAX(total_minutes) FROM (
+                SELECT COALESCE(SUM(CASE WHEN minutes_read > 120 THEN 120 ELSE minutes_read END), 0) as total_minutes
+                FROM Daily_Logs
+                WHERE minutes_read > 0 {date_where_no_alias}
+                GROUP BY student_name
+            )
+        )
+        ORDER BY r.student_name
     """
 
 def get_db_comparison_student_top_sponsors():
-    """Get student with most sponsors"""
+    """Get student with most sponsors (returns all tied winners)"""
     return """
         SELECT
             r.student_name,
@@ -2332,8 +2346,11 @@ def get_db_comparison_student_top_sponsors():
             COALESCE(rc.sponsors, 0) as sponsor_count
         FROM Roster r
         LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-        ORDER BY sponsor_count DESC
-        LIMIT 1
+        WHERE COALESCE(rc.sponsors, 0) = (
+            SELECT MAX(COALESCE(sponsors, 0))
+            FROM Reader_Cumulative
+        )
+        ORDER BY r.student_name
     """
 
 def get_db_comparison_team_top(metric, date_filter=None):
@@ -2356,8 +2373,16 @@ def get_db_comparison_team_top(metric, date_filter=None):
                 FROM Roster r
                 LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
                 GROUP BY r.team_name
-                ORDER BY total_fundraising DESC
-                LIMIT 1
+                HAVING total_fundraising = (
+                    SELECT MAX(team_fundraising)
+                    FROM (
+                        SELECT COALESCE(SUM(rc2.donation_amount), 0) as team_fundraising
+                        FROM Roster r2
+                        LEFT JOIN Reader_Cumulative rc2 ON r2.student_name = rc2.student_name
+                        GROUP BY r2.team_name
+                    )
+                )
+                ORDER BY r.team_name
             ),
             TopClass AS (
                 SELECT
@@ -2367,10 +2392,11 @@ def get_db_comparison_team_top(metric, date_filter=None):
                     ci.team_name,
                     COALESCE(SUM(rc.donation_amount), 0) as class_fundraising
                 FROM Class_Info ci
-                LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
-                WHERE ci.team_name = (SELECT team_name FROM TeamTotals)
+                LEFT JOIN Roster r ON ci.class_name = r.class_name
+                LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+                WHERE ci.team_name IN (SELECT team_name FROM TeamTotals)
                 GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
-                ORDER BY class_fundraising DESC
+                ORDER BY class_fundraising DESC, ci.class_name
                 LIMIT 1
             )
             SELECT
@@ -2391,8 +2417,17 @@ def get_db_comparison_team_top(metric, date_filter=None):
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE dl.minutes_read > 0 {date_where}
                 GROUP BY r.team_name
-                ORDER BY total_minutes DESC
-                LIMIT 1
+                HAVING total_minutes = (
+                    SELECT MAX(team_minutes)
+                    FROM (
+                        SELECT COALESCE(SUM(CASE WHEN dl2.minutes_read > 120 THEN 120 ELSE dl2.minutes_read END), 0) as team_minutes
+                        FROM Roster r2
+                        LEFT JOIN Daily_Logs dl2 ON r2.student_name = dl2.student_name
+                        WHERE dl2.minutes_read > 0 {date_where}
+                        GROUP BY r2.team_name
+                    )
+                )
+                ORDER BY r.team_name
             ),
             TopClass AS (
                 SELECT
@@ -2405,9 +2440,9 @@ def get_db_comparison_team_top(metric, date_filter=None):
                 LEFT JOIN Roster r ON ci.class_name = r.class_name
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE dl.minutes_read > 0 {date_where}
-                    AND ci.team_name = (SELECT team_name FROM TeamTotals)
+                    AND ci.team_name IN (SELECT team_name FROM TeamTotals)
                 GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
-                ORDER BY class_minutes DESC
+                ORDER BY class_minutes DESC, ci.class_name
                 LIMIT 1
             )
             SELECT
@@ -2460,8 +2495,16 @@ def get_db_comparison_grade_top(metric, date_filter=None):
                 FROM Roster r
                 LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
                 GROUP BY r.grade_level
-                ORDER BY total_fundraising DESC
-                LIMIT 1
+                HAVING total_fundraising = (
+                    SELECT MAX(grade_fundraising)
+                    FROM (
+                        SELECT COALESCE(SUM(rc2.donation_amount), 0) as grade_fundraising
+                        FROM Roster r2
+                        LEFT JOIN Reader_Cumulative rc2 ON r2.student_name = rc2.student_name
+                        GROUP BY r2.grade_level
+                    )
+                )
+                ORDER BY r.grade_level
             ),
             TopClass AS (
                 SELECT
@@ -2471,10 +2514,11 @@ def get_db_comparison_grade_top(metric, date_filter=None):
                     ci.grade_level,
                     COALESCE(SUM(rc.donation_amount), 0) as class_fundraising
                 FROM Class_Info ci
-                LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
-                WHERE ci.grade_level = (SELECT grade_level FROM GradeTotals)
+                LEFT JOIN Roster r ON ci.class_name = r.class_name
+                LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+                WHERE ci.grade_level IN (SELECT grade_level FROM GradeTotals)
                 GROUP BY ci.class_name, ci.teacher_name, ci.team_name, ci.grade_level
-                ORDER BY class_fundraising DESC
+                ORDER BY class_fundraising DESC, ci.class_name
                 LIMIT 1
             )
             SELECT
@@ -2495,8 +2539,17 @@ def get_db_comparison_grade_top(metric, date_filter=None):
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE dl.minutes_read > 0 {date_where}
                 GROUP BY r.grade_level
-                ORDER BY total_minutes DESC
-                LIMIT 1
+                HAVING total_minutes = (
+                    SELECT MAX(grade_minutes)
+                    FROM (
+                        SELECT COALESCE(SUM(CASE WHEN dl2.minutes_read > 120 THEN 120 ELSE dl2.minutes_read END), 0) as grade_minutes
+                        FROM Roster r2
+                        LEFT JOIN Daily_Logs dl2 ON r2.student_name = dl2.student_name
+                        WHERE dl2.minutes_read > 0 {date_where}
+                        GROUP BY r2.grade_level
+                    )
+                )
+                ORDER BY r.grade_level
             ),
             TopClass AS (
                 SELECT
@@ -2509,9 +2562,9 @@ def get_db_comparison_grade_top(metric, date_filter=None):
                 LEFT JOIN Roster r ON ci.class_name = r.class_name
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
                 WHERE dl.minutes_read > 0 {date_where}
-                    AND ci.grade_level = (SELECT grade_level FROM GradeTotals)
+                    AND ci.grade_level IN (SELECT grade_level FROM GradeTotals)
                 GROUP BY ci.class_name, ci.teacher_name, ci.team_name, ci.grade_level
-                ORDER BY class_minutes DESC
+                ORDER BY class_minutes DESC, ci.class_name
                 LIMIT 1
             )
             SELECT
@@ -2563,10 +2616,20 @@ def get_db_comparison_class_top(metric, date_filter=None):
                 ci.team_name,
                 COALESCE(SUM(rc.donation_amount), 0) as total_fundraising
             FROM Class_Info ci
-            LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
+            LEFT JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
-            ORDER BY total_fundraising DESC
-            LIMIT 1
+            HAVING total_fundraising = (
+                SELECT MAX(class_fundraising)
+                FROM (
+                    SELECT COALESCE(SUM(rc2.donation_amount), 0) as class_fundraising
+                    FROM Class_Info ci2
+                    LEFT JOIN Roster r2 ON ci2.class_name = r2.class_name
+                    LEFT JOIN Reader_Cumulative rc2 ON r2.student_name = rc2.student_name
+                    GROUP BY ci2.class_name
+                )
+            )
+            ORDER BY ci.class_name
         """
     elif metric == 'minutes':
         return f"""
@@ -2581,8 +2644,42 @@ def get_db_comparison_class_top(metric, date_filter=None):
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             WHERE dl.minutes_read > 0 {date_where}
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
-            ORDER BY total_minutes DESC
-            LIMIT 1
+            HAVING total_minutes = (
+                SELECT MAX(class_minutes)
+                FROM (
+                    SELECT COALESCE(SUM(CASE WHEN dl2.minutes_read > 120 THEN 120 ELSE dl2.minutes_read END), 0) as class_minutes
+                    FROM Class_Info ci2
+                    LEFT JOIN Roster r2 ON ci2.class_name = r2.class_name
+                    LEFT JOIN Daily_Logs dl2 ON r2.student_name = dl2.student_name
+                    WHERE dl2.minutes_read > 0 {date_where}
+                    GROUP BY ci2.class_name
+                )
+            )
+            ORDER BY ci.class_name
+        """
+    elif metric == 'sponsors':
+        return """
+            SELECT
+                ci.class_name,
+                ci.teacher_name,
+                ci.grade_level,
+                ci.team_name,
+                COALESCE(SUM(rc.sponsors), 0) as total_sponsors
+            FROM Class_Info ci
+            LEFT JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
+            HAVING total_sponsors = (
+                SELECT MAX(class_sponsors)
+                FROM (
+                    SELECT COALESCE(SUM(rc2.sponsors), 0) as class_sponsors
+                    FROM Class_Info ci2
+                    LEFT JOIN Roster r2 ON ci2.class_name = r2.class_name
+                    LEFT JOIN Reader_Cumulative rc2 ON r2.student_name = rc2.student_name
+                    GROUP BY ci2.class_name
+                )
+            )
+            ORDER BY ci.class_name
         """
     elif metric == 'size':
         return """
@@ -2609,8 +2706,8 @@ def get_db_comparison_school_avg_participation(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         ColorBonus AS (
@@ -2632,9 +2729,13 @@ def get_db_comparison_school_avg_participation(date_filter=None):
         WHERE td.total_days > 0 {date_where}
     """
 
-def get_db_comparison_school_goal_met():
+def get_db_comparison_school_goal_met(date_filter=None):
     """Get school-wide % who met goal at least 1 day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH StudentGoals AS (
             SELECT
                 r.student_name,
@@ -2642,6 +2743,7 @@ def get_db_comparison_school_goal_met():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.student_name
         )
         SELECT
@@ -2659,8 +2761,8 @@ def get_db_comparison_school_all_days_active(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         StudentDaysActive AS (
@@ -2683,12 +2785,17 @@ def get_db_comparison_school_all_days_active(date_filter=None):
         LEFT JOIN StudentDaysActive sda ON r.student_name = sda.student_name
     """
 
-def get_db_comparison_school_goal_met_all_days():
+def get_db_comparison_school_goal_met_all_days(date_filter=None):
     """Get school-wide % who met goal every day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND log_date <= '{date_filter}'"
+
+    return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
         ),
         StudentGoalDays AS (
             SELECT
@@ -2697,6 +2804,7 @@ def get_db_comparison_school_goal_met_all_days():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.student_name
         )
         SELECT
@@ -2749,7 +2857,8 @@ def get_db_comparison_team_sponsors():
                 ci.grade_level,
                 COALESCE(SUM(rc.sponsors), 0) as class_sponsors
             FROM Class_Info ci
-            LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
+            LEFT JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
             WHERE ci.team_name = (SELECT team_name FROM TeamSponsors)
             GROUP BY ci.class_name, ci.grade_level
             ORDER BY class_sponsors DESC
@@ -2800,8 +2909,8 @@ def get_db_comparison_team_avg_participation(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         TeamBonusData AS (
@@ -2833,9 +2942,13 @@ def get_db_comparison_team_avg_participation(date_filter=None):
         SELECT * FROM TeamStats
     """
 
-def get_db_comparison_team_goal_met():
+def get_db_comparison_team_goal_met(date_filter=None):
     """Get team with highest % who met goal at least 1 day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH StudentGoals AS (
             SELECT
                 r.team_name,
@@ -2844,6 +2957,7 @@ def get_db_comparison_team_goal_met():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.team_name, r.student_name
         ),
         TeamGoals AS (
@@ -2868,8 +2982,8 @@ def get_db_comparison_team_all_days_active(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         StudentDaysActive AS (
@@ -2900,12 +3014,17 @@ def get_db_comparison_team_all_days_active(date_filter=None):
         SELECT * FROM TeamStats
     """
 
-def get_db_comparison_team_goal_met_all_days():
+def get_db_comparison_team_goal_met_all_days(date_filter=None):
     """Get team with highest % who met goal every day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
         ),
         StudentGoalDays AS (
             SELECT
@@ -2915,6 +3034,7 @@ def get_db_comparison_team_goal_met_all_days():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.team_name, r.student_name
         ),
         TeamStats AS (
@@ -2989,7 +3109,8 @@ def get_db_comparison_grade_sponsors():
                 ci.team_name,
                 COALESCE(SUM(rc.sponsors), 0) as class_sponsors
             FROM Class_Info ci
-            LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
+            LEFT JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
             WHERE ci.grade_level = (SELECT grade_level FROM GradeSponsors)
             GROUP BY ci.class_name, ci.team_name
             ORDER BY class_sponsors DESC
@@ -3040,8 +3161,8 @@ def get_db_comparison_grade_avg_participation(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         GradeBonusData AS (
@@ -3073,9 +3194,13 @@ def get_db_comparison_grade_avg_participation(date_filter=None):
         SELECT * FROM GradeStats
     """
 
-def get_db_comparison_grade_goal_met():
+def get_db_comparison_grade_goal_met(date_filter=None):
     """Get grade with highest % who met goal at least 1 day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH StudentGoals AS (
             SELECT
                 r.grade_level,
@@ -3084,6 +3209,7 @@ def get_db_comparison_grade_goal_met():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.grade_level, r.student_name
         ),
         GradeGoals AS (
@@ -3108,8 +3234,8 @@ def get_db_comparison_grade_all_days_active(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         StudentDaysActive AS (
@@ -3140,12 +3266,17 @@ def get_db_comparison_grade_all_days_active(date_filter=None):
         SELECT * FROM GradeStats
     """
 
-def get_db_comparison_grade_goal_met_all_days():
+def get_db_comparison_grade_goal_met_all_days(date_filter=None):
     """Get grade with highest % who met goal every day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
         ),
         StudentGoalDays AS (
             SELECT
@@ -3155,6 +3286,7 @@ def get_db_comparison_grade_goal_met_all_days():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.grade_level, r.student_name
         ),
         GradeStats AS (
@@ -3220,7 +3352,8 @@ def get_db_comparison_class_sponsors():
             ci.team_name,
             COALESCE(SUM(rc.sponsors), 0) as total_sponsors
         FROM Class_Info ci
-        LEFT JOIN Reader_Cumulative rc ON ci.teacher_name = rc.teacher_name
+        LEFT JOIN Roster r ON ci.class_name = r.class_name
+        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
         GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name
         ORDER BY total_sponsors DESC
         LIMIT 1
@@ -3259,8 +3392,8 @@ def get_db_comparison_class_avg_participation(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         ClassBonusData AS (
@@ -3295,9 +3428,13 @@ def get_db_comparison_class_avg_participation(date_filter=None):
         SELECT * FROM ClassStats
     """
 
-def get_db_comparison_class_goal_met():
+def get_db_comparison_class_goal_met(date_filter=None):
     """Get class with highest % who met goal at least 1 day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH StudentGoals AS (
             SELECT
                 r.class_name,
@@ -3306,6 +3443,7 @@ def get_db_comparison_class_goal_met():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.class_name, r.student_name
         ),
         ClassGoals AS (
@@ -3334,8 +3472,8 @@ def get_db_comparison_class_all_days_active(date_filter=None):
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         StudentDaysActive AS (
@@ -3370,12 +3508,17 @@ def get_db_comparison_class_all_days_active(date_filter=None):
         SELECT * FROM ClassStats
     """
 
-def get_db_comparison_class_goal_met_all_days():
+def get_db_comparison_class_goal_met_all_days(date_filter=None):
     """Get class with highest % who met goal every day"""
-    return """
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
         ),
         StudentGoalDays AS (
             SELECT
@@ -3385,6 +3528,7 @@ def get_db_comparison_class_goal_met_all_days():
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.class_name, r.student_name
         ),
         ClassStats AS (
@@ -3448,16 +3592,18 @@ def get_db_comparison_class_color_war_points():
 # Additional Student-Level Comparison Queries
 
 def get_db_comparison_student_top_participation(date_filter=None):
-    """Get student with highest participation rate"""
+    """Get student with highest participation rate (returns all tied winners)"""
     date_where = ""
+    date_where_no_alias = ""
     if date_filter and date_filter != 'all':
-        date_where = f"AND log_date <= '{date_filter}'"
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+        date_where_no_alias = f"AND log_date <= '{date_filter}'"
 
     return f"""
         WITH TotalDays AS (
             SELECT COUNT(DISTINCT log_date) as total_days
             FROM Daily_Logs
-            WHERE 1=1 {date_where}
+            WHERE 1=1 {date_where_no_alias}
         ),
         StudentParticipation AS (
             SELECT
@@ -3466,22 +3612,25 @@ def get_db_comparison_student_top_participation(date_filter=None):
                 r.teacher_name,
                 r.grade_level,
                 r.team_name,
-                COUNT(DISTINCT dl.log_date) as days_active,
-                ROUND(100.0 * COUNT(DISTINCT dl.log_date) / td.total_days, 2) as participation_pct
+                COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date END) as days_active,
+                ROUND(100.0 * COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date END) / td.total_days, 2) as participation_pct
             FROM Roster r
             CROSS JOIN TotalDays td
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            WHERE dl.minutes_read > 0 {date_where}
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
             GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name, td.total_days
-            ORDER BY participation_pct DESC, days_active DESC
-            LIMIT 1
         )
         SELECT * FROM StudentParticipation
+        WHERE participation_pct = (SELECT MAX(participation_pct) FROM StudentParticipation)
+        ORDER BY student_name
     """
 
-def get_db_comparison_student_goal_met():
-    """Get student who met goal most days"""
-    return """
+def get_db_comparison_student_goal_met(date_filter=None):
+    """Get student who met goal most days (returns all tied winners)"""
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         SELECT
             r.student_name,
             r.class_name,
@@ -3494,22 +3643,31 @@ def get_db_comparison_student_goal_met():
         FROM Roster r
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
         LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
-        WHERE dl.minutes_read > 0
+        WHERE dl.minutes_read > 0 {date_where}
         GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name, gr.min_daily_minutes
-        ORDER BY days_met_goal DESC, goal_met_pct DESC
-        LIMIT 1
+        HAVING days_met_goal = (
+            SELECT MAX(days_met_goal) FROM (
+                SELECT COUNT(CASE WHEN dl2.minutes_read >= gr2.min_daily_minutes THEN 1 END) as days_met_goal
+                FROM Roster r2
+                LEFT JOIN Daily_Logs dl2 ON r2.student_name = dl2.student_name
+                LEFT JOIN Grade_Rules gr2 ON r2.grade_level = gr2.grade_level
+                WHERE dl2.minutes_read > 0 {date_where}
+                GROUP BY r2.student_name
+            )
+        )
+        ORDER BY r.student_name
     """
 
 def get_db_comparison_student_all_days_active(date_filter=None):
-    """Get students who logged every day (100% participation)"""
+    """Get students who logged every day (100% participation, returns all tied winners)"""
     date_where = ""
     if date_filter and date_filter != 'all':
         date_where = f"AND log_date <= '{date_filter}'"
 
     return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
             WHERE 1=1 {date_where}
         ),
         StudentDaysActive AS (
@@ -3528,17 +3686,21 @@ def get_db_comparison_student_all_days_active(date_filter=None):
             GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name, td.total_days
             HAVING COUNT(DISTINCT dl.log_date) = td.total_days
             ORDER BY r.student_name
-            LIMIT 1
         )
         SELECT * FROM StudentDaysActive
     """
 
-def get_db_comparison_student_goal_met_all_days():
-    """Get students who met goal every day"""
-    return """
+def get_db_comparison_student_goal_met_all_days(date_filter=None):
+    """Get students who met goal every day (returns all tied winners)"""
+    date_where = ""
+    if date_filter and date_filter != 'all':
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+
+    return f"""
         WITH TotalDays AS (
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
         ),
         StudentGoalDays AS (
             SELECT
@@ -3553,16 +3715,16 @@ def get_db_comparison_student_goal_met_all_days():
             CROSS JOIN TotalDays td
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
+            WHERE 1=1 {date_where}
             GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name, td.total_days
             HAVING COUNT(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 END) = td.total_days
             ORDER BY r.student_name
-            LIMIT 1
         )
         SELECT * FROM StudentGoalDays
     """
 
 def get_db_comparison_student_color_war_points():
-    """Get student with most color war points (participation days)"""
+    """Get student with most color war points (participation days, returns all tied winners)"""
     return """
         SELECT
             r.student_name,
@@ -3575,15 +3737,24 @@ def get_db_comparison_student_color_war_points():
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
         WHERE dl.minutes_read > 0
         GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name
-        ORDER BY total_points DESC
-        LIMIT 1
+        HAVING total_points = (
+            SELECT MAX(total_points) FROM (
+                SELECT COUNT(DISTINCT log_date) as total_points
+                FROM Daily_Logs
+                WHERE minutes_read > 0
+                GROUP BY student_name
+            )
+        )
+        ORDER BY r.student_name
     """
 
 def get_db_comparison_student_avg_minutes_per_day(date_filter=None):
-    """Get student with highest average minutes per day"""
+    """Get student with highest average minutes per day (returns all tied winners)"""
     date_where = ""
+    date_where_no_alias = ""
     if date_filter and date_filter != 'all':
-        date_where = f"AND log_date <= '{date_filter}'"
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+        date_where_no_alias = f"AND log_date <= '{date_filter}'"
 
     return f"""
         SELECT
@@ -3599,15 +3770,25 @@ def get_db_comparison_student_avg_minutes_per_day(date_filter=None):
         WHERE dl.minutes_read > 0 {date_where}
         GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name
         HAVING COUNT(DISTINCT dl.log_date) >= 3
-        ORDER BY avg_minutes_per_day DESC
-        LIMIT 1
+            AND avg_minutes_per_day = (
+                SELECT MAX(avg_minutes) FROM (
+                    SELECT ROUND(AVG(CASE WHEN minutes_read > 120 THEN 120 ELSE minutes_read END), 1) as avg_minutes
+                    FROM Daily_Logs
+                    WHERE minutes_read > 0 {date_where_no_alias}
+                    GROUP BY student_name
+                    HAVING COUNT(DISTINCT log_date) >= 3
+                )
+            )
+        ORDER BY r.student_name
     """
 
 def get_db_comparison_student_total_days(date_filter=None):
-    """Get student with most days active"""
+    """Get student with most days active (returns all tied winners)"""
     date_where = ""
+    date_where_no_alias = ""
     if date_filter and date_filter != 'all':
-        date_where = f"AND log_date <= '{date_filter}'"
+        date_where = f"AND dl.log_date <= '{date_filter}'"
+        date_where_no_alias = f"AND log_date <= '{date_filter}'"
 
     return f"""
         SELECT
@@ -3621,6 +3802,13 @@ def get_db_comparison_student_total_days(date_filter=None):
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
         WHERE dl.minutes_read > 0 {date_where}
         GROUP BY r.student_name, r.class_name, r.teacher_name, r.grade_level, r.team_name
-        ORDER BY total_days DESC
-        LIMIT 1
+        HAVING total_days = (
+            SELECT MAX(total_days) FROM (
+                SELECT COUNT(DISTINCT log_date) as total_days
+                FROM Daily_Logs
+                WHERE minutes_read > 0 {date_where_no_alias}
+                GROUP BY student_name
+            )
+        )
+        ORDER BY r.student_name
     """
