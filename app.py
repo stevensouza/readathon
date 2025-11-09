@@ -3564,10 +3564,10 @@ def help_requirements():
     # Read IMPLEMENTATION_PROMPT.md
     requirements_content = ""
     try:
-        with open('IMPLEMENTATION_PROMPT.md', 'r', encoding='utf-8') as f:
+        with open('md/IMPLEMENTATION_PROMPT.md', 'r', encoding='utf-8') as f:
             requirements_content = f.read()
     except FileNotFoundError:
-        requirements_content = "# Error\n\nIMPLEMENTATION_PROMPT.md not found."
+        requirements_content = "# Error\n\nIMPLEMENTATION_PROMPT.md not found in md/ directory."
 
     return render_template('requirements.html',
                          environment=env,
@@ -3577,7 +3577,7 @@ def help_requirements():
 def download_requirements():
     """Download IMPLEMENTATION_PROMPT.md file"""
     try:
-        return send_file('IMPLEMENTATION_PROMPT.md',
+        return send_file('md/IMPLEMENTATION_PROMPT.md',
                         as_attachment=True,
                         download_name='IMPLEMENTATION_PROMPT.md',
                         mimetype='text/markdown')

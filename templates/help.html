@@ -3,14 +3,76 @@
 {% block title %}User Manual - Read-a-Thon System{% endblock %}
 
 {% block content %}
+<style>
+    html {
+        scroll-behavior: smooth;
+    }
+    .sticky-toc {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+    .toc-link {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: #495057;
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+    }
+    .toc-link:hover {
+        color: #007bff;
+        border-left-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    .toc-link.active {
+        color: #007bff;
+        border-left-color: #007bff;
+        font-weight: 600;
+    }
+    .toc-section {
+        font-size: 0.9rem;
+    }
+    /* Offset anchor targets for sticky navbar */
+    .card[id] {
+        scroll-margin-top: 70px;
+    }
+</style>
+
 <div class="row">
-    <div class="col-lg-10 offset-lg-1">
+    <div class="col-lg-3">
+        <!-- Sticky Table of Contents -->
+        <div class="sticky-toc">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-list"></i> Table of Contents</h5>
+                </div>
+                <div class="card-body p-0">
+                    <nav class="toc-section">
+                        <a href="#readathon-data" class="toc-link">About ReadAThon.com Data</a>
+                        <a href="#quick-start" class="toc-link">Quick Start Guide</a>
+                        <a href="#school-banner" class="toc-link">School Page Headline Banner</a>
+                        <a href="#data-persistence" class="toc-link">Data Persistence</a>
+                        <a href="#prod-vs-sample" class="toc-link">Production vs Sample Data</a>
+                        <a href="#uploading-data" class="toc-link">Uploading Daily Data</a>
+                        <a href="#reports-page" class="toc-link">Reports & Data Page</a>
+                        <a href="#workflows" class="toc-link">Workflows</a>
+                        <a href="#dashboard-tabs" class="toc-link">Dashboard Tabs</a>
+                        <a href="#business-logic" class="toc-link">Business Logic & Rules</a>
+                        <a href="#troubleshooting" class="toc-link">Troubleshooting</a>
+                        <a href="#tips-tricks" class="toc-link">Tips & Tricks</a>
+                    </nav>                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-9">
         <h1 class="mb-4">
             <i class="bi bi-book"></i> Read-a-Thon System - User Manual
         </h1>
 
         <!-- ReadAThon.com Data Source Notice -->
-        <div class="card mb-4 border-warning">
+        <div class="card mb-4 border-warning" id="readathon-data">
             <div class="card-header bg-warning text-dark">
                 <h4 class="mb-0"><i class="bi bi-info-circle"></i> About ReadAThon.com Data</h4>
             </div>
@@ -57,7 +119,7 @@
         </div>
 
         <!-- Quick Start -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="quick-start">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-rocket"></i> Quick Start Guide</h4>
             </div>
@@ -87,36 +149,38 @@
             </div>
         </div>
 
-        <!-- Verification Boxes -->
-        <div class="card mb-4">
+        <!-- School Page Headline Banner -->
+        <div class="card mb-4" id="school-banner">
             <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-check-square"></i> Dashboard Verification Boxes</h4>
+                <h4 class="mb-0"><i class="bi bi-graph-up"></i> School Page Headline Banner</h4>
             </div>
             <div class="card-body">
-                <h5>What Are Verification Boxes?</h5>
-                <p>The colorful boxes at the top of the Dashboard help you verify your data matches the online program's numbers. Each box shows a "Last Updated" timestamp so you know when the data was last refreshed.</p>
+                <h5>Understanding the Headline Banner</h5>
+                <p>The School tab displays a prominent dark blue banner at the top showing 6 key metrics in a horizontal row. This banner provides an at-a-glance summary of your read-a-thon progress.</p>
+
+                <h5 class="mt-4">The 6 Metrics</h5>
 
                 <div class="row mt-3">
                     <div class="col-md-6">
-                        <div class="card border-success mb-3">
+                        <div class="card border-info mb-3">
                             <div class="card-body">
-                                <h6 class="card-title text-success"><i class="bi bi-cash-coin"></i> Box 1: Total Raised (Green)</h6>
+                                <h6 class="card-title"><i class="bi bi-calendar-event"></i> 1. Campaign Day</h6>
                                 <ul class="small">
-                                    <li>Total donations from all students</li>
-                                    <li>Count of students who have donations</li>
-                                    <li>Updated when you upload cumulative stats</li>
+                                    <li><strong>Shows:</strong> Current day of total days (e.g., "3 of 6")</li>
+                                    <li><strong>Subtitle:</strong> Current date</li>
+                                    <li><strong>Does NOT honor date filter</strong> - always shows "today"</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card border-primary mb-3">
+                        <div class="card border-info mb-3">
                             <div class="card-body">
-                                <h6 class="card-title text-primary"><i class="bi bi-book"></i> Box 2: Total Minutes (Blue)</h6>
+                                <h6 class="card-title"><i class="bi bi-cash-coin"></i> 2. Fundraising</h6>
                                 <ul class="small">
-                                    <li>Total credited minutes read (120/day cap)</li>
-                                    <li>Count of students who have read</li>
-                                    <li>Updated when you upload daily minutes</li>
+                                    <li><strong>Shows:</strong> Total $ raised (e.g., "$31,758")</li>
+                                    <li><strong>Subtitle:</strong> Student count and percentage (e.g., "328 of 411 Students (79.8%)")</li>
+                                    <li><strong>Does NOT honor date filter</strong> - always cumulative</li>
                                 </ul>
                             </div>
                         </div>
@@ -124,50 +188,91 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="card border-warning mb-3">
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
                             <div class="card-body">
-                                <h6 class="card-title text-warning"><i class="bi bi-star"></i> Box 3: Top Readers (Orange)</h6>
+                                <h6 class="card-title"><i class="bi bi-book"></i> 3. Minutes Read <span class="filter-indicator">◐</span></h6>
                                 <ul class="small">
-                                    <li>Top fundraiser name and amount</li>
-                                    <li>Top reader name and minutes</li>
+                                    <li><strong>Shows:</strong> Total hours + minutes (e.g., "1,835 hours (110,093 min)")</li>
+                                    <li><strong>Capped:</strong> Maximum 120 minutes per student per day</li>
+                                    <li><strong>◐ icon appears</strong> when date filter is active</li>
+                                    <li><strong>Honors date filter</strong> - shows cumulative through selected date</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card border-secondary mb-3">
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
                             <div class="card-body">
-                                <h6 class="card-title text-secondary"><i class="bi bi-people"></i> Box 4: Top Classes (Purple)</h6>
+                                <h6 class="card-title"><i class="bi bi-gift"></i> 4. Sponsors</h6>
                                 <ul class="small">
-                                    <li>Top fundraising class and amount</li>
-                                    <li>Top reading class and minutes</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-danger mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-danger"><i class="bi bi-shield-check"></i> Box 5: Integrity Check</h6>
-                                <ul class="small">
-                                    <li>Green checkmark if data matches</li>
-                                    <li>Red warning if mismatch detected</li>
-                                    <li>Compares Daily vs Cumulative totals</li>
+                                    <li><strong>Shows:</strong> Total sponsor count (e.g., "782")</li>
+                                    <li><strong>Subtitle:</strong> Student count and percentage (e.g., "328 of 411 Students (79.8%)")</li>
+                                    <li><strong>Does NOT honor date filter</strong> - always cumulative</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-people"></i> 5. Avg. Participation (With Color) <span class="filter-indicator">◐</span></h6>
+                                <ul class="small">
+                                    <li><strong>Shows:</strong> Average daily participation percentage (e.g., "59.7%")</li>
+                                    <li><strong>Subtitle:</strong> Student count (e.g., "245 of 411 Students")</li>
+                                    <li><strong>Includes:</strong> Team color day bonus minutes</li>
+                                    <li><strong>Can exceed 100%</strong> due to color bonus</li>
+                                    <li><strong>◐ icon appears</strong> when date filter is active</li>
+                                    <li><strong>Honors date filter</strong> - calculates average through selected date</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-target"></i> 6. Goal Met (≥1 Day) <span class="filter-indicator">◐</span></h6>
+                                <ul class="small">
+                                    <li><strong>Shows:</strong> Percentage of students who met their goal at least once (e.g., "78.8%")</li>
+                                    <li><strong>Subtitle:</strong> Student count (e.g., "324 of 411 Students")</li>
+                                    <li><strong>Goal:</strong> Reading time equals or exceeds daily goal</li>
+                                    <li><strong>◐ icon appears</strong> when date filter is active</li>
+                                    <li><strong>Honors date filter</strong> - counts goals met through selected date</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Date Filtering</h5>
+                <p>The School page includes a <strong>Filter Period</strong> dropdown above the banner that allows you to filter data by date:</p>
+                <ul>
+                    <li><strong>"All Days"</strong> - Shows cumulative data across entire read-a-thon</li>
+                    <li><strong>Single Date</strong> - Shows data cumulative through that specific date</li>
+                    <li><strong>Relative Days</strong> - "Day 1", "Day 2", etc. for easy navigation</li>
+                </ul>
+                <p>When a date filter is active:</p>
+                <ul>
+                    <li>The <strong>◐ icon</strong> appears on metrics that honor the filter (Minutes, Avg. Participation, Goal Met)</li>
+                    <li>Hovering over ◐ shows a tooltip: "Cumulative through [date]"</li>
+                    <li>Metrics without ◐ (Campaign Day, Fundraising, Sponsors) remain unchanged</li>
+                </ul>
+
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Use the date filter to track daily progress! Compare early days vs. later days to see momentum changes.
+                </div>
+
                 <div class="alert alert-success">
-                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Compare these numbers with the online program to ensure your data is accurate before generating reports!
+                    <strong><i class="bi bi-shield-check"></i> Data Integrity:</strong> Compare banner values with the <a href="https://ReadAThon.com" target="_blank">ReadAThon.com</a> online system to ensure accuracy before generating reports!
                 </div>
             </div>
         </div>
 
         <!-- Data Persistence -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="data-persistence">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-database"></i> Data Persistence</h4>
             </div>
@@ -192,7 +297,7 @@
         </div>
 
         <!-- Environment Selector -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="prod-vs-sample">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-toggle-on"></i> Production vs Sample Data</h4>
             </div>
@@ -236,7 +341,7 @@
         </div>
 
         <!-- Upload Data -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="uploading-data">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-upload"></i> Uploading Daily Data</h4>
             </div>
@@ -299,7 +404,7 @@
         </div>
 
         <!-- Reports & Data Page -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="reports-page">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-graph-up"></i> Reports & Data Page</h4>
             </div>
@@ -570,7 +675,7 @@
         </div>
 
         <!-- Workflows -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="workflows">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-diagram-3"></i> Workflows</h4>
             </div>
@@ -615,7 +720,7 @@
         </div>
 
         <!-- Dashboard Tabs -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="dashboard-tabs">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-grid-3x3"></i> Dashboard Tabs</h4>
             </div>
@@ -667,7 +772,7 @@
         </div>
 
         <!-- Business Logic -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="business-logic">
             <div class="card-header bg-dark text-white">
                 <h4 class="mb-0"><i class="bi bi-calculator"></i> Business Logic & Rules</h4>
             </div>
@@ -733,7 +838,7 @@
         </div>
 
         <!-- Troubleshooting -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="troubleshooting">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Troubleshooting</h4>
             </div>
@@ -825,7 +930,7 @@
         </div>
 
         <!-- Tips & Tricks -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="tips-tricks">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-lightbulb"></i> Tips & Tricks</h4>
             </div>
