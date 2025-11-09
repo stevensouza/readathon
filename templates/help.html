@@ -52,13 +52,18 @@
                     <nav class="toc-section">
                         <a href="#readathon-data" class="toc-link">About ReadAThon.com Data</a>
                         <a href="#quick-start" class="toc-link">Quick Start Guide</a>
-                        <a href="#school-banner" class="toc-link">School Page Headline Banner</a>
                         <a href="#data-persistence" class="toc-link">Data Persistence</a>
                         <a href="#prod-vs-sample" class="toc-link">Production vs Sample Data</a>
-                        <a href="#uploading-data" class="toc-link">Uploading Daily Data</a>
-                        <a href="#reports-page" class="toc-link">Reports & Data Page</a>
-                        <a href="#workflows" class="toc-link">Workflows</a>
-                        <a href="#dashboard-tabs" class="toc-link">Dashboard Tabs</a>
+                        <a href="#interface" class="toc-link"><strong>Interface</strong></a>
+                        <a href="#school-tab" class="toc-link" style="padding-left: 2rem;">School Tab</a>
+                        <a href="#teams-tab" class="toc-link" style="padding-left: 2rem;">Teams Tab</a>
+                        <a href="#grade-tab" class="toc-link" style="padding-left: 2rem;">Grade Level Tab</a>
+                        <a href="#students-tab" class="toc-link" style="padding-left: 2rem;">Students Tab</a>
+                        <a href="#upload-tab" class="toc-link" style="padding-left: 2rem;">Upload Tab</a>
+                        <a href="#reports-tab" class="toc-link" style="padding-left: 2rem;">Reports & Data Tab</a>
+                        <a href="#workflows-tab" class="toc-link" style="padding-left: 2rem;">Workflows Tab</a>
+                        <a href="#admin-tab" class="toc-link" style="padding-left: 2rem;">Admin Tab</a>
+                        <a href="#help-tab" class="toc-link" style="padding-left: 2rem;">Help Tab</a>
                         <a href="#business-logic" class="toc-link">Business Logic & Rules</a>
                         <a href="#troubleshooting" class="toc-link">Troubleshooting</a>
                         <a href="#tips-tricks" class="toc-link">Tips & Tricks</a>
@@ -149,128 +154,6 @@
             </div>
         </div>
 
-        <!-- School Page Headline Banner -->
-        <div class="card mb-4" id="school-banner">
-            <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-graph-up"></i> School Page Headline Banner</h4>
-            </div>
-            <div class="card-body">
-                <h5>Understanding the Headline Banner</h5>
-                <p>The School tab displays a prominent dark blue banner at the top showing 6 key metrics in a horizontal row. This banner provides an at-a-glance summary of your read-a-thon progress.</p>
-
-                <h5 class="mt-4">The 6 Metrics</h5>
-
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title"><i class="bi bi-calendar-event"></i> 1. Campaign Day</h6>
-                                <ul class="small">
-                                    <li><strong>Shows:</strong> Current day of total days (e.g., "3 of 6")</li>
-                                    <li><strong>Subtitle:</strong> Current date</li>
-                                    <li><strong>Does NOT honor date filter</strong> - always shows "today"</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title"><i class="bi bi-cash-coin"></i> 2. Fundraising</h6>
-                                <ul class="small">
-                                    <li><strong>Shows:</strong> Total $ raised (e.g., "$31,758")</li>
-                                    <li><strong>Subtitle:</strong> Student count and percentage (e.g., "328 of 411 Students (79.8%)")</li>
-                                    <li><strong>Does NOT honor date filter</strong> - always cumulative</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title"><i class="bi bi-book"></i> 3. Minutes Read <span class="filter-indicator">◐</span></h6>
-                                <ul class="small">
-                                    <li><strong>Shows:</strong> Total hours + minutes (e.g., "1,835 hours (110,093 min)")</li>
-                                    <li><strong>Capped:</strong> Maximum 120 minutes per student per day</li>
-                                    <li><strong>◐ icon appears</strong> when date filter is active</li>
-                                    <li><strong>Honors date filter</strong> - shows cumulative through selected date</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title"><i class="bi bi-gift"></i> 4. Sponsors</h6>
-                                <ul class="small">
-                                    <li><strong>Shows:</strong> Total sponsor count (e.g., "782")</li>
-                                    <li><strong>Subtitle:</strong> Student count and percentage (e.g., "328 of 411 Students (79.8%)")</li>
-                                    <li><strong>Does NOT honor date filter</strong> - always cumulative</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title"><i class="bi bi-people"></i> 5. Avg. Participation (With Color) <span class="filter-indicator">◐</span></h6>
-                                <ul class="small">
-                                    <li><strong>Shows:</strong> Average daily participation percentage (e.g., "59.7%")</li>
-                                    <li><strong>Subtitle:</strong> Student count (e.g., "245 of 411 Students")</li>
-                                    <li><strong>Includes:</strong> Team color day bonus minutes</li>
-                                    <li><strong>Can exceed 100%</strong> due to color bonus</li>
-                                    <li><strong>◐ icon appears</strong> when date filter is active</li>
-                                    <li><strong>Honors date filter</strong> - calculates average through selected date</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title"><i class="bi bi-target"></i> 6. Goal Met (≥1 Day) <span class="filter-indicator">◐</span></h6>
-                                <ul class="small">
-                                    <li><strong>Shows:</strong> Percentage of students who met their goal at least once (e.g., "78.8%")</li>
-                                    <li><strong>Subtitle:</strong> Student count (e.g., "324 of 411 Students")</li>
-                                    <li><strong>Goal:</strong> Reading time equals or exceeds daily goal</li>
-                                    <li><strong>◐ icon appears</strong> when date filter is active</li>
-                                    <li><strong>Honors date filter</strong> - counts goals met through selected date</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="mt-4">Date Filtering</h5>
-                <p>The School page includes a <strong>Filter Period</strong> dropdown above the banner that allows you to filter data by date:</p>
-                <ul>
-                    <li><strong>"All Days"</strong> - Shows cumulative data across entire read-a-thon</li>
-                    <li><strong>Single Date</strong> - Shows data cumulative through that specific date</li>
-                    <li><strong>Relative Days</strong> - "Day 1", "Day 2", etc. for easy navigation</li>
-                </ul>
-                <p>When a date filter is active:</p>
-                <ul>
-                    <li>The <strong>◐ icon</strong> appears on metrics that honor the filter (Minutes, Avg. Participation, Goal Met)</li>
-                    <li>Hovering over ◐ shows a tooltip: "Cumulative through [date]"</li>
-                    <li>Metrics without ◐ (Campaign Day, Fundraising, Sponsors) remain unchanged</li>
-                </ul>
-
-                <div class="alert alert-info">
-                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Use the date filter to track daily progress! Compare early days vs. later days to see momentum changes.
-                </div>
-
-                <div class="alert alert-success">
-                    <strong><i class="bi bi-shield-check"></i> Data Integrity:</strong> Compare banner values with the <a href="https://ReadAThon.com" target="_blank">ReadAThon.com</a> online system to ensure accuracy before generating reports!
-                </div>
-            </div>
-        </div>
-
         <!-- Data Persistence -->
         <div class="card mb-4" id="data-persistence">
             <div class="card-header card-header-blue">
@@ -340,356 +223,151 @@
             </div>
         </div>
 
-        <!-- Upload Data -->
-        <div class="card mb-4" id="uploading-data">
+        <!-- Interface: All Application Tabs -->
+        <div class="card mb-4" id="interface">
             <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-upload"></i> Uploading Daily Data</h4>
+                <h4 class="mb-0"><i class="bi bi-grid-3x3"></i> Interface: All Application Tabs</h4>
             </div>
             <div class="card-body">
-                <h5>Two Types of Uploads</h5>
-                <p>There are two separate upload processes:</p>
+                <p class="lead">The application provides 9 main tabs for navigating different aspects of the read-a-thon. Each tab serves a specific purpose, from viewing school-wide metrics to managing databases.</p>
 
+                <!-- School Tab -->
+                <h5 id="school-tab" class="mt-4"><i class="bi bi-building"></i> School Tab</h5>
+                <p><strong>Purpose:</strong> School-wide overview with at-a-glance metrics, team competition, and top performers.</p>
+
+                <h6>Headline Banner (6 Metrics)</h6>
+                <p>The dark blue banner at the top displays 6 key metrics in a horizontal row:</p>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="card border-primary mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-primary">1. Daily Minutes Upload</h6>
-                                <p class="small"><strong>When:</strong> Upload this every day after students read</p>
-                                <p class="small"><strong>File Format:</strong> CSV with columns:</p>
-                                <ul class="small">
-                                    <li><code>Reader Name</code> or <code>Student Name</code></li>
-                                    <li><code>Minutes</code> or <code>Minutes Read</code></li>
+                        <ul class="small">
+                            <li><strong>📅 Campaign Day:</strong> Current day of total days + date (does NOT honor date filter)</li>
+                            <li><strong>💰 Fundraising:</strong> Total $ + student count + % (does NOT honor date filter)</li>
+                            <li><strong>📚 Minutes Read:</strong> Hours + minutes (120/day cap, honors date filter, shows ◐ icon when filtered)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>🎁 Sponsors:</strong> Count + student count + % (does NOT honor date filter)</li>
+                            <li><strong>👥 Avg. Participation (With Color):</strong> % + student count (honors date filter, can exceed 100%, shows ◐ icon)</li>
+                            <li><strong>🎯 Goal Met (≥1 Day):</strong> % + student count (honors date filter, shows ◐ icon)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h6>Date Filtering</h6>
+                <p>Filter Period dropdown above banner allows filtering by:</p>
+                <ul class="small">
+                    <li><strong>"All Days":</strong> Cumulative data across entire read-a-thon</li>
+                    <li><strong>Single Date:</strong> Cumulative data through specific date</li>
+                    <li><strong>Relative Days:</strong> "Day 1", "Day 2", etc.</li>
+                </ul>
+                <p class="small">When date filter is active, the <strong>◐ icon</strong> appears on metrics that honor the filter (Minutes, Avg. Participation, Goal Met). Hover over ◐ to see tooltip: "Cumulative through [date]".</p>
+
+                <h6>Additional Sections</h6>
+                <ul class="small">
+                    <li><strong>Team Competition:</strong> Head-to-head comparison cards for both teams</li>
+                    <li><strong>Top Performers:</strong> Leading students and classes</li>
+                    <li><strong>Participation Breakdown:</strong> Daily engagement trends</li>
+                </ul>
+
+                <!-- Teams Tab -->
+                <h5 id="teams-tab" class="mt-4"><i class="bi bi-people"></i> Teams Tab</h5>
+                <p><strong>Purpose:</strong> Detailed head-to-head team competition metrics and leaderboards.</p>
+                <ul class="small">
+                    <li><strong>4-column layout:</strong> 2 rows × 4 cards per team (8 cards total)</li>
+                    <li><strong>Metrics per team:</strong> Fundraising leaders, top classes, reading leaders, participation</li>
+                    <li><strong>Winner highlighting:</strong> Colored oval highlights around winning values</li>
+                    <li><strong>Comparison table:</strong> Side-by-side metrics for both teams (sortable)</li>
+                    <li><strong>Team badges:</strong> Rounded rectangles with team colors (blue/yellow)</li>
+                </ul>
+
+                <!-- Grade Level Tab -->
+                <h5 id="grade-tab" class="mt-4"><i class="bi bi-mortarboard"></i> Grade Level Tab</h5>
+                <p><strong>Purpose:</strong> Grade-by-grade and class-by-class performance breakdown.</p>
+                <ul class="small">
+                    <li><strong>Grade filter buttons:</strong> K, 1, 2, 3, 4, 5, or "All Grades"</li>
+                    <li><strong>Grade-level cards:</strong> Total metrics per grade (6 cards, one per grade)</li>
+                    <li><strong>Class detail table:</strong> All classes shown, sortable by any column</li>
+                    <li><strong>Winner highlighting:</strong> Gold ovals for school-wide winners, silver for grade-level leaders</li>
+                    <li><strong>Team badges:</strong> Shows which team each class belongs to</li>
+                </ul>
+
+                <!-- Students Tab -->
+                <h5 id="students-tab" class="mt-4"><i class="bi bi-person"></i> Students Tab</h5>
+                <p><strong>Purpose:</strong> Individual student performance with master-detail view.</p>
+                <ul class="small">
+                    <li><strong>Master table:</strong> All 411 students in sortable table</li>
+                    <li><strong>Search functionality:</strong> Searches all columns (text and numeric)</li>
+                    <li><strong>Filters:</strong> Grade, Team, Date range</li>
+                    <li><strong>Columns:</strong> Name, Grade, Team, Class, Fundraising, Reading, Sponsors, Participation</li>
+                    <li><strong>Winner highlighting:</strong> Gold for school-wide top performers, silver for grade-level leaders</li>
+                    <li><strong>Detail view:</strong> Click any student to see daily reading log, goal achievement, sponsor info, totals</li>
+                </ul>
+
+                <!-- Upload Tab -->
+                <h5 id="upload-tab" class="mt-4"><i class="bi bi-upload"></i> Upload Tab</h5>
+                <p><strong>Purpose:</strong> Import daily reading data and cumulative stats from ReadAThon.com.</p>
+
+                <h6>Two Upload Types</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-2">
+                            <div class="card-body p-2">
+                                <p class="small mb-1"><strong>1. Daily Minutes Upload</strong></p>
+                                <ul class="small mb-1">
+                                    <li><strong>When:</strong> Every day after students read</li>
+                                    <li><strong>File:</strong> CSV with Reader Name + Minutes</li>
+                                    <li><strong>Updates:</strong> Daily_Logs table</li>
                                 </ul>
-                                <p class="small"><strong>What it does:</strong> Records daily reading activity and updates Daily_Logs table</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card border-success mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-success">2. Cumulative Stats Upload</h6>
-                                <p class="small"><strong>When:</strong> Upload when donation totals change in the online system</p>
-                                <p class="small"><strong>File Format:</strong> CSV with columns:</p>
-                                <ul class="small">
-                                    <li><code>Reader Name</code> or <code>Student Name</code></li>
-                                    <li><code>Donations</code> or <code>Donation Amount</code></li>
-                                    <li><code>Minutes</code> (cumulative total)</li>
-                                    <li><code>Sponsors</code> (optional)</li>
+                        <div class="card border-success mb-2">
+                            <div class="card-body p-2">
+                                <p class="small mb-1"><strong>2. Cumulative Stats Upload</strong></p>
+                                <ul class="small mb-1">
+                                    <li><strong>When:</strong> When donations change</li>
+                                    <li><strong>File:</strong> CSV with Reader Name + Donations + Sponsors</li>
+                                    <li><strong>Updates:</strong> Reader_Cumulative table</li>
                                 </ul>
-                                <p class="small"><strong>What it does:</strong> Updates Reader_Cumulative table with fundraising data</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <h5 class="mt-3">Upload Process</h5>
-                <ol>
-                    <li>Navigate to <strong>Upload Data</strong> page</li>
-                    <li><strong>For Daily Upload:</strong> Select date → Upload minutes file</li>
-                    <li><strong>For Cumulative Upload:</strong> Upload the cumulative stats file (no date needed)</li>
-                    <li>Click the appropriate <strong>"Upload"</strong> button</li>
-                </ol>
+                <p class="small"><strong>Process:</strong> Select date (for daily upload) → Choose CSV file → Click Upload button → System validates names against roster and shows warnings for unrecognized students.</p>
 
-                <div class="alert alert-info">
-                    <strong><i class="bi bi-info-circle"></i> Tips:</strong>
-                    <ul class="mb-0">
-                        <li>Student names must match the roster exactly (case-sensitive)</li>
-                        <li>Any unrecognized names will be shown as warnings</li>
-                        <li>You can re-upload data to update/correct values</li>
-                        <li>The system tracks all uploads in the Upload_History table</li>
-                        <li>Check the verification boxes on the Dashboard to confirm your uploads worked correctly</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+                <!-- Reports & Data Tab -->
+                <h5 id="reports-tab" class="mt-4"><i class="bi bi-graph-up"></i> Reports & Data Tab</h5>
+                <p><strong>Purpose:</strong> Run 22 pre-configured reports, view database tables, and access workflows.</p>
 
-        <!-- Reports & Data Page -->
-        <div class="card mb-4" id="reports-page">
-            <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-graph-up"></i> Reports & Data Page</h4>
-            </div>
-            <div class="card-body">
-                <h5>Three Sections in One Page</h5>
-                <p>The Reports & Data page consolidates three key functions into accordion sections:</p>
+                <h6>Three Accordion Sections</h6>
+                <ul class="small">
+                    <li><strong>Reports:</strong> 22 reports with enhanced metadata (Column Descriptions, Data Sources, Key Terms, Automated Analysis)</li>
+                    <li><strong>Tables:</strong> View raw database tables (Roster, Daily Logs, Upload History, etc.) - all sortable with export</li>
+                    <li><strong>Workflows:</strong> Run multiple reports in sequence (see Workflows Tab below)</li>
+                </ul>
 
-                <h6 class="mt-3">1. Reports Section</h6>
-                <p>22 pre-configured reports with enhanced metadata:</p>
-                <ul>
+                <p class="small"><strong>Enhanced Metadata Features:</strong></p>
+                <ul class="small">
                     <li><strong>Column Descriptions:</strong> Every column explained</li>
                     <li><strong>Data Sources:</strong> Shows which database tables power each metric</li>
                     <li><strong>Key Terms:</strong> Glossary of important definitions</li>
-                    <li><strong>Automated Analysis:</strong> Click the <span class="badge bg-primary">🔍 Analysis</span> button to see data insights</li>
+                    <li><strong>Automated Analysis:</strong> Click 🔍 Analysis button for data insights</li>
                 </ul>
 
-                <table class="table table-hover table-sm mt-3">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Report</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Q1</strong></td>
-                            <td><span class="badge bg-secondary">Utility</span></td>
-                            <td>Shows row counts in each database table</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q2</strong></td>
-                            <td><span class="badge bg-info">Daily</span></td>
-                            <td>Comprehensive daily summary by class or team</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q4 / Slide 4</strong></td>
-                            <td><span class="badge bg-info">Daily</span></td>
-                            <td>Random prize drawing - one winner per grade</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q5</strong></td>
-                            <td><span class="badge bg-success">Cumulative</span></td>
-                            <td>Student cumulative stats (Top Readers, Goal Getters, Fundraisers)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q6</strong></td>
-                            <td><span class="badge bg-success">Cumulative</span></td>
-                            <td>Class participation winner by average participation rate</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q7</strong></td>
-                            <td><span class="badge bg-warning text-dark">Export</span></td>
-                            <td>Complete denormalized log for export to Excel</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q14 / Slide 3</strong></td>
-                            <td><span class="badge bg-success">Cumulative</span></td>
-                            <td>Team participation winner</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q18 / Slide 2</strong></td>
-                            <td><span class="badge bg-success">Cumulative</span></td>
-                            <td>Leading class in each grade by total minutes</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q19 / Slide 5</strong></td>
-                            <td><span class="badge bg-success">Cumulative</span></td>
-                            <td>Total minutes read by each team</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q20 / Slide 6</strong></td>
-                            <td><span class="badge bg-success">Cumulative</span></td>
-                            <td>Total donations raised by each team</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Q21-Q23</strong></td>
-                            <td><span class="badge bg-danger">Integrity</span></td>
-                            <td>Data reconciliation and validation reports</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h6 class="mt-4">2. Tables Section</h6>
-                <p>View raw database tables:</p>
-                <ul>
-                    <li>Roster, Class Info, Grade Rules</li>
-                    <li>Daily Logs, Reader Cumulative</li>
-                    <li>Upload History (audit trail)</li>
-                    <li>Team Color Bonus</li>
-                    <li>All tables support sorting, copy to clipboard, and CSV export</li>
-                </ul>
-
-                <h6 class="mt-4">3. Admin Section (NEW - Significantly Expanded)</h6>
-                <p>Comprehensive database management and analytics tools organized in 5 tabs:</p>
-
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-info"><i class="bi bi-gear"></i> Tab 1: Actions</h6>
-                                <ul class="small">
-                                    <li>Selective table clearing (clear specific tables without affecting others)</li>
-                                    <li>Upload history viewer</li>
-                                    <li>Database integrity tools</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-success mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-success"><i class="bi bi-folder"></i> Tab 2: Data Management</h6>
-                                <ul class="small">
-                                    <li>View and manage all database tables</li>
-                                    <li>Export data to CSV</li>
-                                    <li>View table statistics</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card border-primary mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-primary"><i class="bi bi-plus-circle"></i> Tab 3: Database Creation (NEW v2026.10.0)</h6>
-                                <p class="small"><strong>Create new read-a-thon databases for future years:</strong></p>
-                                <ul class="small">
-                                    <li>Enter school year (e.g., 2027)</li>
-                                    <li>Auto-generate filename (e.g., readathon_2027.db)</li>
-                                    <li>Upload 3 CSV files: Roster, Class Info, Grade Rules</li>
-                                    <li>Automatic database creation with data loading</li>
-                                    <li>Built-in CSV validation</li>
-                                    <li>Automatic registry in Database_Metadata</li>
-                                </ul>
-                                <div class="alert alert-info small mb-0">
-                                    <strong>Use Case:</strong> At the start of each new school year, create a new database with updated rosters and rules.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-warning mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-warning"><i class="bi bi-hdd-stack"></i> Tab 4: Database Registry (v2026.11.0)</h6>
-                                <p class="small"><strong>Manage all read-a-thon databases across years:</strong></p>
-                                <ul class="small">
-                                    <li>View all registered databases (2025, 2026, Sample, etc.)</li>
-                                    <li>Switch active database via dropdown selector</li>
-                                    <li>View database metadata (year, description, statistics)</li>
-                                    <li>Register existing databases</li>
-                                    <li>Maintain historical event records</li>
-                                </ul>
-                                <div class="alert alert-warning small mb-0">
-                                    <strong>Note:</strong> Only ONE database is active at a time. Switch between years using the header dropdown.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-danger mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title text-danger"><i class="bi bi-graph-up-arrow"></i> Tab 5: Database Comparison (NEW v2026.12.0)</h6>
-                                <p class="small"><strong>Year-over-year analysis tool with 50 comprehensive metrics:</strong></p>
-                                <ul class="small">
-                                    <li><strong>50 metrics</strong> across 5 entity levels (School, Team, Grade, Class, Student)</li>
-                                    <li>Compare any two databases side-by-side</li>
-                                    <li>Date filtering (All Dates, specific date ranges)</li>
-                                    <li>Sortable comparison table</li>
-                                    <li>Search box for quick metric lookup</li>
-                                    <li>Entity type filter (show only School, Team, Grade, Class, or Student metrics)</li>
-                                    <li>Export to CSV for analysis</li>
-                                    <li>Color-coded winners (blue/orange ovals)</li>
-                                    <li>Sticky filter selections via sessionStorage</li>
-                                </ul>
-                                <div class="alert alert-danger small mb-0">
-                                    <strong>Example Use Case:</strong> Compare 2025 vs. 2026 fundraising totals, reading minutes, participation rates, and more to track year-over-year growth.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h6 class="mt-3">Database Comparison Metrics Breakdown (50 total)</h6>
-                <div class="accordion" id="dbComparisonMetrics">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metricsSchool">
-                                School Level (10 metrics)
-                            </button>
-                        </h2>
-                        <div id="metricsSchool" class="accordion-collapse collapse" data-bs-parent="#dbComparisonMetrics">
-                            <div class="accordion-body">
-                                <ol class="small">
-                                    <li>Fundraising Total</li>
-                                    <li>Reading Minutes Total</li>
-                                    <li>Sponsor Count</li>
-                                    <li>Total Participating (≥1 Day)</li>
-                                    <li>School Size (Total Students)</li>
-                                    <li>Average Participation % (With Color War Bonus)</li>
-                                    <li>Goal Met (≥1 Day)</li>
-                                    <li>All N Days Active %</li>
-                                    <li>Goal Met All Days %</li>
-                                    <li>Color War Points</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metricsOther">
-                                Team, Grade, Class (10 metrics each = 30 total)
-                            </button>
-                        </h2>
-                        <div id="metricsOther" class="accordion-collapse collapse" data-bs-parent="#dbComparisonMetrics">
-                            <div class="accordion-body">
-                                <p class="small">Same 10 metrics as School level, but calculated per Team/Grade/Class:</p>
-                                <ol class="small">
-                                    <li>Fundraising Total</li>
-                                    <li>Reading Minutes Total</li>
-                                    <li>Sponsor Count</li>
-                                    <li>Total Participating (≥1 Day)</li>
-                                    <li>Size (Total Students)</li>
-                                    <li>Average Participation % (With Color War Bonus)</li>
-                                    <li>Goal Met (≥1 Day)</li>
-                                    <li>All N Days Active %</li>
-                                    <li>Goal Met All Days %</li>
-                                    <li>Color War Points</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#metricsStudent">
-                                Student Level (10 metrics)
-                            </button>
-                        </h2>
-                        <div id="metricsStudent" class="accordion-collapse collapse" data-bs-parent="#dbComparisonMetrics">
-                            <div class="accordion-body">
-                                <ol class="small">
-                                    <li>Top Fundraiser</li>
-                                    <li>Top Reader (Minutes)</li>
-                                    <li>Top Sponsor Count</li>
-                                    <li>Total Participating (≥1 Day) - N/A for individuals</li>
-                                    <li>Top Participation %</li>
-                                    <li>Goal Met (≥1 Day)</li>
-                                    <li>All N Days Active %</li>
-                                    <li>Goal Met All Days %</li>
-                                    <li>Average Minutes Per Day</li>
-                                    <li>Total Days Active</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="mt-3">Report Options</h5>
-                <ul>
-                    <li><strong>Date Filter:</strong> Some reports can show data for a specific date or all dates</li>
-                    <li><strong>Group By:</strong> Q2 can group by class or team</li>
-                    <li><strong>Sort By:</strong> Q5 can sort by minutes, goals, or donations</li>
-                    <li><strong>Limit:</strong> Q5 can show top 10, 25, 50, or all students</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Workflows -->
-        <div class="card mb-4" id="workflows">
-            <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-diagram-3"></i> Workflows</h4>
-            </div>
-            <div class="card-body">
-                <h5>What are Workflows?</h5>
-                <p>Workflows run multiple reports in sequence, perfect for generating all your slide deck data at once!</p>
+                <!-- Workflows Tab -->
+                <h5 id="workflows-tab" class="mt-4"><i class="bi bi-diagram-3"></i> Workflows Tab</h5>
+                <p><strong>Purpose:</strong> Run multiple reports in sequence for daily slideshow or final prizes.</p>
 
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="card border-success mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title">QD: Daily Slide Update</h6>
-                                <p class="small">Runs all reports needed for daily slideshow:</p>
-                                <ul class="small">
+                        <div class="card border-success mb-2">
+                            <div class="card-body p-2">
+                                <p class="small mb-1"><strong>QD: Daily Slide Update</strong></p>
+                                <p class="small mb-1">Runs 5 reports for daily slideshow:</p>
+                                <ul class="small mb-1">
                                     <li>Slide 2: Lead Class by Grade</li>
                                     <li>Slide 3: Team Participation</li>
                                     <li>Slide 4: Prize Drawing</li>
@@ -700,11 +378,11 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card border-info mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title">QC: Cumulative Workflow</h6>
-                                <p class="small">Runs all cumulative prize reports:</p>
-                                <ul class="small">
+                        <div class="card border-info mb-2">
+                            <div class="card-body p-2">
+                                <p class="small mb-1"><strong>QC: Cumulative Workflow</strong></p>
+                                <p class="small mb-1">Runs 6 cumulative prize reports:</p>
+                                <ul class="small mb-1">
                                     <li>Q5: Student Cumulative</li>
                                     <li>Q6: Class Participation</li>
                                     <li>Q14: Team Participation</li>
@@ -716,57 +394,83 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Dashboard Tabs -->
-        <div class="card mb-4" id="dashboard-tabs">
-            <div class="card-header card-header-blue">
-                <h4 class="mb-0"><i class="bi bi-grid-3x3"></i> Dashboard Tabs</h4>
-            </div>
-            <div class="card-body">
-                <h5>School Tab</h5>
-                <p>School-wide overview showing:</p>
-                <ul>
-                    <li>6-metric headline banner (Campaign Day, Fundraising, Minutes, Sponsors, Avg. Participation, Goal Met)</li>
-                    <li>Team competition (head-to-head comparison)</li>
-                    <li>Top performers (students and classes)</li>
-                    <li>Participation breakdown</li>
+                <!-- Admin Tab -->
+                <h5 id="admin-tab" class="mt-4"><i class="bi bi-gear"></i> Admin Tab</h5>
+                <p><strong>Purpose:</strong> Database management, creation, registry, and year-over-year comparison tools.</p>
+
+                <h6>Five Sub-Tabs</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Tab 1: Actions</strong>
+                                <ul class="small">
+                                    <li>Selective table clearing (clear specific tables without affecting others)</li>
+                                    <li>Upload history viewer</li>
+                                    <li>Database integrity tools</li>
+                                </ul>
+                            </li>
+                            <li><strong>Tab 2: Data Management</strong>
+                                <ul class="small">
+                                    <li>View and manage all database tables</li>
+                                    <li>Export data to CSV</li>
+                                    <li>View table statistics</li>
+                                </ul>
+                            </li>
+                            <li><strong>Tab 3: Database Creation</strong>
+                                <ul class="small">
+                                    <li>Create new read-a-thon databases for future years</li>
+                                    <li>Upload 3 CSV files: Roster, Class Info, Grade Rules</li>
+                                    <li>Automatic database creation with data loading</li>
+                                    <li>Auto-register in Database Registry</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Tab 4: Database Registry</strong>
+                                <ul class="small">
+                                    <li>View all registered databases (2025, 2026, Sample, etc.)</li>
+                                    <li>Switch active database via dropdown selector</li>
+                                    <li>View database metadata (year, description, statistics)</li>
+                                    <li>Only ONE database active at a time</li>
+                                </ul>
+                            </li>
+                            <li><strong>Tab 5: Database Comparison</strong>
+                                <ul class="small">
+                                    <li>Year-over-year analysis with 50 comprehensive metrics</li>
+                                    <li>Compare any two databases side-by-side</li>
+                                    <li>5 entity levels: School, Team, Grade, Class, Student</li>
+                                    <li>Date filtering, sortable table, search box, entity filter</li>
+                                    <li>Color-coded winners (blue/orange ovals)</li>
+                                    <li>Export to CSV for further analysis</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Help Tab -->
+                <h5 id="help-tab" class="mt-4"><i class="bi bi-question-circle"></i> Help Tab</h5>
+                <p><strong>Purpose:</strong> Access comprehensive documentation and guides.</p>
+                <ul class="small">
+                    <li><strong>User Manual:</strong> This page - complete application documentation</li>
+                    <li><strong>Installation Guide:</strong> Step-by-step setup instructions for new users</li>
+                    <li><strong>Claude Code Development:</strong> Documentation for developers using Claude Code</li>
+                    <li><strong>Requirements Document:</strong> Complete application requirements and specifications</li>
                 </ul>
 
-                <h5 class="mt-3">Teams Tab</h5>
-                <p>Detailed team competition metrics:</p>
-                <ul>
-                    <li>4-column layout (2 rows × 4 cards per team)</li>
-                    <li>Fundraising leaders, top classes, reading leaders for each team</li>
-                    <li>Colored oval highlights around winning values</li>
-                    <li>Comparison table showing all metrics side-by-side</li>
-                </ul>
-
-                <h5 class="mt-3">Grade Level Tab</h5>
-                <p>Grade-by-grade and class-by-class breakdown:</p>
-                <ul>
-                    <li>Filter by grade (K, 1, 2, 3, 4, 5, or All Grades)</li>
-                    <li>Grade-level cards showing total metrics per grade</li>
-                    <li>Class detail table (sortable by any column)</li>
-                    <li>Gold highlights for school-wide winners, silver for grade-level winners</li>
-                    <li>Team badges showing which team each class belongs to</li>
-                </ul>
-
-                <h5 class="mt-3">Students Tab (NEW)</h5>
-                <p>Individual student performance viewer:</p>
-                <ul>
-                    <li>Master-detail pattern: click any student to see daily breakdown</li>
-                    <li>All 411 students in sortable table</li>
-                    <li>Filters: Grade, Team, Date range</li>
-                    <li>Columns: Name, Grade, Team, Class, Fundraising, Reading, Sponsors, Participation</li>
-                    <li>Gold highlights for school-wide top performers, silver for grade-level leaders</li>
-                    <li>Detail view shows: Daily reading log, goal achievement, sponsor info, totals</li>
-                </ul>
-
-                <div class="alert alert-info">
+                <!-- Filter Persistence Notice -->
+                <div class="alert alert-info mt-3">
                     <strong><i class="bi bi-info-circle"></i> Filter Persistence:</strong>
-                    Date, team, and grade filters persist as you navigate between tabs - your selections are remembered!
+                    Date, team, and grade filters persist as you navigate between tabs - your selections are remembered via sessionStorage!
+                </div>
+
+                <!-- Data Integrity Notice -->
+                <div class="alert alert-success mt-3 mb-0">
+                    <strong><i class="bi bi-shield-check"></i> Data Integrity:</strong>
+                    Always compare banner values with the <a href="https://ReadAThon.com" target="_blank" class="alert-link">ReadAThon.com</a> online system to ensure accuracy before generating reports!
                 </div>
             </div>
         </div>
