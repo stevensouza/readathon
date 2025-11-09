@@ -58,17 +58,40 @@
     }
 
     /* Sticky TOC when scrolling */
-    #tocCard.sticky {
+    #tocCard {
         position: sticky;
         top: 70px;
         z-index: 100;
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-10 offset-lg-1">
+    <!-- Sticky Table of Contents -->
+    <div class="col-lg-3">
+        <div class="card mb-4" id="tocCard">
+            <div class="card-header card-header-blue">
+                <h6 class="mb-0"><i class="bi bi-list"></i> Quick Navigation</h6>
+            </div>
+            <div class="card-body">
+                <nav class="nav flex-column">
+                    <a href="#workflow" class="toc-link"><strong>Development Workflow</strong></a>
+                    <a href="#collaborative" class="toc-link">Collaborative Approach</a>
+                    <a href="#prompt-library" class="toc-link">Prompt Library</a>
+                    <a href="#workflows" class="toc-link">Multi-Step Workflows</a>
+                    <a href="#what-worked" class="toc-link">What Worked Well</a>
+                    <a href="#challenges" class="toc-link">Challenges & Lessons</a>
+                    <a href="#resources" class="toc-link">Resources</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
         <h1 class="mb-4">
             <i class="bi bi-robot"></i> How I Used Claude Code to Develop this Application
         </h1>
@@ -86,42 +109,6 @@
                     <strong>Key Insight:</strong> I provided high-level requirements and business logic.
                     Claude recommended the technology stack, designed the architecture, and wrote the code through collaborative iteration.
                 </p>
-            </div>
-        </div>
-
-        <!-- Table of Contents (Collapsible) -->
-        <div class="card mb-4" id="tocCard">
-            <div class="card-header bg-secondary text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#tocContent">
-                <h5 class="mb-0"><i class="bi bi-list"></i> 📑 Quick Navigation <small class="ms-2">(click to expand/collapse)</small></h5>
-            </div>
-            <div id="tocContent" class="collapse show">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-2">Main Sections</h6>
-                            <ul class="list-unstyled">
-                                <li class="mb-2"><a href="#workflow" class="toc-link"><i class="bi bi-diagram-3"></i> Development Workflow (3-Phase Process)</a></li>
-                                <li class="mb-2"><a href="#collaborative" class="toc-link"><i class="bi bi-chat-dots"></i> Collaborative & Iterative Approach</a></li>
-                                <li class="mb-2"><a href="#prompt-library" class="toc-link"><i class="bi bi-code-square"></i> Prompt Library by Scenario</a></li>
-                                <li class="mb-2"><a href="#workflows" class="toc-link"><i class="bi bi-arrows-move"></i> Common Multi-Step Workflows</a></li>
-                                <li class="mb-2"><a href="#what-worked" class="toc-link"><i class="bi bi-star-fill"></i> Development Patterns That Worked Well</a></li>
-                                <li class="mb-2"><a href="#challenges" class="toc-link"><i class="bi bi-exclamation-triangle"></i> Challenges & Lessons Learned</a></li>
-                                <li class="mb-2"><a href="#resources" class="toc-link"><i class="bi bi-link-45deg"></i> Resources & Next Steps</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-success mb-2">Prompt Categories</h6>
-                            <ul class="list-unstyled">
-                                <li class="mb-2"><a href="#setup" class="toc-link">🚀 Project Setup & Database Design</a></li>
-                                <li class="mb-2"><a href="#csv" class="toc-link">📤 CSV Import & File Validation</a></li>
-                                <li class="mb-2"><a href="#ui" class="toc-link">🎨 UI/UX with Bootstrap</a></li>
-                                <li class="mb-2"><a href="#sql" class="toc-link">📊 Reports & Complex SQL Queries</a></li>
-                                <li class="mb-2"><a href="#debug" class="toc-link">🐛 Testing, Debugging & Error Handling</a></li>
-                                <li class="mb-2"><a href="#docs" class="toc-link">📝 Documentation & Code Organization</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 

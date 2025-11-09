@@ -2,10 +2,94 @@
 
 {% block title %}Application Requirements - Read-a-Thon System{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Smooth scroll for anchor links */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Sticky TOC */
+    #tocCard {
+        position: sticky;
+        top: 70px;
+        z-index: 100;
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
+    }
+
+    /* TOC link styling */
+    .toc-link {
+        text-decoration: none;
+        color: #495057;
+        transition: all 0.2s;
+        display: block;
+        padding: 0.25rem 0;
+    }
+
+    .toc-link:hover {
+        color: #0d6efd;
+        transform: translateX(5px);
+    }
+
+    /* Back to Top button */
+    #backToTop {
+        position: fixed;
+        bottom: 40px;
+        right: 40px;
+        z-index: 1000;
+        display: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s;
+        font-size: 1.5rem;
+    }
+
+    #backToTop:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    #backToTop.show {
+        display: block;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
-    <div class="col-lg-10 offset-lg-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Sticky Table of Contents -->
+    <div class="col-lg-3">
+        <div class="card mb-4" id="tocCard">
+            <div class="card-header card-header-blue">
+                <h6 class="mb-0"><i class="bi bi-list"></i> Quick Navigation</h6>
+            </div>
+            <div class="card-body">
+                <nav class="nav flex-column">
+                    <a href="#overview" class="toc-link"><strong>Overview</strong></a>
+                    <a href="#toc-sections" class="toc-link">Document Sections</a>
+                    <a href="#document-content" class="toc-link">Full Document</a>
+                    <a href="#how-to-use" class="toc-link">How to Use</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
+        <div id="overview" class="d-flex justify-content-between align-items-center mb-4">
             <h1>
                 <i class="bi bi-file-text"></i> Application Requirements
             </h1>
@@ -32,9 +116,9 @@
         </div>
 
         <!-- Table of Contents -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="toc-sections">
             <div class="card-header card-header-blue">
-                <h5 class="mb-0"><i class="bi bi-list-ol"></i> Quick Navigation</h5>
+                <h5 class="mb-0"><i class="bi bi-list-ol"></i> Document Sections</h5>
             </div>
             <div class="card-body">
                 <p class="mb-3">The requirements document includes these major sections:</p>
@@ -65,7 +149,7 @@
         </div>
 
         <!-- Requirements Document Content -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="document-content">
             <div class="card-header bg-dark text-white">
                 <h5 class="mb-0"><i class="bi bi-file-earmark-code"></i> IMPLEMENTATION_PROMPT.md</h5>
             </div>
@@ -75,7 +159,7 @@
         </div>
 
         <!-- Usage Guide -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="how-to-use">
             <div class="card-header card-header-blue">
                 <h5 class="mb-0"><i class="bi bi-question-circle"></i> How to Use This Document</h5>
             </div>
@@ -124,4 +208,25 @@
         </div>
     </div>
 </div>
+
+<!-- Back to Top Button -->
+<button id="backToTop" title="Back to top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+<script>
+// Back to Top button functionality
+window.addEventListener('scroll', function() {
+    const backToTop = document.getElementById('backToTop');
+    if (window.pageYOffset > 300) {
+        backToTop.classList.add('show');
+    } else {
+        backToTop.classList.remove('show');
+    }
+});
+
+document.getElementById('backToTop').addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
 {% endblock %}

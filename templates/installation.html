@@ -2,15 +2,105 @@
 
 {% block title %}Installation Guide - Read-a-Thon System{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Smooth scroll for anchor links */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Sticky TOC */
+    #tocCard {
+        position: sticky;
+        top: 70px;
+        z-index: 100;
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
+    }
+
+    /* TOC link styling */
+    .toc-link {
+        text-decoration: none;
+        color: #495057;
+        transition: all 0.2s;
+        display: block;
+        padding: 0.25rem 0;
+    }
+
+    .toc-link:hover {
+        color: #0d6efd;
+        transform: translateX(5px);
+    }
+
+    /* Back to Top button */
+    #backToTop {
+        position: fixed;
+        bottom: 40px;
+        right: 40px;
+        z-index: 1000;
+        display: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s;
+        font-size: 1.5rem;
+    }
+
+    #backToTop:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    #backToTop.show {
+        display: block;
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
-    <div class="col-lg-10 offset-lg-1">
+    <!-- Sticky Table of Contents -->
+    <div class="col-lg-3">
+        <div class="card mb-4" id="tocCard">
+            <div class="card-header card-header-blue">
+                <h6 class="mb-0"><i class="bi bi-list"></i> Quick Navigation</h6>
+            </div>
+            <div class="card-body">
+                <nav class="nav flex-column">
+                    <a href="#quick-install" class="toc-link"><strong>Quick Install</strong></a>
+                    <a href="#prerequisites" class="toc-link">Prerequisites</a>
+                    <a href="#automated-setup" class="toc-link">Automated Setup</a>
+                    <a href="#manual-setup" class="toc-link">Manual Setup</a>
+                    <a href="#database-setup" class="toc-link">Database Setup</a>
+                    <a href="#verification" class="toc-link">Installation Verification</a>
+                    <a href="#upgrading" class="toc-link">Upgrading from Previous Year</a>
+                    <a href="#troubleshooting" class="toc-link">Troubleshooting</a>
+                    <a href="#readathon-data" class="toc-link">About ReadAThon.com Data</a>
+                    <a href="#desktop-shortcuts" class="toc-link">Desktop Shortcuts</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
         <h1 class="mb-4">
             <i class="bi bi-rocket"></i> Installation Guide
         </h1>
 
         <!-- Quick Install -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="quick-install">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-lightning"></i> Quick Install (5 Minutes)</h4>
             </div>
@@ -35,7 +125,7 @@
         </div>
 
         <!-- Prerequisites -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="prerequisites">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-list-check"></i> Prerequisites</h4>
             </div>
@@ -81,7 +171,7 @@
         </div>
 
         <!-- Automated Setup -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="automated-setup">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-gear"></i> Automated Setup</h4>
             </div>
@@ -130,7 +220,7 @@ cd readathon</code></pre>
         </div>
 
         <!-- Manual Setup -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="manual-setup">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-wrench"></i> Manual Setup</h4>
             </div>
@@ -159,7 +249,7 @@ pip3 install -r requirements.txt</code></pre>
         </div>
 
         <!-- Database Setup -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="database-setup">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-database"></i> Database Setup</h4>
             </div>
@@ -205,7 +295,7 @@ pip3 install -r requirements.txt</code></pre>
         </div>
 
         <!-- Verification -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="verification">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-check-circle"></i> Installation Verification</h4>
             </div>
@@ -243,7 +333,7 @@ pip3 install -r requirements.txt</code></pre>
         </div>
 
         <!-- Upgrade Guide -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="upgrading">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Upgrading from Previous Year</h4>
             </div>
@@ -266,7 +356,7 @@ pip3 install -r requirements.txt</code></pre>
         </div>
 
         <!-- Troubleshooting -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="troubleshooting">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-tools"></i> Troubleshooting</h4>
             </div>
@@ -312,7 +402,7 @@ chmod +x ~/Desktop/"Stop Read-a-Thon.command"</code></pre>
         </div>
 
         <!-- Data Source Notice -->
-        <div class="card mb-4 border-warning">
+        <div class="card mb-4 border-warning" id="readathon-data">
             <div class="card-header bg-warning text-dark">
                 <h4 class="mb-0"><i class="bi bi-info-circle"></i> About ReadAThon.com Data</h4>
             </div>
@@ -335,7 +425,7 @@ chmod +x ~/Desktop/"Stop Read-a-Thon.command"</code></pre>
         </div>
 
         <!-- Desktop Shortcuts -->
-        <div class="card mb-4">
+        <div class="card mb-4" id="desktop-shortcuts">
             <div class="card-header card-header-blue">
                 <h4 class="mb-0"><i class="bi bi-bookmark"></i> Desktop Shortcuts</h4>
             </div>
@@ -396,4 +486,25 @@ chmod +x ~/Desktop/"Stop Read-a-Thon.command"</code></pre>
 
     </div>
 </div>
+
+<!-- Back to Top Button -->
+<button id="backToTop" title="Back to top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+<script>
+// Back to Top button functionality
+window.addEventListener('scroll', function() {
+    const backToTop = document.getElementById('backToTop');
+    if (window.pageYOffset > 300) {
+        backToTop.classList.add('show');
+    } else {
+        backToTop.classList.remove('show');
+    }
+});
+
+document.getElementById('backToTop').addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
 {% endblock %}

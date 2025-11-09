@@ -57,15 +57,16 @@ This document tracks all documentation inconsistencies discovered during review 
 - Document Database Comparison feature (v2026.12.0) with 50 metrics
 - Document only ONE database is active at a time
 
-### 4. Workflows Section (help.html - needs verification)
-**Current Workflows:**
-- **QD: Daily Slide Update** - Runs 5 daily reports (Slides 2-6)
-- **QC: Cumulative Workflow** - Runs 6 cumulative reports (Q5, Q6, Q14, Q18, Q19, Q20)
-
-**Action Required:**
-- Verify workflow names and report lists match current state
-- Document purpose of each workflow
-- Add any new workflows that may have been added
+### 4. Workflows Section (help.html - needs verification) ✅ COMPLETED (2025-11-09, Session 4)
+**Status:** Complete
+**What was done:**
+- Updated Workflows Tab documentation with all 4 predefined workflows:
+  - QD: Daily Slide Update (5 reports)
+  - QC: Cumulative Workflow (6 reports)
+  - QF: Final Prize Winners (10 reports) - ADDED
+  - QA: All Main Reports (23 reports) - ADDED
+- Added "Run Group" feature documentation
+- Documented ability to run ANY group as a workflow (Prize, Slides, Export, Admin, Tables)
 
 ---
 
@@ -87,19 +88,18 @@ This document tracks all documentation inconsistencies discovered during review 
 - Interactive features (sorting, filtering, etc.)
 - Testing requirements
 
-### 6. Add Table of Contents to All Help Pages
-**Pages needing TOC:**
-- `/help` - User Manual (816 lines, very long - TOC essential)
-- `/help/installation` - Installation Guide (TOC would be helpful)
-- `/help/claude` - Claude Code documentation (needs review and expansion)
-- `/help/requirements` - Application requirements (currently has broken link)
+### 6. Add Table of Contents to All Help Pages ✅ COMPLETED (2025-11-09, Session 4)
+**Status:** Complete
+**What was done:**
+- ✅ `/help` - User Manual - Already had sticky sidebar TOC (3-column layout)
+- ✅ `/help/installation` - Installation Guide - Added sticky sidebar TOC (10 sections)
+- ✅ `/help/claude` - Claude Code documentation - Converted collapsible TOC to sticky sidebar
+- ✅ `/help/requirements` - Application requirements - Added sticky sidebar TOC (4 sections)
 
-**TOC Implementation Options:**
-- **Option A:** Sticky sidebar TOC (like modern documentation sites)
-- **Option B:** Top-of-page jump links with "Back to Top" buttons
-- **Option C:** Bootstrap scrollspy navigation
-
-**Recommended:** Option A (sticky sidebar) for best UX
+**Implementation:**
+- Used Option A: Sticky sidebar TOC (3-column layout: col-lg-3 + col-lg-9)
+- Consistent styling across all 4 help pages
+- Smooth scroll behavior, hover animations, back-to-top buttons
 
 ### 7. Upload Page Documentation
 **Action Required:**
@@ -368,6 +368,30 @@ This ensures continuity across sessions even after conversation compaction.
 
 ---
 
-**Last Updated:** 2025-11-09 (Session 4, commit 3284284)
-**Next Task:** Phase 3 - Polish & Enhancements (optional: cross-references, screenshots, consistency review)
-**Status:** Phase 2 complete, Phase 3 pending
+## 📝 Session 4 Summary (2025-11-09)
+
+**Completed:**
+1. ✅ Updated Workflows section in help.html with all 4 workflows (QD, QC, QF, QA)
+2. ✅ Added Run Group feature documentation
+3. ✅ Added sticky TOCs to all 4 help pages (installation, claude_development, requirements)
+4. ✅ Consistent UX across all help documentation
+
+**Files Modified:**
+- `templates/help.html` - Updated Workflows Tab section
+- `templates/installation.html` - Added sticky TOC (3-column layout)
+- `templates/claude_development.html` - Converted to sticky TOC
+- `templates/requirements.html` - Added sticky TOC
+
+**Ready for Commit:** Yes
+**Commit Message:** "Add sticky TOCs to all help pages and update workflows documentation"
+
+**Next Session:** Test refactoring (see TEST_REFACTORING_NEEDED.md)
+- 4 test files need sys.exit() removal
+- Convert to proper pytest test functions
+- Estimated time: 1-2 hours
+
+---
+
+**Last Updated:** 2025-11-09 (Session 4)
+**Next Task:** Test refactoring (see TEST_REFACTORING_NEEDED.md)
+**Status:** Documentation Phase complete, Test refactoring pending
