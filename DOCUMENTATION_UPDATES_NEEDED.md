@@ -145,22 +145,123 @@ Examples:
 
 ## 📋 Implementation Checklist
 
-### Phase 1: Critical Fixes (Do First)
-- [ ] Fix School Page Banner section completely
-- [ ] Fix broken IMPLEMENTATION_PROMPT.md link
-- [ ] Add basic TOC to help.html
+### Phase 1: Critical Fixes ✅ COMPLETED (2025-11-09, commit 23f8810)
+- [x] Fix School Page Banner section completely ✅
+- [x] Fix broken IMPLEMENTATION_PROMPT.md link ✅
+- [x] Add sticky TOC to help.html ✅
 
-### Phase 2: Major Updates
-- [ ] Update Reports & Data section
-- [ ] Update Admin section (5 tabs)
-- [ ] Update Workflows section
-- [ ] Review and expand Claude Code development page
+**What was done:**
+- Replaced "Dashboard Verification Boxes" with accurate "School Page Headline Banner" docs
+- Fixed app.py routes to read from md/IMPLEMENTATION_PROMPT.md (both display and download)
+- Implemented 3-column layout with sticky sidebar TOC
+- Added smooth scrolling, hover effects, section IDs
+- All 398 tests passing
 
-### Phase 3: Polish
-- [ ] Add Students page section
-- [ ] Add Upload page section
-- [ ] Add cross-references
+### Phase 2: Interface Reorganization (NEXT SESSION)
+**Goal:** Consolidate all interface documentation under one "Interface" section with subsections for each tab
+
+**Current Problem:**
+- School Page Banner has standalone detailed section (120+ lines)
+- Upload, Reports, Workflows have separate top-level sections
+- Dashboard Tabs section is brief and incomplete
+- Inconsistent depth of coverage across tabs
+
+**Proposed Structure:**
+```
+Interface (new comprehensive section, id="interface")
+├─ School Tab (id="school-tab")
+│  ├─ Headline Banner (6 metrics, date filtering, ◐ indicator)
+│  ├─ Team Competition cards
+│  ├─ Top Performers section
+│  └─ Participation breakdown
+├─ Teams Tab (id="teams-tab")
+│  ├─ 4-column layout (2 rows per team)
+│  ├─ Comparison table
+│  └─ Winner highlighting rules
+├─ Grade Level Tab (id="grade-tab")
+│  ├─ Grade filter buttons
+│  ├─ Grade cards
+│  ├─ Class detail table
+│  └─ Winner highlighting (gold/silver)
+├─ Students Tab (id="students-tab")
+│  ├─ Master table (411 students, sortable)
+│  ├─ Search functionality (all columns)
+│  ├─ Detail view (daily breakdown)
+│  └─ Filters (grade, team, date)
+├─ Upload Tab (id="upload-tab")
+│  ├─ Two-file upload process
+│  ├─ CSV format requirements
+│  ├─ Date selection
+│  └─ Upload history/audit trail
+├─ Reports & Data Tab (id="reports-tab")
+│  ├─ 3 accordion sections (Reports, Tables, Workflows)
+│  ├─ 22 reports with metadata features
+│  ├─ Enhanced metadata (Column Descriptions, Terms, Analysis)
+│  └─ Export functionality
+├─ Workflows Tab (id="workflows-tab")
+│  ├─ QD: Daily Slide Update (5 reports)
+│  ├─ QC: Cumulative Workflow (6 reports)
+│  └─ Workflow execution and results
+├─ Admin Tab (id="admin-tab")
+│  ├─ Actions (table clearing, integrity checks)
+│  ├─ Data Management (view tables, export, statistics)
+│  ├─ Database Creation (new year databases)
+│  ├─ Database Registry (switch active, metadata)
+│  └─ Database Comparison (50 metrics, year-over-year)
+└─ Help Tab (id="help-tab")
+   ├─ User Manual (this page)
+   ├─ Installation Guide
+   ├─ Claude Code development docs
+   └─ Requirements document
+```
+
+**Implementation Steps:**
+1. **Remove these standalone sections:**
+   - School Page Headline Banner (lines ~157-277) - KEEP CONTENT, MOVE TO INTERFACE
+   - Uploading Daily Data (lines ~338-397) - MOVE TO INTERFACE > Upload Tab
+   - Reports & Data Page (lines ~401-671) - MOVE TO INTERFACE > Reports Tab
+   - Workflows (lines ~672-720) - MOVE TO INTERFACE > Workflows Tab
+
+2. **Replace "Dashboard Tabs" section (lines ~723-773) with comprehensive "Interface" section**
+
+3. **Update TOC** (lines 52-65):
+   ```html
+   <a href="#interface" class="toc-link"><strong>Interface</strong></a>
+   <a href="#school-tab" class="toc-link" style="padding-left: 2rem;">School Tab</a>
+   <a href="#teams-tab" class="toc-link" style="padding-left: 2rem;">Teams Tab</a>
+   <a href="#grade-tab" class="toc-link" style="padding-left: 2rem;">Grade Level Tab</a>
+   <a href="#students-tab" class="toc-link" style="padding-left: 2rem;">Students Tab</a>
+   <a href="#upload-tab" class="toc-link" style="padding-left: 2rem;">Upload Tab</a>
+   <a href="#reports-tab" class="toc-link" style="padding-left: 2rem;">Reports & Data Tab</a>
+   <a href="#workflows-tab" class="toc-link" style="padding-left: 2rem;">Workflows Tab</a>
+   <a href="#admin-tab" class="toc-link" style="padding-left: 2rem;">Admin Tab</a>
+   <a href="#help-tab" class="toc-link" style="padding-left: 2rem;">Help Tab</a>
+   ```
+
+4. **Content Guidelines:**
+   - **School Tab:** Condense banner details to 1-2 paragraphs + bulleted list of 6 metrics
+   - **Teams/Grade/Students:** Keep existing Dashboard Tabs content, expand slightly
+   - **Upload:** Move existing Upload section content, keep current detail level
+   - **Reports:** Summarize 3 accordion sections, mention 22 reports + metadata features
+   - **Workflows:** Move existing Workflows content, keep current detail level
+   - **Admin:** NEW - document all 5 tabs with 2-3 bullet points each
+   - **Help:** NEW - brief overview of 4 help pages with links
+
+5. **Styling:**
+   - Use `<h5>` for each tab subsection
+   - Keep current card styling (`border-info`, `border-primary`, etc.)
+   - Maintain consistency with existing help.html patterns
+
+**Estimated Scope:**
+- Lines to remove: ~400 (4 standalone sections)
+- Lines to add: ~500 (comprehensive Interface section)
+- Net change: +100 lines (from 967 to ~1,067 lines)
+- Number of edits: ~6 major Edit operations
+
+### Phase 3: Polish & Enhancements
+- [ ] Add cross-references between sections
 - [ ] Consider adding screenshots
+- [ ] Review all help pages for consistency
 
 ---
 
@@ -190,13 +291,13 @@ curl -s http://127.0.0.1:5001/workflows | grep -A 50 "QD:\|QC:"
 
 ## 📝 Notes for Next Session
 
-### Search Enhancement (COMPLETED in previous session)
+### Search Enhancement (COMPLETED - Session 1)
 - ✅ Enhanced Students page search to search ALL columns (text and numeric)
 - ✅ Added 20 comprehensive search tests to test_students_page.py
 - ✅ All 398 tests passing (393 passed, 5 skipped)
 - ✅ Updated pre-commit hook with per-module test reporting
 
-### Installation & ReadAThon.com Integration (COMPLETED this session)
+### Installation & ReadAThon.com Integration (COMPLETED - Session 2)
 - ✅ Created idempotent install.sh (380+ lines)
 - ✅ Added 4th help menu item: Installation Guide
 - ✅ Created comprehensive templates/installation.html
@@ -205,25 +306,60 @@ curl -s http://127.0.0.1:5001/workflows | grep -A 50 "QD:\|QC:"
 - ✅ Updated README.md with badges and notices
 - ✅ Expanded Feature 02 documentation (23 → 245 lines)
 
-### Current Session Context Loss Prevention
-This file was created to prevent context loss during conversation compaction. All documentation issues discovered during review are captured here for future sessions.
+### Help Page Documentation Phase 1 (COMPLETED - Session 3, commit 23f8810)
+- ✅ Fixed IMPLEMENTATION_PROMPT.md broken link (app.py)
+- ✅ Added sticky table of contents to help.html (3-column layout)
+- ✅ Enhanced School Page Banner documentation (replaced outdated Verification Boxes)
+- ✅ All 398 tests passing
+- ✅ Pushed to main branch
+
+### Help Page Documentation Phase 2 (NEXT SESSION)
+**Status:** Documented and ready to implement
+**File:** DOCUMENTATION_UPDATES_NEEDED.md (this file)
+**See:** Phase 2 section above for complete implementation plan
+
+**User Request (from Session 3):**
+> "Maybe we get rid of that [standalone School banner section] and instead stick to the dashboards section but enhance that some and put subheaders for each tab and include the other tabs like help and admin as well as students, grade etc. You could also add uploads and have info on workflows and reports data. They should all be indented in the TOC under a section called Interface"
+
+**Implementation Approach:** Consolidate all 9 tabs under one comprehensive "Interface" section with nested TOC structure
+
+### Context Loss Prevention
+This file is automatically updated after each session to preserve:
+- What was completed (with commit hashes)
+- What needs to be done next (detailed plans)
+- User preferences and decisions
+- Implementation details for complex changes
+
+This ensures continuity across sessions even after conversation compaction.
 
 ---
 
 ## 🎯 Quick Start for Next Documentation Session
 
-1. Start Flask app: `python3 app.py --db sample`
-2. Open help pages in browser:
-   - http://127.0.0.1:5001/help
-   - http://127.0.0.1:5001/help/installation
-   - http://127.0.0.1:5001/help/claude
-   - http://127.0.0.1:5001/help/requirements
-3. Review this file (DOCUMENTATION_UPDATES_NEEDED.md)
-4. Pick issues from Phase 1 checklist
-5. Test changes in browser
-6. Update this file as issues are resolved
+### Phase 2: Interface Reorganization
+
+**What to do:**
+1. Read Phase 2 plan in this file (lines 160-260)
+2. Start Flask: `python3 app.py --db sample`
+3. Open help.html for editing
+4. Follow Implementation Steps 1-5 in Phase 2 section
+5. Test in browser: http://127.0.0.1:5001/help
+6. Commit when complete
+
+**Key Files:**
+- `templates/help.html` - Main file to edit (967 lines currently)
+- `DOCUMENTATION_UPDATES_NEEDED.md` - This file (complete plan documented)
+
+**Estimated Time:** 2-3 hours for full Interface reorganization
+
+**Strategy:**
+- Work incrementally: Remove one section, add corresponding Interface subsection, test
+- Use Edit tool for each major section (6 edits total)
+- Test frequently in browser to catch broken links or formatting issues
+- All tests should still pass (no Python code changes, only HTML)
 
 ---
 
-**Last Updated:** 2025-11-09
-**Next Review:** After major feature additions
+**Last Updated:** 2025-11-09 (Session 3, commit 23f8810)
+**Next Task:** Phase 2 - Interface Reorganization
+**Status:** Ready to implement (complete plan documented above)
