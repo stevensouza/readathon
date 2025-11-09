@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Installation Guide - Read-a-Thon System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <h1 class="mb-4">
+            <i class="bi bi-rocket"></i> Installation Guide
+        </h1>
+
+        <!-- Quick Install -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-lightning"></i> Quick Install (5 Minutes)</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">The fastest way to get started:</p>
+                <ol class="lead">
+                    <li>Clone from GitHub: <code>git clone https://github.com/stevensouza/readathon.git</code></li>
+                    <li>Navigate to the project directory</li>
+                    <li>Run: <code>./install.sh</code></li>
+                    <li>Double-click "Start Read-a-Thon.command" on your Desktop</li>
+                    <li>Open browser: <code>http://127.0.0.1:5001</code></li>
+                </ol>
+
+                <div class="alert alert-success mt-3">
+                    <strong><i class="bi bi-check-circle"></i> That's it!</strong> The installation script handles everything automatically: prerequisites, dependencies, database setup, and desktop shortcuts.
+                </div>
+
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-info-circle"></i> Idempotent Design:</strong> The install script can safely run multiple times. It detects what's already installed and skips completed steps.
+                </div>
+            </div>
+        </div>
+
+        <!-- Prerequisites -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-list-check"></i> Prerequisites</h4>
+            </div>
+            <div class="card-body">
+                <h5>System Requirements</h5>
+                <ul>
+                    <li><strong>Operating System:</strong> macOS 11 (Big Sur) or later</li>
+                    <li><strong>Memory:</strong> 4GB RAM minimum (8GB recommended)</li>
+                    <li><strong>Disk Space:</strong> 500MB available</li>
+                    <li><strong>Network:</strong> Internet connection for initial setup (offline afterwards)</li>
+                </ul>
+
+                <h5 class="mt-4">Software Dependencies</h5>
+                <p>The <code>install.sh</code> script automatically installs these if missing:</p>
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary"><i class="bi bi-box"></i> Homebrew</h6>
+                                <p class="small mb-0">Package manager for macOS</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success"><i class="bi bi-code"></i> Python 3.8+</h6>
+                                <p class="small mb-0">Programming language runtime</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-info"><i class="bi bi-server"></i> Flask 3.0.0</h6>
+                                <p class="small mb-0">Web framework for Python</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Automated Setup -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-gear"></i> Automated Setup</h4>
+            </div>
+            <div class="card-body">
+                <h5>Step-by-Step: Using install.sh</h5>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-primary">Step 1</span> Download or Clone the Repository</h6>
+                    <p class="small">Get the latest version from GitHub:</p>
+                    <pre class="bg-light p-3"><code>cd ~/Downloads
+git clone https://github.com/stevensouza/readathon.git
+cd readathon</code></pre>
+                    <p class="small text-muted mt-2">Repository: <a href="https://github.com/stevensouza/readathon" target="_blank">https://github.com/stevensouza/readathon</a></p>
+                </div>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-primary">Step 2</span> Navigate to Project Directory</h6>
+                    <pre class="bg-light p-3"><code>cd /path/to/readathon/v2026_development</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-primary">Step 3</span> Run Installation Script</h6>
+                    <pre class="bg-light p-3"><code>./install.sh</code></pre>
+                    <p class="small text-muted mt-2">If you get "permission denied", run: <code>chmod +x install.sh</code></p>
+                </div>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-primary">Step 4</span> Follow On-Screen Prompts</h6>
+                    <p>The script will:</p>
+                    <ul>
+                        <li>✅ Detect existing installations and skip completed steps</li>
+                        <li>✅ Check macOS version and system requirements</li>
+                        <li>✅ Install Homebrew if needed (with your permission)</li>
+                        <li>✅ Install/upgrade Python 3 if needed</li>
+                        <li>✅ Install Flask and pytest dependencies</li>
+                        <li>✅ Initialize sample database (or skip if exists)</li>
+                        <li>✅ Create desktop shortcuts for Start/Stop</li>
+                        <li>✅ Validate installation with test commands</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong><i class="bi bi-exclamation-triangle"></i> First-Time Homebrew Install:</strong> If Homebrew needs to be installed, it may take 10-15 minutes and require your administrator password.
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Setup -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-wrench"></i> Manual Setup</h4>
+            </div>
+            <div class="card-body">
+                <p>If you prefer to install manually or the automated script fails, follow these steps:</p>
+
+                <h5 class="mt-3">1. Install Homebrew</h5>
+                <pre class="bg-light p-3"><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
+
+                <h5 class="mt-4">2. Install Python 3</h5>
+                <pre class="bg-light p-3"><code>brew install python3</code></pre>
+
+                <h5 class="mt-4">3. Install Python Dependencies</h5>
+                <pre class="bg-light p-3"><code>cd /path/to/readathon/v2026_development
+pip3 install -r requirements.txt</code></pre>
+
+                <h5 class="mt-4">4. Initialize Sample Database</h5>
+                <pre class="bg-light p-3"><code>python3 init_data.py</code></pre>
+
+                <h5 class="mt-4">5. Start the Application</h5>
+                <pre class="bg-light p-3"><code>python3 app.py --db sample</code></pre>
+
+                <h5 class="mt-4">6. Open in Browser</h5>
+                <p>Navigate to: <code>http://127.0.0.1:5001</code></p>
+            </div>
+        </div>
+
+        <!-- Database Setup -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-database"></i> Database Setup</h4>
+            </div>
+            <div class="card-body">
+                <h5>Three Database Options</h5>
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success"><i class="bi bi-star"></i> Option 1: Sample Data</h6>
+                                <p class="small">Perfect for learning and testing. Contains fictitious student data.</p>
+                                <pre class="bg-light p-2 small"><code>python3 init_data.py</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary"><i class="bi bi-plus-circle"></i> Option 2: Create New</h6>
+                                <p class="small">Start fresh for a new school year. Use Admin → Database Creation.</p>
+                                <p class="small mb-0 text-muted">Then upload CSV data from ReadAThon.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-info mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-info"><i class="bi bi-files"></i> Option 3: Copy Existing</h6>
+                                <p class="small">Copy last year's database file to new computer.</p>
+                                <pre class="bg-light p-2 small"><code>cp old_db.db db/</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <strong><i class="bi bi-lightbulb"></i> Database Registry:</strong> The app uses a central registry (<code>db/readathon_registry.db</code>) to track all contest databases. Each school year can have its own database.
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-check-circle"></i> Installation Verification</h4>
+            </div>
+            <div class="card-body">
+                <h5>Test Your Installation</h5>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-success">Test 1</span> Check Python</h6>
+                    <pre class="bg-light p-3"><code>python3 --version
+# Should show: Python 3.8.x or higher</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-success">Test 2</span> Check Flask</h6>
+                    <pre class="bg-light p-3"><code>python3 -c "import flask; print(flask.__version__)"
+# Should show: 3.0.0</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-success">Test 3</span> Run Tests</h6>
+                    <pre class="bg-light p-3"><code>pytest
+# Should show: All tests passing (393+ tests)</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6><span class="badge bg-success">Test 4</span> Start Application</h6>
+                    <pre class="bg-light p-3"><code>python3 app.py --db sample
+# Should show: Running on http://127.0.0.1:5001</code></pre>
+                </div>
+
+                <div class="alert alert-success mt-3">
+                    <strong><i class="bi bi-check-circle"></i> All Tests Pass?</strong> Congratulations! Your installation is complete. Open <code>http://127.0.0.1:5001</code> in your browser.
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrade Guide -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Upgrading from Previous Year</h4>
+            </div>
+            <div class="card-body">
+                <h5>Year-to-Year Upgrade Process</h5>
+                <p>Upgrading to a new school year is simple:</p>
+
+                <ol>
+                    <li><strong>Copy Database Files:</strong> Copy your previous year's database from <code>db/</code> directory</li>
+                    <li><strong>Run Install Script:</strong> The script detects existing version and updates only what's needed</li>
+                    <li><strong>Verify Registry:</strong> Check Admin → Database Registry to see all databases</li>
+                    <li><strong>Create New Database:</strong> Use Admin → Database Creation for new school year</li>
+                    <li><strong>Import Data:</strong> Upload CSV files from ReadAThon.com</li>
+                </ol>
+
+                <div class="alert alert-warning mt-3">
+                    <strong><i class="bi bi-shield-check"></i> Backup Recommendation:</strong> Always backup your database files before upgrading. Copy the entire <code>db/</code> directory to a safe location.
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-tools"></i> Troubleshooting</h4>
+            </div>
+            <div class="card-body">
+                <h5>Common Issues and Solutions</h5>
+
+                <div class="mb-4">
+                    <h6 class="text-danger"><i class="bi bi-x-circle"></i> "Port 5001 already in use"</h6>
+                    <p><strong>Solution:</strong> Kill existing Flask process</p>
+                    <pre class="bg-light p-3"><code>lsof -ti:5001 | xargs kill -9</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-danger"><i class="bi bi-x-circle"></i> "Permission denied: ./install.sh"</h6>
+                    <p><strong>Solution:</strong> Make script executable</p>
+                    <pre class="bg-light p-3"><code>chmod +x install.sh</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-danger"><i class="bi bi-x-circle"></i> "Module 'flask' not found"</h6>
+                    <p><strong>Solution:</strong> Install dependencies</p>
+                    <pre class="bg-light p-3"><code>pip3 install -r requirements.txt</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-danger"><i class="bi bi-x-circle"></i> "Database locked" errors</h6>
+                    <p><strong>Solution:</strong> Stop Flask before running tests</p>
+                    <pre class="bg-light p-3"><code>lsof -ti:5001 | xargs kill -9
+pytest</code></pre>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-danger"><i class="bi bi-x-circle"></i> Desktop shortcuts don't work</h6>
+                    <p><strong>Solution:</strong> Make them executable</p>
+                    <pre class="bg-light p-3"><code>chmod +x ~/Desktop/"Start Read-a-Thon.command"
+chmod +x ~/Desktop/"Stop Read-a-Thon.command"</code></pre>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    <strong><i class="bi bi-question-circle"></i> Still Having Issues?</strong> Check the <a href="/help">User Manual</a> or review the README.md file in the project directory.
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Source Notice -->
+        <div class="card mb-4 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-info-circle"></i> About ReadAThon.com Data</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">This application requires CSV data from <a href="https://www.read-a-thon.com/" target="_blank">ReadAThon.com</a></p>
+
+                <p>The Read-a-Thon application is designed to <strong>enhance</strong> the data you download from ReadAThon.com by adding:</p>
+                <ul>
+                    <li>Team competition tracking and leaderboards</li>
+                    <li>Daily reading minute caps (120 min/day)</li>
+                    <li>Participation rate calculations</li>
+                    <li>Grade-level and class-level analytics</li>
+                    <li>Custom reports and data exports</li>
+                </ul>
+
+                <div class="alert alert-primary mt-3">
+                    <strong><i class="bi bi-download"></i> Next Step After Installation:</strong> Visit <a href="https://www.read-a-thon.com/" target="_blank" class="alert-link">ReadAThon.com</a> to download your school's data, then use the Upload page to import it.
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Shortcuts -->
+        <div class="card mb-4">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-bookmark"></i> Desktop Shortcuts</h4>
+            </div>
+            <div class="card-body">
+                <p>The installation script creates two convenient shortcuts on your Desktop:</p>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-success"><i class="bi bi-play-circle"></i> Start Read-a-Thon.command</h6>
+                                <p class="small mb-2">Double-click to start the application with sample database.</p>
+                                <p class="small text-muted mb-0">Opens Terminal window showing app status.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card border-danger mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title text-danger"><i class="bi bi-stop-circle"></i> Stop Read-a-Thon.command</h6>
+                                <p class="small mb-2">Double-click to stop the application gracefully.</p>
+                                <p class="small text-muted mb-0">Kills Flask process on port 5001.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div class="card mb-4 bg-light">
+            <div class="card-body">
+                <h5><i class="bi bi-bookmark-star"></i> Quick Reference</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Common Commands</h6>
+                        <ul class="small">
+                            <li><code>./install.sh</code> - Run installation</li>
+                            <li><code>python3 app.py --db sample</code> - Start app</li>
+                            <li><code>pytest</code> - Run tests</li>
+                            <li><code>lsof -ti:5001 | xargs kill -9</code> - Stop app</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">Key Files</h6>
+                        <ul class="small">
+                            <li><code>install.sh</code> - Installation script</li>
+                            <li><code>app.py</code> - Main application</li>
+                            <li><code>requirements.txt</code> - Dependencies</li>
+                            <li><code>README.md</code> - Project documentation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

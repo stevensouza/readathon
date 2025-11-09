@@ -664,7 +664,7 @@
     <div class="comparison-table">
         <div class="table-controls">
             <div class="search-box">
-                <input type="text" id="nameSearch" class="form-control form-control-sm" placeholder="🔍 Search by student name..." style="width: 250px;">
+                <input type="text" id="nameSearch" class="form-control form-control-sm" placeholder="🔍 Search all fields..." style="width: 250px;">
                 <button class="btn btn-sm btn-outline-secondary" onclick="clearSearch()" title="Clear search">
                     <i class="bi bi-x-circle"></i>
                 </button>
@@ -1292,7 +1292,7 @@
         }
     }
 
-    // Name search filter
+    // Search filter - searches all columns (text and numeric)
     function filterTable() {
         const searchInput = document.getElementById('nameSearch');
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -1301,9 +1301,34 @@
         let visibleCount = 0;
 
         rows.forEach(row => {
-            const studentName = row.getAttribute('data-student-name').toLowerCase();
+            // If search is empty, show all rows
+            if (searchTerm === '') {
+                row.classList.remove('hidden');
+                visibleCount++;
+                return;
+            }
 
-            if (searchTerm === '' || studentName.includes(searchTerm)) {
+            // Get all text content from all cells in the row
+            const cells = row.querySelectorAll('td');
+            let rowText = '';
+
+            cells.forEach(cell => {
+                // Get text content, removing extra whitespace
+                const cellText = cell.textContent.trim().replace(/\s+/g, ' ');
+                rowText += cellText.toLowerCase() + ' ';
+            });
+
+            // Also search data attributes (grade, team, student name)
+            const dataGrade = row.getAttribute('data-grade') || '';
+            const dataTeam = row.getAttribute('data-team') || '';
+            const dataStudentName = row.getAttribute('data-student-name') || '';
+
+            rowText += dataGrade.toLowerCase() + ' ';
+            rowText += dataTeam.toLowerCase() + ' ';
+            rowText += dataStudentName.toLowerCase() + ' ';
+
+            // Check if search term is found in any column
+            if (rowText.includes(searchTerm)) {
                 row.classList.remove('hidden');
                 visibleCount++;
             } else {

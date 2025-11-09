@@ -873,11 +873,12 @@
                     <a href="/admin" class="nav-link-item {% if request.path == '/admin' %}active{% endif %}">⚙️ Admin</a>
 
                     <div class="nav-dropdown">
-                        <button class="nav-link-item {% if request.path in ['/help', '/help/claude', '/help/requirements'] %}active{% endif %}" onclick="toggleHelpDropdown()">
+                        <button class="nav-link-item {% if request.path in ['/help', '/help/claude', '/help/requirements', '/help/installation'] %}active{% endif %}" onclick="toggleHelpDropdown()">
                             ❓ Help <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
                         <div class="dropdown-menu-custom" id="helpDropdown">
                             <a href="/help" class="dropdown-item-custom">📖 User Manual</a>
+                            <a href="/help/installation" class="dropdown-item-custom">🚀 Installation Guide</a>
                             <a href="/help/claude" class="dropdown-item-custom">🤖 How I Used Claude Code to Develop this Application</a>
                             <a href="/help/requirements" class="dropdown-item-custom">📋 Application Requirements</a>
                         </div>

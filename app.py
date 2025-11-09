@@ -3551,6 +3551,12 @@ def help_claude():
     env = session.get('environment', DEFAULT_DATABASE)
     return render_template('claude_development.html', environment=env)
 
+@app.route('/help/installation')
+def help_installation():
+    """Installation guide and setup documentation"""
+    env = session.get('environment', DEFAULT_DATABASE)
+    return render_template('installation.html', environment=env)
+
 @app.route('/help/requirements')
 def help_requirements():
     """Application requirements document (IMPLEMENTATION_PROMPT.md)"""

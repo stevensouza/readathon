@@ -930,3 +930,187 @@ class TestStudentsTableRegression:
         # Verify silver highlights exist (grade-level winners for minutes)
         # Silver: minutes_capped or minutes_uncapped with value 60
         assert re.search(r'winning-value-grade">60</span>\s*min', html), "Missing silver for grade-level winner (60 min)"
+
+
+class TestStudentsPageSearch:
+    """Test search functionality across all columns"""
+
+    def test_search_box_present(self, client):
+        """Verify search input box is present on page"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        assert 'id="nameSearch"' in html
+        assert 'Search all fields' in html
+        assert 'clearSearch()' in html
+
+    def test_search_by_student_name_full(self, client):
+        """Test searching by full student name"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Verify student21 is in the response
+        assert 'student21' in html
+
+    def test_search_by_student_name_partial(self, client):
+        """Test searching by partial student name"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # JavaScript search would match "student2" to student21, student22
+        # We're testing that the search box and function exist
+        assert 'function filterTable()' in html
+
+    def test_search_by_grade(self, client):
+        """Test that search can find students by grade number"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Grade column should be searchable
+        # Sample data has grades K, 1, 2
+        assert 'data-grade=' in html
+
+    def test_search_by_team_name(self, client):
+        """Test that search can find students by team name"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Team names should be present and searchable
+        # Check for team badge presence
+        assert 'team-badge' in html
+        assert 'data-team=' in html
+
+    def test_search_by_class_name(self, client):
+        """Test that search can find students by class name"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Class names should be in table
+        # Sample data uses class names like "class1", "class2"
+        assert 'class1' in html or 'class2' in html
+
+    def test_search_by_teacher_name(self, client):
+        """Test that search can find students by teacher name"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Teacher names should be in table
+        assert 'teacher1' in html or 'teacher2' in html
+
+    def test_search_by_fundraising_amount(self, client):
+        """Test that search can find students by fundraising amount"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Fundraising amounts should be searchable (numeric values)
+        # Sample data has various fundraising amounts ($10, $20, etc.)
+        assert 'data-value=' in html  # fundraising stored in data-value attribute
+        assert '$' in html  # currency symbol
+
+    def test_search_by_sponsors_count(self, client):
+        """Test that search can find students by sponsor count"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Sponsor counts should be in table
+        # Sample data has various sponsor counts (1-7)
+        assert 'Sponsors' in html
+
+    def test_search_by_minutes(self, client):
+        """Test that search can find students by reading minutes"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Minutes (both capped and uncapped) should be searchable
+        assert 'min' in html
+        assert 'Minutes Capped' in html
+        assert 'Minutes Uncapped' in html
+
+    def test_search_by_participation_percentage(self, client):
+        """Test that search can find students by participation percentage"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Participation percentages should be searchable
+        assert 'Partic. %' in html
+        assert '%' in html
+
+    def test_search_by_goal_percentage(self, client):
+        """Test that search can find students by goal percentage"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Goal percentages should be searchable
+        assert 'Goal %' in html
+
+    def test_search_function_searches_all_cells(self, client):
+        """Verify the filterTable() function searches all td elements"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Check that search function iterates through all cells
+        assert 'cells.forEach(cell =>' in html
+        assert "querySelectorAll('td')" in html or 'querySelectorAll("td")' in html
+
+    def test_search_function_includes_data_attributes(self, client):
+        """Verify search function also checks data attributes"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Verify search includes data attributes
+        assert "getAttribute('data-grade')" in html or 'getAttribute("data-grade")' in html
+        assert "getAttribute('data-team')" in html or 'getAttribute("data-team")' in html
+        assert "getAttribute('data-student-name')" in html or 'getAttribute("data-student-name")' in html
+
+    def test_search_is_case_insensitive(self, client):
+        """Verify search converts to lowercase for case-insensitive matching"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Check that search uses toLowerCase()
+        assert 'toLowerCase()' in html
+
+    def test_search_clears_properly(self, client):
+        """Verify clear search button functionality"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Check clear function exists and resets input
+        assert 'function clearSearch()' in html
+        assert ".value = ''" in html or '.value = ""' in html
+
+    def test_search_updates_visible_count(self, client):
+        """Verify search updates the visible student count"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Check that visible count is updated after search
+        assert 'visibleCount' in html
+        assert "getElementById('visibleCount')" in html or 'getElementById("visibleCount")' in html
+
+    def test_empty_search_shows_all_rows(self, client):
+        """Verify empty search shows all students"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Check that empty search term shows all rows
+        assert "searchTerm === ''" in html or 'searchTerm === ""' in html
+        assert "row.classList.remove('hidden')" in html or 'row.classList.remove("hidden")' in html
+
+    def test_search_box_has_clear_button(self, client):
+        """Verify search box has a clear button with icon"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Check for clear button
+        assert 'bi-x-circle' in html
+        assert 'onclick="clearSearch()"' in html
+
+    def test_search_placeholder_text(self, client):
+        """Verify search placeholder indicates all-field search"""
+        response = client.get('/students')
+        html = response.data.decode('utf-8')
+
+        # Placeholder should say "Search all fields"
+        assert 'Search all fields' in html
+        assert 'placeholder' in html

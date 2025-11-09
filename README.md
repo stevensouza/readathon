@@ -1,6 +1,16 @@
 # Read-a-Thon Management System
 
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
+![Flask 3.0.0](https://img.shields.io/badge/flask-3.0.0-green)
+![License: MIT](https://img.shields.io/badge/license-MIT-yellow)
+![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-blueviolet)
+
 A complete web-based data analysis and reporting system for managing elementary school read-a-thon events. **Built entirely with [Claude Code](https://claude.ai/code)** - see [how it was built](#-built-with-claude-code) below.
+
+> **⚠️ DATA DEPENDENCY NOTICE**
+> This application requires CSV data from **[ReadAThon.com](https://www.read-a-thon.com/)**.
+> You must download your school's data from ReadAThon.com to use this system.
+> See [Data Source](#-data-source) section below for details.
 
 ## 📸 Screenshots
 
@@ -63,6 +73,18 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 - **Multi-Database Support**: Switch between production and sample data
 
 ## Quick Start
+
+> **🚀 AUTOMATED INSTALLATION AVAILABLE**
+> Clone the repository and run the automated installation script:
+> ```bash
+> git clone https://github.com/stevensouza/readathon.git
+> cd readathon
+> ./install.sh
+> ```
+> This handles all prerequisites, dependencies, and setup automatically.
+> For full installation documentation, see the [Installation Guide](templates/installation.html) (also available in the app's Help menu).
+>
+> **Repository:** [https://github.com/stevensouza/readathon](https://github.com/stevensouza/readathon)
 
 ### 1. Install Dependencies
 
