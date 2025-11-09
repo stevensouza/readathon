@@ -875,6 +875,69 @@ Users understand what they're seeing without guessing.</code></pre>
 <strong>Result:</strong> Clean separation of master/detail, fast table rendering,
 detailed drill-down on demand. 50 tests covering both views.</code></pre>
 
+                <h5 class="mt-4">9. Context Management: Save Before Compaction 💾📄</h5>
+                <p><strong>Problem:</strong> Claude Code's conversation context gets compacted automatically after many messages, potentially losing important decisions and context.</p>
+                <p><strong>Solution:</strong> Proactively save context to external files BEFORE hitting compaction limits.</p>
+                <div class="alert alert-info mb-3">
+                    <strong>Key Insight:</strong> You won't get notified before compaction happens. By the time the conversation is shorter, context is already lost.
+                    The solution is to save important context continuously as you work.
+                </div>
+
+                <p><strong>Files I Use for Context Preservation:</strong></p>
+                <ul>
+                    <li><strong>DOCUMENTATION_UPDATES_NEEDED.md</strong> - Tracks what's done, what's pending, session summaries</li>
+                    <li><strong>TEST_REFACTORING_NEEDED.md</strong> - Detailed plan for multi-step refactoring tasks</li>
+                    <li><strong>NEXT_SESSION_[TASK].md</strong> - Quick-start guide for continuing work after context clear</li>
+                    <li><strong>RULES.md</strong> - Universal truths about the app that must never change</li>
+                    <li><strong>Feature docs</strong> - Design decisions, implementation notes, user requirements</li>
+                </ul>
+
+                <p><strong>Pattern:</strong></p>
+                <pre class="bg-light p-3 rounded mb-3" style="white-space: pre-wrap;"><code><strong>Before ending a session:</strong>
+"We've made good progress. Before I clear context, save everything you would
+need to continue this work in the next session. Update DOCUMENTATION_UPDATES_NEEDED.md
+with what we completed today and what's pending."
+
+<strong>Claude updates tracking files with:</strong>
+- Session summary with commit hashes
+- List of files modified
+- What was completed vs. what's pending
+- Exact next steps with file references
+- Any important decisions or gotchas discovered
+
+<strong>Starting next session:</strong>
+"Continue with test refactoring from TEST_REFACTORING_NEEDED.md"
+
+<strong>Claude reads the file and immediately knows:</strong>
+- What work was done previously
+- What needs to be done now
+- Which files to modify
+- What the success criteria are</code></pre>
+
+                <p><strong>Benefits:</strong></p>
+                <ul>
+                    <li><strong>No context loss:</strong> Important decisions are preserved in files, not just conversation history</li>
+                    <li><strong>Fast restarts:</strong> New sessions can pick up exactly where you left off</li>
+                    <li><strong>Self-documenting:</strong> Tracking files become project documentation</li>
+                    <li><strong>Collaborative:</strong> Other developers (or future you) can understand the project history</li>
+                    <li><strong>Compaction-proof:</strong> External files survive conversation compaction</li>
+                </ul>
+
+                <p><strong>When to Save Context:</strong></p>
+                <ul>
+                    <li>Before completing a major milestone (so next session knows what's done)</li>
+                    <li>Before clearing conversation / starting new session</li>
+                    <li>After making important design decisions</li>
+                    <li>When context feels "heavy" (many messages, lots of code changes)</li>
+                    <li>At natural breakpoints (end of Phase 1, before Phase 2, etc.)</li>
+                </ul>
+
+                <div class="alert alert-success mt-3">
+                    <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Treat your tracking documents like a conversation handoff.
+                    Write them so that a fresh Claude Code session (with zero context) can read them and know exactly what to do.
+                    Include file paths, line numbers, commit hashes, and specific next steps.
+                </div>
+
                 <div class="alert alert-warning mt-4">
                     <strong><i class="bi bi-star"></i> Golden Rule:</strong> Before implementing ANY feature, read RULES.md and UI_PATTERNS.md.
                     Reference existing pages for patterns. Create tests during implementation. Use regression tests for user-verified data.
