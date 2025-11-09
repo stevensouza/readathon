@@ -56,14 +56,14 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 - **Number of Sponsors** (sponsor count per student)
 - **Team Color Bonus** (bonus minutes for team spirit events)
 
-**Reporting:** Per-day and full-contest views with 20+ pre-configured reports
+**Reporting:** Per-day and full-contest views with 22 pre-configured reports
 
 ## ✨ Features
 
-- **Modern Dashboard**: Clean Bootstrap 5 interface with multiple tabs (School, Teams, Classes, Students)
+- **Modern Dashboard**: Clean Bootstrap 5 interface with 9 tabs (School, Teams, Grade Level, Students, Upload, Reports, Workflows, Admin, Help)
 - **Local SQLite Database**: All data stored locally - no server needed
 - **Multi-File CSV Upload**: Upload multiple daily files at once with automatic date extraction
-- **20+ Pre-configured Reports**: Comprehensive analysis covering all metrics
+- **22 Pre-configured Reports**: Comprehensive analysis covering all metrics
 - **Enhanced Report Metadata**: Column descriptions, data sources, automated analysis
 - **Workflow Automation**: Run multiple reports in sequence for daily updates
 - **Team Competition Tracking**: Real-time team standings with color bonus support
@@ -167,7 +167,7 @@ Press `CTRL+C` to stop the server.
 
 ## 📊 Reports & Workflows
 
-The system includes 20+ pre-configured reports covering:
+The system includes 22 pre-configured reports covering:
 - **Daily metrics** - Day-by-day performance tracking
 - **Cumulative stats** - Full contest summaries and leaderboards
 - **Team competitions** - Team standings and comparisons
@@ -291,7 +291,9 @@ For issues or questions about this system, check:
 
 This project uses **School Year Calendar Versioning**: `vYYYY.MINOR.PATCH`
 
-**Current Version:** v2026.1.0 (see [VERSION](VERSION) file)
+**Current Version:** v2026.14.0 (see [VERSION](VERSION) file)
+
+**Release Status:** ✅ **Final stable release for 2025-2026 school year**
 
 ### Versioning Format
 - **YYYY**: School year (e.g., 2026 = 2025-2026 school year)
@@ -301,9 +303,7 @@ This project uses **School Year Calendar Versioning**: `vYYYY.MINOR.PATCH`
 ### Examples
 - `v2026.1.0` → `v2026.1.1`: Bug fix or small update
 - `v2026.1.0` → `v2026.2.0`: New feature or major update
-- `v2026.1.0` → `v2027.1.0`: Next school year
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
+- `v2026.14.0` → `v2027.1.0`: Next school year (start fresh numbering)
 
 ---
 
