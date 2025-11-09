@@ -137,7 +137,7 @@
                 </ol>
 
                 <h5 class="mt-4">Navigation Overview</h5>
-                <p>The application has 6 main tabs:</p>
+                <p>The application has 9 main tabs:</p>
                 <ul>
                     <li><strong>School:</strong> School-wide overview with team competition</li>
                     <li><strong>Teams:</strong> Head-to-head team comparison metrics</li>
@@ -145,8 +145,11 @@
                     <li><strong>Students:</strong> Individual student performance (master-detail view)</li>
                     <li><strong>Upload:</strong> Import daily reading and cumulative stats</li>
                     <li><strong>Reports & Data:</strong> 22 pre-configured reports, table views, and workflows</li>
+                    <li><strong>Workflows:</strong> Run multiple reports in sequence</li>
                     <li><strong>Admin:</strong> Database management, creation, registry, and comparison tools</li>
+                    <li><strong>Help:</strong> Comprehensive documentation and guides</li>
                 </ul>
+                <p class="small text-muted"><i class="bi bi-arrow-right"></i> For detailed information about each tab, see the <a href="#interface">Interface section</a> below.</p>
 
                 <div class="alert alert-info mt-3">
                     <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> Use the <strong>environment selector</strong> in the top-right to switch between Production and Sample data!
@@ -231,9 +234,15 @@
             <div class="card-body">
                 <p class="lead">The application provides 9 main tabs for navigating different aspects of the read-a-thon. Each tab serves a specific purpose, from viewing school-wide metrics to managing databases.</p>
 
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-info-circle"></i> Quick Links:</strong>
+                    Jump to: <a href="#school-tab">School</a> • <a href="#teams-tab">Teams</a> • <a href="#grade-tab">Grade Level</a> • <a href="#students-tab">Students</a> • <a href="#upload-tab">Upload</a> • <a href="#reports-tab">Reports</a> • <a href="#workflows-tab">Workflows</a> • <a href="#admin-tab">Admin</a> • <a href="#help-tab">Help</a>
+                </div>
+
                 <!-- School Tab -->
                 <h5 id="school-tab" class="mt-4"><i class="bi bi-building"></i> School Tab</h5>
                 <p><strong>Purpose:</strong> School-wide overview with at-a-glance metrics, team competition, and top performers.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#teams-tab">Teams Tab</a> for detailed team comparisons, <a href="#students-tab">Students Tab</a> for individual student data</p>
 
                 <h6>Headline Banner (6 Metrics)</h6>
                 <p>The dark blue banner at the top displays 6 key metrics in a horizontal row:</p>
@@ -273,6 +282,7 @@
                 <!-- Teams Tab -->
                 <h5 id="teams-tab" class="mt-4"><i class="bi bi-people"></i> Teams Tab</h5>
                 <p><strong>Purpose:</strong> Detailed head-to-head team competition metrics and leaderboards.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#school-tab">School Tab</a> for overall school metrics, <a href="#grade-tab">Grade Level Tab</a> for grade-specific comparisons</p>
                 <ul class="small">
                     <li><strong>4-column layout:</strong> 2 rows × 4 cards per team (8 cards total)</li>
                     <li><strong>Metrics per team:</strong> Fundraising leaders, top classes, reading leaders, participation</li>
@@ -284,6 +294,7 @@
                 <!-- Grade Level Tab -->
                 <h5 id="grade-tab" class="mt-4"><i class="bi bi-mortarboard"></i> Grade Level Tab</h5>
                 <p><strong>Purpose:</strong> Grade-by-grade and class-by-class performance breakdown.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#students-tab">Students Tab</a> for individual student data, <a href="#teams-tab">Teams Tab</a> to see which team each class belongs to</p>
                 <ul class="small">
                     <li><strong>Grade filter buttons:</strong> K, 1, 2, 3, 4, 5, or "All Grades"</li>
                     <li><strong>Grade-level cards:</strong> Total metrics per grade (6 cards, one per grade)</li>
@@ -295,6 +306,7 @@
                 <!-- Students Tab -->
                 <h5 id="students-tab" class="mt-4"><i class="bi bi-person"></i> Students Tab</h5>
                 <p><strong>Purpose:</strong> Individual student performance with master-detail view.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#grade-tab">Grade Level Tab</a> for class and grade comparisons, <a href="#school-tab">School Tab</a> for overall top performers</p>
                 <ul class="small">
                     <li><strong>Master table:</strong> All 411 students in sortable table</li>
                     <li><strong>Search functionality:</strong> Searches all columns (text and numeric)</li>
@@ -307,6 +319,7 @@
                 <!-- Upload Tab -->
                 <h5 id="upload-tab" class="mt-4"><i class="bi bi-upload"></i> Upload Tab</h5>
                 <p><strong>Purpose:</strong> Import daily reading data and cumulative stats from ReadAThon.com.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#reports-tab">Reports & Data Tab</a> uses uploaded data, <a href="#admin-tab">Admin Tab</a> for viewing upload history and clearing data</p>
 
                 <h6>Two Upload Types</h6>
                 <div class="row">
@@ -341,6 +354,7 @@
                 <!-- Reports & Data Tab -->
                 <h5 id="reports-tab" class="mt-4"><i class="bi bi-graph-up"></i> Reports & Data Tab</h5>
                 <p><strong>Purpose:</strong> Run 22 pre-configured reports, view database tables, and access workflows.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#workflows-tab">Workflows Tab</a> to run multiple reports in sequence, <a href="#upload-tab">Upload Tab</a> to import data for reports</p>
 
                 <h6>Three Accordion Sections</h6>
                 <ul class="small">
@@ -360,6 +374,7 @@
                 <!-- Workflows Tab -->
                 <h5 id="workflows-tab" class="mt-4"><i class="bi bi-diagram-3"></i> Workflows Tab</h5>
                 <p><strong>Purpose:</strong> Run multiple reports in sequence for daily slideshow, final prizes, or custom groups.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#reports-tab">Reports & Data Tab</a> for individual report details, <a href="#admin-tab">Admin Tab</a> to manage report groups</p>
 
                 <h6>Four Predefined Workflows</h6>
                 <div class="row">
@@ -441,6 +456,7 @@
                 <!-- Admin Tab -->
                 <h5 id="admin-tab" class="mt-4"><i class="bi bi-gear"></i> Admin Tab</h5>
                 <p><strong>Purpose:</strong> Database management, creation, registry, and year-over-year comparison tools.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#upload-tab">Upload Tab</a> for data import, <a href="#reports-tab">Reports & Data Tab</a> to view tables and export data</p>
 
                 <h6>Five Sub-Tabs</h6>
                 <div class="row">
@@ -524,6 +540,8 @@
                 <h4 class="mb-0"><i class="bi bi-calculator"></i> Business Logic & Rules</h4>
             </div>
             <div class="card-body">
+                <p class="text-muted small"><i class="bi bi-info-circle"></i> See also: <a href="#reports-tab">Reports & Data Tab</a> for detailed metric definitions and glossary in each report's metadata</p>
+
                 <h5>Key Definitions</h5>
                 <dl class="row">
                     <dt class="col-sm-3">Participation</dt>
@@ -590,6 +608,8 @@
                 <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Troubleshooting</h4>
             </div>
             <div class="card-body">
+                <p class="text-muted small"><i class="bi bi-info-circle"></i> See also: <a href="#upload-tab">Upload Tab</a> for data import help, <a href="#admin-tab">Admin Tab</a> for database management tools</p>
+
                 <h5>Common Issues</h5>
 
                 <div class="accordion" id="troubleshootingAccordion">
