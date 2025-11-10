@@ -1410,15 +1410,25 @@ def get_grade_aggregations_query(date_where="", grade_where="", team_where=""):
             WHERE 1=1 {grade_where_r} {team_where_r}
             GROUP BY r.grade_level, r.teacher_name, r.team_name
         ),
+        ClassColorBonus AS (
+            SELECT
+                tcb.class_name,
+                COALESCE(SUM(tcb.bonus_minutes), 0) as class_bonus
+            FROM Team_Color_Bonus tcb
+            GROUP BY tcb.class_name
+        ),
         GradeTopReading AS (
             SELECT
                 r.grade_level,
                 r.teacher_name,
                 r.team_name,
-                SUM(MIN(dl.minutes_read, 120)) as total_minutes,
-                ROW_NUMBER() OVER (PARTITION BY r.grade_level ORDER BY SUM(MIN(dl.minutes_read, 120)) DESC) as rn
+                COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as base_minutes,
+                COALESCE(MAX(ccb.class_bonus), 0) as bonus_minutes,
+                (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(MAX(ccb.class_bonus), 0)) as total_minutes,
+                ROW_NUMBER() OVER (PARTITION BY r.grade_level ORDER BY (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(MAX(ccb.class_bonus), 0)) DESC) as rn
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN ClassColorBonus ccb ON r.class_name = ccb.class_name
             WHERE 1=1 {grade_where_r} {team_where_r}
             GROUP BY r.grade_level, r.teacher_name, r.team_name
         ),

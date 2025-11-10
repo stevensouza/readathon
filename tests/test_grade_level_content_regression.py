@@ -169,17 +169,18 @@ class TestGrade2ClassTie:
         response = client.get('/classes')
         html = response.data.decode('utf-8')
 
-        # Both classes tied at 90 minutes (base reading, no color bonus in aggregation)
+        # Both classes tied at 100 minutes (90 base + 10 color bonus)
         assert 'class3' in html, "Expected class3 in Grade 2"
         assert 'class4' in html, "Expected class4 in Grade 2"
 
-    def test_grade_2_top_class_reader_shows_90_minutes(self, client):
-        """Verify 90 minutes appears for tied top reading classes."""
+    def test_grade_2_top_class_reader_shows_100_minutes(self, client):
+        """Verify 100 minutes appears for tied top reading classes (90 base + 10 color bonus)."""
         response = client.get('/classes')
         html = response.data.decode('utf-8')
 
-        # 90 minutes for each class (base reading)
-        assert '90' in html, "Expected 90 minutes for Grade 2 top classes"
+        # 100 minutes for each class (90 base + 10 color bonus)
+        # BUG FIX: Previously showed only base minutes (90), now correctly includes color bonus
+        assert '100' in html, "Expected 100 minutes for Grade 2 top classes"
 
     def test_grade_2_top_class_fundraiser_single_winner(self, client):
         """Verify Grade 2 TOP CLASS Fundraiser shows class4 ($130, no tie)."""

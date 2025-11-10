@@ -825,15 +825,25 @@ def school_tab():
     else:
         performers['class_fundraising'] = {'teacher': 'N/A', 'grade': '', 'amount': 0}
 
-    # Top class by reading (cumulative through selected date)
+    # Top class by reading (cumulative through selected date, with color bonus)
     class_reading_where = f"WHERE dl.log_date <= '{date_filter}'" if date_filter != 'all' and date_filter in dates else ""
     class_reading_query = f"""
+        WITH ClassBonus AS (
+            SELECT
+                class_name,
+                COALESCE(SUM(bonus_minutes), 0) as bonus
+            FROM Team_Color_Bonus
+            GROUP BY class_name
+        )
         SELECT
             r.teacher_name,
             r.grade_level,
-            SUM(MIN(dl.minutes_read, 120)) as total_minutes
+            COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as base_minutes,
+            COALESCE(MAX(cb.bonus), 0) as bonus_minutes,
+            (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(MAX(cb.bonus), 0)) as total_minutes
         FROM Roster r
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+        LEFT JOIN ClassBonus cb ON r.class_name = cb.class_name
         {class_reading_where}
         GROUP BY r.teacher_name, r.grade_level
         ORDER BY total_minutes DESC
@@ -1394,13 +1404,24 @@ def teams_tab():
             performers['top_class_fundraising_tie_count'] = 0
             performers['top_class_fundraising_all'] = []
 
-        # Top Class (Reading) - with tie detection
+        # Top Class (Reading) - with tie detection and color bonus
         class_reading_max_query = f"""
-            SELECT MAX(total_minutes) as max_value
+            WITH ClassBonus AS (
+                SELECT
+                    class_name,
+                    COALESCE(SUM(bonus_minutes), 0) as bonus
+                FROM Team_Color_Bonus
+                GROUP BY class_name
+            )
+            SELECT MAX(total_minutes_with_bonus) as max_value
             FROM (
-                SELECT SUM(MIN(dl.minutes_read, 120)) as total_minutes
+                SELECT
+                    r.teacher_name,
+                    r.class_name,
+                    (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(cb.bonus, 0)) as total_minutes_with_bonus
                 FROM Roster r
                 LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+                LEFT JOIN ClassBonus cb ON r.class_name = cb.class_name
                 WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
                 GROUP BY r.teacher_name, r.class_name, r.grade_level
             )
@@ -1409,12 +1430,26 @@ def teams_tab():
         max_class_reading = class_reading_max_result[0]['max_value'] if class_reading_max_result and class_reading_max_result[0] and class_reading_max_result[0]['max_value'] else 0
 
         class_reading_query = f"""
-            SELECT r.teacher_name, r.class_name, r.grade_level, SUM(MIN(dl.minutes_read, 120)) as total_minutes
+            WITH ClassBonus AS (
+                SELECT
+                    class_name,
+                    COALESCE(SUM(bonus_minutes), 0) as bonus
+                FROM Team_Color_Bonus
+                GROUP BY class_name
+            )
+            SELECT
+                r.teacher_name,
+                r.class_name,
+                r.grade_level,
+                COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as base_minutes,
+                COALESCE(cb.bonus, 0) as bonus_minutes,
+                (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(cb.bonus, 0)) as total_minutes
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+            LEFT JOIN ClassBonus cb ON r.class_name = cb.class_name
             WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
             GROUP BY r.teacher_name, r.class_name, r.grade_level
-            HAVING SUM(MIN(dl.minutes_read, 120)) = {max_class_reading}
+            HAVING (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(cb.bonus, 0)) = {max_class_reading}
             ORDER BY r.teacher_name
         """
         class_reading_result = db.execute_query(class_reading_query)

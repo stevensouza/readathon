@@ -171,8 +171,8 @@ class TestTopClassTieGrade2:
         assert 'class3' in card_text, f"Expected 'class3' in tied top class card, got: {card_text}"
         assert 'class4' in card_text, f"Expected 'class4' in tied top class card, got: {card_text}"
 
-    def test_shows_90_minutes_base_reading(self, client):
-        """Verify 90 minutes appears for top class reading (base minutes, no color bonus in aggregation)."""
+    def test_shows_100_minutes_with_color_bonus(self, client):
+        """Verify 100 minutes appears for top class reading (90 base + 10 color bonus)."""
         response = client.get('/teams')
         html = response.data.decode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
@@ -182,11 +182,11 @@ class TestTopClassTieGrade2:
         assert top_class_reading is not None
 
         card_text = top_class_reading.get_text()
-        # NOTE: TOP CLASS cards show base reading minutes (90), not with color bonus (+10)
-        # Color bonus is applied at class-level in comparison, not in individual student aggregations
-        # 90 minutes = 1.5 hours
-        assert '90' in card_text or '1.5' in card_text, \
-            f"Expected '90 min' or '1.5 hr' in card, got: {card_text}"
+        # NOTE: TOP CLASS cards show total minutes including color bonus (90 base + 10 color = 100)
+        # BUG FIX: Previously showed only base minutes (90), now correctly includes color bonus
+        # 100 minutes = 1.67 hours (displays as "100 minutes" or "1.7 hr")
+        assert '100' in card_text or '1.7' in card_text, \
+            f"Expected '100 min' or '1.7 hr' in card, got: {card_text}"
 
 
 class TestVariousGradesLogic:
