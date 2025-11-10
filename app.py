@@ -1264,68 +1264,180 @@ def teams_tab():
     def get_top_performers_for_team(team_name):
         performers = {}
 
-        # Fundraising Leader (student)
+        # Fundraising Leader (student) - with tie detection
+        fundraising_max_query = f"""
+            SELECT MAX(rc.donation_amount) as max_value
+            FROM Reader_Cumulative rc
+            JOIN Roster r ON rc.student_name = r.student_name
+            WHERE LOWER(r.team_name) = LOWER('{team_name}')
+        """
+        fundraising_max_result = db.execute_query(fundraising_max_query)
+        max_fundraising = fundraising_max_result[0]['max_value'] if fundraising_max_result and fundraising_max_result[0] and fundraising_max_result[0]['max_value'] else 0
+
         fundraising_leader_query = f"""
             SELECT rc.student_name, r.grade_level, r.class_name, rc.donation_amount
             FROM Reader_Cumulative rc
             JOIN Roster r ON rc.student_name = r.student_name
             WHERE LOWER(r.team_name) = LOWER('{team_name}')
-            ORDER BY rc.donation_amount DESC
-            LIMIT 1
+              AND rc.donation_amount = {max_fundraising}
+            ORDER BY rc.student_name
         """
         fundraising_result = db.execute_query(fundraising_leader_query)
-        if fundraising_result and fundraising_result[0]:
-            performers['fundraising_leader'] = fundraising_result[0]
-        else:
-            performers['fundraising_leader'] = {'student_name': 'N/A', 'grade_level': '', 'class_name': '', 'donation_amount': 0}
+        if fundraising_result and len(fundraising_result) > 0:
+            # Format names: show up to 3, then "and X others"
+            if len(fundraising_result) <= 3:
+                names = ", ".join([leader['student_name'] for leader in fundraising_result])
+            else:
+                names = ", ".join([leader['student_name'] for leader in fundraising_result[:3]]) + f" and {len(fundraising_result) - 3} others"
 
-        # Reading Leader (student)
+            # Check if all tied students are from the same grade
+            grades = set([leader['grade_level'] for leader in fundraising_result])
+            grade_display = fundraising_result[0]['grade_level'] if len(grades) == 1 else 'Various Grades'
+
+            performers['fundraising_leader'] = dict(fundraising_result[0])
+            performers['fundraising_leader']['display_name'] = names
+            performers['fundraising_leader']['grade_level'] = grade_display
+            performers['fundraising_leader_tie_count'] = len(fundraising_result)
+            performers['fundraising_leader_all'] = fundraising_result
+        else:
+            performers['fundraising_leader'] = {'student_name': 'N/A', 'display_name': 'N/A', 'grade_level': '', 'class_name': '', 'donation_amount': 0}
+            performers['fundraising_leader_tie_count'] = 0
+            performers['fundraising_leader_all'] = []
+
+        # Reading Leader (student) - with tie detection
+        reading_max_query = f"""
+            SELECT MAX(total_minutes) as max_value
+            FROM (
+                SELECT SUM(MIN(dl.minutes_read, 120)) as total_minutes
+                FROM Daily_Logs dl
+                JOIN Roster r ON dl.student_name = r.student_name
+                WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
+                GROUP BY dl.student_name
+            )
+        """
+        reading_max_result = db.execute_query(reading_max_query)
+        max_reading = reading_max_result[0]['max_value'] if reading_max_result and reading_max_result[0] and reading_max_result[0]['max_value'] else 0
+
         reading_leader_query = f"""
             SELECT dl.student_name, r.grade_level, r.class_name, SUM(MIN(dl.minutes_read, 120)) as total_minutes
             FROM Daily_Logs dl
             JOIN Roster r ON dl.student_name = r.student_name
             WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
             GROUP BY dl.student_name, r.grade_level, r.class_name
-            ORDER BY total_minutes DESC
-            LIMIT 1
+            HAVING SUM(MIN(dl.minutes_read, 120)) = {max_reading}
+            ORDER BY dl.student_name
         """
         reading_result = db.execute_query(reading_leader_query)
-        if reading_result and reading_result[0]:
-            performers['reading_leader'] = reading_result[0]
-        else:
-            performers['reading_leader'] = {'student_name': 'N/A', 'grade_level': '', 'class_name': '', 'total_minutes': 0}
+        if reading_result and len(reading_result) > 0:
+            # Format names: show up to 3, then "and X others"
+            if len(reading_result) <= 3:
+                names = ", ".join([leader['student_name'] for leader in reading_result])
+            else:
+                names = ", ".join([leader['student_name'] for leader in reading_result[:3]]) + f" and {len(reading_result) - 3} others"
 
-        # Top Class (Fundraising)
+            # Check if all tied students are from the same grade
+            grades = set([leader['grade_level'] for leader in reading_result])
+            grade_display = reading_result[0]['grade_level'] if len(grades) == 1 else 'Various Grades'
+
+            performers['reading_leader'] = dict(reading_result[0])
+            performers['reading_leader']['display_name'] = names
+            performers['reading_leader']['grade_level'] = grade_display
+            performers['reading_leader_tie_count'] = len(reading_result)
+            performers['reading_leader_all'] = reading_result
+        else:
+            performers['reading_leader'] = {'student_name': 'N/A', 'display_name': 'N/A', 'grade_level': '', 'class_name': '', 'total_minutes': 0}
+            performers['reading_leader_tie_count'] = 0
+            performers['reading_leader_all'] = []
+
+        # Top Class (Fundraising) - with tie detection
+        class_fundraising_max_query = f"""
+            SELECT MAX(total_fundraising) as max_value
+            FROM (
+                SELECT SUM(rc.donation_amount) as total_fundraising
+                FROM Roster r
+                LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+                WHERE LOWER(r.team_name) = LOWER('{team_name}')
+                GROUP BY r.teacher_name, r.class_name, r.grade_level
+            )
+        """
+        class_fundraising_max_result = db.execute_query(class_fundraising_max_query)
+        max_class_fundraising = class_fundraising_max_result[0]['max_value'] if class_fundraising_max_result and class_fundraising_max_result[0] and class_fundraising_max_result[0]['max_value'] else 0
+
         class_fundraising_query = f"""
             SELECT r.teacher_name, r.class_name, r.grade_level, SUM(rc.donation_amount) as total_fundraising
             FROM Roster r
             LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
             WHERE LOWER(r.team_name) = LOWER('{team_name}')
             GROUP BY r.teacher_name, r.class_name, r.grade_level
-            ORDER BY total_fundraising DESC
-            LIMIT 1
+            HAVING SUM(rc.donation_amount) = {max_class_fundraising}
+            ORDER BY r.teacher_name
         """
         class_fundraising_result = db.execute_query(class_fundraising_query)
-        if class_fundraising_result and class_fundraising_result[0]:
-            performers['top_class_fundraising'] = class_fundraising_result[0]
-        else:
-            performers['top_class_fundraising'] = {'teacher_name': 'N/A', 'class_name': '', 'grade_level': '', 'total_fundraising': 0}
+        if class_fundraising_result and len(class_fundraising_result) > 0:
+            # Format class names: show up to 3, then "and X others"
+            if len(class_fundraising_result) <= 3:
+                names = ", ".join([leader['class_name'] for leader in class_fundraising_result])
+            else:
+                names = ", ".join([leader['class_name'] for leader in class_fundraising_result[:3]]) + f" and {len(class_fundraising_result) - 3} others"
 
-        # Top Class (Reading)
+            # Check if all tied classes are from the same grade
+            grades = set([leader['grade_level'] for leader in class_fundraising_result])
+            grade_display = class_fundraising_result[0]['grade_level'] if len(grades) == 1 else 'Various Grades'
+
+            performers['top_class_fundraising'] = dict(class_fundraising_result[0])
+            performers['top_class_fundraising']['display_name'] = names
+            performers['top_class_fundraising']['grade_level'] = grade_display
+            performers['top_class_fundraising_tie_count'] = len(class_fundraising_result)
+            performers['top_class_fundraising_all'] = class_fundraising_result
+        else:
+            performers['top_class_fundraising'] = {'teacher_name': 'N/A', 'display_name': 'N/A', 'class_name': '', 'grade_level': '', 'total_fundraising': 0}
+            performers['top_class_fundraising_tie_count'] = 0
+            performers['top_class_fundraising_all'] = []
+
+        # Top Class (Reading) - with tie detection
+        class_reading_max_query = f"""
+            SELECT MAX(total_minutes) as max_value
+            FROM (
+                SELECT SUM(MIN(dl.minutes_read, 120)) as total_minutes
+                FROM Roster r
+                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+                WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
+                GROUP BY r.teacher_name, r.class_name, r.grade_level
+            )
+        """
+        class_reading_max_result = db.execute_query(class_reading_max_query)
+        max_class_reading = class_reading_max_result[0]['max_value'] if class_reading_max_result and class_reading_max_result[0] and class_reading_max_result[0]['max_value'] else 0
+
         class_reading_query = f"""
             SELECT r.teacher_name, r.class_name, r.grade_level, SUM(MIN(dl.minutes_read, 120)) as total_minutes
             FROM Roster r
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
             GROUP BY r.teacher_name, r.class_name, r.grade_level
-            ORDER BY total_minutes DESC
-            LIMIT 1
+            HAVING SUM(MIN(dl.minutes_read, 120)) = {max_class_reading}
+            ORDER BY r.teacher_name
         """
         class_reading_result = db.execute_query(class_reading_query)
-        if class_reading_result and class_reading_result[0]:
-            performers['top_class_reading'] = class_reading_result[0]
+        if class_reading_result and len(class_reading_result) > 0:
+            # Format class names: show up to 3, then "and X others"
+            if len(class_reading_result) <= 3:
+                names = ", ".join([leader['class_name'] for leader in class_reading_result])
+            else:
+                names = ", ".join([leader['class_name'] for leader in class_reading_result[:3]]) + f" and {len(class_reading_result) - 3} others"
+
+            # Check if all tied classes are from the same grade
+            grades = set([leader['grade_level'] for leader in class_reading_result])
+            grade_display = class_reading_result[0]['grade_level'] if len(grades) == 1 else 'Various Grades'
+
+            performers['top_class_reading'] = dict(class_reading_result[0])
+            performers['top_class_reading']['display_name'] = names
+            performers['top_class_reading']['grade_level'] = grade_display
+            performers['top_class_reading_tie_count'] = len(class_reading_result)
+            performers['top_class_reading_all'] = class_reading_result
         else:
-            performers['top_class_reading'] = {'teacher_name': 'N/A', 'class_name': '', 'grade_level': '', 'total_minutes': 0}
+            performers['top_class_reading'] = {'teacher_name': 'N/A', 'display_name': 'N/A', 'class_name': '', 'grade_level': '', 'total_minutes': 0}
+            performers['top_class_reading_tie_count'] = 0
+            performers['top_class_reading_all'] = []
 
         return performers
 
@@ -1750,6 +1862,101 @@ def grade_level_tab():
     grade_summaries_result = db.execute_query(grade_agg_query)
     grade_summaries = [dict(row) for row in grade_summaries_result] if grade_summaries_result else []
 
+    # Enhance grade summaries with tie detection for "TOP CLASS" within each grade
+    for grade in grade_summaries:
+        grade_level = grade['grade_level']
+
+        # Get all classes in this grade
+        grade_classes = [c for c in classes if c['grade_level'] == grade_level]
+
+        if not grade_classes:
+            continue
+
+        # Find max values directly from classes (not from grade aggregations, which may exclude color bonus)
+        max_fundraising = max([c.get('total_fundraising', 0) for c in grade_classes], default=0)
+        max_reading = max([c.get('total_minutes', 0) for c in grade_classes], default=0)
+        max_participation = max([c.get('avg_participation_with_color_pct', 0) for c in grade_classes], default=0)
+
+        # Find all classes tied for top fundraising
+        if max_fundraising > 0:
+            tied_fundraising = [c for c in grade_classes if c.get('total_fundraising', 0) == max_fundraising]
+            if len(tied_fundraising) <= 3:
+                grade['top_fundraising_teacher'] = ", ".join([c['class_name'] for c in tied_fundraising])
+            else:
+                grade['top_fundraising_teacher'] = ", ".join([c['class_name'] for c in tied_fundraising[:3]]) + f" and {len(tied_fundraising) - 3} others"
+            grade['top_fundraising_amount'] = max_fundraising
+
+        # Find all classes tied for top reading
+        if max_reading > 0:
+            tied_reading = [c for c in grade_classes if c.get('total_minutes', 0) == max_reading]
+            if len(tied_reading) <= 3:
+                grade['top_reading_teacher'] = ", ".join([c['class_name'] for c in tied_reading])
+            else:
+                grade['top_reading_teacher'] = ", ".join([c['class_name'] for c in tied_reading[:3]]) + f" and {len(tied_reading) - 3} others"
+            grade['top_reading_minutes'] = max_reading
+
+        # Find all classes tied for top participation
+        if max_participation > 0:
+            tied_participation = [c for c in grade_classes if c.get('avg_participation_with_color_pct', 0) == max_participation]
+            if len(tied_participation) <= 3:
+                grade['top_participation_teacher'] = ", ".join([c['class_name'] for c in tied_participation])
+            else:
+                grade['top_participation_teacher'] = ", ".join([c['class_name'] for c in tied_participation[:3]]) + f" and {len(tied_participation) - 3} others"
+            grade['top_participation_pct'] = max_participation
+
+    # Enhance grade summaries with tie detection for "TOP STUDENT" within each grade
+    for grade in grade_summaries:
+        grade_level = grade['grade_level']
+
+        # Get all students in this grade (need to query)
+        student_query = f"""
+            SELECT
+                r.student_name,
+                r.grade_level,
+                r.team_name,
+                r.class_name,
+                COALESCE(rc.donation_amount, 0) as fundraising,
+                SUM(MIN(dl.minutes_read, 120)) as total_minutes
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            WHERE r.grade_level = '{grade_level}' {team_where}
+            GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name, rc.donation_amount
+        """
+        grade_students = db.execute_query(student_query)
+
+        if not grade_students:
+            continue
+
+        # Convert to list of dicts
+        grade_students = [dict(row) for row in grade_students]
+
+        # Find max values for fundraising and reading (handle None values)
+        max_fundraising = max([s.get('fundraising') or 0 for s in grade_students], default=0)
+        max_reading = max([s.get('total_minutes') or 0 for s in grade_students], default=0)
+
+        # Find all students tied for top fundraising
+        if max_fundraising > 0:
+            tied_fundraisers = [s for s in grade_students if (s.get('fundraising') or 0) == max_fundraising]
+            if len(tied_fundraisers) <= 3:
+                grade['top_student_fundraiser'] = ", ".join([s['student_name'] for s in tied_fundraisers])
+            else:
+                grade['top_student_fundraiser'] = ", ".join([s['student_name'] for s in tied_fundraisers[:3]]) + f" and {len(tied_fundraisers) - 3} others"
+            grade['top_student_fundraising_amount'] = max_fundraising
+            # Use first student's team for display (they should all be in same grade)
+            grade['top_student_fundraiser_team'] = tied_fundraisers[0]['team_name']
+
+        # Find all students tied for top reading
+        if max_reading > 0:
+            tied_readers = [s for s in grade_students if (s.get('total_minutes') or 0) == max_reading]
+            if len(tied_readers) <= 3:
+                grade['top_student_reader'] = ", ".join([s['student_name'] for s in tied_readers])
+            else:
+                grade['top_student_reader'] = ", ".join([s['student_name'] for s in tied_readers[:3]]) + f" and {len(tied_readers) - 3} others"
+            grade['top_student_reading_minutes'] = max_reading
+            # Use first student's team for display
+            grade['top_student_reader_team'] = tied_readers[0]['team_name']
+
     # Get team names dynamically from database
     team_names_query = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
     team_names_result = db.execute_query(team_names_query)
@@ -1765,34 +1972,92 @@ def grade_level_tab():
             grade[f'{team_names[1].lower()}_students'] = grade.get('team2_students', 0)
 
     # === GET LEADERS FOR HEADLINE BANNER (All grades + each individual grade) ===
-    def parse_banner_leaders(leaders_result):
-        """Helper to parse leader query results into dict"""
+    def parse_banner_leaders(leaders_result, all_classes_data, filter_grade=None, filter_team=None):
+        """
+        Helper to parse leader query results into dict with tie detection.
+
+        Args:
+            leaders_result: Query results with one leader per metric
+            all_classes_data: All classes data to detect ties
+            filter_grade: Optional grade filter
+            filter_team: Optional team filter
+        """
         leaders = {}
-        if leaders_result:
+        if leaders_result and all_classes_data:
             for row in leaders_result:
-                leaders[row['metric']] = {
-                    'class_name': row['class_name'],
-                    'teacher': row['teacher_name'],
-                    'grade': row['grade_level'],
-                    'team': row['team_name'],
-                    'value': row['value']
+                metric = row['metric']
+                max_value = row['value']
+
+                # Find ALL classes that match this max value
+                tied_classes = []
+                for cls in all_classes_data:
+                    # Apply filters
+                    if filter_grade and cls['grade_level'] != filter_grade:
+                        continue
+                    if filter_team and cls['team_name'] != filter_team:
+                        continue
+
+                    # Check if this class matches the max value for this metric
+                    cls_value = None
+                    if metric == 'fundraising':
+                        cls_value = cls.get('total_fundraising', 0)
+                    elif metric == 'minutes':
+                        cls_value = cls.get('total_minutes', 0)
+                    elif metric == 'sponsors':
+                        cls_value = cls.get('total_sponsors', 0)
+                    elif metric == 'avg_participation_with_color':
+                        cls_value = cls.get('avg_participation_with_color_pct', 0)
+                    elif metric == 'goal_met':
+                        cls_value = cls.get('goal_met_once_pct', 0)
+
+                    if cls_value == max_value and max_value > 0:
+                        tied_classes.append({
+                            'class_name': cls['class_name'],
+                            'teacher': cls['teacher_name'],
+                            'grade': cls['grade_level'],
+                            'team': cls['team_name']
+                        })
+
+                # Format display name based on number of ties
+                if len(tied_classes) == 0:
+                    # Fallback to original single result
+                    display_name = row['class_name']
+                    display_grade = row['grade_level']
+                    display_team = row['team_name']
+                elif len(tied_classes) <= 3:
+                    display_name = ", ".join([c['class_name'] for c in tied_classes])
+                    # Use grade/team from first tied class
+                    display_grade = tied_classes[0]['grade'] if len(set([c['grade'] for c in tied_classes])) == 1 else "Various"
+                    display_team = tied_classes[0]['team']
+                else:
+                    display_name = ", ".join([c['class_name'] for c in tied_classes[:3]]) + f" and {len(tied_classes) - 3} others"
+                    display_grade = "Various"
+                    display_team = tied_classes[0]['team']
+
+                leaders[metric] = {
+                    'class_name': display_name,
+                    'teacher': row['teacher_name'],  # Keep first teacher for compatibility
+                    'grade': display_grade,
+                    'team': display_team,
+                    'value': max_value,
+                    'tie_count': len(tied_classes)
                 }
         return leaders
 
-    # Get school-wide leaders (all grades, optionally filtered by team)
+    # Get school-wide leaders (all grades, optionally filtered by team) with tie detection
     team_for_banner = team_filter if team_filter != 'all' else None
     leaders_query_all = get_school_wide_leaders_query(date_where, grade=None, team=team_for_banner)
     leaders_result_all = db.execute_query(leaders_query_all)
-    banner_leaders_all = parse_banner_leaders(leaders_result_all)
+    banner_leaders_all = parse_banner_leaders(leaders_result_all, classes, filter_grade=None, filter_team=team_for_banner)
 
-    # Get grade-specific leaders (now using consistent format)
+    # Get grade-specific leaders (now using consistent format) with tie detection
     banner_leaders_by_grade = {}
     grades = ['K', '1', '2', '3', '4', '5']
 
     for grade in grades:
         leaders_query_grade = get_school_wide_leaders_query(date_where, grade=grade, team=team_for_banner)
         leaders_result_grade = db.execute_query(leaders_query_grade)
-        banner_leaders_by_grade[grade] = parse_banner_leaders(leaders_result_grade)
+        banner_leaders_by_grade[grade] = parse_banner_leaders(leaders_result_grade, classes, filter_grade=grade, filter_team=team_for_banner)
 
     # Set banner_leaders based on grade filter
     if grade_filter != 'all' and grade_filter in banner_leaders_by_grade:

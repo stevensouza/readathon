@@ -775,7 +775,7 @@
                     <div class="grade-card-section-title">🏆 TOP CLASS</div>
                     <div class="grade-card-content">
                         <div class="grade-card-metric">
-                            <div class="metric-header">Fundraising: {{ grade.top_fundraising_teacher if grade.top_fundraising_teacher else 'N/A' }}'s Class</div>
+                            <div class="metric-header">Fundraising: {{ grade.top_fundraising_teacher if grade.top_fundraising_teacher else 'N/A' }}</div>
                             <div class="metric-value-line">
                                 ${{ "{:,.0f}".format(grade.top_fundraising_amount or 0) }}
                                 {% if team_names|length >= 2 %}{{ '🔵 ' + team_names[0] if grade.top_fundraising_team == team_names[0] else ('🟡 ' + team_names[1] if grade.top_fundraising_team == team_names[1] else '') }}{% endif %}
@@ -783,7 +783,7 @@
                         </div>
                         <div class="grade-card-metric">
                             <div class="metric-header">
-                                Reading (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_reading_teacher if grade.top_reading_teacher else 'N/A' }}'s Class
+                                Reading (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_reading_teacher if grade.top_reading_teacher else 'N/A' }}
                             </div>
                             <div class="metric-value-line">
                                 {{ "{:.0f}".format((grade.top_reading_minutes or 0) / 60) }} hrs ({{ "{:,.0f}".format(grade.top_reading_minutes or 0) }} min)
@@ -792,7 +792,7 @@
                         </div>
                         <div class="grade-card-metric">
                             <div class="metric-header">
-                                Avg. Participation (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_participation_teacher if grade.top_participation_teacher else 'N/A' }}'s Class
+                                Avg. Participation (With Color) {% if date_filter != 'all' %}◐{% endif %}: {{ grade.top_participation_teacher if grade.top_participation_teacher else 'N/A' }}
                             </div>
                             <div class="metric-value-line">
                                 {{ "{:.1f}".format(grade.top_participation_pct or 0) }}%

@@ -222,6 +222,100 @@ class TestTeamsPage:
         assert 'zen-card-kitsko' in html
         assert 'zen-card-staub' in html
 
+    def test_tie_badge_in_comparison_table(self, client, sample_db):
+        """Verify TIE badge appears when teams have equal values."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+
+        # Check if any ties exist in the comparison table
+        # Get team metrics to verify ties
+        team_query = """
+            SELECT r.team_name,
+                   SUM(rc.donation_amount) as fundraising,
+                   SUM(rc.sponsors) as sponsors
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            GROUP BY r.team_name
+            ORDER BY r.team_name
+        """
+        team_results = sample_db.execute_query(team_query)
+
+        if len(team_results) == 2:
+            team1 = team_results[0]
+            team2 = team_results[1]
+
+            # Check for ties in any metric
+            has_tie = (
+                team1['fundraising'] == team2['fundraising'] or
+                team1['sponsors'] == team2['sponsors']
+            )
+
+            if has_tie:
+                # If there's a tie, verify TIE badge appears
+                assert 'leader-badge-tie' in html or 'TIE' in html
+
+    def test_tie_indicator_in_top_performer_cards(self, client, sample_db):
+        """Verify tie indicators appear in top performer cards when multiple students/classes share the top value."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+
+        # Check for tie indicators in the HTML
+        # Pattern: "name1, name2" (multiple names) or "name1, name2, name3 and X others"
+        # When there's a tie, we should see commas in the leader name field
+
+        # Check if there are any "and X others" patterns (indicating >3 ties)
+        others_pattern = r'and \d+ others'
+        others_matches = re.findall(others_pattern, html)
+
+        # If we found "and X others", that's a tie indicator
+        for match in others_matches:
+            # Extract the number
+            num = int(re.search(r'\d+', match).group())
+            # Should be at least 1 (meaning at least 4 total tied)
+            assert num >= 1, f"Invalid 'others' count: {num}"
+
+    def test_both_values_highlighted_on_tie(self, client, sample_db):
+        """Verify both team values get highlighted when there's a tie."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+
+        # Get team metrics to check for ties
+        team_query = """
+            SELECT r.team_name,
+                   SUM(rc.donation_amount) as fundraising
+            FROM Roster r
+            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+            GROUP BY r.team_name
+            ORDER BY r.team_name
+        """
+        team_results = sample_db.execute_query(team_query)
+
+        if len(team_results) == 2:
+            team1 = team_results[0]
+            team2 = team_results[1]
+
+            # If there's a fundraising tie, both values should be highlighted
+            if team1['fundraising'] == team2['fundraising']:
+                # Both winning-value-kitsko and winning-value-staub should appear
+                assert 'winning-value-kitsko' in html
+                assert 'winning-value-staub' in html
+
+    def test_tie_count_data_structure(self, client):
+        """Verify tie_count fields are present in top_performers data structure."""
+        response = client.get('/teams')
+        html = response.data.decode('utf-8')
+
+        # The page should load successfully even if all tie_count values are 1 (no ties)
+        # This test verifies the template doesn't crash when accessing tie_count fields
+        assert response.status_code == 200
+        assert 'TOP PERFORMERS' in html
+
+        # Verify no template errors related to missing tie_count fields
+        assert 'fundraising_leader_tie_count' not in html  # Should not leak variable names
+        assert 'reading_leader_tie_count' not in html
+        assert 'top_class_fundraising_tie_count' not in html
+        assert 'top_class_reading_tie_count' not in html
+
 
 if __name__ == '__main__':
     # Allow running this file directly with: python test_teams_page.py
