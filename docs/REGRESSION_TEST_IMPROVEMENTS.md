@@ -247,9 +247,10 @@ Grade 2
 4. ⏭️ Edge cases (>3 ties, empty values) - Would require new test database
 
 ### Phase 4: Integration with CI/CD ✅
-1. ✅ Tests run automatically via pre-commit hook (all 397 structural + 54 content tests)
-2. ✅ Test maintenance documented in this file
-3. ✅ Sample database expected values documented in each test file header
+1. ✅ Tests run automatically via pre-commit hook (all 451 tests: 397 structural + 54 content)
+2. ✅ Content regression tests added to pre-commit hook (2025-11-10)
+3. ✅ Test maintenance documented in this file
+4. ✅ Sample database expected values documented in each test file header
 
 ## Benefits
 
@@ -336,6 +337,12 @@ Content regression tests provide significantly better coverage than structural t
 **No application bugs found:** All discrepancies were test expectations vs. actual correct behavior
 
 **Final test suite:** 397 structural + 54 content = **451 tests, all passing** ✅
+
+**Pre-commit hook integration (2025-11-10):** All 451 tests now run on every commit, ensuring:
+- No regressions in page structure or content
+- Displayed values match expected sample data
+- Calculations remain correct across code changes
+- Color bonus bug (like the one fixed in v2026.14.1) would be caught immediately
 
 **Key Achievement:** Three major pages (Teams, Grade Level, School) now have comprehensive content regression tests that will catch:
 - Wrong student/class names displayed
