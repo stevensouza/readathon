@@ -1,8 +1,8 @@
 # Quick Start Guide - Next Session
 
-**Last Updated:** 2025-11-03
-**Status:** Students Page Complete (v2026.5.0) - Ready for Next Feature
-**Current Version:** v2026.5.0
+**Last Updated:** 2025-11-10
+**Status:** ✅ Development Complete - Maintenance Mode
+**Current Version:** v2026.14.2
 
 ---
 
@@ -12,147 +12,111 @@
 Continue work on Read-a-Thon application.
 
 **Current Status:**
-- ✅ Students Page complete with all fixes and regression tests (v2026.5.0)
-- ✅ 235 tests passing (50 Students page tests)
-- ✅ All 4 dashboard tabs fully functional: School, Teams, Grade Level, Students
+- ✅ All planned features implemented for 2026 school year
+- ✅ 460 tests passing (includes comprehensive content regression tests)
+- ✅ Pre-commit hook active with all content tests
+- ✅ All 9 dashboard tabs fully functional: School, Teams, Grade Level, Students, Upload, Reports, Workflows, Admin, Help
 - ✅ Filter persistence working across all pages (date, grade, team)
 - ✅ Gold/silver highlighting working correctly across all pages
+- ✅ Database registry system operational
+- ✅ Export functionality working
 
-**Completed in v2026.5.0:**
-- Students page production implementation complete
-- Half-circle indicators (◐) now conditional on date filter
-- Banner title corrected ("Avg. Participation" not "With Color")
-- Grade-level silver highlighting for all-grades view
-- Grade filter persistence bug fixed (all filters read simultaneously)
-- 2 comprehensive regression tests added (student21 detail + complete table)
+**Development Status:**
+- 🟢 Maintenance mode: No active development planned
+- 🟢 Application ready for 2026 read-a-thon event
+- 🟢 Bug fixes only (increment patch version for fixes)
 
-**Potential Next Tasks:**
-1. Add team filter to Grade Level page (enhancement)
-2. Add name search to Students table (enhancement)
-3. New features or reports as needed
+**If bugs are discovered:**
+1. Report issue and reproduction steps
+2. Create/update tests to reproduce bug
+3. Fix bug
+4. Verify all 460 tests pass
+5. Increment patch version (v2026.14.3)
 
 Refer to:
-- Universal rules: RULES.md
-- UI patterns: UI_PATTERNS.md
-- Version history: CHANGELOG.md
+- Universal rules: md/RULES.md
+- UI patterns: md/UI_PATTERNS.md
+- Regression tests: docs/REGRESSION_TEST_IMPROVEMENTS.md
+- Session state: docs/QUICK_START_NEXT_SESSION.md (this file)
 ```
 
 ---
 
-## ✅ JUST COMPLETED (v2026.5.0 - 2025-11-03)
+## ✅ RECENT COMPLETIONS (v2026.14.0 - v2026.14.2)
 
-### Students Page Final Fixes and Regression Tests
+### v2026.14.2 (2025-11-10) - Pre-commit Hook Enhancement
+**Changes:**
+- Added content regression tests to pre-commit hook
+- All 460 tests now run on every commit
+- Documented regression test improvements
 
-**All critical bugs fixed:**
-1. **Half-circle indicators (◐)** - Now only appear when single day selected
-   - Added conditionals in banner (3 metrics) and table headers (6 columns)
-   - Implemented Bootstrap tooltips for context
-2. **Banner title** - Removed "(With Color)" from Avg. Participation
-   - Color war bonuses don't apply at student level
-3. **Participation calculation** - Simplified from nested aggregates
-   - Now: `COUNT(*) / (students × days) × 100`
-4. **Grade-level silver highlighting** - Fixed for all-grades view
-   - Created `get_students_grade_winners()` method
-   - Each grade's top performers get silver highlights
-5. **Grade filter persistence** - Fixed critical bug
-   - Rewrote filter restoration to read ALL filters from sessionStorage simultaneously
-   - Prevents grade filter from being lost during navigation
+**Commits:**
+- `889aaf3` - Bump version to v2026.14.2
+- `0baca7e` - Document content regression tests added to pre-commit hook
 
-**Regression tests added:**
-1. **student21 detail modal** - Locks in all 20+ values for student21
-2. **Complete table regression** - Verifies all 7 students' data and gold/silver highlights
+### v2026.14.1 (2025-11-10) - Bug Fix
+**Changes:**
+- Fixed color bonus calculation in TOP CLASS Reading cards
+- Color bonus now properly included in top class calculations
 
-**Test Results:**
-- Students page: 50/50 tests passing ✅
-- Full suite: 235 tests passing ✅
+**Commits:**
+- `f8fcd89` - Fix: Include color bonus in TOP CLASS Reading calculations
 
-**Files Modified:**
-- `templates/students.html` - Conditional rendering, filter restoration logic
-- `queries.py` - Simplified participation calculation
-- `database.py` - Added `get_students_grade_winners()` method
-- `app.py` - Call grade_winners method when viewing all grades
-- `test_students_page.py` - Added 2 comprehensive regression tests
+### v2026.14.0 (2025-11-10) - Final Release for 2025-2026 School Year
+**Changes:**
+- Completed all content regression tests (Phases 1-3)
+- Added 54 comprehensive content tests across 3 major pages
+- Documentation improvements (help pages, workflows, interface)
+- Test refactoring (removed sys.exit() patterns)
+
+**Commits:**
+- `0c2c70a` - Bump version to v2026.14.0
+- `8f5c64a` - Add School page content regression tests (Phase 3)
+- `1d27ec4` - Add Grade Level content regression tests (Phase 2)
+- `d6e8897` - Add content regression tests for Teams page
 
 ---
 
 ## 📊 PROJECT STATUS OVERVIEW
 
-### Completed Features (v2026.1.0 - v2026.5.0)
-
-**v2026.5.0 (2025-11-03)** - Students Page Final Fixes
-- Fixed half-circle indicators (conditional rendering)
-- Fixed banner title (removed "With Color")
-- Fixed grade-level winner highlighting for all-grades view
-- Fixed grade filter persistence bug
-- Added 2 comprehensive regression tests
-
-**v2026.4.0 (2025-11-01)** - Development Process Improvements
-- Established testing discipline framework
-- Immediate documentation standards
-- Students page implementation roadmap
-
-**v2026.3.0 (2025-10-25)** - Teams Page Redesign
-- 4-column layout (2 rows × 4 cards)
-- Team-specific colored borders and backgrounds
-- Filter indicators and global filter persistence
-
-**v2026.2.0** - Grade Level Page
-- Grade-specific cards and detail tables
-- Filter persistence with sessionStorage
-- Gold/silver winner highlighting
-
-**v2026.1.0** - Database Selection
-- Persistent database preference
-- Command-line arguments (--db sample/prod)
-- Launcher scripts
-
 ### Test Coverage
-- **Total tests:** 235 passing + 5 skipped
-- **Students page:** 50 tests
-- **Banner regression:** Tests for all pages
-- **Filter persistence:** Cross-page testing
+- **Total tests:** 460 passing
+- **Content regression tests:** 54 tests (Teams, Grade Level, School pages)
+- **Structural tests:** 406 tests (page loads, UI elements, calculations)
+- **Pre-commit hook:** All 460 tests run automatically
 
 ### Documentation Status
 - ✅ RULES.md - Universal rules across all pages
 - ✅ UI_PATTERNS.md - Established UI component patterns
-- ✅ STUDENTS_PAGE_DESIGN.md - Complete design documentation
-- ✅ STUDENTS_PAGE_STATUS.md - Implementation status tracking
-- ✅ CHANGELOG.md - Version history
+- ✅ REGRESSION_TEST_IMPROVEMENTS.md - Content regression test documentation
+- ✅ All help pages complete with sticky TOCs
 - ✅ All feature documentation in docs/features/
+
+### Application Features
+- **9 Dashboard Tabs:** School, Teams, Grade Level, Students, Upload, Reports, Workflows, Admin, Help
+- **22 Pre-configured Reports:** Q1-Q23 (non-sequential numbering)
+- **Workflow Automation:** Run multiple reports in sequence
+- **Database Registry:** Multi-database support with UI switcher
+- **Enhanced Metadata:** Column descriptions, terms, automated analysis for all reports
+- **Export Capabilities:** Copy to clipboard or download as CSV
+- **Upload Audit Trail:** Track every file upload with detailed history
+- **Filter Persistence:** Grade, team, and date filters persist across pages
 
 ---
 
-## 🎯 POTENTIAL NEXT TASKS
+## 🎯 NO ACTIVE DEVELOPMENT PLANNED
 
-### Enhancement: Team Filter for Grade Level Page
-**Scope:** Large change affecting multiple components
+**Application Status:**
+- ✅ All features complete for 2026 school year
+- ✅ Comprehensive test coverage (460 tests)
+- ✅ Pre-commit hooks prevent regressions
+- ✅ Documentation complete
+- ✅ Ready for production use
 
-**What needs updating:**
-- Banner queries (add team_where parameter)
-- Grade cards (team filtering logic)
-- Detail table (team_where in query)
-- UI (add team dropdown matching Students page)
-- Tests (add team filter test cases)
-
-**Estimated effort:** 4-6 hours
-
-### Enhancement: Name Search for Students Table
-**Scope:** Small UI convenience feature
-
-**What to add:**
-- Search input field
-- JavaScript filter function (case-insensitive)
-- Clear/reset button
-- Visible count update
-
-**Estimated effort:** 30-60 minutes
-
-### New Features
-Check with user for priorities:
-- Additional reports or data views
-- Export functionality enhancements
-- New dashboard metrics
-- Data import improvements
+**Maintenance Mode:**
+- Bug fixes only (if discovered)
+- Patch version increments (v2026.14.x)
+- No new features planned until next school year (v2027.x.x)
 
 ---
 
@@ -164,25 +128,30 @@ Check with user for priorities:
 - `queries.py` - SQL queries extracted for maintainability
 - `report_metadata.py` - Column metadata and analysis
 
-### Templates
+### Templates (Jinja2 + Bootstrap 5)
 - `templates/base.html` - Base template with navigation
-- `templates/students.html` - Students page (812 lines)
-- `templates/grade_level.html` - Grade Level page
-- `templates/teams.html` - Teams page (4-column layout)
-- `templates/school.html` - School dashboard
+- `templates/school.html` - School dashboard tab
+- `templates/teams.html` - Teams tab (4-column layout)
+- `templates/grade_level.html` - Grade Level tab
+- `templates/students.html` - Students tab with detail modal
+- `templates/upload.html` - CSV upload interface
+- `templates/reports.html` - Report selection and display
+- `templates/workflows.html` - Workflow automation
+- `templates/admin.html` - Admin controls and database registry
 
-### Documentation
+### Documentation (Critical Reading)
 - `CLAUDE.md` - Project guidance for Claude Code
-- `RULES.md` - Universal rules across all pages
-- `UI_PATTERNS.md` - UI component patterns
-- `docs/STUDENTS_PAGE_DESIGN.md` - Students page design doc
+- `md/RULES.md` - **MUST READ** - Universal rules across all pages
+- `md/UI_PATTERNS.md` - **MUST READ** - UI component patterns
+- `docs/REGRESSION_TEST_IMPROVEMENTS.md` - Content regression test documentation
 - `docs/QUICK_START_NEXT_SESSION.md` - This file
-- `CHANGELOG.md` - Version history
 
-### Tests
-- `test_students_page.py` - 50 tests for Students page
-- `test_banner.py` - Banner regression tests
-- `test_audit_trail.py` - Audit trail functionality
+### Tests (460 tests total)
+- `tests/test_teams_content_regression.py` - 12 content tests
+- `tests/test_grade_level_content_regression.py` - 21 content tests
+- `tests/test_school_content_regression.py` - 21 content tests
+- `tests/test_students_page.py` - 50+ tests for Students page
+- Plus 15+ other test files for all features
 
 ---
 
@@ -236,57 +205,63 @@ for idx, team_name in enumerate(sorted(team_names)):
 
 ---
 
-## 📊 DATABASE NOTES
+## 📊 DATABASE ARCHITECTURE
 
 ### Databases
-- `readathon_prod.db` - Production (real student data)
-- `readathon_sample.db` - Sample (fictitious data for testing, 7 students)
+- `db/readathon_registry.db` - Registry database (tracks all contest databases)
+- `db/readathon_2025.db` - 2025 contest database (production, 411 students)
+- `db/readathon_sample.db` - Sample database (fictitious data, 7 students for testing)
 
-### Key Tables
-- `Roster` - 411 students (prod) or 7 students (sample)
-- `Daily_Logs` - Day-by-day reading minutes
+### Key Tables (Contest Databases)
+- `Roster` - Student roster (411 students in prod, 7 in sample)
+- `Daily_Logs` - Day-by-day reading minutes (capped and uncapped)
 - `Reader_Cumulative` - Aggregated stats (fundraising, sponsors)
 - `Class_Info` - Teacher assignments, grade levels
 - `Grade_Rules` - Grade-specific reading goals
+- `Team_Color_Bonus` - Bonus minutes for team spirit events
+- `Upload_History` - Audit trail for CSV imports
 
-### Important Rules
-- Reading minutes capped at 120 per day for contest calculations
-- Database stores both capped and uncapped values
-- Sanctioned dates: Oct 10-15, 2025 (6-day window)
-- Two-team competition (alphabetical order determines colors)
+### Important Business Rules (see md/RULES.md)
+- Reading minutes **capped at 120 per day** for contest calculations
+- Database stores both `capped_minutes` and `uncapped_minutes`
+- Sanctioned dates: **Oct 10-15, 2025** (6-day window)
+- Two-team competition: **Team colors assigned alphabetically** (team1=blue, team2=yellow)
+- **Fundraising is NEVER capped** (always from Reader_Cumulative)
+- Participation can **exceed 100%** with color bonus
 
 ---
 
-## 🧪 TESTING BEFORE COMMITTING
+## 🧪 TESTING (Before Any Commits)
 
-**Automated tests:**
+**Stop Flask before running tests:**
 ```bash
-pytest test_students_page.py -v  # 50 tests
-pytest --tb=short -q             # All 235 tests
+lsof -ti:5001 | xargs kill
+```
+
+**Run full test suite:**
+```bash
+pytest                          # All 460 tests
+pytest --tb=short -q            # Concise output
+pytest tests/test_specific.py   # Specific test file
 ```
 
 **Manual browser testing:**
 ```bash
 python3 app.py --db sample
-open http://127.0.0.1:5001/students
+open http://127.0.0.1:5001
 ```
 
-**Checklist:**
-- [ ] All automated tests pass
-- [ ] Page loads without errors
-- [ ] Filters work (grade, team, date)
-- [ ] Banner updates correctly
-- [ ] Gold and silver highlights appear
-- [ ] Student detail modal works
-- [ ] Filter persistence across tabs
-- [ ] Half-circles only on single-day views
+**Pre-commit hook:**
+- Automatically runs all 460 tests on every commit
+- Includes content regression tests (catches display/calculation bugs)
+- Must pass before commit succeeds
 
 ---
 
-## 💡 TIPS FOR NEXT SESSION
+## 💡 MAINTENANCE MODE REMINDERS
 
-1. **Before starting new work:** Read RULES.md and UI_PATTERNS.md
-2. **When implementing features:** Follow testing discipline (CLAUDE.md lines 228-320)
-3. **When making decisions:** Document immediately in appropriate files
-4. **When uncertain:** Ask user for clarification
-5. **Before committing:** Run full test suite and manual browser verification
+1. **No new features:** Development complete for 2026 school year
+2. **Bug fixes only:** If bugs discovered, create test → fix → verify → commit
+3. **Always read RULES.md and UI_PATTERNS.md** before any changes
+4. **Test thoroughly:** All 460 tests must pass before committing
+5. **Version increments:** Patch only (v2026.14.x) for bug fixes
