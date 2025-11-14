@@ -1223,10 +1223,15 @@
             const exceeded = day.exceeded_cap ? `<span class="status-indicator cap-exceeded">⚠️ Exceeded cap (+${day.actual_minutes - 120} min)</span><br>` : '';
             const goalMet = day.met_goal ? `<span class="status-indicator goal-met">✅ Met daily goal</span>` : '';
 
+            // Parse date in local time (avoid timezone issues)
+            const [year, month, dayOfMonth] = day.log_date.split('-').map(Number);
+            const localDate = new Date(year, month - 1, dayOfMonth); // month is 0-indexed
+            const formattedDate = localDate.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
+
             html += `
                 <tr>
                     <td class="text-center">${dayNum++}</td>
-                    <td>${new Date(day.log_date).toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'})}</td>
+                    <td>${formattedDate}</td>
                     <td class="text-end">${day.actual_minutes} min</td>
                     <td class="text-end">${day.capped_minutes} min</td>
                     <td>${exceeded}${goalMet}</td>

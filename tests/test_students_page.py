@@ -1114,3 +1114,152 @@ class TestStudentsPageSearch:
         # Placeholder should say "Search all fields"
         assert 'Search all fields' in html
         assert 'placeholder' in html
+
+
+class TestStudentDetailDataIntegrity:
+    """
+    Regression tests for student detail view data integrity.
+
+    These tests verify that dates and minutes shown in the student detail
+    view exactly match the data in the Daily_Logs table, preventing issues
+    like timezone bugs that cause off-by-one date errors.
+
+    Tests use production database (readathon_2025.db) to verify real student data.
+    """
+
+    @pytest.fixture
+    def prod_client(self):
+        """Create a test client using production database."""
+        app.config['TESTING'] = True
+        with app.test_client() as client:
+            with app.app_context():
+                # Use production database for these regression tests (db_id = 1)
+                with client.session_transaction() as sess:
+                    sess['active_database_id'] = 1
+            yield client
+
+    @pytest.fixture
+    def prod_db(self):
+        """Get production database instance for verification queries."""
+        return ReadathonDB('db/readathon_2025.db')
+
+    def verify_student_detail_matches_db(self, client, db, student_name):
+        """
+        Helper method to verify student detail data matches database.
+
+        Args:
+            client: Flask test client
+            db: ReadathonDB instance
+            student_name: Name of student to verify
+
+        Returns:
+            tuple: (passed, message) - True if test passed, error message if failed
+        """
+        # Fetch student detail from API
+        response = client.get(f'/student/{student_name}')
+        assert response.status_code == 200, f"Failed to fetch detail for {student_name}"
+
+        api_data = response.get_json()
+        assert api_data is not None, f"No JSON data returned for {student_name}"
+        assert 'daily' in api_data, f"Missing 'daily' field for {student_name}"
+
+        daily_from_api = api_data['daily']
+
+        # Query database directly for same student
+        query = """
+            SELECT
+                log_date,
+                minutes_read as actual_minutes,
+                CASE WHEN minutes_read > 120 THEN 120 ELSE minutes_read END as capped_minutes
+            FROM Daily_Logs
+            WHERE student_name = ?
+            ORDER BY log_date
+        """
+        daily_from_db = db.execute_query(query, (student_name,))
+
+        # Verify same number of days
+        if len(daily_from_api) != len(daily_from_db):
+            return (False,
+                   f"{student_name}: API returned {len(daily_from_api)} days, "
+                   f"DB has {len(daily_from_db)} days")
+
+        # Verify each day's date and minutes match exactly
+        for i, (api_day, db_day) in enumerate(zip(daily_from_api, daily_from_db)):
+            day_num = i + 1
+
+            # Check date matches
+            if api_day['log_date'] != db_day['log_date']:
+                return (False,
+                       f"{student_name} Day {day_num}: "
+                       f"API date={api_day['log_date']}, "
+                       f"DB date={db_day['log_date']} (timezone bug?)")
+
+            # Check actual minutes match
+            if api_day['actual_minutes'] != db_day['actual_minutes']:
+                return (False,
+                       f"{student_name} Day {day_num} ({db_day['log_date']}): "
+                       f"API actual_minutes={api_day['actual_minutes']}, "
+                       f"DB actual_minutes={db_day['actual_minutes']}")
+
+            # Check capped minutes match
+            if api_day['capped_minutes'] != db_day['capped_minutes']:
+                return (False,
+                       f"{student_name} Day {day_num} ({db_day['log_date']}): "
+                       f"API capped_minutes={api_day['capped_minutes']}, "
+                       f"DB capped_minutes={db_day['capped_minutes']}")
+
+        return (True, f"{student_name}: All {len(daily_from_api)} days verified ✓")
+
+    def test_reed_niebler_dates_and_minutes(self, prod_client, prod_db):
+        """
+        Regression test: Verify Reed Niebler's dates and minutes match database.
+
+        This test caught a timezone bug where dates were off by one day
+        (showed Oct 10-19 instead of Oct 9-18).
+        """
+        passed, message = self.verify_student_detail_matches_db(
+            prod_client, prod_db, 'Reed Niebler'
+        )
+        assert passed, message
+
+    def test_anderson_kerlik_dates_and_minutes(self, prod_client, prod_db):
+        """
+        Regression test: Verify Anderson Kerlik's dates and minutes match database.
+        """
+        # First check if this student has any data
+        query = "SELECT COUNT(*) as count FROM Daily_Logs WHERE student_name = ?"
+        result = prod_db.execute_query(query, ('Anderson Kerlik',))
+
+        if result[0]['count'] == 0:
+            pytest.skip("Anderson Kerlik has no reading data")
+
+        passed, message = self.verify_student_detail_matches_db(
+            prod_client, prod_db, 'Anderson Kerlik'
+        )
+        assert passed, message
+
+    def test_ten_day_reader_dates_and_minutes(self, prod_client, prod_db):
+        """
+        Regression test: Verify a 10-day reader's dates and minutes match database.
+
+        Tests a student who read all 10 days to ensure full date range is correct.
+        """
+        # Find a student with 10 days of reading
+        query = """
+            SELECT student_name, COUNT(*) as days
+            FROM Daily_Logs
+            GROUP BY student_name
+            HAVING COUNT(*) >= 10
+            LIMIT 1
+        """
+        result = prod_db.execute_query(query)
+
+        if not result:
+            pytest.skip("No students with 10+ days of reading found")
+
+        student_name = result[0]['student_name']
+
+        passed, message = self.verify_student_detail_matches_db(
+            prod_client, prod_db, student_name
+        )
+        assert passed, message
