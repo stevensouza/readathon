@@ -7,6 +7,7 @@
     <div class="col-12">
         <h1 class="mb-4">
             <i class="bi bi-upload"></i> Upload Data
+            <small class="text-muted fs-6">— Database: {{ current_db_name }}</small>
         </h1>
 
         <!-- Daily Minutes Upload -->
@@ -18,20 +19,62 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="collapse" id="collapseDaily">
+                <div class="collapse show" id="collapseDaily">
                 <p class="text-muted">Upload multiple daily reading minutes files at once. Dates are extracted from filenames automatically.</p>
+                <p class="text-muted"><strong>📥 How to Export from www.read-a-thon.com:</strong> View Reports → All Reports → Reports By Date → Select date and 'Minutes Read' from picklists</p>
+                <p class="text-muted"><strong>💡 Tip:</strong> Parents often enter minutes late—re-upload all past contest days daily for accuracy. Re-uploading merges/replaces data for that date.</p>
 
-                <!-- Multi-File Selection -->
-                <div class="mb-3">
-                    <label for="daily_files" class="form-label fw-bold">Select Daily Minutes Files *</label>
-                    <input type="file" class="form-control" id="daily_files" name="daily_files" accept=".csv" multiple required onchange="previewDailyFiles()">
-                    <div class="form-text">
-                        Select multiple CSV files. Expected filename format: <code>daily_YYYY-MM-DD.csv</code> or similar with date pattern.
-                        <br>CSV with columns: <code>ReaderName</code>, <code>Minutes</code> (+ optional: ClassID, Teacher, ReaderID)
-                        <br>Example: <code>John Smith, 45</code> or <code>Jane Doe, 120, C101, Teacher Name, R456</code>
-                        <br><strong>Validation:</strong> Reader names must match database roster. Minutes are capped at 120 per day for contest calculations.
+                <!-- Multi-File Selection - Prominent Card -->
+                <div class="card mb-4" style="border: 2px solid #1e3a5f; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); max-width: 800px; margin-left: auto; margin-right: auto;">
+                    <div class="card-body text-center py-3">
+                        <h5 class="mb-2">
+                            <i class="bi bi-cloud-upload-fill" style="font-size: 1.8rem; color: #1e3a5f;"></i>
+                            <span class="ms-2 d-inline-block">Select Daily Minutes Files</span>
+                        </h5>
+                        <div style="max-width: 600px; margin: 0 auto;">
+                            <input type="file" class="form-control form-control-lg" id="daily_files" name="daily_files" accept=".csv" multiple required onchange="previewDailyFiles()">
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            <div class="mb-1">
+                                <i class="bi bi-file-earmark-text"></i> <strong>Filename:</strong> Must contain date (e.g., <code>daily_2025-10-15.csv</code>)
+                            </div>
+                            <div class="mb-1">
+                                <i class="bi bi-table"></i> <strong>Required columns:</strong> <code>ReaderName</code>, <code>Minutes</code>
+                            </div>
+                            <div>
+                                <i class="bi bi-shield-check"></i> <strong>Note:</strong> Student names must match roster exactly
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- CSV Format Example - Collapsible -->
+                <details class="mb-3">
+                    <summary class="fw-bold text-secondary" style="cursor: pointer; padding: 0.5rem; background: #f8f9fa; border-left: 3px solid #6c757d;">
+                        <i class="bi bi-code-square"></i> CSV Format Example (click to expand)
+                    </summary>
+                    <div class="alert alert-secondary mt-2 mb-0">
+                        <pre class="mb-2" style="font-size: 0.85rem;"><code>ClassID,Teacher,ReaderID,ReaderName,Minutes
+1001,"Ms. Spencer",2117001,"John Doe",45
+1001,"Ms. Spencer",2117002,"Jane Spencer",30</code></pre>
+                        <small class="text-muted">Required: ReaderName, Minutes | Optional/Ignored: ClassID, Teacher, ReaderID</small>
+                    </div>
+                </details>
+
+                <!-- What Happens During Upload - Collapsible -->
+                <details class="mb-3">
+                    <summary class="fw-bold text-secondary" style="cursor: pointer; padding: 0.5rem; background: #f8f9fa; border-left: 3px solid #0dcaf0;">
+                        <i class="bi bi-info-circle"></i> What Happens During Upload (click to expand)
+                    </summary>
+                    <div class="alert alert-info mt-2 mb-0">
+                        <ol class="mb-0 small">
+                            <li>System validates student names against the roster (case-insensitive)</li>
+                            <li>Unrecognized names are reported as warnings</li>
+                            <li>Data is merged with existing data for that date (if re-uploading)</li>
+                            <li>Upload history is updated with status (success/warning/error)</li>
+                        </ol>
+                    </div>
+                </details>
 
                 <!-- File Preview Table -->
                 <div id="filePreviewSection" style="display: none;" class="mb-3">
@@ -80,19 +123,63 @@
             </div>
             <div class="card-body">
                 <div class="collapse" id="collapseCumulative">
-                <p class="text-muted">Upload cumulative fundraising and reading stats (replaces all existing cumulative data)</p>
+                <p class="text-muted"><strong>📥 How to Export from www.read-a-thon.com:</strong> View Reports → All Reports → Reports By Reader → Comprehensive Report → Download Report (CSV)</p>
+                <p class="text-muted"><strong>⚠️ Warning:</strong> This replaces ALL existing cumulative data (not incremental). Upload daily as data changes—contains running totals.</p>
+                <p class="text-muted"><strong>💡 Note:</strong> Students not in roster will be imported with "ERROR: NO ROSTER MATCH" tag for review.</p>
+
                 <form id="uploadCumulativeForm" enctype="multipart/form-data">
-                    <!-- Cumulative File -->
-                    <div class="mb-3">
-                        <label for="cumulative_file" class="form-label fw-bold">Cumulative Stats File *</label>
-                        <input type="file" class="form-control" id="cumulative_file" name="cumulative_file" accept=".csv" required>
-                        <div class="form-text">
-                            CSV with columns: <code>"Reader Name"</code>, <code>Teacher</code>, <code>Raised</code>, <code>Sponsors</code>, <code>Minutes</code> (+ optional: Email, Sessions, PageCreated)
-                            <br>Example: <code>"John Smith", "Teacher Name", 125.50, 5, 450</code>
-                            <br><strong>Validation:</strong> Reader names and teachers must match database roster. This replaces ALL existing cumulative data.
-                            <br><strong>Note:</strong> Fundraising amounts are in dollars, minutes are total cumulative reading time.
+                    <!-- Cumulative File - Prominent Card -->
+                    <div class="card mb-4" style="border: 2px solid #198754; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); max-width: 800px; margin-left: auto; margin-right: auto;">
+                        <div class="card-body text-center py-3">
+                            <h5 class="mb-2">
+                                <i class="bi bi-bar-chart-fill" style="font-size: 1.8rem; color: #198754;"></i>
+                                <span class="ms-2 d-inline-block">Select Cumulative Stats File</span>
+                            </h5>
+                            <div style="max-width: 600px; margin: 0 auto;">
+                                <input type="file" class="form-control form-control-lg" id="cumulative_file" name="cumulative_file" accept=".csv" required>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                <div class="mb-1">
+                                    <i class="bi bi-table"></i> <strong>Required columns:</strong> <code>"Reader Name"</code>, <code>Teacher</code>, <code>Raised</code>, <code>Sponsors</code>, <code>Minutes</code>
+                                </div>
+                                <div class="mb-1">
+                                    <i class="bi bi-shield-check"></i> <strong>Validation:</strong> Names and teachers must match student roster exactly
+                                </div>
+                                <div>
+                                    <i class="bi bi-currency-dollar"></i> <strong>Note:</strong> Fundraising in dollars, minutes are cumulative totals
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- CSV Format Example - Collapsible -->
+                    <details class="mb-3">
+                        <summary class="fw-bold text-secondary" style="cursor: pointer; padding: 0.5rem; background: #f8f9fa; border-left: 3px solid #6c757d;">
+                            <i class="bi bi-code-square"></i> CSV Format Example (click to expand)
+                        </summary>
+                        <div class="alert alert-secondary mt-2 mb-0">
+                            <pre class="mb-2" style="font-size: 0.85rem;"><code>"Reader Name",Teacher,Email,Raised,Sponsors,Sessions,PageCreated,Minutes
+"John Doe","Ms. Spencer",john@example.com,100.00,5,3,Yes,150
+"Jane Spencer","Ms. Spencer",jane@example.com,75.00,3,2,Yes,120</code></pre>
+                            <small class="text-muted">Required: "Reader Name", Teacher, Raised, Sponsors, Minutes | Optional/Ignored: Email, Sessions, PageCreated</small>
+                        </div>
+                    </details>
+
+                    <!-- What Happens During Upload - Collapsible -->
+                    <details class="mb-3">
+                        <summary class="fw-bold text-secondary" style="cursor: pointer; padding: 0.5rem; background: #f8f9fa; border-left: 3px solid #0dcaf0;">
+                            <i class="bi bi-info-circle"></i> What Happens During Upload (click to expand)
+                        </summary>
+                        <div class="alert alert-info mt-2 mb-0">
+                            <ol class="mb-0 small">
+                                <li>System validates student names and teachers against the roster (case-insensitive)</li>
+                                <li>ALL existing cumulative data is replaced (not incremental)</li>
+                                <li>Students not in roster are imported with "ERROR: NO ROSTER MATCH" tag</li>
+                                <li>Successfully processed entries are saved to the database</li>
+                                <li>Upload history is updated with status and student counts</li>
+                            </ol>
+                        </div>
+                    </details>
 
                     <!-- Submit Button -->
                     <div class="d-grid gap-2">
@@ -115,26 +202,35 @@
             </div>
             <div class="card-body">
                 <div class="collapse" id="collapseBonus">
-                <p class="text-muted">Upload Team Color Bonus data for a special event day (students wearing team colors earn bonus points and minutes)</p>
+                <p class="text-muted"><strong>📋 Data Source:</strong> School principal provides this data (usually as spreadsheet) near contest end—not from www.read-a-thon.com.</p>
+                <p class="text-muted"><strong>🎯 Bonus Structure:</strong> Students wearing team colors receive +1 participation day (class/grade/team/school levels) and +10 reading minutes for their team.</p>
                 <form id="uploadBonusForm" enctype="multipart/form-data">
-                    <!-- Event Date -->
-                    <div class="mb-3">
-                        <label for="bonus_event_date" class="form-label fw-bold">Event Date *</label>
-                        <input type="date" class="form-control" id="bonus_event_date" name="bonus_event_date" required>
-                        <div class="form-text">
-                            Select the date when the Team Color Bonus event occurred
-                        </div>
-                    </div>
+                    <!-- Team Color Bonus - Prominent Card -->
+                    <div class="card mb-4" style="border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%); max-width: 800px; margin-left: auto; margin-right: auto;">
+                        <div class="card-body text-center py-3">
+                            <h5 class="mb-2">
+                                <i class="bi bi-star-fill" style="font-size: 1.8rem; color: #ffc107;"></i>
+                                <span class="ms-2 d-inline-block">Upload Team Color Bonus</span>
+                            </h5>
 
-                    <!-- Bonus File -->
-                    <div class="mb-3">
-                        <label for="bonus_file" class="form-label fw-bold">Team Color Bonus File *</label>
-                        <input type="file" class="form-control" id="bonus_file" name="bonus_file" accept=".csv" required>
-                        <div class="form-text">
-                            CSV with columns: <code>timestamp</code>, <code>class_name</code>, <code>team_name</code>, <code>grade_level</code>, <code>students_count</code>
-                            <br>Example: <code>10/16/2025 8:46:06, porter, kitsko, 1, 14</code>
-                            <br><strong>Validation:</strong> Class name (lowercase teacher name) and team name must match database (case-insensitive)
-                            <br><strong>Bonus Calculation:</strong> Each student = +1 participation point, +10 minutes for their team
+                            <!-- Event Date -->
+                            <div style="max-width: 600px; margin: 0 auto;">
+                                <label for="bonus_event_date" class="form-label fw-bold text-start d-block">Event Date *</label>
+                                <input type="date" class="form-control form-control-lg mb-2" id="bonus_event_date" name="bonus_event_date" required>
+
+                                <!-- Bonus File -->
+                                <label for="bonus_file" class="form-label fw-bold text-start d-block mt-2">Team Color Bonus File *</label>
+                                <input type="file" class="form-control form-control-lg" id="bonus_file" name="bonus_file" accept=".csv" required>
+                            </div>
+
+                            <div class="mt-2 text-muted small">
+                                <div class="mb-1">
+                                    <i class="bi bi-table"></i> <strong>Required columns:</strong> <code>timestamp</code>, <code>class_name</code>, <code>team_name</code>, <code>grade_level</code>, <code>students_count</code>
+                                </div>
+                                <div>
+                                    <i class="bi bi-shield-check"></i> <strong>Validation:</strong> Class name (lowercase teacher) and team name must match roster
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -174,64 +270,6 @@
                         </div>
                     </div>
                 </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Instructions -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseInstructions">
-                <h5 class="mb-0">
-                    <i class="bi bi-info-circle"></i> Instructions
-                    <i class="bi bi-chevron-down float-end"></i>
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="collapse" id="collapseInstructions">
-                <h6>Daily Minutes Upload:</h6>
-                <ul>
-                    <li>Upload daily reading minutes for participation tracking</li>
-                    <li>CSV file must include columns: <strong>ReaderName</strong> and <strong>Minutes</strong></li>
-                    <li>Other columns (ClassID, Teacher, ReaderID) are ignored if present</li>
-                    <li>Select the specific date for this data</li>
-                    <li>Data is merged with existing data for that date if re-uploading</li>
-                    <li>Student names must match the roster exactly</li>
-                </ul>
-
-                <div class="alert alert-secondary mt-2 mb-2">
-                    <strong>Daily Minutes CSV Format Example:</strong>
-                    <pre class="mb-0"><code>ClassID,Teacher,ReaderID,ReaderName,Minutes
-1001,"Ms. Spencer",2117001,"John Doe",45
-1001,"Ms. Spencer",2117002,"Jane Spencer",30</code></pre>
-                    <small class="text-muted">Required: ReaderName, Minutes | Optional/Ignored: ClassID, Teacher, ReaderID</small>
-                </div>
-
-                <h6 class="mt-3">Cumulative Stats Upload:</h6>
-                <ul>
-                    <li>Upload cumulative fundraising and reading totals</li>
-                    <li>CSV file must include: <strong>"Reader Name"</strong>, <strong>Teacher</strong>, <strong>Raised</strong>, <strong>Sponsors</strong>, <strong>Minutes</strong></li>
-                    <li>Other columns (Email, Sessions, PageCreated) are ignored if present</li>
-                    <li>This replaces ALL existing cumulative data (not incremental)</li>
-                    <li>Upload daily as data changes - contains running totals</li>
-                    <li>Students not in roster will be imported with "ERROR: NO ROSTER MATCH" tag</li>
-                </ul>
-
-                <div class="alert alert-secondary mt-2 mb-2">
-                    <strong>Cumulative Stats CSV Format Example:</strong>
-                    <pre class="mb-0"><code>"Reader Name",Teacher,Email,Raised,Sponsors,Sessions,PageCreated,Minutes
-"John Doe","Ms. Spencer",john@example.com,100.00,5,3,Yes,150
-"Jane Spencer","Ms. Spencer",jane@example.com,75.00,3,2,Yes,120</code></pre>
-                    <small class="text-muted">Required: "Reader Name", Teacher, Raised, Sponsors, Minutes | Optional/Ignored: Email, Sessions, PageCreated</small>
-                </div>
-
-                <h6 class="mt-3">What Happens During Upload:</h6>
-                <ol>
-                    <li>System validates student names against the roster</li>
-                    <li>Column names are matched case-insensitively</li>
-                    <li>Unrecognized student names are reported as warnings</li>
-                    <li>Successfully processed entries are saved to the database</li>
-                    <li>Upload history is updated with status (success/warning/error)</li>
-                </ol>
                 </div>
             </div>
         </div>
@@ -357,6 +395,15 @@ function previewDailyFiles() {
     fileCount.textContent = files.length;
     updateUploadCount();
     previewSection.style.display = 'block';
+
+    // Make upload button sticky when files are selected
+    const uploadBtn = document.getElementById('uploadMultipleBtn');
+    if (uploadBtn && files.length > 0) {
+        uploadBtn.style.position = 'sticky';
+        uploadBtn.style.bottom = '20px';
+        uploadBtn.style.zIndex = '1050';
+        uploadBtn.style.boxShadow = '0 -4px 12px rgba(0,0,0,0.3)';
+    }
 }
 
 // Toggle all file checkboxes
