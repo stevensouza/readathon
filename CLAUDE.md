@@ -71,6 +71,46 @@ pytest
 python3 clear_all_data.py         # Reset database tables (keeps schema)
 ```
 
+## Claude Skills (Automated Enforcement)
+
+This project uses **Claude Skills** for automated enforcement of best practices. Skills are model-invoked - Claude automatically uses them when relevant conditions are detected.
+
+### Active Skills
+
+**1. Readathon Pre-Commit Check** (`.claude/skills/readathon-precommit-check/`)
+- **Triggers:** When preparing git commits
+- **Enforces:** Testing discipline, security scans, documentation updates
+- **Actions:** Kills Flask, runs pytest, checks for security issues, validates docs updated
+- **Replaces:** Manual checklist from "Post-Implementation Checklist" section
+
+**2. Readathon Database Safety** (`.claude/skills/readathon-database-safety/`)
+- **Triggers:** Before database modification operations (INSERT, UPDATE, DELETE, DROP, clear_all_data.py)
+- **Enforces:** Protection against accidental production database changes
+- **Actions:** Warns before production operations, blocks destructive operations, recommends sample DB
+- **Replaces:** Manual database safety checks
+
+**3. Readathon Document Reflex** (`.claude/skills/readathon-document-reflex/`)
+- **Triggers:** When design decisions made, patterns discovered, rules defined
+- **Enforces:** Immediate documentation (prevents context loss during conversation compaction)
+- **Actions:** Auto-updates RULES.md, UI_PATTERNS.md, feature docs when decisions occur
+- **Replaces:** Manual "remember to document" reminders
+
+### Why Skills vs. Documentation?
+
+**Previous approach:** Detailed checklists in CLAUDE.md that rely on Claude remembering to follow them
+
+**Skills approach:** Automated triggers that proactively enforce best practices when conditions are met
+
+**Result:** Better enforcement, less reliance on discipline, systematic quality control
+
+### Skill Files
+
+Skills are stored in `.claude/skills/` directory:
+- Each skill has its own subdirectory
+- Core instructions in `SKILL.md` file with YAML frontmatter
+- Skills can include helper scripts and templates
+- Committed to repository (shared across all sessions)
+
 ## Architecture Overview
 
 ### Technology Stack
@@ -246,123 +286,64 @@ Instead of saying *"The banner now shows correct values"*, do this:
 
 ---
 
-## Testing Discipline (MANDATORY)
+## Testing Discipline (Enforced by Skills)
 
-**CRITICAL PROBLEM:** In the past, features were claimed "complete" when simple tests would have caught errors (including page load failures due to exceptions).
+**See Skill:** `.claude/skills/readathon-precommit-check/` for automated enforcement.
 
-**NEW RULE:** NEVER claim a feature is "working" or "complete" without:
+**Core Principle:** NEVER claim a feature is "working" or "complete" without running automated tests and verifying functionality.
 
-### 1. Automated Tests (Create DURING Implementation, NOT After)
-```bash
-# Create test file while implementing, not after
-test_students_page.py
+### Two-Tier Testing (Claude Code Web vs. Desktop)
 
-# Mandatory tests for ALL pages (see md/RULES.md lines 228-320):
+**Tier 1: Automated Testing** (Claude Code Web can do)
+- ✅ Create and run pytest tests
+- ✅ Start Flask, verify HTTP 200 responses
+- ✅ Check for exceptions in logs
+- ✅ Verify database query results
+- ✅ Commit with tag: `[Automated tests pass]`
+
+**Tier 2: Visual Testing** (User does on desktop)
+- ❌ Visual browser verification (Claude Code Web cannot do)
+- ❌ Prototype side-by-side comparison
+- ❌ UI/UX validation
+- ❌ Interactive element testing
+
+**Workflow:** Claude completes Tier 1 → commits/pushes → User performs Tier 2 on desktop → approves or requests changes
+
+### Mandatory Tests for ALL Pages
+See `md/RULES.md` lines 228-320 for complete test requirements:
 - test_page_loads_successfully (HTTP 200)
 - test_no_error_messages (scan for exceptions)
-- test_percentage_formats (validate all %)
-- test_currency_formats (validate all $)
+- test_percentage_formats, test_currency_formats
 - test_sample_data_integrity (verify DB calculations)
-- test_team_badges_present (team color consistency)
-- test_winning_value_highlights (gold/silver ovals)
+- test_team_badges_present, test_winning_value_highlights
 - test_headline_banner (6 metrics present)
-```
-
-### 2. Manual Browser Testing (BEFORE Claiming Done)
-**Checklist - ALL must pass before saying "it's working":**
-- [ ] ✅ Run tests: `pytest test_students_page.py -v` (all passing)
-- [ ] ✅ Start Flask app: `python3 app.py --db sample`
-- [ ] ✅ Open URL in browser: `http://127.0.0.1:5001/students`
-- [ ] ✅ Page loads without errors (no exceptions, no blank page)
-- [ ] ✅ Compare side-by-side with prototype (visual match)
-- [ ] ✅ Banner: 6 metrics present, correct order, correct values
-- [ ] ✅ Table: Sortable headers, alternating row colors, correct data
-- [ ] ✅ Filters: Work correctly, persist via sessionStorage
-- [ ] ✅ Team colors: Follow alphabetical rule (blue/yellow)
-- [ ] ✅ Run SQL queries to verify calculations match displayed values
-
-### 3. Completion Statement Format
-**BAD:** "The banner now shows correct values ✅"
-
-**GOOD:**
-```
-✅ Banner implementation complete:
-- Tested in browser: http://127.0.0.1:5001/students
-- All 6 metrics present in correct order
-- Values verified against database queries:
-  * Fundraising: $45,678 (matches Reader_Cumulative SUM)
-  * Minutes: 8,234 hours (matches Daily_Logs capped SUM)
-  * Sponsors: 28 (matches Reader_Cumulative SUM)
-- Visual match with prototype ✅
-- All tests passing (8/8) ✅
-```
-
-**When tests fail or page doesn't load:**
-- ❌ Do NOT say "it's working"
-- ✅ Fix the issue first
-- ✅ Re-test until all checks pass
-- ✅ THEN report completion
 
 ---
 
-## Immediate Documentation (REFLEX ACTION)
+## Immediate Documentation (Enforced by Skills)
 
-**PROBLEM:** Context is lost during conversation compaction. Important decisions/rules are forgotten.
+**See Skill:** `.claude/skills/readathon-document-reflex/` for automated enforcement.
 
-**SOLUTION:** Document important information **immediately** when discovered, not "later" or "at the end".
+**Core Principle:** Document important information **immediately** when discovered, not "later" or "at the end". This prevents context loss during conversation compaction.
 
-### When to Document Immediately (REFLEX)
+### When Documentation Triggers Automatically
 
-**User asks important question → Document answer NOW:**
-```
-User: "Should fundraising be capped or uncapped?"
-Claude: [Immediately edits md/RULES.md]
-        "✅ Documented in md/RULES.md line 82-85: Fundraising is NEVER capped,
-            always from Reader_Cumulative table"
-```
+The `readathon-document-reflex` skill automatically triggers when:
+- User asks about data sources ("Should X be capped or uncapped?")
+- Design decisions made ("Students page will use X")
+- Patterns discovered ("I notice all pages use Y pattern")
+- Calculation rules defined ("Metric Z is calculated as...")
 
-**Design decision made → Update design doc NOW:**
-```
-User: "Students page should use capped minutes"
-Claude: [Immediately updates docs/STUDENTS_PAGE_DESIGN.md]
-        "✅ Documented in STUDENTS_PAGE_DESIGN.md line 178:
-            Reading column uses capped minutes (max 120/day)"
-```
+### Quick Reference: Which Files to Update
 
-**New pattern discovered → Update md/UI_PATTERNS.md NOW:**
-```
-Claude: "I notice all pages use the same filter dropdown pattern"
-        [Immediately updates UI_PATTERNS.md]
-        "✅ Added Filter Period Selector pattern to md/UI_PATTERNS.md lines 50-109"
-```
+| Decision Type | File to Update |
+|---------------|----------------|
+| Data source, calculation rules | `md/RULES.md` |
+| UI patterns, styling | `md/UI_PATTERNS.md` |
+| Feature design | `docs/[FEATURE]_DESIGN.md` |
+| Open questions / TBD items | Feature design docs |
 
-### Which Files to Update
-
-| Decision Type | File to Update | Example |
-|---------------|----------------|---------|
-| Data source rule | `md/RULES.md` | "Fundraising always from Reader_Cumulative" |
-| Calculation rule | `md/RULES.md` | "Participation can exceed 100% with color bonus" |
-| Visual pattern | `md/UI_PATTERNS.md` | "Team badges use rounded rectangles" |
-| Color assignment | `md/UI_PATTERNS.md` or `md/RULES.md` | "Team 1 (alphabetically first) = blue" |
-| Feature design | `docs/STUDENTS_PAGE_DESIGN.md` | "Detail view shows daily breakdown" |
-| Open questions | `docs/STUDENTS_PAGE_DESIGN.md` | "TBD: Export to CSV or Excel?" |
-
-### Compaction Reality
-
-**Q: Will Claude get notified before compaction happens?**
-- **A: No.** Compaction happens transparently. By the time conversation is shorter, it's too late.
-
-**Q: Can Claude save state during compaction?**
-- **A: No.** There's no "pre-compaction hook" to trigger documentation.
-
-**Q: Will user need to remind Claude to document?**
-- **A: Possibly yes, occasionally.** But by making it a **reflex action** (document immediately when decision is made), we minimize context loss.
-
-**Best Practice:**
-- ✅ Document IMMEDIATELY when decision is made (not later)
-- ✅ Update "Last Updated" date in file
-- ✅ Reference file location so user knows where to find it
-- ✅ If uncertain whether to document, ASK USER
+The skill handles the immediate editing and reports back with file location and line numbers.
 
 ---
 
@@ -535,77 +516,35 @@ This applies to:
 - Documentation mentioning prototype files
 - Any HTML file in the prototypes/ directory
 
-## Post-Implementation Checklist
+## Post-Implementation Checklist (Enforced by Skills)
 
-**CRITICAL: Claude must automatically perform these steps after ANY feature implementation without being asked.**
+**See Skill:** `.claude/skills/readathon-precommit-check/` for automated enforcement before commits.
 
-This checklist ensures quality, security, and completeness for every feature. User only needs to approve final commit.
+After ANY feature implementation, Claude automatically performs:
 
 ### 1. Testing ✅
-**Automatically Create or Update Tests:**
-- Create test file (e.g., `test_students_page.py`) using pytest framework
-- Include tests for:
-  - Page loading successfully (HTTP 200, no errors)
-  - Data structure verification (tables, sections, headings present)
-  - Sample data integrity (calculations match database)
-  - UI elements present (buttons, filters, navigation)
-- Run existing test suite to check for regressions
-- Report test results: "✅ X tests created, all passing" or "⚠️ Y tests failing"
-- Suggest adding to pre-commit hook if critical feature
+- Create test file using pytest framework
+- Run full test suite to check for regressions
+- Report: "✅ X tests created, Y/Z passing"
 
-### 2. Security Review ⚠️ WARN ONLY
-**Automatically Check for Security Issues:**
-
-**SQL Injection:**
-- ✅ Verify parameterized queries: `cursor.execute(query, params)`
-- ❌ Flag string formatting: `f"SELECT * FROM {table}"`
-
-**XSS (Cross-Site Scripting):**
-- ✅ Verify Jinja2 auto-escaping: `{{ variable }}`
-- ⚠️ Flag unsafe HTML: `{{ variable | safe }}` (warn user)
-
-**Input Validation:**
-- ✅ Check length limits (e.g., `if len(input) > 100`)
-- ✅ Check format validation (regex patterns)
-- ✅ Check sanitization (strip, validate)
-
-**File Operations:**
-- ✅ Check path traversal prevention
-- ✅ Check file type validation
-- ✅ Check size limits
-
-**Error Handling:**
-- ❌ Flag exposing system details: `return f"Database error: {str(e)}"`
-- ✅ Verify generic user messages: `return "Operation failed. Please try again"`
-
-**If issues found:**
-- ⚠️ **WARN user but don't block implementation**
-- Explain issue clearly
-- Provide recommended fix
-- Ask: "I can fix this now. Proceed with fix?"
-
-**If no issues found:**
-- ✅ Report: "Security review: No issues found ✅"
+### 2. Security Review ⚠️
+- Scan for SQL injection, XSS, path traversal, error exposure
+- Warn about issues (don't block)
+- Report: "✅ No issues found" or "⚠️ Found N issues" + recommendations
 
 ### 3. Documentation 📝
-**Automatically Update Documentation:**
-- Update relevant feature documentation (`docs/features/feature-XX.md`)
-- Add code comments for complex logic (algorithms, security-critical sections)
-- Update `docs/QUICK_START_NEXT_SESSION.md` if major change
-- Update `docs/00-INDEX.md` if new feature
-- Document any new dependencies in `requirements.txt` and CLAUDE.md
-- Add prototype to `prototypes/INDEX.html` if applicable
+- Update feature documentation (`docs/features/`, design docs)
+- Add code comments for complex logic
+- Update QUICK_START_NEXT_SESSION.md if major change
+- **Handled automatically by `readathon-document-reflex` skill**
 
-### 4. Version Control 🤚 ASK FIRST
-**Automatically Prepare Commit (But Ask for Approval):**
+### 4. Prepare Commit 🤚 ASK FIRST
+- Run `git status` and `git diff`
+- Generate commit message (project style from CHANGELOG.md)
+- Present summary and **ASK for approval**
+- **NEVER auto-commit without user approval**
 
-**Step 1: Review Changes**
-- Run `git status` to see modified/new files
-- Run `git diff` to see actual changes
-- Summarize what changed
-
-**Step 2: Generate Commit Message**
-Follow project style (from CHANGELOG.md):
+### Commit Message Format
 ```
 <Short descriptive title>
 
@@ -617,80 +556,18 @@ Follow project style (from CHANGELOG.md):
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-**Step 3: Present to User and ASK**
-```
-"✅ [Feature name] implementation complete!
+### When to Ask vs. Act
 
-What I did:
-- [Summary of implementation]
-- Added X automated tests (Y passing ✅ / Z failing ⚠️)
-- Security review: [No issues found ✅ / Found N issues ⚠️]
-- Updated X documentation files
+**Act Automatically:**
+- ✅ Tests, security scans, documentation updates
+- ✅ Read-only git commands
+- ✅ Generate commit messages (but not committing)
 
-Proposed commit message:
-
-'[Generated commit message]'
-
-Approve this commit? (yes/no)"
-```
-
-**Step 4: After Approval**
-- Commit with generated message
-- Show `git log -1` to verify
-- Suggest version increment if significant: "This is a [minor/patch] feature, increment to vYYYY.X.0?"
-
-**NEVER auto-commit without asking first!**
-
-### 5. User Communication 📢
-**Automatically Provide:**
-
-**For Prototypes:**
-- Terminal command: `open prototypes/file.html`
-- Browser URL: `file:///Users/stevesouza/my/data/readathon/v2026_development/prototypes/file.html`
-
-**Summary:**
-- What was implemented
-- Test results
-- Security review results
-- Documentation updated
-- Commit ready for approval
-
-**Next Steps:**
-- Suggest version increment
-- Note any breaking changes or migrations needed
-- Recommend follow-up work if applicable
-
----
-
-## When Claude Should Ask vs. Act
-
-**Act Automatically (No User Permission Needed):**
-- ✅ Creating or updating automated tests
-- ✅ Running existing test suite
-- ✅ Security review (with warnings for issues)
-- ✅ Updating documentation
-- ✅ Adding code comments
-- ✅ Providing prototype links (both formats)
-- ✅ Running read-only git commands (`git status`, `git diff`, `git log`)
-- ✅ Analyzing code for issues
-- ✅ Generating commit messages (but not committing)
-
-**Ask First (Always Require User Approval):**
-- 🤚 Git commits (prepare message, then ASK)
-- 🤚 Git pushes (local to remote)
-- 🤚 Version tagging (creating release tags)
-- 🤚 Deleting files or data
-- 🤚 Destructive git operations (filter-branch, reset --hard, etc.)
-- 🤚 Modifying configuration files
-- 🤚 Installing dependencies
-- ❓ **When uncertain about user's intent** - Always ask for clarification
-
-**Key Principle:**
-- **Automate quality checks** (tests, security, docs)
-- **Ask for destructive operations** (commits, pushes, deletes)
-- **Ask when uncertain** (ambiguous requirements, multiple approaches)
-
-This ensures Claude is proactive about quality while maintaining user control over git history and critical operations.
+**Ask First:**
+- 🤚 Git commits/pushes
+- 🤚 Destructive operations
+- 🤚 Configuration changes
+- ❓ When uncertain about intent
 
 ---
 
