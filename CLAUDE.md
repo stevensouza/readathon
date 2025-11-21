@@ -42,7 +42,7 @@ python3 app.py --db readathon_2025.db
 ### Testing
 ```bash
 python3 test_audit_trail.py       # Test audit trail functionality
-pytest                             # Run all tests (335 tests)
+pytest                             # Run all tests (463 tests)
 pytest tests/test_specific.py      # Run specific test file
 ```
 
@@ -64,7 +64,7 @@ pytest
 **Before running pre-commit tests:**
 1. Stop Flask: `lsof -ti:5001 | xargs kill`
 2. Run tests: `pytest` (or let pre-commit hook run them)
-3. All 335 tests should pass
+3. All 463 tests should pass
 
 ### Database Operations
 ```bash
@@ -215,7 +215,7 @@ db/                       # SQLite databases
   ├─ readathon_2025.db    # 2025 contest database (production)
   └─ readathon_sample.db  # Sample database (fictitious data for testing)
 csv/                      # Sample CSV files for initialization
-tests/                    # All test files (18 files, 411 tests)
+tests/                    # All test files (18 files, 463 tests)
   ├─ test_database_registry.py  # Database registry tests (13 tests)
   └─ ...                  # Other test files
 templates/                # Jinja2 HTML (base, index, upload, reports, admin, workflows)
@@ -451,7 +451,7 @@ See `VERSION` file for current version and `CHANGELOG.md` for release history.
   - Q24 report queries central registry
   - Export includes database registry info in README
   - Sample database shows yellow/amber banner
-  - All 18 test files updated (411 tests passing)
+  - All 18 test files updated (463 tests passing)
 - ✅ Enhanced metadata implemented for all 22 reports (Q1-Q23)
 - ✅ Analysis modal working with automated insights
 - ✅ SQL queries extracted to queries.py module

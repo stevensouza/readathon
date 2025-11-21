@@ -26,7 +26,7 @@ lsof -ti:5001 | xargs kill -9 2>/dev/null
 pytest -v
 ```
 
-**Expected:** All tests passing (currently 335 tests in the suite)
+**Expected:** All tests passing (currently 463 tests in the suite)
 
 **If failures occur:**
 - ❌ BLOCK commit
