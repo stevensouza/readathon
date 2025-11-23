@@ -180,3 +180,35 @@ Last Updated: [YYYY-MM-DD]
 By documenting **immediately as reflex action**, we minimize context loss and ensure decisions persist across sessions.
 
 **Best Practice:** When uncertain whether to document, **ask user** then document immediately after confirmation.
+
+## Integration with Meta-Skills
+
+This skill is part of the multi-layer context preservation system:
+
+### Coordination with readathon-context-saver
+
+When this skill documents a decision:
+- **Also trigger:** readathon-context-saver to update `docs/SESSION_MEMORY.md`
+- **Purpose:** Permanent docs (this skill) + session state (context-saver)
+- **Avoid:** Duplicate work - coordinate the update
+- **Division:**
+  - document-reflex → permanent project documentation
+  - context-saver → temporary session state
+
+### Coordination with readathon-workflow-detector
+
+When documenting patterns/decisions:
+- **Check:** Does this represent a workflow pattern worth tracking?
+- **If yes:** Update `.claude/workflow_patterns.md` as well
+- **Examples:**
+  - Documenting "prototype workflow" pattern → track as workflow
+  - Documenting data source decision → just documentation (not workflow)
+  - Documenting testing approach → could be workflow pattern
+
+### Layer in Context Preservation Strategy
+
+This skill is **Layer 1** in the multi-layer defense:
+- **Layer 1 (this skill):** Real-time docs - immediate
+- **Layer 2:** Session memory - moderate frequency
+- **Layer 3:** Workflow patterns - every occurrence
+- **Layer 4:** Quick start guide - session boundaries

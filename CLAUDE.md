@@ -95,6 +95,43 @@ This project uses **Claude Skills** for automated enforcement of best practices.
 - **Actions:** Auto-updates RULES.md, UI_PATTERNS.md, feature docs when decisions occur
 - **Replaces:** Manual "remember to document" reminders
 
+**4. Readathon Workflow Detector** (`.claude/skills/readathon-workflow-detector/`) **[META-SKILL]**
+- **Triggers:** After every user request + at session start
+- **Detects:** Repetitive workflow patterns and complex tasks that should be automated
+- **Suggests:** Creating new skills when patterns reach threshold (2/3/5 based on expertise)
+- **Tracks:** All patterns in `.claude/workflow_patterns.md`
+- **Respects:** "Track but don't make skill" user overrides
+- **Meta-concept:** A skill that creates other skills by watching user behavior
+
+**5. Readathon Context Saver** (`.claude/skills/readathon-context-saver/`)
+- **Triggers:** Every 5-10 minutes + after important events
+- **Prevents:** Context loss during long sessions and conversation compaction
+- **Saves:** Session state to `docs/SESSION_MEMORY.md`
+- **Captures:** Current work, key decisions, git state, workflow patterns, open questions
+- **Purpose:** Break the context loss spiral (long session → compaction → re-explain → longer session)
+
+### Meta-Skill System
+
+**What's a meta-skill?** A skill designed to detect when other skills would be useful.
+
+The `readathon-workflow-detector` uses dual detection:
+1. **Repetition-based:** Tracks when you do the same thing 2-5 times (adaptive threshold)
+2. **Complexity-based:** Immediately recognizes complex tasks worth automating (suggests at count 1)
+
+**How it works:**
+- Categorizes every request (Workflow, Question, Bug Fix, Feature, Analysis, Creative, Administrative)
+- Tracks patterns in `.claude/workflow_patterns.md` with counts and status
+- Suggests skill creation when threshold reached
+- Learns user expertise level and adjusts timing
+- Respects "track but don't make skill" overrides
+
+**Context preservation strategy:**
+Multi-layer defense against context loss:
+- **Layer 1:** Real-time docs (document-reflex) - immediate
+- **Layer 2:** Session memory (context-saver) - every 5-10 min + events
+- **Layer 3:** Workflow patterns (workflow-detector) - every occurrence
+- **Layer 4:** Quick start guide - session boundaries
+
 ### Why Skills vs. Documentation?
 
 **Previous approach:** Detailed checklists in CLAUDE.md that rely on Claude remembering to follow them
@@ -223,8 +260,18 @@ prototypes/               # HTML prototypes (sanitized with fictitious data)
 docs/                     # Feature documentation (31 features + architecture)
   ├─ 00-INDEX.md          # Master index of all features
   ├─ QUICK_START_NEXT_SESSION.md  # Current work status
+  ├─ SESSION_MEMORY.md    # Live session state (auto-saved every 5-10 min)
+  ├─ GENERIC_PROMPTS.md   # Generic prompts for workflow detection & context preservation
   └─ features/            # Individual feature specs
   └─ screenshots/         # Screenshots (sanitized for privacy)
+.claude/                  # Claude Code configuration
+  ├─ workflow_patterns.md # Workflow pattern tracking (meta-skill data)
+  └─ skills/              # Claude skills
+      ├─ readathon-precommit-check/
+      ├─ readathon-database-safety/
+      ├─ readathon-document-reflex/
+      ├─ readathon-workflow-detector/  # Meta-skill for pattern detection
+      └─ readathon-context-saver/      # Context preservation skill
 ```
 
 ## Universal Rules & UI Patterns

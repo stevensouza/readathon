@@ -38,7 +38,62 @@ Refer to:
 - UI patterns: md/UI_PATTERNS.md
 - Regression tests: docs/REGRESSION_TEST_IMPROVEMENTS.md
 - Session state: docs/QUICK_START_NEXT_SESSION.md (this file)
+- Session memory: docs/SESSION_MEMORY.md (live updates)
+- Workflow patterns: .claude/workflow_patterns.md (pattern tracking)
 ```
+
+---
+
+## 🤖 META-SKILL SYSTEM (NEW!)
+
+**What is it?** A "meta-skill" that watches your workflow patterns and suggests when other skills would be useful.
+
+### Active Meta-Skills
+
+**1. Workflow Detector** (`.claude/skills/readathon-workflow-detector/`)
+- Tracks every workflow pattern you use
+- Suggests creating skills when patterns reach threshold (2/3/5 times based on expertise)
+- Uses dual detection: repetition-based + immediate complexity detection
+- Respects "track but don't make skill" overrides
+- File: `.claude/workflow_patterns.md`
+
+**2. Context Saver** (`.claude/skills/readathon-context-saver/`)
+- Auto-saves session state every 5-10 minutes + after important events
+- Prevents context loss during long sessions and compaction
+- Captures: current work, decisions, git state, patterns, open questions
+- File: `docs/SESSION_MEMORY.md`
+
+### How to Use
+
+**At session start, Claude will:**
+1. Read `.claude/workflow_patterns.md` and `docs/SESSION_MEMORY.md`
+2. Summarize what you were working on
+3. Show pattern counts and active skills
+4. Offer to continue or start fresh
+
+**During session, Claude will:**
+- Track all workflow patterns automatically
+- Suggest skills when thresholds reached
+- Save context every 5-10 minutes
+- Update session memory after important events
+
+**If you don't want a skill:**
+- Say "track but don't make skill" → Claude will never suggest that pattern again
+- Pattern continues to be counted for visibility
+
+### Benefits
+
+- ✅ No more manual pattern detection
+- ✅ Context preserved even during long sessions
+- ✅ Can resume seamlessly after compaction
+- ✅ Skills grow organically from actual needs
+- ✅ Don't forget where you left off
+
+### Files to Check
+
+- `.claude/workflow_patterns.md` - See all tracked patterns and counts
+- `docs/SESSION_MEMORY.md` - See current session state
+- `docs/GENERIC_PROMPTS.md` - Generic versions for other projects
 
 ---
 
