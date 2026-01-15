@@ -120,6 +120,9 @@ This index helps you find features by **what they do**, not by feature number. U
 | [File Formats](architecture/file-formats.md) | CSV column specifications for daily vs cumulative uploads |
 | [API Endpoints](architecture/api-endpoints.md) | All Flask API routes and their parameters |
 | [Column Detection Logic](architecture/column-detection.md) | How the system identifies file types |
+| **[Performance Analysis](PERFORMANCE_ANALYSIS.md)** | **🔥 Comprehensive performance audit (962 lines) - 12 issues identified** |
+| **[Performance Summary](PERFORMANCE_ISSUES_SUMMARY.md)** | **⚡ Quick reference - Critical issues & fixes** |
+| **[Performance Optimization SQL](PERFORMANCE_OPTIMIZATION_SCRIPT.sql)** | **📊 Ready-to-run SQL script to add indexes** |
 
 ---
 
@@ -144,4 +147,4 @@ This index helps you find features by **what they do**, not by feature number. U
 
 ---
 
-**Last Updated:** 2025-10-24
+**Last Updated:** 2026-01-15
