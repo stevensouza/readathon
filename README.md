@@ -89,11 +89,13 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 ### 1. Install Dependencies
 
 ```bash
-# Flask (app), pytest + beautifulsoup4 (tests)
-pip3 install -r requirements.txt
+# Flask (app), pytest + beautifulsoup4 (tests), installed into a project virtualenv (venv/).
+# (Homebrew's Python refuses system-wide "pip3 install" with "externally-managed-environment".)
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
 
-# Or run the installer (checks Python/Flask, creates Desktop start/stop shortcuts).
-# It does not start the app. Safe to rerun anytime: it skips completed steps, rewrites
+# Or run the installer (creates venv/ and installs the dependencies, creates Desktop start/stop
+# shortcuts). It does not start the app. ./run.sh uses venv/ automatically. Safe to rerun anytime: it skips completed steps, rewrites
 # outdated Desktop shortcuts, and reports the current state even when everything is fine.
 ./install.sh
 ```
@@ -162,7 +164,7 @@ Code comes from git; the real databases never do (they contain student names and
    ```bash
    git clone https://github.com/stevensouza/readathon.git
    cd readathon
-   ./install.sh                  # or: pip3 install -r requirements.txt
+   ./install.sh                  # creates venv/ and installs requirements.txt into it
    ```
 2. **Add the databases** you were given (privately, e.g. a zip made by `./package_data.sh`):
    ```bash

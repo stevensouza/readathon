@@ -22,4 +22,11 @@ fi
 # Open the browser once the server has had a moment to start
 (sleep 2 && open "$URL") &
 
-python3 app.py "$@"
+# Use the project virtualenv created by install.sh when present
+if [ -x "$SCRIPT_DIR/venv/bin/python3" ]; then
+    PYTHON="$SCRIPT_DIR/venv/bin/python3"
+else
+    PYTHON=python3
+fi
+
+"$PYTHON" app.py "$@"

@@ -135,45 +135,28 @@ else
 fi
 
 # Install Python dependencies
+# Homebrew's Python refuses system-wide pip installs (PEP 668, "externally-managed-environment"),
+# so dependencies live in a project virtualenv (venv/, gitignored). run.sh uses it automatically.
 print_header "Python Dependencies"
 
 cd "$SCRIPT_DIR"
 
-if [ -f "requirements.txt" ]; then
-    print_info "Installing dependencies from requirements.txt..."
-
-    # Check if Flask is already installed
-    if python3 -c "import flask" 2>/dev/null; then
-        FLASK_VERSION=$(python3 -c "import flask; print(flask.__version__)")
-        print_status "Flask already installed: $FLASK_VERSION"
-    else
-        print_info "Installing Flask..."
-        pip3 install Flask==3.0.0
-        print_status "Flask installed"
-    fi
-
-    # Check if pytest is already installed
-    if python3 -c "import pytest" 2>/dev/null; then
-        PYTEST_VERSION=$(python3 -c "import pytest; print(pytest.__version__)")
-        print_status "pytest already installed: $PYTEST_VERSION"
-    else
-        print_info "Installing pytest..."
-        pip3 install pytest==7.4.3
-        print_status "pytest installed"
-    fi
-
-    # BeautifulSoup is used by the page-content regression tests
-    if python3 -c "import bs4" 2>/dev/null; then
-        print_status "beautifulsoup4 already installed"
-    else
-        print_info "Installing beautifulsoup4..."
-        pip3 install beautifulsoup4==4.15.0
-        print_status "beautifulsoup4 installed"
-    fi
-else
+if [ ! -f "requirements.txt" ]; then
     print_error "requirements.txt not found in $SCRIPT_DIR"
     exit 1
 fi
+
+if [ -x "venv/bin/python3" ]; then
+    print_status "Virtual environment already exists: venv/"
+else
+    print_info "Creating virtual environment in venv/ ..."
+    python3 -m venv venv
+    print_status "Virtual environment created"
+fi
+
+print_info "Installing dependencies from requirements.txt (Flask, pytest, beautifulsoup4)..."
+venv/bin/python3 -m pip install --quiet --disable-pip-version-check -r requirements.txt
+print_status "Dependencies installed: Flask $(venv/bin/python3 -c 'from importlib.metadata import version; print(version("flask"))'), pytest $(venv/bin/python3 -c 'import pytest; print(pytest.__version__)'), beautifulsoup4 $(venv/bin/python3 -c 'from importlib.metadata import version; print(version("beautifulsoup4"))')"
 
 # Database Setup
 print_header "Database Setup"
@@ -203,7 +186,7 @@ else
 fi
 
 print_info "To create a new year's database: Admin -> Database Registry -> Create New Database"
-print_info "  (or from the command line: python3 init_data.py <year>)"
+print_info "  (or from the command line: venv/bin/python3 init_data.py <year>)"
 
 # Desktop shortcuts are generated files: rewrite them whenever they don't match
 # this install (e.g. an old copy pointing to a different folder), so reruns fix them.
@@ -264,7 +247,7 @@ print_header "Installation Validation"
 print_info "Running validation checks..."
 
 # Test 1: Python imports
-if python3 -c "import flask, pytest" 2>/dev/null; then
+if venv/bin/python3 -c "import flask, pytest, bs4" 2>/dev/null; then
     print_status "Python dependencies working"
 else
     print_error "Python dependency import failed"
@@ -327,7 +310,7 @@ echo "  ./run.sh --db \"2026 Read-a-Thon\"        # a specific year"
 echo ""
 echo -e "${BLUE}Run Tests:${NC}"
 echo "  cd $SCRIPT_DIR"
-echo "  pytest"
+echo "  venv/bin/pytest"
 echo ""
 echo -e "${BLUE}Documentation:${NC}"
 echo "  • User Manual: Open app → Help menu → User Manual"
