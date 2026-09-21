@@ -8,8 +8,12 @@
 # Or create a symbolic link:
 #   ln -s ../../pre-commit.sh .git/hooks/pre-commit
 
+# Use the project virtualenv created by install.sh when present
+PYTHON=python3
+[ -x "$(git rev-parse --show-toplevel)/venv/bin/python3" ] && PYTHON="$(git rev-parse --show-toplevel)/venv/bin/python3"
+
 echo "🧪 Running school page tests..."
-python3 -m pytest tests/test_school_page.py -v
+"$PYTHON" -m pytest tests/test_school_page.py -v
 
 # If tests fail, prevent commit
 if [ $? -ne 0 ]; then
@@ -21,7 +25,7 @@ fi
 
 echo ""
 echo "🧪 Running grade level page tests..."
-python3 -m pytest tests/test_grade_level_page.py -v
+"$PYTHON" -m pytest tests/test_grade_level_page.py -v
 
 # If tests fail, prevent commit
 if [ $? -ne 0 ]; then
@@ -33,7 +37,7 @@ fi
 
 echo ""
 echo "🧪 Running teams page tests..."
-python3 -m pytest tests/test_teams_page.py -v
+"$PYTHON" -m pytest tests/test_teams_page.py -v
 
 # If tests fail, prevent commit
 if [ $? -ne 0 ]; then

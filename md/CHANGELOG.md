@@ -9,6 +9,11 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+### Fixed
+- `install.sh` failed with `error: externally-managed-environment` on Homebrew Python (PEP 668) when installing
+  dependencies; it now creates a project virtualenv (`venv/`) and installs `requirements.txt` into it. `run.sh` and
+  `pre-commit.sh` use `venv/` automatically when present
+
 ### Changed
 - `install.sh` now rewrites Desktop Start/Stop shortcuts that are out of date (e.g. pointing to an old folder) instead of
   skipping them, reports when they are already up to date, and lists other Read-a-Thon shortcuts it finds (untouched)
