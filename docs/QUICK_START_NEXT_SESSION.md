@@ -279,7 +279,7 @@ for idx, team_name in enumerate(sorted(team_names)):
 ### Important Business Rules (see md/RULES.md)
 - Reading minutes **capped at 120 per day** for contest calculations
 - Database stores both `capped_minutes` and `uncapped_minutes`
-- Sanctioned dates: **Oct 10-15, 2025** (6-day window)
+- Contest dates: **Oct 10-19, 2025** (10 days, taken from uploaded data)
 - Two-team competition: **Team colors assigned alphabetically** (team1=blue, team2=yellow)
 - **Fundraising is NEVER capped** (always from Reader_Cumulative)
 - Participation can **exceed 100%** with color bonus

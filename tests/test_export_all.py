@@ -244,7 +244,7 @@ def test_export_filename_format(client):
     # Should contain 'readathon_export'
     assert 'readathon_export' in filename
 
-    # Should contain environment (sample or prod)
+    # Should contain the database label (e.g. 'sample' or '2026')
     assert 'sample' in filename or 'prod' in filename
 
     # Should contain version (e.g., 2026_8_0)

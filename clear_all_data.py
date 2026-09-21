@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """
-Script to FULLY RESET the PROD database
-Wipes: Daily_Logs, Reader_Cumulative, and ALL Upload_History
+Script to FULLY RESET a contest database
+Wipes: Daily_Logs, Reader_Cumulative, Team_Color_Bonus, and ALL Upload_History
 Preserves: Roster, Class_Info, Grade_Rules
+
+Usage: python3 clear_all_data.py readathon_2026.db
 """
+import os
 import sys
-sys.path.insert(0, '/Users/stevesouza/my/data/readathon/v2026_development')
 
 from database import ReadathonDB
 
-def clear_all_data():
-    """Clear ALL transactional data from PROD database"""
+def clear_all_data(db_path):
+    """Clear ALL transactional data from the given database"""
 
     print("="*70)
-    print("FULL DATABASE RESET - PRODUCTION DATABASE")
+    print("FULL DATABASE RESET")
     print("="*70)
     print("\n⚠️  WARNING: This will PERMANENTLY DELETE:")
     print("  ❌ ALL Daily_Logs records (all dates, all students)")
@@ -24,7 +26,7 @@ def clear_all_data():
     print("  ✓ Roster (all student records)")
     print("  ✓ Class_Info")
     print("  ✓ Grade_Rules")
-    print("\n🎯 Database: db/readathon_prod.db")
+    print(f"\n🎯 Database: {db_path}")
     print("="*70)
 
     confirm = input("\n⚠️  Type 'reset' to confirm: ")
@@ -33,8 +35,7 @@ def clear_all_data():
         print("\n❌ Cancelled - confirmation text did not match")
         return False
 
-    # Connect to PROD database
-    db = ReadathonDB('db/readathon_prod.db')
+    db = ReadathonDB(db_path)
     conn = db.get_connection()
     cursor = conn.cursor()
 
@@ -155,5 +156,16 @@ def clear_all_data():
         return False
 
 if __name__ == "__main__":
-    success = clear_all_data()
+    if len(sys.argv) != 2:
+        print("Usage: python3 clear_all_data.py <database filename>   (e.g. readathon_2026.db)")
+        sys.exit(1)
+
+    filename = os.path.basename(sys.argv[1])
+    db_path = os.path.join('db', filename)
+    # Refuse to continue rather than let ReadathonDB create an empty file for a typo
+    if not os.path.exists(db_path):
+        print(f"❌ Database not found: {db_path}")
+        sys.exit(1)
+
+    success = clear_all_data(db_path)
     sys.exit(0 if success else 1)

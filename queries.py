@@ -3,6 +3,8 @@ SQL Queries Module for Read-a-Thon Database
 Contains all SQL queries extracted from database.py, organized as constants and template functions.
 """
 
+import re
+
 # ============================================================================
 # CREATE TABLE STATEMENTS
 # ============================================================================
@@ -70,6 +72,7 @@ CREATE_TABLE_UPLOAD_HISTORY = """
         total_students_affected INTEGER,
         upload_type TEXT DEFAULT 'new',
         status TEXT DEFAULT 'success',
+        file_type TEXT DEFAULT 'daily',
         action_taken TEXT DEFAULT 'inserted',
         records_replaced INTEGER DEFAULT 0,
         audit_details TEXT
@@ -102,6 +105,25 @@ CREATE_TABLE_TEAM_COLOR_BONUS = """
     )
 """
 
+# Registry database (db/readathon_registry.db) - catalog of per-year contest databases
+SAMPLE_DB_FILENAME = 'readathon_sample.db'
+YEAR_DB_FILENAME_PATTERN = re.compile(r'readathon_(\d{4})\.db')  # one contest database per event year
+
+CREATE_TABLE_DATABASE_REGISTRY = """
+    CREATE TABLE IF NOT EXISTS Database_Registry (
+        db_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        db_filename TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        year INTEGER,
+        description TEXT,
+        is_active INTEGER DEFAULT 0,
+        created_timestamp TEXT NOT NULL,
+        student_count INTEGER DEFAULT 0,
+        total_days INTEGER DEFAULT 0,
+        total_donations REAL DEFAULT 0.0
+    )
+"""
+
 # ============================================================================
 # ALTER TABLE STATEMENTS
 # ============================================================================
@@ -109,6 +131,7 @@ CREATE_TABLE_TEAM_COLOR_BONUS = """
 ALTER_ADD_ACTION_TAKEN = "ALTER TABLE Upload_History ADD COLUMN action_taken TEXT DEFAULT 'inserted'"
 ALTER_ADD_RECORDS_REPLACED = "ALTER TABLE Upload_History ADD COLUMN records_replaced INTEGER DEFAULT 0"
 ALTER_ADD_AUDIT_DETAILS = "ALTER TABLE Upload_History ADD COLUMN audit_details TEXT"
+ALTER_ADD_FILE_TYPE = "ALTER TABLE Upload_History ADD COLUMN file_type TEXT DEFAULT 'daily'"
 
 # ============================================================================
 # DELETE STATEMENTS

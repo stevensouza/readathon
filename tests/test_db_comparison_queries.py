@@ -5,20 +5,24 @@ Compares results against similar queries from other tabs (School, Teams, Grade/C
 """
 
 import sqlite3
+import pytest
 import sys
 import os
 
 # Change to project root
-os.chdir('/Users/stevesouza/my/data/readathon/v2026_development')
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from queries import *
 
 DB_PATH = 'db/readathon_2025.db'
+
+# Real contest databases are gitignored (student PII), so skip when not present locally
+pytestmark = pytest.mark.skipif(not os.path.exists(DB_PATH), reason=f'{DB_PATH} not present')
 SAMPLE_DB_PATH = 'db/readathon_sample.db'
 
 def execute_query(db_path, query):
     """Execute a query and return results"""
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 

@@ -89,8 +89,11 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 ### 1. Install Dependencies
 
 ```bash
-# Install Flask (only dependency)
+# Flask (app), pytest + beautifulsoup4 (tests)
 pip3 install -r requirements.txt
+
+# Or run the installer (checks Python/Flask, creates Desktop start/stop shortcuts)
+./install.sh
 ```
 
 ### 2. Initialize Database
@@ -102,14 +105,13 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-**Option B: Use Your Own Data (for production)**
+**Option B: Use Your Own Data (one database per event year)**
+
+In the app: **Admin → Database Registry → Create New Database** (year, `readathon_<YEAR>.db`, and the three CSVs).
+
+Or from the command line, with `class_info.csv`, `grade_rules.csv`, `roster.csv` in the project folder:
 ```bash
-# Create three CSV files with your school's roster data:
-# - class_info.csv
-# - grade_rules.csv
-# - roster.csv
-# Then run the initialization script:
-python3 init_data.py
+python3 init_data.py 2026     # creates db/readathon_2026.db and registers it as "2026 Read-a-Thon"
 ```
 
 **CSV Format Requirements:**
@@ -124,25 +126,66 @@ See the `sample_*.csv` files in the repository for examples.
 ### 3. Start the Application
 
 ```bash
-# Default: Uses last database choice (or sample if first run)
-python3 app.py
-
-# Explicitly use sample database
-python3 app.py --db sample
-# OR
-./run_sample.sh
-
-# Explicitly use production database
-python3 app.py --db prod
-# OR
-./run_prod.sh
+# Starts the app and opens http://127.0.0.1:5001 in your browser
+./run.sh                              # last database you used (sample on first run)
+./run.sh --db sample                  # sample database
+./run.sh --db "2026 Read-a-Thon"      # a specific year (display name or filename)
 ```
 
-Open your browser to: **http://localhost:5000** (or 5001 if configured)
+`./run.sh` passes its options to `python3 app.py`, which you can also run directly.
+Browser address: **http://127.0.0.1:5001**
 
 **Note:** The app remembers your last database choice in `.readathon_config`. You can also switch databases using the dropdown menu in the navigation bar.
 
 Press `CTRL+C` to stop the server.
+
+## Starting a New Year
+
+Each event year gets its own database, `db/readathon_<YEAR>.db`. Last year's database is not needed to set up the new one.
+
+1. **Back up** the `db/` folder. Real databases are gitignored (student PII), so git will not keep them.
+2. **Prepare** `roster.csv`, `class_info.csv` and `grade_rules.csv` for the new year (same columns as above). Keep them out of git.
+3. **Create** the database: Admin → Database Registry → Create New Database, or `python3 init_data.py <YEAR>`.
+4. **Switch** to it with the header dropdown, or `python3 app.py --db "<YEAR> Read-a-Thon"`. The app remembers the choice.
+5. **Check** the student count, teams and grade goals on the School / Classes pages.
+6. **Compare with last year (optional):** copy last year's `readathon_<YEAR>.db` into `db/` and restart the app; it is registered automatically. Then use Admin → Database Comparison ("Through Day N" lines up the same contest day in both years).
+
+The contest date range is taken from the dates you upload, so nothing needs to change in code for a new year.
+
+## Setting Up on a Mac (git clone + your databases)
+
+Code comes from git; the real databases never do (they contain student names and are gitignored). Anyone can run the app on a Mac this way:
+
+1. **Get the code**
+   ```bash
+   git clone https://github.com/stevensouza/readathon.git
+   cd readathon
+   ./install.sh                  # or: pip3 install -r requirements.txt
+   ```
+2. **Add the databases** you were given (privately, e.g. a zip made by `./package_data.sh`):
+   ```bash
+   unzip -o ~/Downloads/readathon_data_2026-10-14_1530.zip    # fills db/ (run inside the readathon folder)
+   ```
+   Or copy individual files such as `readathon_2025.db` and `readathon_2026.db` into `db/`.
+3. **Start the app**: `./run.sh` (opens http://127.0.0.1:5001)
+   - Every `db/readathon_<YEAR>.db` is registered automatically on start (the terminal prints "Registered new database file").
+   - Pick the year in the header dropdown. The sample database (yellow banner) is always available for practice.
+4. **Updating the code later**: `git pull` (stop the app first). The `db/` folder is untouched by git.
+
+`git status` never shows the database files, and they cannot be committed by accident (`*.db` is in `.gitignore`, except the sample).
+
+## Moving the Data Between Computers
+
+When the app runs on someone else's Mac and the current state needs to go back and forth:
+
+1. **Stop the app** on the computer that has the latest data (`lsof -ti:5001 | xargs kill`, or the Desktop "Stop" shortcut).
+2. **Package the data**: `./package_data.sh` creates `~/Desktop/readathon_data_<date>_<time>.zip` with everything in `db/`.
+3. **Send it privately** (AirDrop, USB stick, a private share) - it contains student names.
+4. **On the other computer**: stop the app, `git pull` for the latest code, then `unzip -o readathon_data_<date>_<time>.zip` inside the readathon folder.
+
+**Only one computer should be "live" at a time.** Uploads made on a computer after its data was copied elsewhere are not merged - the next copy overwrites them. Agree on who owns the data each day, and package it again after changes.
+
+Zipping the whole folder (code + `db/`) also works, but moving code with `git pull` and data with `package_data.sh` keeps both machines on the same code version and makes the data zip small.
 
 ## Daily Workflow
 
@@ -211,10 +254,15 @@ Configurable by grade level:
 readathon/
 ├── app.py                  # Flask web application
 ├── database.py             # Database and report logic
-├── init_data.py            # Initialize database with roster
+├── init_data.py            # Create + register db/readathon_<YEAR>.db from roster CSVs
+├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster)
+├── package_data.sh         # Zip db/ to move data to another computer
+├── install.sh              # One-time Mac setup + Desktop shortcuts
+├── run.sh                  # Start the app (./run.sh [--db ...]) and open the browser
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file
-├── readathon.db           # SQLite database (created on first run)
+├── db/                    # Databases: readathon_sample.db (in git), readathon_<YEAR>.db + registry (local only)
+├── md/                    # Requirements (REQUIREMENTS.md), rules, changelog
 └── templates/             # HTML templates
     ├── base.html
     ├── index.html
@@ -226,16 +274,16 @@ readathon/
 ## Troubleshooting
 
 ### Database Issues
-If you need to reset the database:
+To wipe a year's uploaded data (daily logs, cumulative, team color bonus, upload history) but keep its roster:
 ```bash
-rm readathon.db
-python3 init_data.py
+python3 clear_all_data.py readathon_2026.db
 ```
+Selected tables can also be cleared from the Admin page.
 
 ### Port Already in Use
-If port 5000 is already in use, edit `app.py` line 197:
-```python
-app.run(debug=True, host='127.0.0.1', port=5001)  # Change to 5001 or other port
+The app runs on port 5001. To stop a running copy:
+```bash
+lsof -ti:5001 | xargs kill
 ```
 
 ### Upload Warnings
@@ -283,27 +331,23 @@ For issues or questions about this system, check:
 3. Terminal output when running `python3 app.py`
 
 ## Contest Duration
-- **Typical Contest Period**: 10 days (configurable)
-- Minutes read outside the official contest period are tracked but don't count toward the competition
-- Contest dates are configurable per school year
+- The contest period is the range of dates uploaded to Daily_Logs (it can differ each year)
+- Reports Q21-Q23 reconcile daily minutes against the cumulative totals
 
 ## 📋 Versioning
 
-This project uses **School Year Calendar Versioning**: `vYYYY.MINOR.PATCH`
+This project uses **Event-Year Calendar Versioning**: `vYYYY.MINOR.PATCH`, where YYYY is the read-a-thon **event year**.
 
-**Current Version:** v2026.14.0 (see [VERSION](VERSION) file)
+**Current Version:** see the [VERSION](VERSION) file
 
-**Release Status:** ✅ **Final stable release for 2025-2026 school year**
+- **2025 event:** `v2026.1.0`–`v2026.14.3` (numbered under an earlier school-year scheme). Final code is tagged `readathon-2025-final`.
+- **2026 event:** continues from `v2026.15.0`
+- **2027 event:** starts at `v2027.1.0`
 
 ### Versioning Format
-- **YYYY**: School year (e.g., 2026 = 2025-2026 school year)
+- **YYYY**: Event year
 - **MINOR**: Feature additions and improvements
 - **PATCH**: Bug fixes and minor updates
-
-### Examples
-- `v2026.1.0` → `v2026.1.1`: Bug fix or small update
-- `v2026.1.0` → `v2026.2.0`: New feature or major update
-- `v2026.14.0` → `v2027.1.0`: Next school year (start fresh numbering)
 
 ---
 

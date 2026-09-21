@@ -49,8 +49,9 @@ class TestDatabaseRegistry:
         registry = DatabaseRegistry()
         databases = registry.list_databases()
 
-        # Should have at least 2 databases (2025 and Sample)
-        assert len(databases) >= 2, "Registry should contain at least 2 databases"
+        # Always has Sample (auto-seeded); real year databases exist only locally
+        assert len(databases) >= 1, "Registry should contain at least 1 database"
+        assert any(db['db_filename'] == 'readathon_sample.db' for db in databases)
 
         # Check for expected fields
         for db in databases:
@@ -65,6 +66,28 @@ class TestDatabaseRegistry:
 
         registry.close()
         print("✓ Registry initializes with correct schema")
+
+    def test_registry_bootstraps_on_fresh_checkout(self, tmp_path):
+        """A missing registry (gitignored) is created and seeded with the sample DB"""
+        shutil.copy('db/readathon_sample.db', tmp_path / 'readathon_sample.db')
+        registry = DatabaseRegistry(str(tmp_path / 'readathon_registry.db'))
+
+        databases = registry.list_databases()
+        assert [db['db_filename'] for db in databases] == ['readathon_sample.db']
+        assert registry.get_active_database()['db_filename'] == 'readathon_sample.db'
+        assert databases[0]['student_count'] > 0
+        registry.close()
+
+        # Reopening must not seed a duplicate
+        registry = DatabaseRegistry(str(tmp_path / 'readathon_registry.db'))
+        assert len(registry.list_databases()) == 1
+        registry.close()
+
+    def test_registry_bootstrap_without_sample_db(self, tmp_path):
+        """With no sample DB present, the registry table is created but left empty"""
+        registry = DatabaseRegistry(str(tmp_path / 'readathon_registry.db'))
+        assert registry.list_databases() == []
+        registry.close()
 
     def test_list_databases(self):
         """Test listing all databases from registry"""

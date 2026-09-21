@@ -23,8 +23,8 @@ This file contains universal rules that apply across all pages and features in t
 - **Goals Met = count of students who achieved reading goal ≥1 day**
 
 ### Contest Period
-- **Duration:** 10 consecutive days (e.g., Oct 10-19)
-- **Start date may vary** between years, but always 10 days
+- **Defined by the data:** the range is the first..last date uploaded to `Daily_Logs` (2025: 10 days, Oct 10-19)
+- **Start date and length may vary** between years - never hard-code dates or timestamps
 - **Out-of-range dates:** Cause reconciliation differences (tracked in reports Q21-Q23)
 
 ---

@@ -5,6 +5,7 @@ Every query is validated against equivalent "ground truth" queries from actual t
 """
 
 import sqlite3
+import pytest
 import os
 import sys
 
@@ -15,9 +16,12 @@ from queries import *
 
 DB_PATH = 'db/readathon_2025.db'
 
+# Real contest databases are gitignored (student PII), so skip when not present locally
+pytestmark = pytest.mark.skipif(not os.path.exists(DB_PATH), reason=f'{DB_PATH} not present')
+
 def get_result(query):
     """Execute query and return first row as dict"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(f'file:{DB_PATH}?mode=ro', uri=True)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute(query)
@@ -27,7 +31,7 @@ def get_result(query):
 
 def get_results(query):
     """Execute query and return all rows as list of dicts"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(f'file:{DB_PATH}?mode=ro', uri=True)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute(query)
