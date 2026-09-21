@@ -166,8 +166,8 @@
                 <h5>Your Data is Safe!</h5>
                 <p><strong>All data is permanently stored on your Mac's hard drive</strong> in SQLite database files:</p>
                 <ul>
-                    <li><code>readathon_prod.db</code> - Your real read-a-thon data</li>
-                    <li><code>readathon_sample.db</code> - Sample test data</li>
+                    <li><code>db/readathon_2026.db</code> (one per event year) - Your real read-a-thon data</li>
+                    <li><code>db/readathon_sample.db</code> - Sample test data</li>
                 </ul>
                 <p>The data is <strong>NOT</strong> stored in memory - it survives:</p>
                 <ul>
@@ -659,15 +659,11 @@
                             <div class="accordion-body">
                                 <strong>Solution:</strong>
                                 <ol>
-                                    <li>Stop the application (CTRL+C in Terminal)</li>
-                                    <li>Delete the database file:
-                                        <ul>
-                                            <li><code>rm readathon_prod.db</code> for production</li>
-                                            <li><code>rm readathon_sample.db</code> for sample</li>
-                                        </ul>
-                                    </li>
-                                    <li>Run <code>python3 init_data.py</code> to recreate</li>
-                                    <li>Restart the application</li>
+                                    <li>To clear selected tables: <strong>Admin</strong> page → choose tables → Clear</li>
+                                    <li>To wipe all uploaded data for a year but keep its roster:
+                                        <code>python3 clear_all_data.py readathon_2026.db</code></li>
+                                    <li>To restore the sample data: <code>git checkout db/readathon_sample.db</code></li>
+                                    <li>Back up the <code>db/</code> folder first - real databases are not stored in git</li>
                                 </ol>
                             </div>
                         </div>

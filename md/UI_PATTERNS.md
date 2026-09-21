@@ -266,7 +266,7 @@ function applyDateFilter() {
     </thead>
     <tbody>
         <tr>
-            <td>neurohr am</td>
+            <td>teacher1 am</td>
             <td>K</td>
             <td><span class="team-badge team-badge-kitsko">KITSKO</span></td>
             <td class="text-end" data-value="2624">$2,624</td>

@@ -46,7 +46,7 @@ def cleanup():
     registry = DatabaseRegistry()
     databases = registry.list_databases()
     for db in databases:
-        if 'test_readathon' in db['db_filename'] or db['year'] == 2027:
+        if db['db_filename'] == TEST_DB_NAME:
             registry.delete_database(db['db_id'])
             print(f"✓ Removed registry entry: {db['display_name']}")
     registry.close()

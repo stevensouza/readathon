@@ -3,6 +3,7 @@ Read-a-Thon Database Module
 Handles SQLite database creation, initialization, and all data operations
 """
 
+import os
 import sqlite3
 import csv
 import io
@@ -32,6 +33,68 @@ class DatabaseRegistry:
         self.registry_path = registry_path
         self.conn = sqlite3.connect(registry_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
+        self._ensure_schema()
+
+    def _ensure_schema(self):
+        """
+        Create the registry table if missing and seed it with the sample database.
+
+        Real contest databases (and the registry itself) are gitignored for privacy,
+        so a fresh checkout has no registry. Seeding the sample database lets the app
+        start so a new year's database can be created from the Admin page.
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(CREATE_TABLE_DATABASE_REGISTRY)
+        self.conn.commit()
+
+        cursor.execute('SELECT COUNT(*) FROM Database_Registry')
+        if cursor.fetchone()[0] > 0:
+            return
+
+        registry_dir = os.path.dirname(self.registry_path)
+        if os.path.exists(os.path.join(registry_dir, SAMPLE_DB_FILENAME)):
+            db_id = self.register_database(SAMPLE_DB_FILENAME, 'Sample', None,
+                                           'Sample database for testing')
+            self.set_active_database(db_id)
+
+    def register_year_databases(self) -> List[str]:
+        """
+        Register any db/readathon_<YEAR>.db file that is not in the registry yet.
+
+        Year databases are copied between computers outside of git, so copying the file
+        into db/ is enough - it appears in the database dropdown on the next start.
+
+        Returns:
+            Filenames that were newly registered
+        """
+        registry_dir = os.path.dirname(self.registry_path) or '.'
+        registered = {db['db_filename'] for db in self.list_databases()}
+        added = []
+        for filename in sorted(os.listdir(registry_dir)):
+            match = YEAR_DB_FILENAME_PATTERN.fullmatch(filename)
+            if not match or filename in registered:
+                continue
+            year = int(match.group(1))
+            db_id = self.register_database(filename, f'{year} Read-a-Thon', year,
+                                           f'{year} read-a-thon database')
+            self.update_stats(db_id, **self.read_database_stats(os.path.join(registry_dir, filename)))
+            added.append(filename)
+        return added
+
+    @staticmethod
+    def read_database_stats(db_path: str) -> Dict[str, Any]:
+        """Summary statistics for the registry, read without modifying the contest database"""
+        try:
+            conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
+            cursor = conn.cursor()
+            student_count = cursor.execute('SELECT COUNT(*) FROM Roster').fetchone()[0]
+            total_days = cursor.execute('SELECT COUNT(DISTINCT log_date) FROM Daily_Logs').fetchone()[0]
+            total_donations = cursor.execute(
+                'SELECT COALESCE(SUM(donation_amount), 0) FROM Reader_Cumulative').fetchone()[0]
+            conn.close()
+        except sqlite3.Error:
+            return {'student_count': 0, 'total_days': 0, 'total_donations': 0.0}
+        return {'student_count': student_count, 'total_days': total_days, 'total_donations': total_donations}
 
     def close(self):
         """Close registry database connection"""
@@ -458,6 +521,9 @@ class ReadathonDB:
 
         if 'audit_details' not in columns:
             cursor.execute(ALTER_ADD_AUDIT_DETAILS)
+
+        if 'file_type' not in columns:
+            cursor.execute(ALTER_ADD_FILE_TYPE)
 
         # Database_Metadata table - tracks year databases for multi-year support
         cursor.execute(CREATE_TABLE_DATABASE_METADATA)
@@ -3382,6 +3448,21 @@ Calculation Rules:<br>
             'grade_context': grade_context
         }
 
+    @staticmethod
+    def _contest_day_to_date(db, filter_period: str) -> str:
+        """
+        Convert a comparison filter ('all' or 'dayN') to a date in this database.
+        The result is interpolated into SQL, so only 'all' or one of the database's own dates is returned.
+        A day past the end of this database's contest means its full contest.
+        """
+        if not filter_period.startswith('day') or not filter_period[3:].isdigit():
+            return 'all'
+        dates = sorted(db.get_all_dates())
+        day = int(filter_period[3:])
+        if day < 1 or day > len(dates):
+            return 'all'
+        return dates[day - 1]
+
     def get_database_comparison(self, db1_filename: str, db2_filename: str, filter_period: str = 'all') -> Dict[str, Any]:
         """
         Compare two databases and return comparison data for all metrics and entity levels.
@@ -3389,7 +3470,7 @@ Calculation Rules:<br>
         Args:
             db1_filename: Filename of first database (e.g., 'readathon_2025.db')
             db2_filename: Filename of second database (e.g., 'readathon_2024.db')
-            filter_period: Date filter ('all' or specific date like '2025-10-15')
+            filter_period: 'all' or 'dayN' (contest day N, mapped to each database's Nth date)
 
         Returns:
             Dict containing comparison results with structure:
@@ -3461,9 +3542,26 @@ Calculation Rules:<br>
         db1_info = registry.get_database_by_name(db1_filename)
         db2_info = registry.get_database_by_name(db2_filename)
 
+        # Only open registered databases (ReadathonDB would otherwise create a new file for any name)
+        for requested, info in ((db1_filename, db1_info), (db2_filename, db2_info)):
+            if not info or not os.path.exists(f"db/{info['db_filename']}"):
+                raise ValueError(f'Database not found in registry: {requested}')
+
+
         # Connect to both databases
-        db1 = ReadathonDB(f'db/{db1_filename}')
-        db2 = ReadathonDB(f'db/{db2_filename}')
+        db1 = ReadathonDB(f"db/{db1_info['db_filename']}")
+        db2 = ReadathonDB(f"db/{db2_info['db_filename']}")
+
+        # The comparison queries assume reading data exists (a new year's database has only the roster)
+        for db, info in ((db1, db1_info), (db2, db2_info)):
+            if not db.get_all_dates():
+                raise ValueError(f"{info['display_name']} has no reading data yet - "
+                                 "comparison is available after the first daily upload")
+
+        # "dayN" means contest day N in each database, so years with different dates line up
+        # (e.g. day 3 of 2025 = 2025-10-12, day 3 of 2026 = that year's 3rd uploaded date)
+        db1_filter = self._contest_day_to_date(db1, filter_period)
+        db2_filter = self._contest_day_to_date(db2, filter_period)
 
         comparisons = []
 
@@ -3486,8 +3584,8 @@ Calculation Rules:<br>
 
         # School-level comparisons
         # School - Fundraising
-        db1_school_fundraising = db1.execute_query(get_db_comparison_school_fundraising(filter_period))[0]
-        db2_school_fundraising = db2.execute_query(get_db_comparison_school_fundraising(filter_period))[0]
+        db1_school_fundraising = db1.execute_query(get_db_comparison_school_fundraising(db1_filter))[0]
+        db2_school_fundraising = db2.execute_query(get_db_comparison_school_fundraising(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'School',
@@ -3507,8 +3605,8 @@ Calculation Rules:<br>
         })
 
         # School - Minutes
-        db1_school_minutes = db1.execute_query(get_db_comparison_school_minutes(filter_period))[0]
-        db2_school_minutes = db2.execute_query(get_db_comparison_school_minutes(filter_period))[0]
+        db1_school_minutes = db1.execute_query(get_db_comparison_school_minutes(db1_filter))[0]
+        db2_school_minutes = db2.execute_query(get_db_comparison_school_minutes(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'School',
@@ -3549,8 +3647,8 @@ Calculation Rules:<br>
         })
 
         # School - Participation
-        db1_school_participation = db1.execute_query(get_db_comparison_school_participation(filter_period))[0]
-        db2_school_participation = db2.execute_query(get_db_comparison_school_participation(filter_period))[0]
+        db1_school_participation = db1.execute_query(get_db_comparison_school_participation(db1_filter))[0]
+        db2_school_participation = db2.execute_query(get_db_comparison_school_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'School',
@@ -3623,8 +3721,8 @@ Calculation Rules:<br>
         })
 
         # Student - Minutes
-        db1_student_minutes_list = db1.execute_query(get_db_comparison_student_top_reader(filter_period))
-        db2_student_minutes_list = db2.execute_query(get_db_comparison_student_top_reader(filter_period))
+        db1_student_minutes_list = db1.execute_query(get_db_comparison_student_top_reader(db1_filter))
+        db2_student_minutes_list = db2.execute_query(get_db_comparison_student_top_reader(db2_filter))
 
         db1_minutes_fmt = self._format_tied_winners(db1_student_minutes_list)
         db2_minutes_fmt = self._format_tied_winners(db2_student_minutes_list)
@@ -3694,8 +3792,8 @@ Calculation Rules:<br>
 
         for metric_key, metric_name, honors_filter, format_type in team_metrics:
             # Get all tied winners for tie counting
-            db1_team_list = db1.execute_query(get_db_comparison_team_top(metric_key, filter_period if honors_filter else None))
-            db2_team_list = db2.execute_query(get_db_comparison_team_top(metric_key, filter_period if honors_filter else None))
+            db1_team_list = db1.execute_query(get_db_comparison_team_top(metric_key, db1_filter if honors_filter else None))
+            db2_team_list = db2.execute_query(get_db_comparison_team_top(metric_key, db2_filter if honors_filter else None))
 
             # Count ties and pick first winner
             db1_tie_count = len(db1_team_list)
@@ -3745,8 +3843,8 @@ Calculation Rules:<br>
 
         for metric_key, metric_name, honors_filter, format_type in grade_metrics:
             # Get all tied winners for tie counting
-            db1_grade_list = db1.execute_query(get_db_comparison_grade_top(metric_key, filter_period if honors_filter else None))
-            db2_grade_list = db2.execute_query(get_db_comparison_grade_top(metric_key, filter_period if honors_filter else None))
+            db1_grade_list = db1.execute_query(get_db_comparison_grade_top(metric_key, db1_filter if honors_filter else None))
+            db2_grade_list = db2.execute_query(get_db_comparison_grade_top(metric_key, db2_filter if honors_filter else None))
 
             # Count ties and pick first winner
             db1_tie_count = len(db1_grade_list)
@@ -3796,8 +3894,8 @@ Calculation Rules:<br>
 
         for metric_key, metric_name, honors_filter, format_type in class_metrics:
             # Get all tied winners for tie counting
-            db1_class_list = db1.execute_query(get_db_comparison_class_top(metric_key, filter_period if honors_filter else None))
-            db2_class_list = db2.execute_query(get_db_comparison_class_top(metric_key, filter_period if honors_filter else None))
+            db1_class_list = db1.execute_query(get_db_comparison_class_top(metric_key, db1_filter if honors_filter else None))
+            db2_class_list = db2.execute_query(get_db_comparison_class_top(metric_key, db2_filter if honors_filter else None))
 
             # Count ties and pick first winner
             db1_tie_count = len(db1_class_list)
@@ -3843,8 +3941,8 @@ Calculation Rules:<br>
 
         # Additional School-level comparisons
         # School - Avg Participation % (With Color)
-        db1_school_avg_part = db1.execute_query(get_db_comparison_school_avg_participation(filter_period))[0]
-        db2_school_avg_part = db2.execute_query(get_db_comparison_school_avg_participation(filter_period))[0]
+        db1_school_avg_part = db1.execute_query(get_db_comparison_school_avg_participation(db1_filter))[0]
+        db2_school_avg_part = db2.execute_query(get_db_comparison_school_avg_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'School',
@@ -3864,8 +3962,8 @@ Calculation Rules:<br>
         })
 
         # School - Goal Met (≥1 Day)
-        db1_school_goal = db1.execute_query(get_db_comparison_school_goal_met(filter_period))[0]
-        db2_school_goal = db2.execute_query(get_db_comparison_school_goal_met(filter_period))[0]
+        db1_school_goal = db1.execute_query(get_db_comparison_school_goal_met(db1_filter))[0]
+        db2_school_goal = db2.execute_query(get_db_comparison_school_goal_met(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'School',
@@ -3885,8 +3983,8 @@ Calculation Rules:<br>
         })
 
         # School - All N Days Active %
-        db1_school_all_days_result = db1.execute_query(get_db_comparison_school_all_days_active(filter_period))
-        db2_school_all_days_result = db2.execute_query(get_db_comparison_school_all_days_active(filter_period))
+        db1_school_all_days_result = db1.execute_query(get_db_comparison_school_all_days_active(db1_filter))
+        db2_school_all_days_result = db2.execute_query(get_db_comparison_school_all_days_active(db2_filter))
 
         # Handle case where no students logged every day
         db1_school_all_days = db1_school_all_days_result[0] if db1_school_all_days_result else {
@@ -3914,8 +4012,8 @@ Calculation Rules:<br>
         })
 
         # School - Goal Met All Days %
-        db1_school_goal_all_result = db1.execute_query(get_db_comparison_school_goal_met_all_days(filter_period))
-        db2_school_goal_all_result = db2.execute_query(get_db_comparison_school_goal_met_all_days(filter_period))
+        db1_school_goal_all_result = db1.execute_query(get_db_comparison_school_goal_met_all_days(db1_filter))
+        db2_school_goal_all_result = db2.execute_query(get_db_comparison_school_goal_met_all_days(db2_filter))
 
         # Handle case where no students met goal every day
         db1_school_goal_all = db1_school_goal_all_result[0] if db1_school_goal_all_result else {
@@ -3988,8 +4086,8 @@ Calculation Rules:<br>
         })
 
         # Team - Total Participating (≥1 Day)
-        db1_team_part = db1.execute_query(get_db_comparison_team_participation(filter_period))[0]
-        db2_team_part = db2.execute_query(get_db_comparison_team_participation(filter_period))[0]
+        db1_team_part = db1.execute_query(get_db_comparison_team_participation(db1_filter))[0]
+        db2_team_part = db2.execute_query(get_db_comparison_team_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Team',
@@ -4011,8 +4109,8 @@ Calculation Rules:<br>
         })
 
         # Team - Avg Participation % (With Color)
-        db1_team_avg = db1.execute_query(get_db_comparison_team_avg_participation(filter_period))[0]
-        db2_team_avg = db2.execute_query(get_db_comparison_team_avg_participation(filter_period))[0]
+        db1_team_avg = db1.execute_query(get_db_comparison_team_avg_participation(db1_filter))[0]
+        db2_team_avg = db2.execute_query(get_db_comparison_team_avg_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Team',
@@ -4034,8 +4132,8 @@ Calculation Rules:<br>
         })
 
         # Team - Goal Met (≥1 Day)
-        db1_team_goal = db1.execute_query(get_db_comparison_team_goal_met(filter_period))[0]
-        db2_team_goal = db2.execute_query(get_db_comparison_team_goal_met(filter_period))[0]
+        db1_team_goal = db1.execute_query(get_db_comparison_team_goal_met(db1_filter))[0]
+        db2_team_goal = db2.execute_query(get_db_comparison_team_goal_met(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Team',
@@ -4057,8 +4155,8 @@ Calculation Rules:<br>
         })
 
         # Team - All N Days Active %
-        db1_team_all_days_result = db1.execute_query(get_db_comparison_team_all_days_active(filter_period))
-        db2_team_all_days_result = db2.execute_query(get_db_comparison_team_all_days_active(filter_period))
+        db1_team_all_days_result = db1.execute_query(get_db_comparison_team_all_days_active(db1_filter))
+        db2_team_all_days_result = db2.execute_query(get_db_comparison_team_all_days_active(db2_filter))
 
         # Handle case where no team has all students active every day
         db1_team_all_days = db1_team_all_days_result[0] if db1_team_all_days_result else {
@@ -4088,8 +4186,8 @@ Calculation Rules:<br>
         })
 
         # Team - Goal Met All Days %
-        db1_team_goal_all_result = db1.execute_query(get_db_comparison_team_goal_met_all_days(filter_period))
-        db2_team_goal_all_result = db2.execute_query(get_db_comparison_team_goal_met_all_days(filter_period))
+        db1_team_goal_all_result = db1.execute_query(get_db_comparison_team_goal_met_all_days(db1_filter))
+        db2_team_goal_all_result = db2.execute_query(get_db_comparison_team_goal_met_all_days(db2_filter))
 
         # Handle case where no team has students who met goal every day
         db1_team_goal_all = db1_team_goal_all_result[0] if db1_team_goal_all_result else {
@@ -4166,8 +4264,8 @@ Calculation Rules:<br>
         })
 
         # Grade - Total Participating (≥1 Day)
-        db1_grade_part = db1.execute_query(get_db_comparison_grade_participation(filter_period))[0]
-        db2_grade_part = db2.execute_query(get_db_comparison_grade_participation(filter_period))[0]
+        db1_grade_part = db1.execute_query(get_db_comparison_grade_participation(db1_filter))[0]
+        db2_grade_part = db2.execute_query(get_db_comparison_grade_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Grade',
@@ -4189,8 +4287,8 @@ Calculation Rules:<br>
         })
 
         # Grade - Avg Participation % (With Color)
-        db1_grade_avg = db1.execute_query(get_db_comparison_grade_avg_participation(filter_period))[0]
-        db2_grade_avg = db2.execute_query(get_db_comparison_grade_avg_participation(filter_period))[0]
+        db1_grade_avg = db1.execute_query(get_db_comparison_grade_avg_participation(db1_filter))[0]
+        db2_grade_avg = db2.execute_query(get_db_comparison_grade_avg_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Grade',
@@ -4212,8 +4310,8 @@ Calculation Rules:<br>
         })
 
         # Grade - Goal Met (≥1 Day)
-        db1_grade_goal = db1.execute_query(get_db_comparison_grade_goal_met(filter_period))[0]
-        db2_grade_goal = db2.execute_query(get_db_comparison_grade_goal_met(filter_period))[0]
+        db1_grade_goal = db1.execute_query(get_db_comparison_grade_goal_met(db1_filter))[0]
+        db2_grade_goal = db2.execute_query(get_db_comparison_grade_goal_met(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Grade',
@@ -4235,8 +4333,8 @@ Calculation Rules:<br>
         })
 
         # Grade - All N Days Active %
-        db1_grade_all_days_result = db1.execute_query(get_db_comparison_grade_all_days_active(filter_period))
-        db2_grade_all_days_result = db2.execute_query(get_db_comparison_grade_all_days_active(filter_period))
+        db1_grade_all_days_result = db1.execute_query(get_db_comparison_grade_all_days_active(db1_filter))
+        db2_grade_all_days_result = db2.execute_query(get_db_comparison_grade_all_days_active(db2_filter))
 
         # Handle case where no grade has all students active every day
         db1_grade_all_days = db1_grade_all_days_result[0] if db1_grade_all_days_result else {
@@ -4266,8 +4364,8 @@ Calculation Rules:<br>
         })
 
         # Grade - Goal Met All Days %
-        db1_grade_goal_all_result = db1.execute_query(get_db_comparison_grade_goal_met_all_days(filter_period))
-        db2_grade_goal_all_result = db2.execute_query(get_db_comparison_grade_goal_met_all_days(filter_period))
+        db1_grade_goal_all_result = db1.execute_query(get_db_comparison_grade_goal_met_all_days(db1_filter))
+        db2_grade_goal_all_result = db2.execute_query(get_db_comparison_grade_goal_met_all_days(db2_filter))
 
         # Handle case where no grade has students who met goal every day
         db1_grade_goal_all = db1_grade_goal_all_result[0] if db1_grade_goal_all_result else {
@@ -4344,8 +4442,8 @@ Calculation Rules:<br>
         })
 
         # Class - Total Participating (≥1 Day)
-        db1_class_part = db1.execute_query(get_db_comparison_class_participation(filter_period))[0]
-        db2_class_part = db2.execute_query(get_db_comparison_class_participation(filter_period))[0]
+        db1_class_part = db1.execute_query(get_db_comparison_class_participation(db1_filter))[0]
+        db2_class_part = db2.execute_query(get_db_comparison_class_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Class',
@@ -4367,8 +4465,8 @@ Calculation Rules:<br>
         })
 
         # Class - Avg Participation % (With Color)
-        db1_class_avg = db1.execute_query(get_db_comparison_class_avg_participation(filter_period))[0]
-        db2_class_avg = db2.execute_query(get_db_comparison_class_avg_participation(filter_period))[0]
+        db1_class_avg = db1.execute_query(get_db_comparison_class_avg_participation(db1_filter))[0]
+        db2_class_avg = db2.execute_query(get_db_comparison_class_avg_participation(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Class',
@@ -4390,8 +4488,8 @@ Calculation Rules:<br>
         })
 
         # Class - Goal Met (≥1 Day)
-        db1_class_goal = db1.execute_query(get_db_comparison_class_goal_met(filter_period))[0]
-        db2_class_goal = db2.execute_query(get_db_comparison_class_goal_met(filter_period))[0]
+        db1_class_goal = db1.execute_query(get_db_comparison_class_goal_met(db1_filter))[0]
+        db2_class_goal = db2.execute_query(get_db_comparison_class_goal_met(db2_filter))[0]
 
         comparisons.append({
             'entity_level': 'Class',
@@ -4413,8 +4511,8 @@ Calculation Rules:<br>
         })
 
         # Class - All N Days Active %
-        db1_class_all_days_result = db1.execute_query(get_db_comparison_class_all_days_active(filter_period))
-        db2_class_all_days_result = db2.execute_query(get_db_comparison_class_all_days_active(filter_period))
+        db1_class_all_days_result = db1.execute_query(get_db_comparison_class_all_days_active(db1_filter))
+        db2_class_all_days_result = db2.execute_query(get_db_comparison_class_all_days_active(db2_filter))
 
         # Handle case where no class has all students active every day
         db1_class_all_days = db1_class_all_days_result[0] if db1_class_all_days_result else {
@@ -4446,8 +4544,8 @@ Calculation Rules:<br>
         })
 
         # Class - Goal Met All Days %
-        db1_class_goal_all_result = db1.execute_query(get_db_comparison_class_goal_met_all_days(filter_period))
-        db2_class_goal_all_result = db2.execute_query(get_db_comparison_class_goal_met_all_days(filter_period))
+        db1_class_goal_all_result = db1.execute_query(get_db_comparison_class_goal_met_all_days(db1_filter))
+        db2_class_goal_all_result = db2.execute_query(get_db_comparison_class_goal_met_all_days(db2_filter))
 
         # Handle case where no class has students who met goal every day
         db1_class_goal_all = db1_class_goal_all_result[0] if db1_class_goal_all_result else {
@@ -4503,8 +4601,8 @@ Calculation Rules:<br>
 
         # Additional Student-level comparisons
         # Student - Participation %
-        db1_student_part_list = db1.execute_query(get_db_comparison_student_top_participation(filter_period))
-        db2_student_part_list = db2.execute_query(get_db_comparison_student_top_participation(filter_period))
+        db1_student_part_list = db1.execute_query(get_db_comparison_student_top_participation(db1_filter))
+        db2_student_part_list = db2.execute_query(get_db_comparison_student_top_participation(db2_filter))
 
         db1_part_fmt = self._format_tied_winners(db1_student_part_list)
         db2_part_fmt = self._format_tied_winners(db2_student_part_list)
@@ -4534,8 +4632,8 @@ Calculation Rules:<br>
         })
 
         # Student - Goal Met (Days)
-        db1_student_goal_list = db1.execute_query(get_db_comparison_student_goal_met(filter_period))
-        db2_student_goal_list = db2.execute_query(get_db_comparison_student_goal_met(filter_period))
+        db1_student_goal_list = db1.execute_query(get_db_comparison_student_goal_met(db1_filter))
+        db2_student_goal_list = db2.execute_query(get_db_comparison_student_goal_met(db2_filter))
 
         db1_goal_fmt = self._format_tied_winners(db1_student_goal_list)
         db2_goal_fmt = self._format_tied_winners(db2_student_goal_list)
@@ -4565,8 +4663,8 @@ Calculation Rules:<br>
         })
 
         # Student - All Days Active (100%)
-        db1_student_all_list = db1.execute_query(get_db_comparison_student_all_days_active(filter_period))
-        db2_student_all_list = db2.execute_query(get_db_comparison_student_all_days_active(filter_period))
+        db1_student_all_list = db1.execute_query(get_db_comparison_student_all_days_active(db1_filter))
+        db2_student_all_list = db2.execute_query(get_db_comparison_student_all_days_active(db2_filter))
 
         db1_all_fmt = self._format_tied_winners(db1_student_all_list)
         db2_all_fmt = self._format_tied_winners(db2_student_all_list)
@@ -4596,8 +4694,8 @@ Calculation Rules:<br>
         })
 
         # Student - Goal Met All Days
-        db1_student_goal_all_list = db1.execute_query(get_db_comparison_student_goal_met_all_days(filter_period))
-        db2_student_goal_all_list = db2.execute_query(get_db_comparison_student_goal_met_all_days(filter_period))
+        db1_student_goal_all_list = db1.execute_query(get_db_comparison_student_goal_met_all_days(db1_filter))
+        db2_student_goal_all_list = db2.execute_query(get_db_comparison_student_goal_met_all_days(db2_filter))
 
         db1_goal_all_fmt = self._format_tied_winners(db1_student_goal_all_list)
         db2_goal_all_fmt = self._format_tied_winners(db2_student_goal_all_list)
@@ -4627,8 +4725,8 @@ Calculation Rules:<br>
         })
 
         # Student - Avg Minutes Per Day
-        db1_student_avg_list = db1.execute_query(get_db_comparison_student_avg_minutes_per_day(filter_period))
-        db2_student_avg_list = db2.execute_query(get_db_comparison_student_avg_minutes_per_day(filter_period))
+        db1_student_avg_list = db1.execute_query(get_db_comparison_student_avg_minutes_per_day(db1_filter))
+        db2_student_avg_list = db2.execute_query(get_db_comparison_student_avg_minutes_per_day(db2_filter))
 
         db1_avg_fmt = self._format_tied_winners(db1_student_avg_list)
         db2_avg_fmt = self._format_tied_winners(db2_student_avg_list)
@@ -4658,8 +4756,8 @@ Calculation Rules:<br>
         })
 
         # Student - Total Days Active
-        db1_student_days_list = db1.execute_query(get_db_comparison_student_total_days(filter_period))
-        db2_student_days_list = db2.execute_query(get_db_comparison_student_total_days(filter_period))
+        db1_student_days_list = db1.execute_query(get_db_comparison_student_total_days(db1_filter))
+        db2_student_days_list = db2.execute_query(get_db_comparison_student_total_days(db2_filter))
 
         db1_days_fmt = self._format_tied_winners(db1_student_days_list)
         db2_days_fmt = self._format_tied_winners(db2_student_days_list)

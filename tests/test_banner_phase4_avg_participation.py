@@ -157,7 +157,7 @@ class TestPhase4GradeLevelBanner:
 
     def test_grade_level_banner_tooltip(self, client):
         """Verify Grade Level tooltip mentions average daily participation with color bonus"""
-        response = client.get('/classes?date=2025-10-13')
+        response = client.get('/classes?date=2025-10-11')
         html = response.data.decode('utf-8')
 
         assert 'Average daily participation (with color bonus)' in html, \

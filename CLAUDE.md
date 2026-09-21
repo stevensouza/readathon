@@ -10,8 +10,9 @@ This is a **Flask web application** for managing an elementary school read-a-tho
 
 ### Setup & Installation
 ```bash
-pip3 install -r requirements.txt  # Only dependency: Flask==3.0.0
-python3 init_data.py              # Initialize DB with 411 student roster + class data
+pip3 install -r requirements.txt  # Flask, pytest, beautifulsoup4 (tests)
+python3 init_data.py 2026         # Create + register db/readathon_2026.db from roster.csv, class_info.csv, grade_rules.csv
+                                  # (or in the app: Admin -> Database Registry -> Create New Database)
 ```
 
 ### Running the Application
@@ -23,10 +24,10 @@ python3 app.py
 python3 app.py --db sample
 
 # Use specific database by name (case-insensitive)
-python3 app.py --db "2025 Read-a-Thon"
+python3 app.py --db "2026 Read-a-Thon"
 
 # Use specific database by filename
-python3 app.py --db readathon_2025.db
+python3 app.py --db readathon_2026.db
 ```
 
 **Database Selection:**
@@ -35,14 +36,17 @@ python3 app.py --db readathon_2025.db
 - Case-insensitive matching for all CLI arguments
 - App remembers last database choice in `.readathon_config` (gitignored)
 - Priority: CLI argument > Config file > Default (sample)
+- Registry is auto-created on first start and seeded with the sample DB (real DBs + registry are gitignored for PII)
+- **Naming convention:** one database per event year, `db/readathon_<YEAR>.db`, display name "<YEAR> Read-a-Thon"
+- Any `db/readathon_<YEAR>.db` copied into `db/` is auto-registered at startup (`DatabaseRegistry.register_year_databases`)
+- `./package_data.sh` zips `db/` (app must be stopped) for moving data between computers; code moves via git
 - Can switch databases via UI dropdown in header (persists to config file)
 - Startup shows which database is active and why
 - Sample database displays with yellow/amber banner for visual distinction
 
 ### Testing
 ```bash
-python3 test_audit_trail.py       # Test audit trail functionality
-pytest                             # Run all tests (463 tests)
+pytest                             # Run all tests (484 tests; tests needing db/readathon_2025.db skip if it's absent)
 pytest tests/test_specific.py      # Run specific test file
 ```
 
@@ -195,8 +199,9 @@ Supporting Tables:
    - Database stores both `capped_minutes` and `uncapped_minutes`
    - Reports use capped values for contest calculations
 
-2. **Sanctioned Dates: Oct 10-15, 2025**
-   - Only this 6-day window counts toward official contest
+2. **Contest Dates Come From the Data**
+   - The contest range is the first..last date uploaded to Daily_Logs (2025 event: 10 days, Oct 10-19, 2025)
+   - Never hard-code a year's dates or timestamps in page code
    - Out-of-range dates cause reconciliation differences (tracked in Q21-Q23)
 
 3. **Two-Team Competition**
@@ -484,7 +489,8 @@ The skill handles the immediate editing and reports back with file location and 
 5. **Consult docs/00-INDEX.md** - Searchable feature index
 
 ### Current Version
-**v2026.1.1** - Database selection with persistent preference
+See `VERSION` (v2026.14.3 was the code used for the 2025 event; 2026-event work continues from v2026.15.0).
+Requirements summary: `md/REQUIREMENTS.md`
 
 See `VERSION` file for current version and `CHANGELOG.md` for release history.
 
@@ -620,23 +626,28 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## Versioning Scheme
 
-**School Year Calendar Versioning**: `vYYYY.MINOR.PATCH`
+**Event-Year Calendar Versioning**: `vYYYY.MINOR.PATCH`
 
 ### Format
-- **YYYY**: School year (e.g., 2026 = 2025-2026 school year ending in Spring 2026)
+- **YYYY**: Read-a-thon **event year** (Oct 2026 event = v2026.x, Oct 2027 event = v2027.x)
 - **MINOR**: Feature additions and improvements (1, 2, 3, ...)
 - **PATCH**: Bug fixes and small updates (0, 1, 2, ...)
 
+**Historical note:** v2026.1.0-v2026.14.3 were created under an earlier school-year scheme and are the code used
+for the **2025** event (tag `readathon-2025-final`). Work for the 2026 event continues from v2026.15.0 rather than
+restarting at v2026.1.0 (those tags already exist). From v2027.1.0 on, MINOR restarts at 1 each event year.
+
 ### When to Increment
-- **Year (2026 → 2027)**: New school year or major redesign
+- **Year (2026 → 2027)**: First release for the next event year
 - **Minor (1 → 2)**: New features, reports, UI changes, significant improvements
 - **Patch (0 → 1)**: Bug fixes, documentation updates, minor tweaks
+- **End of an event:** add an annotated tag `readathon-<YEAR>-final` on the code used for that event
 
 ### Examples
 ```
-v2026.1.0 → v2026.1.1  (bug fix or small update)
-v2026.1.0 → v2026.2.0  (new feature added)
-v2026.1.0 → v2027.1.0  (next school year)
+v2026.15.0 → v2026.15.1  (bug fix or small update)
+v2026.15.0 → v2026.16.0  (new feature added)
+v2026.x.y  → v2027.1.0   (first release for the 2027 event)
 ```
 
 ### Version Management
@@ -649,7 +660,7 @@ v2026.1.0 → v2027.1.0  (next school year)
 When ready to tag a new release, tell Claude Code:
 - "Increment patch version and tag" → v2026.1.0 → v2026.1.1
 - "Increment minor version and tag" → v2026.1.0 → v2026.2.0
-- "Create new school year version" → v2026.1.0 → v2027.1.0
+- "Create new event year version" → v2026.x.y → v2027.1.0
 
 Claude will:
 1. Update VERSION file

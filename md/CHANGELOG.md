@@ -3,9 +3,40 @@
 All notable changes to the Read-a-Thon Management System will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project uses **School Year Calendar Versioning** (vYYYY.MINOR.PATCH).
+and this project uses **Event-Year Calendar Versioning** (vYYYY.MINOR.PATCH, YYYY = read-a-thon event year).
+Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme and are the code used for the
+**2025** event (tag `readathon-2025-final`); 2026-event releases continue from v2026.15.0.
 
 ## [Unreleased]
+
+## [v2026.15.0] - 2026-09-21 - 2026 event preparation
+
+### Fixed
+- Fresh checkout could not start: the database registry (gitignored) is now created automatically and seeded with the sample database
+- Newly created year databases crashed the School/Teams/Classes/Students pages and every upload (`Upload_History.file_type` missing); added to the schema with a migration for existing databases
+- Classes page crashed on a database with a roster but no reading data yet
+- Sample-file-into-production upload confirmation never triggered (checked a legacy session value); upload/clear messages now name the actual database instead of always "SAMPLE"
+- Export ZIP filename always said "sample"; now names the database (e.g. `readathon_export_2026_...`)
+- Unvalidated `date`/`grade`/`team` query parameters reached SQL on the Classes and Students pages (500 errors); unknown values now fall back to "all"
+- Database comparison opened (and silently created) any filename passed in the URL; now limited to registered databases, and explains when a database has no reading data yet
+- Create Database accepted paths in the filename
+- Database comparison "Day N" filter never filtered (it compared dates against the text 'dayN'); now "Through Day N" maps to each database's own Nth contest date so years line up, and the options cover the longest registered contest instead of a fixed 6 days
+- Database comparison page dropdowns had empty values (read `filename` instead of `db_filename`), so comparing from that page never worked
+- Real-data regression tests hard-coded registry ID 1 and real student names; they now look up `readathon_2025.db` and pick students by query. A real teacher name was also removed from two design-doc examples
+- `clear_all_data.py` targeted the obsolete `readathon_prod.db`; now requires an explicit database file
+- `init_data.py` created an unregistered `readathon_prod.db`; now `python3 init_data.py <YEAR>` creates and registers `readathon_<YEAR>.db`
+- `install.sh` "initialized the sample database" with the wrong script and its Desktop shortcut always opened the sample database
+
+### Changed
+- Removed hard-coded 2025 values (contest range fallback, roster/grade-rules timestamps, spirit-day date, export README period)
+- Tests that need the local-only `readathon_2025.db` skip when it is absent (and no longer create an empty file); `beautifulsoup4` added to requirements
+- Versioning switched to event-year; new `md/REQUIREMENTS.md` (v26) supersedes the 2025 Google Doc requirements (v25)
+- README, CLAUDE.md, RULES.md and in-app Help/Installation pages updated for per-year databases
+
+### Added
+- Year database files copied into `db/` (`readathon_<YEAR>.db`) are registered automatically at startup; "Register Existing Database" now writes to the real registry (it wrote to a legacy table inside the active contest database)
+- `package_data.sh`: zips `db/` (refuses while the app is running) for moving data to another computer
+- README: "Setting Up on a Mac (git clone + your databases)" and "Moving the Data Between Computers"
 
 ## [v2026.12.0] - 2025-11-07
 

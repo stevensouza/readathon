@@ -5,10 +5,11 @@ This test ensures the Students page displays correct information
 from the sample database and maintains data integrity across changes.
 """
 
+import os
 import pytest
 import re
 from app import app
-from database import ReadathonDB
+from database import ReadathonDB, DatabaseRegistry
 
 
 @pytest.fixture
@@ -1116,6 +1117,8 @@ class TestStudentsPageSearch:
         assert 'placeholder' in html
 
 
+# Real contest databases are gitignored (student PII); skip rather than create an empty file
+@pytest.mark.skipif(not os.path.exists('db/readathon_2025.db'), reason='db/readathon_2025.db not present')
 class TestStudentDetailDataIntegrity:
     """
     Regression tests for student detail view data integrity.
@@ -1133,9 +1136,14 @@ class TestStudentDetailDataIntegrity:
         app.config['TESTING'] = True
         with app.test_client() as client:
             with app.app_context():
-                # Use production database for these regression tests (db_id = 1)
+                # Use the 2025 database for these regression tests (looked up - IDs differ per machine)
+                registry = DatabaseRegistry()
+                db_2025 = registry.get_database_by_name('readathon_2025.db')
+                registry.close()
+                if not db_2025:
+                    pytest.skip('readathon_2025.db is not registered')
                 with client.session_transaction() as sess:
-                    sess['active_database_id'] = 1
+                    sess['active_database_id'] = db_2025['db_id']
             yield client
 
     @pytest.fixture
@@ -1210,32 +1218,36 @@ class TestStudentDetailDataIntegrity:
 
         return (True, f"{student_name}: All {len(daily_from_api)} days verified ✓")
 
-    def test_reed_niebler_dates_and_minutes(self, prod_client, prod_db):
+    def find_student_with_days(self, db, days):
+        """Pick a student who read on exactly `days` days (no real names hard-coded in the repo)"""
+        result = db.execute_query("""
+            SELECT student_name FROM Daily_Logs
+            GROUP BY student_name
+            HAVING COUNT(*) = ?
+            ORDER BY student_name
+            LIMIT 1
+        """, (days,))
+        if not result:
+            pytest.skip(f"No student with exactly {days} reading days")
+        return result[0]['student_name']
+
+    def test_nine_day_reader_dates_and_minutes(self, prod_client, prod_db):
         """
-        Regression test: Verify Reed Niebler's dates and minutes match database.
+        Regression test: Verify a 9-day reader's dates and minutes match database.
 
         This test caught a timezone bug where dates were off by one day
         (showed Oct 10-19 instead of Oct 9-18).
         """
-        passed, message = self.verify_student_detail_matches_db(
-            prod_client, prod_db, 'Reed Niebler'
-        )
+        student_name = self.find_student_with_days(prod_db, 9)
+        passed, message = self.verify_student_detail_matches_db(prod_client, prod_db, student_name)
         assert passed, message
 
-    def test_anderson_kerlik_dates_and_minutes(self, prod_client, prod_db):
+    def test_partial_reader_dates_and_minutes(self, prod_client, prod_db):
         """
-        Regression test: Verify Anderson Kerlik's dates and minutes match database.
+        Regression test: Verify a student who read on only a few days matches database.
         """
-        # First check if this student has any data
-        query = "SELECT COUNT(*) as count FROM Daily_Logs WHERE student_name = ?"
-        result = prod_db.execute_query(query, ('Anderson Kerlik',))
-
-        if result[0]['count'] == 0:
-            pytest.skip("Anderson Kerlik has no reading data")
-
-        passed, message = self.verify_student_detail_matches_db(
-            prod_client, prod_db, 'Anderson Kerlik'
-        )
+        student_name = self.find_student_with_days(prod_db, 3)
+        passed, message = self.verify_student_detail_matches_db(prod_client, prod_db, student_name)
         assert passed, message
 
     def test_ten_day_reader_dates_and_minutes(self, prod_client, prod_db):

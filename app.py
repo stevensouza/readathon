@@ -45,18 +45,21 @@ def write_config(db_id, db_filename):
         pass  # Silently fail if can't write config
 
 # Temporary compatibility - will be removed when all routes are updated
-DEFAULT_DATABASE = "sample"  # Fallback for legacy session.get('environment', DEFAULT_DATABASE)
 
 # Parse command line arguments - HYBRID APPROACH
 parser = argparse.ArgumentParser(description='Read-a-Thon Management System')
 parser.add_argument('--db',
-                   help='Database to use: display name ("2025 Read-a-Thon"), '
-                        'filename (readathon_2025.db), or alias ("sample"). '
+                   help='Database to use: display name ("2026 Read-a-Thon"), '
+                        'filename (readathon_2026.db), or alias ("sample"). '
                         'Case-insensitive.')
 args, unknown = parser.parse_known_args()
 
 # Initialize registry
 registry = DatabaseRegistry()
+
+# Year databases copied into db/ (outside git) are registered automatically
+for new_db_filename in registry.register_year_databases():
+    print(f"🗄️  Registered new database file: db/{new_db_filename}")
 
 # Determine startup database
 if args.db:
@@ -127,6 +130,72 @@ def get_current_reports():
     """Get report generator for current environment"""
     return ReportGenerator(get_current_db())
 
+def format_contest_range(sorted_dates):
+    """Format the contest date range (e.g. 'Oct 10-Oct 15, 2026') from the uploaded daily log dates"""
+    if not sorted_dates:
+        return "No reading data yet"
+    start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
+    end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
+    return f"{start_date}-{end_date}"
+
+def get_setup_tables_timestamp():
+    """
+    When the setup tables (Roster, Class_Info, Grade_Rules) were loaded.
+    They are loaded once when a database is created, so use the registry's created_timestamp.
+    """
+    db_info = registry.get_database(session.get('active_database_id', DEFAULT_DATABASE_ID))
+    if not db_info or not db_info.get('created_timestamp'):
+        return 'Unknown'
+    try:
+        return datetime.fromisoformat(db_info['created_timestamp']).strftime('%m/%d/%Y %I:%M %p')
+    except ValueError:
+        return db_info['created_timestamp']
+
+def get_max_contest_days(databases):
+    """Number of 'Through Day N' options for database comparison: the longest contest among registered databases"""
+    return max([db['total_days'] or 0 for db in databases] + [10])
+
+def get_validated_filters(db, dates):
+    """
+    Read date/grade/team filters from the query string, keeping only values that exist in the data.
+    Several queries interpolate these filters into SQL, so anything unrecognized falls back to 'all'.
+    """
+    grades = {row['grade_level'] for row in db.execute_query("SELECT DISTINCT grade_level FROM Roster")}
+    teams = {row['team_name'] for row in db.execute_query("SELECT DISTINCT team_name FROM Roster")}
+    date_filter = request.args.get('date', 'all')
+    grade_filter = request.args.get('grade', 'all')
+    team_filter = request.args.get('team', 'all')
+    return (date_filter if date_filter in dates else 'all',
+            grade_filter if grade_filter in grades else 'all',
+            team_filter if team_filter in teams else 'all')
+
+def get_team_color_bonus_summary(db):
+    """Most recent team color bonus event date and class count, e.g. '2026-10-13 (12 classes)'"""
+    result = db.execute_query("""
+        SELECT event_date, COUNT(*) as class_count
+        FROM Team_Color_Bonus
+        GROUP BY event_date
+        ORDER BY event_date DESC
+        LIMIT 1
+    """)
+    if result and result[0] and result[0]['event_date']:
+        return f"{result[0]['event_date']} ({result[0]['class_count']} classes)"
+    return 'No data'
+
+def is_sample_db_info(db_info):
+    """True if the registry entry is the sample database (by display name or filename)"""
+    return 'sample' in db_info['display_name'].lower() or 'sample' in db_info['db_filename'].lower()
+
+def get_current_db_label():
+    """Display name of the active database (e.g. '2026 Read-a-Thon'), used in logs and API responses"""
+    db_info = registry.get_database(session.get('active_database_id', DEFAULT_DATABASE_ID))
+    return db_info['display_name'] if db_info else 'unknown'
+
+def is_production_db():
+    """True if the active database holds real contest data (anything other than the sample database)"""
+    db_info = registry.get_database(session.get('active_database_id', DEFAULT_DATABASE_ID))
+    return bool(db_info) and not is_sample_db_info(db_info)
+
 @app.context_processor
 def inject_database_info():
     """Inject database information into all templates"""
@@ -134,12 +203,9 @@ def inject_database_info():
     db_info = registry.get_database(db_id)
 
     if db_info:
-        # Check if this is the sample database (either by display name or filename)
-        is_sample = 'sample' in db_info['display_name'].lower() or 'sample' in db_info['db_filename'].lower()
-
         return {
             'current_database': db_info,
-            'is_sample_database': is_sample
+            'is_sample_database': is_sample_db_info(db_info)
         }
 
     return {
@@ -281,7 +347,7 @@ def get_workflow_reports(workflow_id):
 @app.route('/school')
 def school_tab():
     """School overview dashboard (landing page)"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     db = get_current_db()
     reports = get_current_reports()
 
@@ -310,12 +376,7 @@ def school_tab():
     sorted_dates = sorted(dates)  # Oldest to newest
     total_days = len(sorted_dates)  # Total number of days in contest
 
-    if sorted_dates:
-        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
-        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
-        full_contest_range = f"{start_date}-{end_date}"
-    else:
-        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+    full_contest_range = format_contest_range(sorted_dates)
 
     # Current day calculation - date-aware
     if date_filter != 'all' and date_filter in dates:
@@ -971,24 +1032,11 @@ def school_tab():
     else:
         metadata['reader_cumulative_updated'] = 'Never'
 
-    # Roster timestamp (static - set during init)
-    metadata['roster_updated'] = '09/15/2025 8:00 AM'
+    # Roster timestamp (loaded when the database was created)
+    metadata['roster_updated'] = get_setup_tables_timestamp()
 
     # Team_Color_Bonus timestamp (event date)
-    team_color_bonus_query = """
-        SELECT event_date, COUNT(*) as class_count
-        FROM Team_Color_Bonus
-        GROUP BY event_date
-        ORDER BY event_date DESC
-        LIMIT 1
-    """
-    team_color_bonus_ts = db.execute_query(team_color_bonus_query)
-    if team_color_bonus_ts and team_color_bonus_ts[0] and team_color_bonus_ts[0]['event_date']:
-        event_date = team_color_bonus_ts[0]['event_date']
-        class_count = team_color_bonus_ts[0]['class_count']
-        metadata['team_color_bonus_updated'] = f"{event_date} ({class_count} classes)"
-    else:
-        metadata['team_color_bonus_updated'] = 'No data'
+    metadata['team_color_bonus_updated'] = get_team_color_bonus_summary(db)
 
     return render_template('school.html',
                          environment=env,
@@ -1007,7 +1055,7 @@ def school_tab():
 @app.route('/teams')
 def teams_tab():
     """Teams head-to-head competition dashboard"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     db = get_current_db()
 
     # Get filter parameter (optional)
@@ -1038,12 +1086,7 @@ def teams_tab():
     # Calculate full contest date range
     sorted_dates = sorted(dates)
     total_days = len(sorted_dates)
-    if sorted_dates:
-        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
-        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
-        full_contest_range = f"{start_date}-{end_date}"
-    else:
-        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+    full_contest_range = format_contest_range(sorted_dates)
 
     # Campaign Day calculation - date-aware (for banner metric)
     if date_filter != 'all' and date_filter in dates:
@@ -1668,12 +1711,7 @@ def teams_tab():
 
     # === FULL CONTEST RANGE ===
     sorted_dates = sorted(dates)
-    if sorted_dates:
-        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
-        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
-        full_contest_range = f"{start_date}-{end_date}"
-    else:
-        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+    full_contest_range = format_contest_range(sorted_dates)
 
     # === METADATA (Last Updated) ===
     metadata = {}
@@ -1702,24 +1740,11 @@ def teams_tab():
     else:
         metadata['reader_cumulative_updated'] = 'Never'
 
-    # Roster timestamp (static - set during init)
-    metadata['roster_updated'] = '09/15/2025 8:00 AM'
+    # Roster timestamp (loaded when the database was created)
+    metadata['roster_updated'] = get_setup_tables_timestamp()
 
     # Team_Color_Bonus timestamp (event date)
-    team_color_bonus_query = """
-        SELECT event_date, COUNT(*) as class_count
-        FROM Team_Color_Bonus
-        GROUP BY event_date
-        ORDER BY event_date DESC
-        LIMIT 1
-    """
-    team_color_bonus_ts = db.execute_query(team_color_bonus_query)
-    if team_color_bonus_ts and team_color_bonus_ts[0] and team_color_bonus_ts[0]['event_date']:
-        event_date = team_color_bonus_ts[0]['event_date']
-        class_count = team_color_bonus_ts[0]['class_count']
-        metadata['team_color_bonus_updated'] = f"{event_date} ({class_count} classes)"
-    else:
-        metadata['team_color_bonus_updated'] = 'No data'
+    metadata['team_color_bonus_updated'] = get_team_color_bonus_summary(db)
 
     return render_template('teams.html',
                          environment=env,
@@ -1740,16 +1765,14 @@ def teams_tab():
 @app.route('/classes')
 def grade_level_tab():
     """Grade Level dashboard - class and grade-level competition view"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     db = get_current_db()
-
-    # Get filter parameters (optional)
-    date_filter = request.args.get('date', 'all')
-    grade_filter = request.args.get('grade', 'all')
-    team_filter = request.args.get('team', 'all')
 
     # Get all available dates
     dates = db.get_all_dates()
+
+    # Get filter parameters (optional)
+    date_filter, grade_filter, team_filter = get_validated_filters(db, dates)
 
     # Build WHERE clause based on filter (cumulative through selected date)
     date_where = ""
@@ -1766,24 +1789,10 @@ def grade_level_tab():
     if team_filter != 'all':
         team_where = f" AND ci.team_name = '{team_filter}'"
 
-    # DEBUG: Log filter state
-    print(f"\n=== GRADE LEVEL ROUTE DEBUG ===")
-    print(f"  date_filter: {date_filter}")
-    print(f"  grade_filter: {grade_filter}")
-    print(f"  team_filter: {team_filter}")
-    print(f"  date_where: {repr(date_where)}")
-    print(f"  grade_where: {repr(grade_where)}")
-    print(f"  team_where: {repr(team_where)}")
-
     # Calculate full contest date range
     sorted_dates = sorted(dates)
     total_days = len(sorted_dates)
-    if sorted_dates:
-        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
-        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
-        full_contest_range = f"{start_date}-{end_date}"
-    else:
-        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+    full_contest_range = format_contest_range(sorted_dates)
 
     # Campaign Day calculation - date-aware (for banner metric)
     if date_filter != 'all' and date_filter in dates:
@@ -1832,13 +1841,6 @@ def grade_level_tab():
     classes_query = get_grade_level_classes_query(date_where, grade_where, team_where)
     classes_result = db.execute_query(classes_query)
 
-    # DEBUG: Log result count
-    row_count = len(classes_result) if classes_result else 0
-    print(f"  Query returned {row_count} classes")
-    if row_count > 0 and classes_result:
-        grades_in_results = set(row['grade_level'] for row in classes_result)
-        print(f"  Grades in results: {grades_in_results}")
-    print(f"=================================\n")
 
     # Find grade-level winners (silver highlights) for each metric - use ALL classes
     # Matches metrics from Teams page for consistency
@@ -2021,7 +2023,9 @@ def grade_level_tab():
         if leaders_result and all_classes_data:
             for row in leaders_result:
                 metric = row['metric']
-                max_value = row['value']
+                max_value = row['value'] or 0  # NULL before any reading data is uploaded
+                if max_value <= 0:
+                    continue  # Nobody leads a metric where everyone is at zero
 
                 # Find ALL classes that match this max value
                 tied_classes = []
@@ -2123,13 +2127,11 @@ def grade_level_tab():
     reader_cumulative_ts = db.execute_query(reader_cumulative_ts_query)
     metadata['reader_cumulative_updated'] = reader_cumulative_ts[0]['last_updated'] if reader_cumulative_ts and reader_cumulative_ts[0] and reader_cumulative_ts[0]['last_updated'] else 'Never'
 
-    # Roster timestamp
-    roster_ts_query = "SELECT datetime('now', 'localtime') as last_updated"
-    roster_ts = db.execute_query(roster_ts_query)
-    metadata['roster_updated'] = roster_ts[0]['last_updated'] if roster_ts and roster_ts[0] else 'Never'
+    # Roster timestamp (loaded when the database was created)
+    metadata['roster_updated'] = get_setup_tables_timestamp()
 
     # Team Color Bonus
-    metadata['team_color_bonus_updated'] = '2025-10-13 (Spirit Day)'
+    metadata['team_color_bonus_updated'] = get_team_color_bonus_summary(db)
 
     return render_template('grade_level.html',
                          environment=env,
@@ -2154,16 +2156,14 @@ def grade_level_tab():
 @app.route('/students')
 def students_tab():
     """Students master-detail dashboard"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     db = get_current_db()
-
-    # Get filter parameters
-    date_filter = request.args.get('date', 'all')
-    grade_filter = request.args.get('grade', 'all')
-    team_filter = request.args.get('team', 'all')
 
     # Get all available dates for filter dropdown
     dates = db.get_all_dates()
+
+    # Get filter parameters
+    date_filter, grade_filter, team_filter = get_validated_filters(db, dates)
 
     # Get team names (sorted alphabetically for consistency)
     team_names_query = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
@@ -2173,12 +2173,7 @@ def students_tab():
     # Calculate full contest date range
     sorted_dates = sorted(dates)
     total_days = len(sorted_dates)
-    if sorted_dates:
-        start_date = datetime.strptime(sorted_dates[0], '%Y-%m-%d').strftime('%b %d')
-        end_date = datetime.strptime(sorted_dates[-1], '%Y-%m-%d').strftime('%b %d, %Y')
-        full_contest_range = f"{start_date}-{end_date}"
-    else:
-        full_contest_range = "Oct 10-15, 2025"  # Fallback if no dates
+    full_contest_range = format_contest_range(sorted_dates)
 
     # === GET DATA FROM DATABASE ===
 
@@ -2235,9 +2230,6 @@ def students_tab():
     # - Silver: Filtered winners (grade/team subset)
     highlight_mode = 'gold' if (grade_filter == 'all' and team_filter == 'all') else 'silver'
 
-    # Choose appropriate winners dict
-    winners = school_winners if highlight_mode == 'gold' else filtered_winners
-
     # === BUILD TEAM INDEX MAPPING (alphabetical order determines color) ===
     # Team 1 (alphabetically first) = index 0 (blue)
     # Team 2 (alphabetically second) = index 1 (yellow)
@@ -2272,11 +2264,11 @@ def students_tab():
     else:
         metadata['reader_cumulative_updated'] = 'Never'
 
-    # Roster timestamp (static - set during init)
-    metadata['roster_updated'] = '09/15/2025 8:00 AM'
+    # Roster timestamp (loaded when the database was created)
+    metadata['roster_updated'] = get_setup_tables_timestamp()
 
-    # Grade_Rules timestamp (static)
-    metadata['grade_rules_updated'] = '09/15/2025 8:00 AM'
+    # Grade_Rules timestamp (loaded when the database was created)
+    metadata['grade_rules_updated'] = get_setup_tables_timestamp()
 
     # === RENDER TEMPLATE ===
 
@@ -2301,15 +2293,14 @@ def students_tab():
 @app.route('/student/<student_name>')
 def student_detail(student_name):
     """Student detail API endpoint (returns JSON for modal)"""
-    env = session.get('environment', DEFAULT_DATABASE)
     db = get_current_db()
-
-    # Get filter parameter (should match main page filter)
-    date_filter = request.args.get('date', 'all')
 
     # Get all dates for calculating days_in_filter
     dates = db.get_all_dates()
     sorted_dates = sorted(dates)
+
+    # Get filter parameter (should match main page filter)
+    date_filter, _, _ = get_validated_filters(db, dates)
 
     # Calculate days in filter (for "X/Y" display)
     if date_filter != 'all' and date_filter in dates:
@@ -2331,7 +2322,7 @@ def student_detail(student_name):
 @app.route('/index_old')
 def index():
     """Main dashboard (old version - kept for reference)"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     db = get_current_db()
     reports = get_current_reports()
 
@@ -2606,7 +2597,7 @@ def index():
 @app.route('/upload')
 def upload_page():
     """Data upload page"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     return render_template('upload.html', environment=env)
 
 
@@ -2656,7 +2647,7 @@ def delete_day(log_date):
     """Delete all data for a specific date"""
     try:
         db = get_current_db()
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         # Delete from Daily_Logs
         result = db.delete_day_data(log_date)
@@ -2672,7 +2663,7 @@ def delete_cumulative():
     """Delete all cumulative data (donations, sponsors, cumulative minutes)"""
     try:
         db = get_current_db()
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         # Delete from Reader_Cumulative
         result = db.delete_cumulative_data()
@@ -2700,10 +2691,10 @@ def upload_daily():
         confirmed = request.form.get('confirmed', 'false').lower() == 'true'
 
         # Get current environment
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         # Safeguard: Check if sample data is being uploaded to production
-        if env == 'prod' and not confirmed:
+        if is_production_db() and not confirmed:
             # Check filename for "sample" keyword
             minutes_name = minutes_file.filename.lower()
 
@@ -2745,10 +2736,10 @@ def upload_cumulative():
         confirmed = request.form.get('confirmed', 'false').lower() == 'true'
 
         # Get current environment
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         # Safeguard: Check if sample data is being uploaded to production
-        if env == 'prod' and not confirmed:
+        if is_production_db() and not confirmed:
             # Check filename for "sample" keyword
             cumulative_name = cumulative_file.filename.lower()
 
@@ -2794,10 +2785,10 @@ def upload_team_color_bonus():
         confirmed = request.form.get('confirmed', 'false').lower() == 'true'
 
         # Get current environment
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         # Safeguard: Check if sample data is being uploaded to production
-        if env == 'prod' and not confirmed:
+        if is_production_db() and not confirmed:
             # Check filename for "sample" keyword
             bonus_name = bonus_file.filename.lower()
 
@@ -2843,7 +2834,7 @@ def delete_upload_history_batch():
             }), 400
 
         # Get current environment
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         db = get_current_db()
         result = db.delete_upload_history_batch(upload_ids)
@@ -2860,7 +2851,7 @@ def delete_upload_history_batch():
 @app.route('/reports')
 def reports_page():
     """Unified Reports & Data page - combines reports, tables, and admin queries"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
 
     # Get unified items (all reports, tables, admin queries)
     all_items = get_unified_items()
@@ -2918,7 +2909,7 @@ def reports_page():
 @app.route('/admin')
 def admin_page():
     """Administration page - administrative operations only (no reports tab)"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
 
     # Get database registry for database comparison tab
     registry = DatabaseRegistry()
@@ -2950,13 +2941,14 @@ def admin_page():
                          comparison_data=comparison_data,
                          db1_filename=db1_filename,
                          db2_filename=db2_filename,
-                         filter_period=filter_period)
+                         filter_period=filter_period,
+                         max_contest_days=get_max_contest_days(databases))
 
 
 @app.route('/database-comparison')
 def database_comparison():
     """Database comparison page - year-over-year analysis"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
 
     # Get database registry to populate dropdowns
     registry = DatabaseRegistry()
@@ -2990,7 +2982,8 @@ def database_comparison():
                            comparison_data=comparison_data,
                            db1_filename=db1_filename,
                            db2_filename=db2_filename,
-                           filter_period=filter_period)
+                           filter_period=filter_period,
+                           max_contest_days=get_max_contest_days(databases))
 
 
 @app.route('/api/report/<report_id>')
@@ -3217,8 +3210,8 @@ def export_all():
         # Prepare response
         zip_buffer.seek(0)
 
-        # Get environment for filename
-        env = 'prod' if session.get('active_environment') == 'prod' else 'sample'
+        # Label the export with the database (readathon_2026.db -> '2026', readathon_sample.db -> 'sample')
+        env = os.path.splitext(db_info['db_filename'])[0].replace('readathon_', '') if db_info else 'unknown'
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         # Include version in filename (remove 'v' prefix and replace dots with underscores)
         version_str = version.replace('v', '').replace('.', '_')
@@ -3306,9 +3299,9 @@ def generate_export_readme(metadata: dict) -> str:
 - **Uncapped Minutes:** Actual minutes read (may exceed 120)
 - Reports use **capped minutes** for contest calculations
 
-### Sanctioned Contest Dates
-- **Official Period:** October 10-15, 2025
-- Out-of-range dates may appear in data but don't count toward official totals
+### Contest Dates
+- **Dates in this export:** {date_range['min_date']} to {date_range['max_date']}
+- The contest period is defined by the dates uploaded to Daily_Logs
 
 ### Team Competition
 - School divided into two teams for friendly competition
@@ -3337,7 +3330,7 @@ Please handle with appropriate care and follow your organization's data privacy 
 ## Support
 
 For questions about this data or the Read-a-Thon system:
-- See source repository: /Users/stevesouza/my/data/readathon/v2026_development
+- See the Read-a-Thon source repository
 - Review IMPLEMENTATION_PROMPT.md for complete system documentation
 - Check CLAUDE.md for development guidelines
 
@@ -3363,11 +3356,11 @@ def list_databases():
 
 @app.route('/api/databases/register', methods=['POST'])
 def register_database():
-    """Register a new year database"""
+    """Register an existing database file (already copied into db/) in the registry"""
     try:
         data = request.json
         year = data.get('year')
-        db_filename = data.get('db_filename')
+        db_filename = (data.get('db_filename') or '').strip()
         description = data.get('description', '')
 
         if not year or not db_filename:
@@ -3376,10 +3369,22 @@ def register_database():
                 'error': 'Year and database filename are required'
             }), 400
 
-        db = get_current_db()
-        result = db.register_database(int(year), db_filename, description)
+        # Plain filename only - databases always live in db/
+        if os.path.basename(db_filename) != db_filename or not db_filename.endswith('.db'):
+            return jsonify({'success': False, 'error': 'Enter a filename like readathon_2025.db (no folder)'}), 400
 
-        return jsonify(result)
+        db_path = os.path.join('db', db_filename)
+        if not os.path.exists(db_path):
+            return jsonify({'success': False, 'error': f'{db_path} not found - copy the file into the db folder first'}), 400
+
+        if registry.get_database_by_name(db_filename):
+            return jsonify({'success': False, 'error': f'{db_filename} is already registered'}), 400
+
+        display_name = description or f"{int(year)} Read-a-Thon"
+        db_id = registry.register_database(db_filename, display_name, int(year), description)
+        registry.update_stats(db_id, **DatabaseRegistry.read_database_stats(db_path))
+
+        return jsonify({'success': True, 'db_id': db_id, 'year': int(year), 'db_filename': db_filename})
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -3412,7 +3417,14 @@ def create_database():
                 'error': 'All three CSV files are required (roster, class_info, grade_rules)'
             }), 400
 
-        # Validate filename
+        # Validate filename (plain name only - databases always live in db/)
+        filename = filename[3:] if filename.startswith('db/') else filename
+        if os.path.basename(filename) != filename:
+            return jsonify({
+                'success': False,
+                'error': 'Database filename must not contain a path'
+            }), 400
+
         if not filename.endswith('.db'):
             return jsonify({
                 'success': False,
@@ -3674,7 +3686,7 @@ def clear_tables():
         db = get_current_db()
         conn = db.get_connection()
         cursor = conn.cursor()
-        env = session.get('environment', DEFAULT_DATABASE)
+        env = get_current_db_label()
 
         deleted = {}
 
@@ -3719,7 +3731,7 @@ def clear_tables():
 @app.route('/workflows')
 def workflows_page():
     """Workflow execution page with dynamic workflow data"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     db = get_current_db()
     dates = db.get_all_dates()
 
@@ -3842,25 +3854,25 @@ def view_table(table_id):
 @app.route('/help')
 def help_page():
     """User manual / help page"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     return render_template('help.html', environment=env)
 
 @app.route('/help/claude')
 def help_claude():
     """Claude Code development documentation"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     return render_template('claude_development.html', environment=env)
 
 @app.route('/help/installation')
 def help_installation():
     """Installation guide and setup documentation"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     return render_template('installation.html', environment=env)
 
 @app.route('/help/requirements')
 def help_requirements():
     """Application requirements document (IMPLEMENTATION_PROMPT.md)"""
-    env = session.get('environment', DEFAULT_DATABASE)
+    env = get_current_db_label()
     # Read IMPLEMENTATION_PROMPT.md
     requirements_content = ""
     try:

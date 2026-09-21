@@ -160,6 +160,15 @@ if [ -f "requirements.txt" ]; then
         pip3 install pytest==7.4.3
         print_status "pytest installed"
     fi
+
+    # BeautifulSoup is used by the page-content regression tests
+    if python3 -c "import bs4" 2>/dev/null; then
+        print_status "beautifulsoup4 already installed"
+    else
+        print_info "Installing beautifulsoup4..."
+        pip3 install beautifulsoup4==4.15.0
+        print_status "beautifulsoup4 installed"
+    fi
 else
     print_error "requirements.txt not found in $SCRIPT_DIR"
     exit 1
@@ -176,39 +185,24 @@ if [ -d "$SCRIPT_DIR/db" ]; then
         print_status "Registry database found: readathon_registry.db"
     fi
 
-    if [ -f "$SCRIPT_DIR/db/readathon_2025.db" ]; then
-        print_status "Production database found: readathon_2025.db"
-    fi
+    # Year databases (readathon_2025.db, readathon_2026.db, ...) are gitignored - they exist only locally
+    for YEAR_DB in "$SCRIPT_DIR"/db/readathon_[0-9][0-9][0-9][0-9].db; do
+        if [ -f "$YEAR_DB" ]; then
+            print_status "Contest database found: $(basename "$YEAR_DB")"
+        fi
+    done
 
     if [ -f "$SCRIPT_DIR/db/readathon_sample.db" ]; then
         print_status "Sample database found: readathon_sample.db"
     else
-        print_warning "Sample database not found"
-        read -p "Initialize sample database now? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            if [ -f "$SCRIPT_DIR/init_data.py" ]; then
-                print_info "Running database initialization..."
-                python3 "$SCRIPT_DIR/init_data.py"
-                print_status "Sample database initialized"
-            else
-                print_error "init_data.py not found"
-            fi
-        fi
+        print_warning "Sample database not found - restore it with: git checkout db/readathon_sample.db"
     fi
 else
-    print_warning "Database directory not found - creating..."
-    mkdir -p "$SCRIPT_DIR/db"
-    print_status "Database directory created"
-
-    print_info "Initializing sample database..."
-    if [ -f "$SCRIPT_DIR/init_data.py" ]; then
-        python3 "$SCRIPT_DIR/init_data.py"
-        print_status "Sample database initialized"
-    else
-        print_error "init_data.py not found"
-    fi
+    print_warning "Database directory not found - restore it with: git checkout db/"
 fi
+
+print_info "To create a new year's database: Admin -> Database Registry -> Create New Database"
+print_info "  (or from the command line: python3 init_data.py <year>)"
 
 # Create Desktop shortcuts
 print_header "Desktop Shortcuts"
@@ -227,7 +221,7 @@ if [ -d "$DESKTOP_DIR" ]; then
 cd "$SCRIPT_DIR"
 echo "🚀 Starting Read-a-Thon Application..."
 echo ""
-python3 app.py --db sample
+python3 app.py
 EOF
         chmod +x "$START_SCRIPT"
         print_status "Start shortcut created on Desktop"
@@ -315,7 +309,9 @@ echo "  3. To stop: Double-click 'Stop Read-a-Thon.command'"
 echo ""
 echo -e "${BLUE}Manual Start:${NC}"
 echo "  cd $SCRIPT_DIR"
-echo "  python3 app.py --db sample"
+echo "  python3 app.py                         # last database you used"
+echo "  python3 app.py --db sample             # sample data"
+echo "  python3 app.py --db \"2026 Read-a-Thon\"  # a specific year"
 echo ""
 echo -e "${BLUE}Run Tests:${NC}"
 echo "  cd $SCRIPT_DIR"

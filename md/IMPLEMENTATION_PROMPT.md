@@ -88,7 +88,7 @@ The Read-a-Thon Management System is a **fully functional Flask web application*
 #### Key Business Logic
 
 - **120-Minute Daily Cap:** Students can read more, but max 120 min/day counts toward totals
-- **Sanctioned Dates:** Oct 10-15, 2025 (only this 6-day window counts for official contest)
+- **Contest Dates:** taken from the uploaded Daily_Logs dates (2025 event: 10 days, Oct 10-19, 2025)
 - **Team Competition:** Two teams compete across fundraising, reading, participation
 - **Team Color Bonus:** Oct 13 event added +10 bonus minutes per participating student
 - **Participation Metrics:**
