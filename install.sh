@@ -219,9 +219,7 @@ if [ -d "$DESKTOP_DIR" ]; then
         cat > "$START_SCRIPT" << EOF
 #!/bin/bash
 cd "$SCRIPT_DIR"
-echo "🚀 Starting Read-a-Thon Application..."
-echo ""
-python3 app.py
+./run.sh
 EOF
         chmod +x "$START_SCRIPT"
         print_status "Start shortcut created on Desktop"
@@ -309,9 +307,9 @@ echo "  3. To stop: Double-click 'Stop Read-a-Thon.command'"
 echo ""
 echo -e "${BLUE}Manual Start:${NC}"
 echo "  cd $SCRIPT_DIR"
-echo "  python3 app.py                         # last database you used"
-echo "  python3 app.py --db sample             # sample data"
-echo "  python3 app.py --db \"2026 Read-a-Thon\"  # a specific year"
+echo "  ./run.sh                               # last database you used"
+echo "  ./run.sh --db sample                   # sample data"
+echo "  ./run.sh --db \"2026 Read-a-Thon\"        # a specific year"
 echo ""
 echo -e "${BLUE}Run Tests:${NC}"
 echo "  cd $SCRIPT_DIR"

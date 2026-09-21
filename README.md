@@ -126,18 +126,14 @@ See the `sample_*.csv` files in the repository for examples.
 ### 3. Start the Application
 
 ```bash
-# Default: Uses last database choice (or sample if first run)
-python3 app.py
-
-# Explicitly use sample database
-python3 app.py --db sample
-
-# Use a specific year's database (display name or filename)
-python3 app.py --db "2026 Read-a-Thon"
-python3 app.py --db readathon_2026.db
+# Starts the app and opens http://127.0.0.1:5001 in your browser
+./run.sh                              # last database you used (sample on first run)
+./run.sh --db sample                  # sample database
+./run.sh --db "2026 Read-a-Thon"      # a specific year (display name or filename)
 ```
 
-Open your browser to: **http://127.0.0.1:5001**
+`./run.sh` passes its options to `python3 app.py`, which you can also run directly.
+Browser address: **http://127.0.0.1:5001**
 
 **Note:** The app remembers your last database choice in `.readathon_config`. You can also switch databases using the dropdown menu in the navigation bar.
 
@@ -171,7 +167,7 @@ Code comes from git; the real databases never do (they contain student names and
    unzip -o ~/Downloads/readathon_data_2026-10-14_1530.zip    # fills db/ (run inside the readathon folder)
    ```
    Or copy individual files such as `readathon_2025.db` and `readathon_2026.db` into `db/`.
-3. **Start the app**: `python3 app.py`, then open http://127.0.0.1:5001
+3. **Start the app**: `./run.sh` (opens http://127.0.0.1:5001)
    - Every `db/readathon_<YEAR>.db` is registered automatically on start (the terminal prints "Registered new database file").
    - Pick the year in the header dropdown. The sample database (yellow banner) is always available for practice.
 4. **Updating the code later**: `git pull` (stop the app first). The `db/` folder is untouched by git.
@@ -262,6 +258,7 @@ readathon/
 ├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster)
 ├── package_data.sh         # Zip db/ to move data to another computer
 ├── install.sh              # One-time Mac setup + Desktop shortcuts
+├── run.sh                  # Start the app (./run.sh [--db ...]) and open the browser
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file
 ├── db/                    # Databases: readathon_sample.db (in git), readathon_<YEAR>.db + registry (local only)

@@ -17,6 +17,10 @@ python3 init_data.py 2026         # Create + register db/readathon_2026.db from 
 
 ### Running the Application
 ```bash
+# Start script (same options as app.py; opens the browser)
+./run.sh
+./run.sh --db sample
+
 # Default: Uses last database choice (or sample if first run)
 python3 app.py
 
