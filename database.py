@@ -51,10 +51,11 @@ class DatabaseRegistry:
         if cursor.fetchone()[0] > 0:
             return
 
-        registry_dir = os.path.dirname(self.registry_path)
-        if os.path.exists(os.path.join(registry_dir, SAMPLE_DB_FILENAME)):
+        sample_path = os.path.join(os.path.dirname(self.registry_path), SAMPLE_DB_FILENAME)
+        if os.path.exists(sample_path):
             db_id = self.register_database(SAMPLE_DB_FILENAME, 'Sample', None,
                                            'Sample database for testing')
+            self.recalculate_stats_from_file(db_id)
             self.set_active_database(db_id)
 
     def register_year_databases(self) -> List[str]:
@@ -77,7 +78,7 @@ class DatabaseRegistry:
             year = int(match.group(1))
             db_id = self.register_database(filename, f'{year} Read-a-Thon', year,
                                            f'{year} read-a-thon database')
-            self.update_stats(db_id, **self.read_database_stats(os.path.join(registry_dir, filename)))
+            self.recalculate_stats_from_file(db_id)
             added.append(filename)
         return added
 
@@ -393,26 +394,13 @@ class DatabaseRegistry:
         if not db:
             return {'success': False, 'error': f'Database ID {db_id} not found'}
 
-        db_path = f"db/{db['db_filename']}"
+        db_path = os.path.join(os.path.dirname(self.registry_path), db['db_filename'])
 
         try:
-            # Open the contest database file
-            contest_conn = sqlite3.connect(db_path)
-            cursor = contest_conn.cursor()
-
-            # Get student count from Roster
-            cursor.execute("SELECT COUNT(*) FROM Roster")
-            student_count = cursor.fetchone()[0]
-
-            # Get total days from Daily_Logs
-            cursor.execute("SELECT COUNT(DISTINCT log_date) FROM Daily_Logs")
-            total_days = cursor.fetchone()[0]
-
-            # Get total donations from Reader_Cumulative
-            cursor.execute("SELECT COALESCE(SUM(donation_amount), 0.0) FROM Reader_Cumulative")
-            total_donations = cursor.fetchone()[0]
-
-            contest_conn.close()
+            stats = self.read_database_stats(db_path)
+            student_count = stats['student_count']
+            total_days = stats['total_days']
+            total_donations = stats['total_donations']
 
             # Update registry with calculated values
             result = self.update_stats(db_id, student_count, total_days, total_donations)

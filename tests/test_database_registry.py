@@ -75,6 +75,7 @@ class TestDatabaseRegistry:
         databases = registry.list_databases()
         assert [db['db_filename'] for db in databases] == ['readathon_sample.db']
         assert registry.get_active_database()['db_filename'] == 'readathon_sample.db'
+        assert databases[0]['student_count'] > 0
         registry.close()
 
         # Reopening must not seed a duplicate

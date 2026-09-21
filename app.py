@@ -3382,7 +3382,7 @@ def register_database():
 
         display_name = description or f"{int(year)} Read-a-Thon"
         db_id = registry.register_database(db_filename, display_name, int(year), description)
-        registry.update_stats(db_id, **DatabaseRegistry.read_database_stats(db_path))
+        registry.recalculate_stats_from_file(db_id)
 
         return jsonify({'success': True, 'db_id': db_id, 'year': int(year), 'db_filename': db_filename})
 
