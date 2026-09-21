@@ -9,6 +9,12 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+### Changed
+- `install.sh` now rewrites Desktop Start/Stop shortcuts that are out of date (e.g. pointing to an old folder) instead of
+  skipping them, reports when they are already up to date, and lists other Read-a-Thon shortcuts it finds (untouched)
+- User manual (Installation Guide), README and older guides start the app with `./run.sh` instead of `python3 app.py`, and
+  explain what `install.sh` does (setup only - it does not start the app) and that it is safe to rerun
+
 ## [v2026.15.0] - 2026-09-21 - 2026 event preparation
 
 ### Fixed

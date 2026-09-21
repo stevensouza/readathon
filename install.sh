@@ -1,7 +1,8 @@
 #!/bin/bash
 # Read-a-Thon Application Installation Script
 # Idempotent installation for macOS
-# Can safely run multiple times - skips already-completed steps
+# Safe to run as many times as you like: completed steps are skipped, Desktop shortcuts
+# are refreshed if outdated, and every run reports the current state of the install.
 
 set -e  # Exit on error
 
@@ -204,43 +205,55 @@ fi
 print_info "To create a new year's database: Admin -> Database Registry -> Create New Database"
 print_info "  (or from the command line: python3 init_data.py <year>)"
 
-# Create Desktop shortcuts
+# Desktop shortcuts are generated files: rewrite them whenever they don't match
+# this install (e.g. an old copy pointing to a different folder), so reruns fix them.
 print_header "Desktop Shortcuts"
 
 DESKTOP_DIR="$HOME/Desktop"
 
-if [ -d "$DESKTOP_DIR" ]; then
-    # Start App shortcut
-    START_SCRIPT="$DESKTOP_DIR/Start Read-a-Thon.command"
-    if [ -f "$START_SCRIPT" ]; then
-        print_status "Start shortcut already exists"
+# install_shortcut <file> <description> <content>
+install_shortcut() {
+    local file="$1" desc="$2" content="$3"
+    local name
+    name="$(basename "$file")"
+    if [ -f "$file" ] && [ "$(cat "$file")" == "$content" ]; then
+        print_status "$name is up to date ($desc)"
     else
-        print_info "Creating Start shortcut..."
-        cat > "$START_SCRIPT" << EOF
-#!/bin/bash
-cd "$SCRIPT_DIR"
-./run.sh
-EOF
-        chmod +x "$START_SCRIPT"
-        print_status "Start shortcut created on Desktop"
+        if [ -f "$file" ]; then
+            print_warning "$name was out of date - replacing it. Old version:"
+            sed 's/^/      /' "$file"
+        fi
+        printf '%s\n' "$content" > "$file"
+        print_status "$name written to Desktop ($desc)"
     fi
+    if [ ! -x "$file" ]; then
+        chmod +x "$file"
+        print_status "$name made executable"
+    fi
+}
 
-    # Stop App shortcut
-    STOP_SCRIPT="$DESKTOP_DIR/Stop Read-a-Thon.command"
-    if [ -f "$STOP_SCRIPT" ]; then
-        print_status "Stop shortcut already exists"
-    else
-        print_info "Creating Stop shortcut..."
-        cat > "$STOP_SCRIPT" << EOF
-#!/bin/bash
-echo "🛑 Stopping Read-a-Thon Application..."
+if [ -d "$DESKTOP_DIR" ]; then
+    install_shortcut "$DESKTOP_DIR/Start Read-a-Thon.command" \
+        "runs ./run.sh in $SCRIPT_DIR" \
+        "#!/bin/bash
+cd \"$SCRIPT_DIR\"
+./run.sh"
+
+    install_shortcut "$DESKTOP_DIR/Stop Read-a-Thon.command" \
+        "stops the app on port 5001" \
+        "#!/bin/bash
+echo \"🛑 Stopping Read-a-Thon Application...\"
 lsof -ti:5001 | xargs kill -9 2>/dev/null
-echo "✅ Application stopped"
-sleep 2
-EOF
-        chmod +x "$STOP_SCRIPT"
-        print_status "Stop shortcut created on Desktop"
-    fi
+echo \"✅ Application stopped\"
+sleep 2"
+
+    # Report (but don't touch) other Read-a-Thon shortcuts, e.g. from older versions
+    for OTHER in "$DESKTOP_DIR"/*[Rr]ead*[Tt]hon*.command; do
+        case "$(basename "$OTHER")" in
+            "Start Read-a-Thon.command"|"Stop Read-a-Thon.command") ;;
+            *) [ -f "$OTHER" ] && print_warning "Other shortcut found (not managed by this installer, delete it if unused): $(basename "$OTHER")" ;;
+        esac
+    done
 else
     print_warning "Desktop directory not found - skipping shortcuts"
 fi
@@ -299,6 +312,7 @@ fi
 
 echo ""
 echo -e "${BLUE}Installation Location:${NC} $SCRIPT_DIR"
+echo "(Safe to rerun ./install.sh anytime - it re-checks everything and fixes outdated Desktop shortcuts.)"
 echo ""
 echo -e "${BLUE}Quick Start:${NC}"
 echo "  1. Double-click 'Start Read-a-Thon.command' on Desktop"
