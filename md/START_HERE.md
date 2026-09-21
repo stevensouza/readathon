@@ -17,8 +17,8 @@ Your Read-a-Thon reporting system is ready to use!
 Open Terminal and run:
 
 ```bash
-cd /Users/stevesouza/my/data/readathon
-python3 app.py
+cd ~/my/data/gitrepo/readathon
+./run.sh            # starts the app and opens http://127.0.0.1:5001
 ```
 
 You should see:
@@ -28,12 +28,12 @@ READ-A-THON REPORTING SYSTEM
 ============================================================
 
 Starting web server...
-Open your browser and go to: http://localhost:5000
+Open your browser and go to: http://127.0.0.1:5001
 ```
 
 ### Step 2: Open Your Browser
 
-Navigate to: **http://localhost:5000**
+Navigate to: **http://127.0.0.1:5001**
 
 You'll see the dashboard with all your stats!
 
@@ -103,7 +103,7 @@ See `README.md` for:
 
 Your typical daily routine will be:
 
-1. Start the app: `python3 app.py`
+1. Start the app: `./run.sh`
 2. Upload today's minutes and donations CSV files
 3. Run reports or workflows
 4. Copy results to your slideshow or export to Excel
@@ -127,6 +127,6 @@ Check the README.md file for detailed documentation on:
 
 ---
 
-**Ready to start?** Run `python3 app.py` and open http://localhost:5000 🚀
+**Ready to start?** Run `./run.sh` - it opens http://127.0.0.1:5001 for you 🚀
 
 Good luck with your read-a-thon! 📚✨

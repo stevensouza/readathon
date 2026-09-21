@@ -31,10 +31,10 @@
 
 ## Running the Application
 ```bash
-cd ~/my/data/readathon/v2026_development
-python3 app.py
+cd ~/my/data/gitrepo/readathon
+./run.sh
 ```
-Access at: http://localhost:5000
+Opens http://127.0.0.1:5001 in your browser
 
 ## Testing
 - Automated tests in `test_*.py` files

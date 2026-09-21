@@ -92,7 +92,9 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 # Flask (app), pytest + beautifulsoup4 (tests)
 pip3 install -r requirements.txt
 
-# Or run the installer (checks Python/Flask, creates Desktop start/stop shortcuts)
+# Or run the installer (checks Python/Flask, creates Desktop start/stop shortcuts).
+# It does not start the app. Safe to rerun anytime: it skips completed steps, rewrites
+# outdated Desktop shortcuts, and reports the current state even when everything is fine.
 ./install.sh
 ```
 
@@ -102,7 +104,7 @@ pip3 install -r requirements.txt
 ```bash
 # The repo includes a sample database with fake data
 # Just run the app - it will use readathon_sample.db automatically
-python3 app.py
+./run.sh
 ```
 
 **Option B: Use Your Own Data (one database per event year)**
@@ -146,7 +148,7 @@ Each event year gets its own database, `db/readathon_<YEAR>.db`. Last year's dat
 1. **Back up** the `db/` folder. Real databases are gitignored (student PII), so git will not keep them.
 2. **Prepare** `roster.csv`, `class_info.csv` and `grade_rules.csv` for the new year (same columns as above). Keep them out of git.
 3. **Create** the database: Admin → Database Registry → Create New Database, or `python3 init_data.py <YEAR>`.
-4. **Switch** to it with the header dropdown, or `python3 app.py --db "<YEAR> Read-a-Thon"`. The app remembers the choice.
+4. **Switch** to it with the header dropdown, or `./run.sh --db "<YEAR> Read-a-Thon"`. The app remembers the choice.
 5. **Check** the student count, teams and grade goals on the School / Classes pages.
 6. **Compare with last year (optional):** copy last year's `readathon_<YEAR>.db` into `db/` and restart the app; it is registered automatically. Then use Admin → Database Comparison ("Through Day N" lines up the same contest day in both years).
 
@@ -328,7 +330,7 @@ This application is designed to run locally and keep student data private:
 For issues or questions about this system, check:
 1. The troubleshooting section above
 2. Error messages in the browser console (F12)
-3. Terminal output when running `python3 app.py`
+3. Terminal output when running `./run.sh`
 
 ## Contest Duration
 - The contest period is the range of dates uploaded to Daily_Logs (it can differ each year)
