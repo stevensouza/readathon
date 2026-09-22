@@ -77,23 +77,29 @@
     .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid var(--navy); color: var(--navy); font-weight: 800; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 2; }
 
     .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); }
-    .print-bar { max-width: 8.5in; margin: 0 auto 10px auto; display: flex; justify-content: flex-end; gap: 8px; }
 
     @media print {
         @page { size: letter; margin: 0.4in; }
         body { background: #fff; }
-        .print-bar, .option-label { display: none; }
+        .option-label { display: none; }
         .page { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .section { break-inside: avoid; }
+        /* box-shadow on a rounded/circular shape can print as its full
+           rectangular bounding box instead of following the curve (a
+           browser print-to-PDF quirk) — drop it for print only on the
+           round elements: the stat oval, trophy badges, and VS badge */
+        .mh-medallion, .win-trophy-badge, .vs-badge { box-shadow: none; }
     }
 </style>
 </head>
 <body>
 
-<div class="print-bar">
-    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
-</div>
+<!-- Print/PDF button removed: some browsers' print-to-PDF pipeline mis-renders
+     the rounded badges (border-radius background not clipping correctly in
+     print), a bug we couldn't reliably fix or verify. Printing via the
+     browser's own Print menu still works and uses the @media print rules
+     below; we're just not inviting PDF export from an in-page button. -->
 
 <div class="option-label">Option B — Editorial / Scoreboard (medallion stat, newspaper columns, VS scoreboard)</div>
 <div class="page">

@@ -29,7 +29,6 @@ body { background: #eef1f4; color: var(--ink); font-family: -apple-system, "Sego
 .nav-tabs .nav-link:not(.active):hover { background: #f0f3f7; }
 .tab-content { max-width: 8.5in; margin: 0 auto 30px auto; }
 .tab-pane .page { margin: 16px auto 0 auto; }
-.print-bar-shared { max-width: 8.5in; margin: 0 auto 6px auto; display: flex; justify-content: flex-end; }
 
 /* ============ Option A — Compact Side-by-Side ============ */
 #opt-a .page { max-width: 8.5in; margin: 0 auto 24px auto; background: #fff; padding: 0.45in 0.55in; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
@@ -186,7 +185,7 @@ body { background: #eef1f4; color: var(--ink); font-family: -apple-system, "Sego
 @media print {
     @page { size: letter; margin: 0.4in; }
     body { background: #fff; }
-    .chrome-wrap, .print-bar-shared, .nav-tabs { display: none; }
+    .chrome-wrap, .nav-tabs { display: none; }
     .tab-content { margin: 0; max-width: 100%; }
     .tab-pane .page { margin: 0; box-shadow: none; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -196,9 +195,11 @@ body { background: #eef1f4; color: var(--ink); font-family: -apple-system, "Sego
 </head>
 <body>
 
-<div class="print-bar-shared">
-    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF (prints the active tab)</button>
-</div>
+<!-- Print/PDF button removed: the browser's print-to-PDF pipeline mis-renders
+     the rounded badges in Option B (border-radius background not clipping
+     correctly in print), a bug we couldn't reliably fix or verify. Printing
+     via the browser's own Print menu still works and uses the @media print
+     rules above; we're just not inviting PDF export from an in-page button. -->
 
 <div class="chrome-wrap">
     <div class="proto-intro">
