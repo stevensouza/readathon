@@ -39,6 +39,7 @@ This index helps you find features by **what they do**, not by feature number. U
 - **[Database Creation Tool](features/feature-35-database-creation-tool.md)** - Web UI to create new databases (empty, clone, or sample data)
 
 ### 📱 Slides & Presentations
+- **[Scoreboards](features/feature-39-scoreboards.md)** - Daily Scoreboard + Prize Scoreboard, emailable as an image (supersedes Slides Tab)
 - **[Slides Tab](features/feature-21-slides-tab-new.md)** - Presentation mode for read-a-thon slides
 - **[Slide Column Indicators](features/feature-11-slide-column-indicators.md)** - Visual indicators for slide columns
 
@@ -109,6 +110,7 @@ This index helps you find features by **what they do**, not by feature number. U
 | Database Comparison Tool | [feature-34-database-comparison-tool.md](features/feature-34-database-comparison-tool.md) | NEW | Medium-High |
 | Database Creation Tool | [feature-35-database-creation-tool.md](features/feature-35-database-creation-tool.md) | NEW | Medium-High |
 | Tag-Based Reporting System | [feature-38-tag-based-reporting-system.md](features/feature-38-tag-based-reporting-system.md) | FUTURE | High |
+| Scoreboards | [feature-39-scoreboards.md](features/feature-39-scoreboards.md) | PROTOTYPE | High |
 
 ---
 

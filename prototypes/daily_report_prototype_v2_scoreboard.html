@@ -3,21 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Report — Option B: Editorial Scoreboard</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<title>Daily Scoreboard — Prototype</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <style>
-    :root { --navy: #1e3a5f; --gold: #f59e0b; --ink: #1f2937; --muted: #6b7280; --hairline: #e2e6ea; }
+    :root { --navy: #1e3a5f; --gold: #f59e0b; --ink: #1f2937; --muted: #6b7280; --hairline: #e2e6ea; --year-now: var(--navy); --year-past: #64748b; }
     body { background: #eef1f4; color: var(--ink); font-family: -apple-system, "Segoe UI", Arial, sans-serif; }
-    .option-label { max-width: 8.5in; margin: 16px auto 8px auto; font-size: 0.8rem; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .05em; }
     .page { max-width: 8.5in; margin: 0 auto 24px auto; background: #fff; padding: 0.45in 0.55in; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+
+    /* Toolbar: controls live outside .page so they never appear in the copied image */
+    .toolbar { max-width: 8.5in; margin: 16px auto 10px auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.8rem; }
+    .toolbar .tb-label { font-weight: 700; color: var(--navy); }
+    .toolbar select, .toolbar button { font-size: 0.8rem; }
+    .toolbar .tb-spacer { flex: 1 1 auto; }
+    .toolbar .tb-status { color: var(--muted); font-style: italic; }
 
     /* Masthead with medallion stat */
     .masthead { background: var(--navy); color: #fff; padding: 16px 24px; border-radius: 6px; display: flex; align-items: center; gap: 18px; }
     .mh-title { flex: 1 1 auto; min-width: 0; }
     .mh-title h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; margin: 0; line-height: 1.15; }
-    .mh-title .campaign-title { font-size: 0.86rem; font-weight: 700; font-style: italic; color: #ffd873; margin-top: 3px; letter-spacing: 0.02em; }
-    .mh-title .subtitle { font-size: 0.68rem; opacity: 0.8; margin-top: 3px; letter-spacing: 0.03em; }
+    .mh-title .report-name { font-size: 0.86rem; font-weight: 700; font-style: italic; color: #ffd873; margin-top: 3px; letter-spacing: 0.02em; }
+    .mh-title .subtitle { font-size: 0.68rem; opacity: 0.8; margin-top: 3px; letter-spacing: 0.03em; text-transform: uppercase; }
     .mh-medallion { flex: 0 0 auto; width: 106px; height: 80px; border-radius: 50%; background: radial-gradient(ellipse at 35% 30%, #ffe6ad 0%, var(--gold) 68%); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-align: center; }
     .mh-medallion .num { font-size: 1.4rem; font-weight: 800; color: var(--navy); line-height: 1; }
     .mh-medallion .label { font-size: 0.48rem; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.3; margin-top: 4px; }
@@ -44,23 +51,29 @@
     table.report-table tr:nth-child(even) td { background: #f7f8fa; }
     .school-winner { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%); color: var(--navy); border-radius: 999px; padding: 0px 8px; font-size: 0.62rem; font-weight: 700; margin-left: 5px; white-space: nowrap; }
 
-    /* Scoreboard teams section */
+    /* Scoreboard (teams, and the same layout reused for year vs year) */
     .scoreboard { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: 8px; overflow: hidden; }
     .score-panel { padding: 16px 20px; color: #fff; }
-    .score-panel.troopers { background: var(--navy); }
-    .score-panel.jedi { background: var(--gold); color: var(--navy); }
-    .score-panel .team-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; margin-bottom: 1px; opacity: 0.95; }
-    .score-panel .team-sub { font-size: 0.68rem; font-style: italic; opacity: 0.8; margin-bottom: 9px; }
-    .score-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.18); }
-    .score-panel.jedi .score-row { border-bottom-color: rgba(30,58,95,0.18); }
+    /* extra room on the inner edges so the VS badge never crowds the labels/values */
+    .score-panel:first-child { padding-right: 34px; }
+    .score-panel:nth-child(2) { padding-left: 34px; }
+    .score-panel.team-blue { background: var(--navy); }
+    .score-panel.team-gold { background: var(--gold); color: var(--navy); }
+    .score-panel.year-now { background: var(--year-now); }
+    .score-panel.year-past { background: var(--year-past); }
+    .score-panel .team-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; margin-bottom: 9px; opacity: 0.95; }
+    .score-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.18); min-height: 38px; }
+    .score-panel.team-gold .score-row { border-bottom-color: rgba(30,58,95,0.18); }
     .score-row:last-child { border-bottom: none; }
-    .score-row .metric-label { font-size: 0.72rem; opacity: 0.85; }
+    .score-row .metric-label { font-size: 0.72rem; opacity: 0.85; line-height: 1.25; }
+    .score-row .metric-delta { display: block; font-size: 0.62rem; font-weight: 700; opacity: 0.9; }
 
     /* Value + trophy slot: every row reserves the same fixed-width slot on the
        right, filled or empty, so the numbers themselves always land on the
        same vertical line regardless of which rows happen to be winners */
     .metric-val-wrap { display: inline-flex; align-items: center; gap: 7px; }
     .metric-val { font-size: 1.15rem; font-weight: 800; }
+    .metric-val.na { font-size: 0.8rem; font-weight: 700; font-style: italic; opacity: 0.85; }
     .trophy-slot { width: 22px; height: 22px; flex-shrink: 0; }
     .win-trophy-badge {
         display: inline-flex; align-items: center; justify-content: center;
@@ -75,48 +88,41 @@
         text-shadow: 0 1px 0 rgba(0,0,0,0.15);
     }
     .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid var(--navy); color: var(--navy); font-weight: 800; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 2; }
+    .scoreboard-note { font-size: 0.66rem; color: var(--muted); font-style: italic; margin-top: 6px; }
 
-    .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); }
-
-    @media print {
-        @page { size: letter; margin: 0.4in; }
-        body { background: #fff; }
-        .option-label { display: none; }
-        .page { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
-        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .section { break-inside: avoid; }
-        /* box-shadow on a rounded/circular shape can print as its full
-           rectangular bounding box instead of following the curve (a
-           browser print-to-PDF quirk) — drop it for print only on the
-           round elements: the stat oval, trophy badges, and VS badge */
-        .mh-medallion, .win-trophy-badge, .vs-badge { box-shadow: none; }
-    }
+    .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; gap: 16px; font-size: 0.68rem; color: var(--muted); }
+    .report-footer span:last-child { white-space: nowrap; }
 </style>
 </head>
 <body>
 
-<!-- Print/PDF button removed: some browsers' print-to-PDF pipeline mis-renders
-     the rounded badges (border-radius background not clipping correctly in
-     print), a bug we couldn't reliably fix or verify. Printing via the
-     browser's own Print menu still works and uses the @media print rules
-     below; we're just not inviting PDF export from an in-page button. -->
+<!-- Controls sit outside .page: "Copy as image" captures only .page, so the
+     emailed image never shows pickers or buttons. -->
+<div class="toolbar">
+    <span class="tb-label">As of</span>
+    <select id="day-picker" class="form-select form-select-sm w-auto"></select>
+    <button id="redraw-btn" class="btn btn-sm btn-outline-secondary"><i class="bi bi-shuffle"></i> Redraw prize winners</button>
+    <span class="tb-spacer"></span>
+    <span id="tb-status" class="tb-status"></span>
+    <button id="copy-btn" class="btn btn-sm btn-primary"><i class="bi bi-clipboard-check"></i> Copy as image</button>
+    <button id="download-btn" class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i> Download PNG</button>
+</div>
 
-<div class="option-label">Option B — Editorial / Scoreboard (medallion stat, newspaper columns, VS scoreboard)</div>
-<div class="page">
+<div class="page" id="report">
 
     <div class="masthead">
         <div class="mh-title">
             <h1>Lincoln Elementary Read-a-Thon</h1>
-            <div class="campaign-title">Book Wars: The Reader Strikes Back</div>
-            <div class="subtitle">DAILY UPDATE — GENERATED AUTOMATICALLY FROM LIVE CAMPAIGN DATA</div>
+            <div class="report-name">2026 Daily Scoreboard</div>
+            <div class="subtitle">Results through <span class="js-date-short">Oct 16</span></div>
         </div>
         <div class="mh-medallion">
             <div class="num">77%</div>
             <div class="label">Of Students Read<br>at Least 1 Day</div>
         </div>
         <div class="mh-day">
-            <div class="day">Day 7 of 10</div>
-            <div class="date">October 16, 2026</div>
+            <div class="day">Day <span class="js-day">7</span> of 10</div>
+            <div class="date js-date-long">October 16, 2026</div>
         </div>
     </div>
 
@@ -125,19 +131,12 @@
             <div>
                 <div class="section-header-v3">
                     <span class="cat">Students</span>
-                    <span class="desc">Daily Prize Winners</span>
+                    <span class="desc">Daily Prize Winners &middot; Drawing #<span id="draw-num">1</span></span>
                     <div class="rule"></div>
                 </div>
                 <table class="report-table">
                     <thead><tr><th>Grade</th><th>Winner</th></tr></thead>
-                    <tbody>
-                        <tr><td>Kindergarten</td><td>Ava Thompson</td></tr>
-                        <tr><td>1st Grade</td><td>Liam Brooks</td></tr>
-                        <tr><td>2nd Grade</td><td>Noah Kim</td></tr>
-                        <tr><td>3rd Grade</td><td>Mia Fischer</td></tr>
-                        <tr><td>4th Grade</td><td>Ethan Ward</td></tr>
-                        <tr><td>5th Grade</td><td>Sophia Reyes</td></tr>
-                    </tbody>
+                    <tbody id="winners-body"></tbody>
                 </table>
             </div>
             <div class="col-rule"></div>
@@ -169,29 +168,126 @@
             <div class="rule"></div>
         </div>
         <div class="scoreboard">
-            <div class="score-panel troopers">
-                <div class="team-label"><i class="bi bi-shield-fill"></i> The Book Troopers</div>
-                <div class="team-sub">Mrs. Whitfield</div>
-                <div class="score-row win"><span class="metric-label">Participation</span><span class="metric-val-wrap"><span class="metric-val">68.2%</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
-                <div class="score-row"><span class="metric-label">Minutes Read</span><span class="metric-val-wrap"><span class="metric-val">35,410</span><span class="trophy-slot"></span></span></div>
-                <div class="score-row"><span class="metric-label">Money Raised</span><span class="metric-val-wrap"><span class="metric-val">$13,450</span><span class="trophy-slot"></span></span></div>
+            <div class="score-panel team-blue">
+                <div class="team-label"><i class="bi bi-shield-fill"></i> Team Dragons</div>
+                <div class="score-row"><span class="metric-label">Participation<span class="metric-delta">72% today</span></span><span class="metric-val-wrap"><span class="metric-val">68.2%</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+                <div class="score-row"><span class="metric-label">Minutes Read<span class="metric-delta">+4,860 today</span></span><span class="metric-val-wrap"><span class="metric-val">35,410</span><span class="trophy-slot"></span></span></div>
+                <div class="score-row"><span class="metric-label">Money Raised<span class="metric-delta">+$1,120 today</span></span><span class="metric-val-wrap"><span class="metric-val">$13,450</span><span class="trophy-slot"></span></span></div>
             </div>
-            <div class="score-panel jedi">
-                <div class="team-label"><i class="bi bi-stars"></i> The Jedi Readers</div>
-                <div class="team-sub">Mr. Solis</div>
-                <div class="score-row"><span class="metric-label">Participation</span><span class="metric-val-wrap"><span class="metric-val">64.5%</span><span class="trophy-slot"></span></span></div>
-                <div class="score-row win"><span class="metric-label">Minutes Read</span><span class="metric-val-wrap"><span class="metric-val">39,820</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
-                <div class="score-row win"><span class="metric-label">Money Raised</span><span class="metric-val-wrap"><span class="metric-val">$15,780</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+            <div class="score-panel team-gold">
+                <div class="team-label"><i class="bi bi-stars"></i> Team Phoenix</div>
+                <div class="score-row"><span class="metric-label">Participation<span class="metric-delta">69% today</span></span><span class="metric-val-wrap"><span class="metric-val">64.5%</span><span class="trophy-slot"></span></span></div>
+                <div class="score-row"><span class="metric-label">Minutes Read<span class="metric-delta">+5,340 today</span></span><span class="metric-val-wrap"><span class="metric-val">39,820</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+                <div class="score-row"><span class="metric-label">Money Raised<span class="metric-delta">+$1,410 today</span></span><span class="metric-val-wrap"><span class="metric-val">$15,780</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
             </div>
             <div class="vs-badge">VS</div>
         </div>
     </div>
 
+    <div class="section">
+        <div class="section-header-v3">
+            <span class="cat">2026 vs 2025 Showdown</span>
+            <span class="desc">Whole school, Day <span class="js-day">7</span> this year vs Day <span class="js-day">7</span> last year</span>
+            <div class="rule"></div>
+        </div>
+        <div class="scoreboard years">
+            <div class="score-panel year-now">
+                <div class="team-label"><i class="bi bi-rocket-takeoff-fill"></i> 2026</div>
+                <div class="score-row"><span class="metric-label">Participation</span><span class="metric-val-wrap"><span class="metric-val">66.4%</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+                <div class="score-row"><span class="metric-label">Minutes Read</span><span class="metric-val-wrap"><span class="metric-val">75,230</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+                <div class="score-row"><span class="metric-label">Money Raised</span><span class="metric-val-wrap"><span class="metric-val">$29,230</span><span class="trophy-slot"></span></span></div>
+            </div>
+            <div class="score-panel year-past">
+                <div class="team-label"><i class="bi bi-clock-history"></i> 2025</div>
+                <div class="score-row"><span class="metric-label">Participation</span><span class="metric-val-wrap"><span class="metric-val">63.1%</span><span class="trophy-slot"></span></span></div>
+                <div class="score-row"><span class="metric-label">Minutes Read</span><span class="metric-val-wrap"><span class="metric-val">71,880</span><span class="trophy-slot"></span></span></div>
+                <div class="score-row"><span class="metric-label">Money Raised</span><span class="metric-val-wrap"><span class="metric-val na">Not available*</span><span class="trophy-slot"></span></span></div>
+            </div>
+            <div class="vs-badge">VS</div>
+        </div>
+        <div class="scoreboard-note">* 2025 only kept final fundraising totals, not day-by-day amounts. 2025 finished with $38,610 raised.</div>
+    </div>
+
     <div class="report-footer">
-        <span>PROTOTYPE — mock statistics only, for layout review. Team/theme names reflect this year's real "Book Wars" campaign branding; team lead names are placeholders.</span>
-        <span>Lincoln Elementary Read-a-Thon 2026</span>
+        <span>PROTOTYPE &mdash; mock data. Team names come from the data (capitalized); "Dragons"/"Phoenix" are the public placeholders.</span>
+        <span>Generated <span class="js-date-short">Oct 16</span>, 2026</span>
     </div>
 
 </div>
+
+<script>
+    // --- Mock contest calendar (production: dates come from Daily_Logs) ---
+    const CONTEST_START = new Date(2026, 9, 10);
+    const TOTAL_DAYS = 10;
+    const LATEST_DAY = 7;
+
+    // --- Daily drawing: sticky per day + drawing number ---
+    // Production idea: seed = (date, drawing #). Same inputs => same winners on
+    // every reload, nothing saved. "Redraw" bumps the drawing # (kept in the URL)
+    // and the # is printed in the section header so everyone knows which draw it is.
+    const ELIGIBLE = {
+        'Kindergarten': ['Ava Thompson', 'Leo Park', 'Mila Grant', 'Owen Hart', 'Nora Ellis'],
+        '1st Grade':    ['Liam Brooks', 'Zoe Carter', 'Eli Nguyen', 'Harper Quinn', 'Caleb Ross'],
+        '2nd Grade':    ['Noah Kim', 'Chloe Diaz', 'Jack Moore', 'Lily Evans', 'Mason Reid'],
+        '3rd Grade':    ['Mia Fischer', 'Lucas Bell', 'Isla Ford', 'Ezra Lane', 'Grace Hill'],
+        '4th Grade':    ['Ethan Ward', 'Ruby Shah', 'Max Cole', 'Ella Price', 'Theo Grant'],
+        '5th Grade':    ['Sophia Reyes', 'Aiden Cruz', 'Luna Hayes', 'Miles Dunn', 'Ivy Walsh'],
+    };
+
+    function seededIndex(seedText, n) {
+        let h = 2166136261;
+        for (const ch of seedText) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+        return Math.abs(h) % n;
+    }
+
+    function dateFor(day) {
+        const d = new Date(CONTEST_START);
+        d.setDate(d.getDate() + day - 1);
+        return d;
+    }
+
+    function render(day, drawNum) {
+        const d = dateFor(day);
+        document.querySelectorAll('.js-day').forEach(el => el.textContent = day);
+        document.querySelectorAll('.js-date-long').forEach(el => el.textContent = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+        document.querySelectorAll('.js-date-short').forEach(el => el.textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        document.getElementById('draw-num').textContent = drawNum;
+        document.getElementById('winners-body').innerHTML = Object.entries(ELIGIBLE).map(([grade, pool]) =>
+            `<tr><td>${grade}</td><td>${pool[seededIndex(`${d.toISOString().slice(0, 10)}|${grade}|${drawNum}`, pool.length)]}</td></tr>`
+        ).join('');
+    }
+
+    const picker = document.getElementById('day-picker');
+    for (let day = 1; day <= LATEST_DAY; day++) {
+        const label = dateFor(day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        picker.add(new Option(`Day ${day} — ${label}${day === LATEST_DAY ? ' (latest)' : ''}`, day, false, day === LATEST_DAY));
+    }
+    let drawNum = 1;
+    picker.addEventListener('change', () => { drawNum = 1; render(+picker.value, drawNum); });
+    document.getElementById('redraw-btn').addEventListener('click', () => { drawNum++; render(+picker.value, drawNum); });
+    render(LATEST_DAY, drawNum);
+
+    // --- Copy as image / Download PNG (captures only .page) ---
+    const status = document.getElementById('tb-status');
+    const capture = () => htmlToImage.toBlob(document.getElementById('report'), { pixelRatio: 2, backgroundColor: '#ffffff', style: { margin: '0' } });
+    function flash(msg) { status.textContent = msg; setTimeout(() => status.textContent = '', 3000); }
+
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': capture() })]);
+            flash('Copied — paste into your email');
+        } catch (e) {
+            flash('Copy not allowed here — use Download PNG');
+        }
+    });
+    document.getElementById('download-btn').addEventListener('click', async () => {
+        const blob = await capture();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `daily_scoreboard_day${picker.value}.png`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
+</script>
 </body>
 </html>
