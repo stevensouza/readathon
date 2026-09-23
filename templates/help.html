@@ -50,6 +50,8 @@
                 </div>
                 <div class="card-body p-0">
                     <nav class="toc-section">
+                        <a href="#daily-steps" class="toc-link"><strong>Daily Steps</strong></a>
+                        <a href="#simple-view" class="toc-link">Simple View</a>
                         <a href="#readathon-data" class="toc-link">About ReadAThon.com Data</a>
                         <a href="#quick-start" class="toc-link">Quick Start Guide</a>
                         <a href="#data-persistence" class="toc-link">Data Persistence</a>
@@ -76,6 +78,38 @@
         <h1 class="mb-4">
             <i class="bi bi-book"></i> Read-a-Thon System - User Manual
         </h1>
+
+        <!-- Daily Steps: the whole daily job during the contest -->
+        <div class="card mb-4 border-primary" id="daily-steps">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-list-check"></i> Daily Steps (during the contest)</h4>
+            </div>
+            <div class="card-body">
+                <ol class="mb-2">
+                    <li><strong>Upload the day's minutes:</strong> 📤 Upload &rarr; Daily Minutes Upload &rarr; choose the day's CSV file(s) from ReadAThon.com.</li>
+                    <li><strong>Upload the cumulative file:</strong> 📤 Upload &rarr; Cumulative Stats Upload. <strong>Check the snapshot date</strong> - it should be the contest day the file covers (it defaults to the latest day with minutes).</li>
+                    <li><strong>Open the Daily Scoreboard:</strong> 🏆 Scoreboards &rarr; Daily Scoreboard (it opens on the latest day).</li>
+                    <li><strong>Copy as image</strong> and paste it into the email (or <strong>Download PNG</strong> and attach it).</li>
+                </ol>
+                <p class="small text-muted mb-0">After the last day: 🏆 Scoreboards &rarr; Prize Scoreboard shows the Final Prize Winners.</p>
+            </div>
+        </div>
+
+        <!-- Simple View -->
+        <div class="card mb-4" id="simple-view">
+            <div class="card-header card-header-blue">
+                <h4 class="mb-0"><i class="bi bi-magic"></i> Simple View</h4>
+            </div>
+            <div class="card-body">
+                <p>The <strong>✨ Simple view</strong> button (top right, next to the database selector) hides everything except the daily job: <strong>Upload, Scoreboards, Help</strong> and the database selector. The app opens on the Daily Scoreboard, and the Upload page hides its delete buttons.</p>
+                <ul class="small mb-0">
+                    <li><strong>☰ Full view</strong> brings back every page: School, Teams, Grade Level, Students, Reports &amp; Data, Workflows, Admin.</li>
+                    <li>The choice is remembered, even after restarting the app.</li>
+                    <li>It can also be set when starting the app: <code>./run.sh --simple</code> or <code>./run.sh --full</code>.</li>
+                    <li>Simple view only declutters the screen - hidden pages still work if you type their address.</li>
+                </ul>
+            </div>
+        </div>
 
         <!-- ReadAThon.com Data Source Notice -->
         <div class="card mb-4 border-warning" id="readathon-data">

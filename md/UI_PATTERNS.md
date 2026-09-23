@@ -511,6 +511,14 @@ as a printed newsletter rather than a dashboard, and captured as an image. CSS i
 
 ---
 
+### 8. Simple View
+
+`body.simple-view` (toggle next to the database selector, `VIEW_MODE` in `app.py`) keeps only the daily job in the
+nav: Upload, Scoreboards, Help, database selector. Wrap other nav items in `{% if not simple_view %}`; give
+controls that should disappear in simple view (e.g. delete buttons) the class **`full-view-only`**.
+
+---
+
 ## Layout Templates
 
 ### Card-Based Page Template

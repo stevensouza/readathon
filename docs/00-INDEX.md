@@ -56,6 +56,7 @@ This index helps you find features by **what they do**, not by feature number. U
 - **[Configurable Team Names](features/feature-36-configurable-team-names.md)** - Replace hardcoded team names with configuration
 - **[Save Error/Warning Messages](features/feature-18-save-errorwarning-messages.md)** - Persist error messages for troubleshooting
 - **[Delete Confirmations](features/feature-19-improve-delete-confirmations.md)** - Improved delete confirmation dialogs
+- **[Windows Compatibility](features/feature-40-windows-compatibility.md)** - Future: what to fix if the app ever needs to run on Windows (Mac-only scripts)
 
 ### 🎯 Workflows & Processes
 - **[Workflows Tab](features/feature-22-workflows-tab-keep-separate-confirmed.md)** - Step-by-step guided workflows
@@ -111,6 +112,7 @@ This index helps you find features by **what they do**, not by feature number. U
 | Database Creation Tool | [feature-35-database-creation-tool.md](features/feature-35-database-creation-tool.md) | NEW | Medium-High |
 | Tag-Based Reporting System | [feature-38-tag-based-reporting-system.md](features/feature-38-tag-based-reporting-system.md) | FUTURE | High |
 | Scoreboards | [feature-39-scoreboards.md](features/feature-39-scoreboards.md) | ✅ COMPLETED (v2026.16.0) | High |
+| Windows Compatibility | [feature-40-windows-compatibility.md](features/feature-40-windows-compatibility.md) | FUTURE | Low (High if needed) |
 
 ---
 

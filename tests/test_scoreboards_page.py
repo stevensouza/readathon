@@ -389,6 +389,7 @@ class TestScoreboardData:
         assert scoreboards.format_grade_label('K') == 'Kindergarten'
         assert scoreboards.format_grade_label('3') == '3rd Grade'
         assert scoreboards.display_name("mary o'neil-smith") == "Mary O'Neil-Smith"
+        assert scoreboards.display_name('Benicio de Corral') == 'Benicio de Corral'  # already cased: left as typed
         assert scoreboards.prize_text("Prize: Grandpa Joe's $25 Gift Card per grade level. Uses 120-minute daily cap.") == "Grandpa Joe's $25 Gift Card"
         assert scoreboards.leaders({'a': 1, 'b': 1}) == {'a', 'b'}
         assert scoreboards.leaders({'a': 1, 'b': None}) == set()

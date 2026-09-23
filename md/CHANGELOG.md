@@ -27,6 +27,11 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 - **Q25: Fundraising by Day** report (money and sponsors per saved day, and the amount added since the previous day)
 - **Scoreboard Settings** in Admin → Actions: school name for the masthead and contest days (default 10)
 - Prize reports Q9-Q16, Q18-Q20 accept an "as of" date (Reports page results unchanged)
+- **Simple view** (✨ button next to the database selector, or `./run.sh --simple`): the menu shows only Upload,
+  Scoreboards and Help, the app opens on the Daily Scoreboard, and the Upload page hides its delete buttons.
+  ☰ Full view brings everything back; the choice is remembered
+- **Daily Steps** box at the top of Help: upload minutes, upload the cumulative file (check the snapshot date), open
+  the Daily Scoreboard, copy it into the email
 
 ### Changed
 - The new history table is included in table counts (Q1), table views, export ZIP, Admin table clearing,

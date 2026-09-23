@@ -135,12 +135,17 @@ See the `sample_*.csv` files in the repository for examples.
 ./run.sh                              # last database you used (sample on first run)
 ./run.sh --db sample                  # sample database
 ./run.sh --db "2026 Read-a-Thon"      # a specific year (display name or filename)
+./run.sh --simple                     # simple view: only Upload, Scoreboards, Help (remembered; --full to undo)
 ```
 
 `./run.sh` passes its options to `python3 app.py`, which you can also run directly.
 Browser address: **http://127.0.0.1:5001**
 
 **Note:** The app remembers your last database choice in `.readathon_config`. You can also switch databases using the dropdown menu in the navigation bar.
+
+**Simple view:** the **✨ Simple view** button (top right) hides everything but the daily job - Upload, Scoreboards,
+Help and the database selector - opens the app on the Daily Scoreboard, and hides the Upload page's delete buttons.
+**☰ Full view** brings every page back. The choice is remembered in `.readathon_config` (also `--simple` / `--full`).
 
 Press `CTRL+C` to stop the server.
 
@@ -274,7 +279,7 @@ readathon/
 ├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster)
 ├── package_data.sh         # Zip db/ to move data to another computer
 ├── install.sh              # One-time Mac setup + Desktop shortcuts
-├── run.sh                  # Start the app (./run.sh [--db ...]) and open the browser
+├── run.sh                  # Start the app (./run.sh [--db ...] [--simple|--full]) and open the browser
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file
 ├── db/                    # Databases: readathon_sample.db (in git), readathon_<YEAR>.db + registry (local only)
@@ -321,6 +326,9 @@ If you see "Student not found in roster" warnings:
 - **Database**: SQLite 3
 - **Frontend**: Bootstrap 5.3.0, Bootstrap Icons
 - **No Internet Required**: All assets served from CDN but system works offline after first load
+- **Platform**: developed and run on macOS. Windows may need work later: the app itself should run, but the
+  setup/run scripts (`install.sh`, `run.sh`, `package_data.sh`) are Mac-only - see
+  [Feature 40: Windows Compatibility](docs/features/feature-40-windows-compatibility.md)
 
 ## 🔒 Data Privacy
 

@@ -20,30 +20,35 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.secret_key = 'readathon-secret-key-change-in-production'  # For session management
 
-# Configuration file for persistent database preference
+# Configuration file for persistent preferences (active database, simple/full view)
 CONFIG_FILE = '.readathon_config'
+VIEW_MODES = ('full', 'simple')
+
+def load_config():
+    """All remembered preferences (empty if the file is missing or unreadable)"""
+    try:
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+def save_config(**updates):
+    """Update some preferences, keeping the others"""
+    config = load_config()
+    config.update(updates)
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=2)
+    except OSError:
+        pass  # Silently fail if can't write config
 
 def read_config():
     """Read active database ID from config file"""
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, 'r') as f:
-                config = json.load(f)
-                return config.get('active_database_id')
-        except:
-            return None
-    return None
+    return load_config().get('active_database_id')
 
 def write_config(db_id, db_filename):
     """Write active database to config file"""
-    try:
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump({
-                'active_database_id': db_id,
-                'active_database_filename': db_filename
-            }, f, indent=2)
-    except:
-        pass  # Silently fail if can't write config
+    save_config(active_database_id=db_id, active_database_filename=db_filename)
 
 # Temporary compatibility - will be removed when all routes are updated
 
@@ -53,7 +58,19 @@ parser.add_argument('--db',
                    help='Database to use: display name ("2026 Read-a-Thon"), '
                         'filename (readathon_2026.db), or alias ("sample"). '
                         'Case-insensitive.')
+view_group = parser.add_mutually_exclusive_group()
+view_group.add_argument('--simple', action='store_const', const='simple', dest='view_mode',
+                        help='Simple view: only Upload, Scoreboards, Help and the database selector (remembered)')
+view_group.add_argument('--full', action='store_const', const='full', dest='view_mode',
+                        help='Full view: every page (remembered)')
 args, unknown = parser.parse_known_args()
+
+# Simple view hides everything but the daily job (upload -> scoreboard -> email); toggled in the nav
+if args.view_mode:
+    save_config(view_mode=args.view_mode)
+VIEW_MODE = load_config().get('view_mode', 'full')
+if VIEW_MODE not in VIEW_MODES:
+    VIEW_MODE = 'full'
 
 # Initialize registry
 registry = DatabaseRegistry()
@@ -217,13 +234,27 @@ def inject_database_info():
     if db_info:
         return {
             'current_database': db_info,
-            'is_sample_database': is_sample_db_info(db_info)
+            'is_sample_database': is_sample_db_info(db_info),
+            'simple_view': VIEW_MODE == 'simple'
         }
 
     return {
         'current_database': None,
-        'is_sample_database': False
+        'is_sample_database': False,
+        'simple_view': VIEW_MODE == 'simple'
     }
+
+
+@app.route('/api/view_mode', methods=['POST'])
+def set_view_mode():
+    """Switch between simple view (daily job only) and full view; remembered in .readathon_config"""
+    global VIEW_MODE
+    mode = (request.json or {}).get('mode')
+    if mode not in VIEW_MODES:
+        return jsonify({'success': False, 'error': f'Unknown view: {mode}'}), 400
+    VIEW_MODE = mode
+    save_config(view_mode=mode)
+    return jsonify({'success': True, 'mode': mode})
 
 
 def get_unified_items():
@@ -361,6 +392,9 @@ def get_workflow_reports(workflow_id):
 @app.route('/school')
 def school_tab():
     """School overview dashboard (landing page)"""
+    # Simple view opens on the Daily Scoreboard (the daily deliverable)
+    if request.path == '/' and VIEW_MODE == 'simple':
+        return redirect(url_for('daily_scoreboard'))
     env = get_current_db_label()
     db = get_current_db()
     reports = get_current_reports()

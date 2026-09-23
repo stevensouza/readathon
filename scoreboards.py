@@ -47,8 +47,13 @@ def team_display_name(team_name: str) -> str:
 
 
 def display_name(name: str) -> str:
-    """Names are stored lowercase: 'mary o'neil-smith' -> 'Mary O'Neil-Smith'"""
-    return re.sub(r"(^|[\s\-'])([a-z])", lambda m: m.group(1) + m.group(2).upper(), name or '')
+    """Capitalize names stored all-lowercase (teacher names): 'mary o'neil-smith' -> 'Mary O'Neil-Smith'.
+
+    Names that already have capitals (student names) are left alone, so 'Benicio de Corral' stays as typed.
+    """
+    if not name or name != name.lower():
+        return name or ''
+    return re.sub(r"(^|[\s\-'])([a-z])", lambda m: m.group(1) + m.group(2).upper(), name)
 
 
 def pct(value: Optional[float], decimals: int = 1) -> str:
@@ -99,7 +104,8 @@ def contest_calendar(db, requested_day: Optional[int], contest_days_setting: int
     is_latest = day == len(dates)
     options = []
     for n, d in enumerate(dates, start=1):
-        label = datetime.strptime(d, '%Y-%m-%d').strftime('%a %b %-d')
+        parsed_day = datetime.strptime(d, '%Y-%m-%d')
+        label = f"{parsed_day:%a %b} {parsed_day.day}"
         options.append({'day': n, 'label': f"Day {n} — {label}{' (latest)' if n == len(dates) else ''}"})
     parsed = datetime.strptime(date, '%Y-%m-%d')
     return {
@@ -111,8 +117,9 @@ def contest_calendar(db, requested_day: Optional[int], contest_days_setting: int
         # Reading queries: latest day = whole contest (identical to the Reports page)
         'reading_as_of': None if is_latest else date,
         'total_days': total_days,
-        'date_long': parsed.strftime('%B %-d, %Y'),
-        'date_short': parsed.strftime('%b %-d'),
+        # f-string day numbers instead of %-d, which Windows strftime doesn't support
+        'date_long': f'{parsed:%B} {parsed.day}, {parsed.year}',
+        'date_short': f'{parsed:%b} {parsed.day}',
         'options': options,
     }
 
@@ -128,11 +135,12 @@ def event_year(db_info: Optional[Dict[str, Any]], calendar: Dict[str, Any]) -> O
 
 def masthead(settings: Dict[str, str], year: Optional[int], calendar: Dict[str, Any]) -> Dict[str, Any]:
     school = settings.get('school_name', '').strip()
+    today = datetime.now()
     return {
         'title': f'{school} Read-a-Thon' if school else 'Read-a-Thon',
         'year': year or '',
         'calendar': calendar,
-        'generated': datetime.now().strftime('%b %-d, %Y'),
+        'generated': f'{today:%b} {today.day}, {today.year}',
     }
 
 

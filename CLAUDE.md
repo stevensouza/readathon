@@ -12,7 +12,7 @@ Version: see `VERSION` (`vYYYY.MINOR.PATCH`, YYYY = **event** year). v2026.1.0â€
 
 ```bash
 ./install.sh                       # create venv/ (gitignored) + install requirements.txt (Homebrew Python blocks system pip - PEP 668)
-./run.sh [--db sample]             # start app (uses venv/, opens browser). Same options as `python3 app.py`
+./run.sh [--db sample] [--simple|--full]   # start app (uses venv/, opens browser). Same options as `python3 app.py`
 python3 init_data.py 2026          # create + register db/readathon_2026.db from roster.csv, class_info.csv, grade_rules.csv
                                    # (or in-app: Admin -> Database Registry -> Create New Database)
 python3 clear_all_data.py          # reset tables (keeps schema)
@@ -22,7 +22,7 @@ venv/bin/pytest                    # all tests (system python3 lacks the deps an
 venv/bin/pytest tests/test_school_page.py -k test_page_loads_successfully   # single test
 ```
 
-`--db` accepts display name, filename, or alias (`sample`), case-insensitive. Startup DB priority: CLI arg > `.readathon_config` (gitignored, written when you switch DB in the UI) > registry's active DB.
+`--db` accepts display name, filename, or alias (`sample`), case-insensitive. Startup DB priority: CLI arg > `.readathon_config` (gitignored, written when you switch DB in the UI) > registry's active DB. `.readathon_config` also holds `view_mode` (`simple`/`full`): simple view hides every nav item except Upload, Scoreboards, Help and the DB selector, redirects `/` to the Daily Scoreboard, and hides elements with class `full-view-only` (Upload delete controls). Write it with `save_config()` (keeps other keys), not by overwriting the file.
 
 ### Testing gotchas (verified)
 
