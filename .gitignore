@@ -34,6 +34,9 @@ tests/__pycache__/
 .coverage
 htmlcov/
 
+# Playwright MCP debug snapshots (from visual QA during design sessions)
+.playwright-mcp/
+
 # Environment
 venv/
 .env

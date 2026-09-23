@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Read-a-Thon Report — Prototype Options</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+:root {
+        --navy: #1e3a5f;
+        --gold: #f59e0b;
+        --ink: #1f2937;
+        --muted: #6b7280;
+        --hairline: #e2e6ea;
+    }
+
+body { background: #eef1f4; color: var(--ink); font-family: -apple-system, "Segoe UI", Arial, sans-serif; }
+
+.chrome-wrap { max-width: 8.5in; margin: 20px auto 10px auto; }
+.proto-intro { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.proto-intro h5 { margin: 0; color: var(--navy); font-weight: 800; }
+.proto-intro .hint { font-size: 0.78rem; color: var(--muted); }
+.nav-tabs { border-bottom: 2px solid var(--navy); gap: 4px; }
+.nav-tabs .nav-link { color: var(--navy); font-weight: 600; font-size: 0.88rem; border: 1px solid transparent; border-radius: 8px 8px 0 0; padding: 9px 16px; }
+.nav-tabs .nav-link .tab-sub { display: block; font-weight: 400; font-size: 0.68rem; color: var(--muted); }
+.nav-tabs .nav-link.active { color: #fff; background: var(--navy); border-color: var(--navy); }
+.nav-tabs .nav-link.active .tab-sub { color: #cfe0f2; }
+.nav-tabs .nav-link:not(.active):hover { background: #f0f3f7; }
+.tab-content { max-width: 8.5in; margin: 0 auto 30px auto; }
+.tab-pane .page { margin: 16px auto 0 auto; }
+
+/* ============ Option A — Compact Side-by-Side ============ */
+#opt-a .page { max-width: 8.5in; margin: 0 auto 24px auto; background: #fff; padding: 0.45in 0.55in; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+    #opt-a /* Masthead with embedded stat highlight */
+    .masthead {
+        background: var(--navy); color: #fff; padding: 16px 26px; border-radius: 6px;
+        display: flex; align-items: center; gap: 22px;
+    }
+    #opt-a .mh-title { flex: 1 1 auto; min-width: 0; }
+    #opt-a .mh-title h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.4rem; margin: 0; line-height: 1.15; }
+    #opt-a .mh-title .subtitle { font-size: 0.72rem; opacity: 0.85; margin-top: 2px; letter-spacing: 0.02em; }
+    #opt-a .mh-divider { width: 1px; align-self: stretch; background: rgba(255,255,255,0.25); }
+    #opt-a .mh-stat { text-align: center; white-space: nowrap; flex: 0 0 auto; }
+    #opt-a .mh-stat .num { font-size: 1.6rem; font-weight: 800; color: var(--gold); line-height: 1; }
+    #opt-a .mh-stat .label { font-size: 0.62rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; max-width: 110px; }
+    #opt-a .mh-day { text-align: right; white-space: nowrap; flex: 0 0 auto; }
+    #opt-a .mh-day .day { font-size: 1.2rem; font-weight: 700; }
+    #opt-a .mh-day .date { font-size: 0.72rem; opacity: 0.85; }
+    #opt-a /* Two-tier section headers */
+    .section { margin-top: 22px; }
+    #opt-a .section-header-v2 { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    #opt-a .section-icon { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+    #opt-a .section-title-v2 .cat { font-weight: 800; color: var(--navy); font-size: 1.05rem; }
+    #opt-a .section-title-v2 .sep { color: #c7ccd3; margin: 0 5px; font-weight: 400; }
+    #opt-a .section-title-v2 .desc { font-weight: 500; color: #3f4d5e; font-size: 1.0rem; }
+    #opt-a /* Twin panel grid (Students + Classes side by side) */
+    .twin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    #opt-a table.report-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    #opt-a table.report-table th { background: var(--navy); color: #fff; text-align: left; padding: 6px 10px; font-weight: 600; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    #opt-a table.report-table th.num-col { text-align: right; white-space: nowrap; }
+    #opt-a table.report-table td { padding: 5px 10px; border-bottom: 1px solid var(--hairline); }
+    #opt-a table.report-table td.num-col { text-align: right; font-weight: 700; }
+    #opt-a table.report-table tr:nth-child(even) td { background: #f7f8fa; }
+    #opt-a .school-winner { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%); color: var(--navy); border-radius: 999px; padding: 0px 8px; font-size: 0.64rem; font-weight: 700; margin-left: 5px; white-space: nowrap; }
+    #opt-a /* Teams section */
+    .teams-compare { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    #opt-a .teams-compare th { padding: 8px 10px; font-size: 0.78rem; text-align: center; }
+    #opt-a .teams-compare th.metric-col { text-align: left; background: transparent; }
+    #opt-a .teams-compare th.team-dragons { background: var(--navy); color: #fff; border-radius: 6px 6px 0 0; }
+    #opt-a .teams-compare th.team-phoenix { background: var(--gold); color: var(--navy); border-radius: 6px 6px 0 0; }
+    #opt-a .teams-compare td { padding: 9px 10px; border-bottom: 1px solid var(--hairline); text-align: center; font-weight: 600; }
+    #opt-a .teams-compare td.metric-col { text-align: left; font-weight: 500; color: var(--muted); font-size: 0.8rem; }
+    #opt-a .team-name-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; margin-top: 2px; }
+    #opt-a .team-name-badge.dragons { background: var(--navy); color: #fff; }
+    #opt-a .team-name-badge.phoenix { background: var(--gold); color: var(--navy); }
+    #opt-a .leader-oval { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%); border-radius: 999px; padding: 2px 10px 2px 8px; }
+    #opt-a .leader-oval i { font-size: 0.7rem; }
+    #opt-a .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); }
+
+/* ============ Option B — Editorial Scoreboard ============ */
+#opt-b .page { max-width: 8.5in; margin: 0 auto 24px auto; background: #fff; padding: 0.45in 0.55in; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+    #opt-b /* Masthead with medallion stat */
+    .masthead { background: var(--navy); color: #fff; padding: 16px 24px; border-radius: 6px; display: flex; align-items: center; gap: 18px; }
+    #opt-b .mh-title { flex: 1 1 auto; min-width: 0; }
+    #opt-b .mh-title h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; margin: 0; line-height: 1.15; }
+    #opt-b .mh-title .campaign-title { font-size: 0.86rem; font-weight: 700; font-style: italic; color: #ffd873; margin-top: 3px; letter-spacing: 0.02em; }
+    #opt-b .mh-title .subtitle { font-size: 0.68rem; opacity: 0.8; margin-top: 3px; letter-spacing: 0.03em; }
+    #opt-b .mh-medallion { flex: 0 0 auto; width: 106px; height: 80px; border-radius: 50%; background: radial-gradient(ellipse at 35% 30%, #ffe6ad 0%, var(--gold) 68%); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-align: center; }
+    #opt-b .mh-medallion .num { font-size: 1.4rem; font-weight: 800; color: var(--navy); line-height: 1; }
+    #opt-b .mh-medallion .label { font-size: 0.48rem; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.3; margin-top: 4px; }
+    #opt-b .mh-day { text-align: right; white-space: nowrap; flex: 0 0 auto; border-left: 1px solid rgba(255,255,255,0.25); padding-left: 18px; }
+    #opt-b .mh-day .day { font-size: 1.25rem; font-weight: 700; }
+    #opt-b .mh-day .date { font-size: 0.72rem; opacity: 0.85; }
+    #opt-b /* Editorial section headers */
+    .section { margin-top: 26px; }
+    #opt-b .section-header-v3 { margin-bottom: 12px; }
+    #opt-b .section-header-v3 .cat { font-family: Georgia, "Times New Roman", serif; font-weight: 700; color: var(--navy); font-size: 1.3rem; }
+    #opt-b .section-header-v3 .desc { display: block; font-size: 0.78rem; color: var(--muted); font-style: italic; margin-top: 1px; }
+    #opt-b .section-header-v3 .rule { height: 2px; background: var(--navy); width: 42px; margin-top: 6px; }
+    #opt-b /* Newsletter twin columns with a rule between */
+    .twin-cols { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 24px; }
+    #opt-b .twin-cols .col-rule { background: var(--hairline); }
+    #opt-b table.report-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    #opt-b table.report-table th { background: var(--navy); color: #fff; text-align: left; padding: 6px 10px; font-weight: 600; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    #opt-b table.report-table th.num-col { text-align: right; white-space: nowrap; }
+    #opt-b table.report-table td { padding: 5px 10px; border-bottom: 1px solid var(--hairline); }
+    #opt-b table.report-table td.num-col { text-align: right; font-weight: 700; }
+    #opt-b table.report-table tr:nth-child(even) td { background: #f7f8fa; }
+    #opt-b .school-winner { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%); color: var(--navy); border-radius: 999px; padding: 0px 8px; font-size: 0.62rem; font-weight: 700; margin-left: 5px; white-space: nowrap; }
+    #opt-b /* Scoreboard teams section */
+    .scoreboard { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: 8px; overflow: hidden; }
+    #opt-b .score-panel { padding: 16px 20px; color: #fff; }
+    #opt-b .score-panel.troopers { background: var(--navy); }
+    #opt-b .score-panel.jedi { background: var(--gold); color: var(--navy); }
+    #opt-b .score-panel .team-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; margin-bottom: 1px; opacity: 0.95; }
+    #opt-b .score-panel .team-sub { font-size: 0.68rem; font-style: italic; opacity: 0.8; margin-bottom: 9px; }
+    #opt-b .score-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.18); }
+    #opt-b .score-panel.jedi .score-row { border-bottom-color: rgba(30,58,95,0.18); }
+    #opt-b .score-row:last-child { border-bottom: none; }
+    #opt-b .score-row .metric-label { font-size: 0.72rem; opacity: 0.85; }
+    #opt-b /* Value + trophy slot: every row reserves the same fixed-width slot on the
+       right, #opt-b filled or empty, #opt-b so the numbers themselves always land on the
+       same vertical line regardless of which rows happen to be winners */
+    .metric-val-wrap { display: inline-flex; align-items: center; gap: 7px; }
+    #opt-b .metric-val { font-size: 1.15rem; font-weight: 800; }
+    #opt-b .trophy-slot { width: 22px; height: 22px; flex-shrink: 0; }
+    #opt-b .win-trophy-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+        background: #fff;
+        border: 2px solid var(--gold);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    }
+    #opt-b .win-trophy-badge i {
+        color: #c8890a;
+        font-size: 0.72rem;
+        text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    }
+    #opt-b .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid var(--navy); color: var(--navy); font-weight: 800; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 2; }
+    #opt-b .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); }
+
+/* ============ Option C — Dashboard Cards ============ */
+#opt-c .page { max-width: 8.5in; margin: 0 auto 24px auto; background: #f4f6f8; padding: 0.4in 0.5in; }
+    #opt-c .masthead { background: var(--navy); color: #fff; padding: 16px 24px; border-radius: 10px; display: flex; align-items: center; gap: 16px; }
+    #opt-c .mh-title { flex: 1 1 auto; min-width: 0; }
+    #opt-c .mh-title h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.4rem; margin: 0; line-height: 1.15; }
+    #opt-c .mh-title .subtitle { font-size: 0.72rem; opacity: 0.85; margin-top: 2px; letter-spacing: 0.02em; }
+    #opt-c .mh-chip { flex: 0 0 auto; background: var(--gold); color: var(--navy); font-weight: 800; font-size: 0.78rem; padding: 6px 14px; border-radius: 999px; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+    #opt-c .mh-day { text-align: right; white-space: nowrap; flex: 0 0 auto; }
+    #opt-c .mh-day .day { font-size: 1.15rem; font-weight: 700; }
+    #opt-c .mh-day .date { font-size: 0.7rem; opacity: 0.85; }
+    #opt-c .grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    #opt-c .card-v2 { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); border: 1px solid #eef0f2; padding: 16px 18px; }
+    #opt-c .card-v2.full { margin-top: 16px; }
+    #opt-c .card-header-v2 { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 10px; }
+    #opt-c .card-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    #opt-c .card-header-v2 .cat { font-weight: 800; color: var(--navy); font-size: 1.0rem; }
+    #opt-c .card-header-v2 .desc { display: block; font-size: 0.74rem; color: var(--muted); }
+    #opt-c table.report-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    #opt-c table.report-table th { background: var(--navy); color: #fff; text-align: left; padding: 6px 9px; font-weight: 600; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    #opt-c table.report-table th.num-col { text-align: right; white-space: nowrap; }
+    #opt-c table.report-table td { padding: 5px 9px; border-bottom: 1px solid var(--hairline); }
+    #opt-c table.report-table td.num-col { text-align: right; font-weight: 700; }
+    #opt-c table.report-table tr:nth-child(even) td { background: #f7f8fa; }
+    #opt-c .school-winner { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%); color: var(--navy); border-radius: 999px; padding: 0px 7px; font-size: 0.6rem; font-weight: 700; margin-left: 4px; white-space: nowrap; }
+    #opt-c /* Comparison bars for Teams card */
+    .compare-row { margin-bottom: 14px; }
+    #opt-c .compare-row:last-child { margin-bottom: 2px; }
+    #opt-c .compare-labels { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; }
+    #opt-c .compare-labels .metric-name { color: var(--muted); font-weight: 500; text-align: center; flex: 1; }
+    #opt-c .compare-labels .val-dragons { color: var(--navy); text-align: left; flex: 0 0 90px; }
+    #opt-c .compare-labels .val-phoenix { color: #a5680a; text-align: right; flex: 0 0 90px; }
+    #opt-c .compare-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: var(--hairline); }
+    #opt-c .compare-bar .seg-dragons { background: var(--navy); }
+    #opt-c .compare-bar .seg-phoenix { background: var(--gold); }
+    #opt-c .win-star { color: var(--gold); font-size: 0.7rem; margin-left: 3px; }
+    #opt-c .team-legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: 0.72rem; color: var(--muted); }
+    #opt-c .team-legend .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    #opt-c .team-legend .dot.dragons { background: var(--navy); }
+    #opt-c .team-legend .dot.phoenix { background: var(--gold); }
+    #opt-c .report-footer { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; font-size: 0.66rem; color: var(--muted); }
+
+/* ============ Print ============ */
+@media print {
+    @page { size: letter; margin: 0.4in; }
+    body { background: #fff; }
+    .chrome-wrap, .nav-tabs { display: none; }
+    .tab-content { margin: 0; max-width: 100%; }
+    .tab-pane .page { margin: 0; box-shadow: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #opt-a .section, #opt-b .section, #opt-c .card-v2 { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- Print/PDF button removed: the browser's print-to-PDF pipeline mis-renders
+     the rounded badges in Option B (border-radius background not clipping
+     correctly in print), a bug we couldn't reliably fix or verify. Printing
+     via the browser's own Print menu still works and uses the @media print
+     rules above; we're just not inviting PDF export from an in-page button. -->
+
+<div class="chrome-wrap">
+    <div class="proto-intro">
+        <h5>Daily Read-a-Thon Report — Layout Options</h5>
+        <span class="hint">Mock data, for format review — click a tab to compare</span>
+    </div>
+    <ul class="nav nav-tabs" id="protoTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-a-btn" data-bs-toggle="tab" data-bs-target="#opt-a" type="button" role="tab" aria-controls="opt-a" aria-selected="false">
+                Option A<span class="tab-sub">Compact Side-by-Side</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-b-btn" data-bs-toggle="tab" data-bs-target="#opt-b" type="button" role="tab" aria-controls="opt-b" aria-selected="true">
+                Option B<span class="tab-sub">Editorial Scoreboard ★ Book Wars</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-c-btn" data-bs-toggle="tab" data-bs-target="#opt-c" type="button" role="tab" aria-controls="opt-c" aria-selected="false">
+                Option C<span class="tab-sub">Dashboard Cards</span>
+            </button>
+        </li>
+    </ul>
+</div>
+
+<div class="tab-content" id="protoTabsContent">
+    <div class="tab-pane fade" id="opt-a" role="tabpanel" aria-labelledby="tab-a-btn">
+        <div class="page">
+
+    <div class="masthead">
+        <div class="mh-title">
+            <h1>Lincoln Elementary Read-a-Thon</h1>
+            <div class="subtitle">DAILY UPDATE — GENERATED AUTOMATICALLY FROM LIVE CAMPAIGN DATA</div>
+        </div>
+        <div class="mh-divider"></div>
+        <div class="mh-stat">
+            <div class="num">76.8%</div>
+            <div class="label">Read ≥1 Day</div>
+        </div>
+        <div class="mh-divider"></div>
+        <div class="mh-day">
+            <div class="day">Day 7 of 10</div>
+            <div class="date">October 16, 2026</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="twin-grid">
+            <div>
+                <div class="section-header-v2">
+                    <div class="section-icon"><i class="bi bi-people-fill"></i></div>
+                    <div class="section-title-v2"><span class="cat">Students</span><span class="sep">—</span><span class="desc">Daily Prize Winners</span></div>
+                </div>
+                <table class="report-table">
+                    <thead><tr><th>Grade</th><th>Winner</th></tr></thead>
+                    <tbody>
+                        <tr><td>Kindergarten</td><td>Ava Thompson</td></tr>
+                        <tr><td>1st Grade</td><td>Liam Brooks</td></tr>
+                        <tr><td>2nd Grade</td><td>Noah Kim</td></tr>
+                        <tr><td>3rd Grade</td><td>Mia Fischer</td></tr>
+                        <tr><td>4th Grade</td><td>Ethan Ward</td></tr>
+                        <tr><td>5th Grade</td><td>Sophia Reyes</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="section-header-v2">
+                    <div class="section-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                    <div class="section-title-v2"><span class="cat">Classes</span><span class="sep">—</span><span class="desc">Highest Participation % by Grade, Cumulative</span></div>
+                </div>
+                <table class="report-table">
+                    <thead><tr><th>Grade</th><th>Class</th><th class="num-col">Participation %</th></tr></thead>
+                    <tbody>
+                        <tr><td>Kindergarten</td><td>Mrs. Alvarez</td><td class="num-col">68.4%</td></tr>
+                        <tr><td>1st Grade</td><td>Mr. Chen <span class="school-winner"><i class="bi bi-star-fill"></i> Top</span></td><td class="num-col">71.2%</td></tr>
+                        <tr><td>2nd Grade</td><td>Ms. Patel</td><td class="num-col">66.9%</td></tr>
+                        <tr><td>3rd Grade</td><td>Mrs. Novak</td><td class="num-col">63.5%</td></tr>
+                        <tr><td>4th Grade</td><td>Mr. Delgado</td><td class="num-col">60.8%</td></tr>
+                        <tr><td>5th Grade</td><td>Mrs. Ibarra</td><td class="num-col">58.3%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header-v2">
+            <div class="section-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div class="section-title-v2"><span class="cat">Teams</span><span class="sep">—</span><span class="desc">Head-to-Head, Cumulative</span></div>
+        </div>
+        <table class="teams-compare">
+            <thead>
+                <tr>
+                    <th class="metric-col"></th>
+                    <th class="team-dragons"><div><i class="bi bi-shield-fill"></i></div><span class="team-name-badge dragons">Dragons</span></th>
+                    <th class="team-phoenix"><div><i class="bi bi-fire"></i></div><span class="team-name-badge phoenix">Phoenix</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="metric-col">Participation %</td><td>61.2%</td><td><span class="leader-oval"><i class="bi bi-star-fill"></i> 64.5%</span></td></tr>
+                <tr><td class="metric-col">Minutes Read</td><td>35,410</td><td><span class="leader-oval"><i class="bi bi-star-fill"></i> 39,820</span></td></tr>
+                <tr><td class="metric-col">Money Raised</td><td>$13,450</td><td><span class="leader-oval"><i class="bi bi-star-fill"></i> $15,780</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="report-footer">
+        <span>PROTOTYPE — mock data only, for layout review. Team names anonymized (Phoenix / Dragons) per project convention.</span>
+        <span>Lincoln Elementary Read-a-Thon 2026</span>
+    </div>
+
+</div>
+    </div>
+    <div class="tab-pane fade show active" id="opt-b" role="tabpanel" aria-labelledby="tab-b-btn">
+        <div class="page">
+
+    <div class="masthead">
+        <div class="mh-title">
+            <h1>Lincoln Elementary Read-a-Thon</h1>
+            <div class="campaign-title">Book Wars: The Reader Strikes Back</div>
+            <div class="subtitle">DAILY UPDATE — GENERATED AUTOMATICALLY FROM LIVE CAMPAIGN DATA</div>
+        </div>
+        <div class="mh-medallion">
+            <div class="num">77%</div>
+            <div class="label">Of Students Read<br>at Least 1 Day</div>
+        </div>
+        <div class="mh-day">
+            <div class="day">Day 7 of 10</div>
+            <div class="date">October 16, 2026</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="twin-cols">
+            <div>
+                <div class="section-header-v3">
+                    <span class="cat">Students</span>
+                    <span class="desc">Daily Prize Winners</span>
+                    <div class="rule"></div>
+                </div>
+                <table class="report-table">
+                    <thead><tr><th>Grade</th><th>Winner</th></tr></thead>
+                    <tbody>
+                        <tr><td>Kindergarten</td><td>Ava Thompson</td></tr>
+                        <tr><td>1st Grade</td><td>Liam Brooks</td></tr>
+                        <tr><td>2nd Grade</td><td>Noah Kim</td></tr>
+                        <tr><td>3rd Grade</td><td>Mia Fischer</td></tr>
+                        <tr><td>4th Grade</td><td>Ethan Ward</td></tr>
+                        <tr><td>5th Grade</td><td>Sophia Reyes</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-rule"></div>
+            <div>
+                <div class="section-header-v3">
+                    <span class="cat">Classes</span>
+                    <span class="desc">Highest Participation % by Grade, Cumulative</span>
+                    <div class="rule"></div>
+                </div>
+                <table class="report-table">
+                    <thead><tr><th>Grade</th><th>Class</th><th class="num-col">Participation %</th></tr></thead>
+                    <tbody>
+                        <tr><td>Kindergarten</td><td>Mrs. Alvarez</td><td class="num-col">68.4%</td></tr>
+                        <tr><td>1st Grade</td><td>Mr. Chen <span class="school-winner"><i class="bi bi-star-fill"></i> Top</span></td><td class="num-col">71.2%</td></tr>
+                        <tr><td>2nd Grade</td><td>Ms. Patel</td><td class="num-col">66.9%</td></tr>
+                        <tr><td>3rd Grade</td><td>Mrs. Novak</td><td class="num-col">63.5%</td></tr>
+                        <tr><td>4th Grade</td><td>Mr. Delgado</td><td class="num-col">60.8%</td></tr>
+                        <tr><td>5th Grade</td><td>Mrs. Ibarra</td><td class="num-col">58.3%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header-v3">
+            <span class="cat">Teams</span>
+            <span class="desc">Head-to-Head, Cumulative</span>
+            <div class="rule"></div>
+        </div>
+        <div class="scoreboard">
+            <div class="score-panel troopers">
+                <div class="team-label"><i class="bi bi-shield-fill"></i> The Book Troopers</div>
+                <div class="team-sub">Mrs. Whitfield</div>
+                <div class="score-row win"><span class="metric-label">Participation</span><span class="metric-val-wrap"><span class="metric-val">68.2%</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+                <div class="score-row"><span class="metric-label">Minutes Read</span><span class="metric-val-wrap"><span class="metric-val">35,410</span><span class="trophy-slot"></span></span></div>
+                <div class="score-row"><span class="metric-label">Money Raised</span><span class="metric-val-wrap"><span class="metric-val">$13,450</span><span class="trophy-slot"></span></span></div>
+            </div>
+            <div class="score-panel jedi">
+                <div class="team-label"><i class="bi bi-stars"></i> The Jedi Readers</div>
+                <div class="team-sub">Mr. Solis</div>
+                <div class="score-row"><span class="metric-label">Participation</span><span class="metric-val-wrap"><span class="metric-val">64.5%</span><span class="trophy-slot"></span></span></div>
+                <div class="score-row win"><span class="metric-label">Minutes Read</span><span class="metric-val-wrap"><span class="metric-val">39,820</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+                <div class="score-row win"><span class="metric-label">Money Raised</span><span class="metric-val-wrap"><span class="metric-val">$15,780</span><span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span></span></div>
+            </div>
+            <div class="vs-badge">VS</div>
+        </div>
+    </div>
+
+    <div class="report-footer">
+        <span>PROTOTYPE — mock statistics only, for layout review. Team/theme names reflect this year's real "Book Wars" campaign branding; team lead names are placeholders.</span>
+        <span>Lincoln Elementary Read-a-Thon 2026</span>
+    </div>
+
+</div>
+    </div>
+    <div class="tab-pane fade" id="opt-c" role="tabpanel" aria-labelledby="tab-c-btn">
+        <div class="page">
+
+    <div class="masthead">
+        <div class="mh-title">
+            <h1>Lincoln Elementary Read-a-Thon</h1>
+            <div class="subtitle">DAILY UPDATE — GENERATED AUTOMATICALLY FROM LIVE CAMPAIGN DATA</div>
+        </div>
+        <div class="mh-chip"><i class="bi bi-lightning-fill"></i> 76.8% Read ≥1 Day</div>
+        <div class="mh-day">
+            <div class="day">Day 7 of 10</div>
+            <div class="date">October 16, 2026</div>
+        </div>
+    </div>
+
+    <div class="grid-row">
+        <div class="card-v2">
+            <div class="card-header-v2">
+                <div class="card-icon"><i class="bi bi-people-fill"></i></div>
+                <div><span class="cat">Students</span><span class="desc">Daily Prize Winners</span></div>
+            </div>
+            <table class="report-table">
+                <thead><tr><th>Grade</th><th>Winner</th></tr></thead>
+                <tbody>
+                    <tr><td>Kindergarten</td><td>Ava Thompson</td></tr>
+                    <tr><td>1st Grade</td><td>Liam Brooks</td></tr>
+                    <tr><td>2nd Grade</td><td>Noah Kim</td></tr>
+                    <tr><td>3rd Grade</td><td>Mia Fischer</td></tr>
+                    <tr><td>4th Grade</td><td>Ethan Ward</td></tr>
+                    <tr><td>5th Grade</td><td>Sophia Reyes</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-v2">
+            <div class="card-header-v2">
+                <div class="card-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <div><span class="cat">Classes</span><span class="desc">Highest Participation % by Grade, Cumulative</span></div>
+            </div>
+            <table class="report-table">
+                <thead><tr><th>Grade</th><th>Class</th><th class="num-col">Participation %</th></tr></thead>
+                <tbody>
+                    <tr><td>Kindergarten</td><td>Mrs. Alvarez</td><td class="num-col">68.4%</td></tr>
+                    <tr><td>1st Grade</td><td>Mr. Chen <span class="school-winner"><i class="bi bi-star-fill"></i> Top</span></td><td class="num-col">71.2%</td></tr>
+                    <tr><td>2nd Grade</td><td>Ms. Patel</td><td class="num-col">66.9%</td></tr>
+                    <tr><td>3rd Grade</td><td>Mrs. Novak</td><td class="num-col">63.5%</td></tr>
+                    <tr><td>4th Grade</td><td>Mr. Delgado</td><td class="num-col">60.8%</td></tr>
+                    <tr><td>5th Grade</td><td>Mrs. Ibarra</td><td class="num-col">58.3%</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-v2 full">
+        <div class="card-header-v2">
+            <div class="card-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div><span class="cat">Teams</span><span class="desc">Head-to-Head, Cumulative</span></div>
+        </div>
+
+        <div class="compare-row">
+            <div class="compare-labels"><span class="val-dragons">61.2%</span><span class="metric-name">Participation</span><span class="val-phoenix">64.5%<span class="win-star">★</span></span></div>
+            <div class="compare-bar"><div class="seg-dragons" style="width:48.7%"></div><div class="seg-phoenix" style="width:51.3%"></div></div>
+        </div>
+        <div class="compare-row">
+            <div class="compare-labels"><span class="val-dragons">35,410</span><span class="metric-name">Minutes Read</span><span class="val-phoenix">39,820<span class="win-star">★</span></span></div>
+            <div class="compare-bar"><div class="seg-dragons" style="width:47.1%"></div><div class="seg-phoenix" style="width:52.9%"></div></div>
+        </div>
+        <div class="compare-row">
+            <div class="compare-labels"><span class="val-dragons">$13,450</span><span class="metric-name">Money Raised</span><span class="val-phoenix">$15,780<span class="win-star">★</span></span></div>
+            <div class="compare-bar"><div class="seg-dragons" style="width:46.0%"></div><div class="seg-phoenix" style="width:54.0%"></div></div>
+        </div>
+
+        <div class="team-legend">
+            <span><span class="dot dragons"></span>Dragons</span>
+            <span><span class="dot phoenix"></span>Phoenix</span>
+        </div>
+    </div>
+
+    <div class="report-footer">
+        <span>PROTOTYPE — mock data only, for layout review. Team names anonymized (Phoenix / Dragons) per project convention.</span>
+        <span>Lincoln Elementary Read-a-Thon 2026</span>
+    </div>
+
+</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Read-a-Thon Report — Prototype (Mock Data)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+    :root {
+        --navy: #1e3a5f;
+        --gold: #f59e0b;
+        --ink: #1f2937;
+        --muted: #6b7280;
+        --hairline: #e2e6ea;
+    }
+    body {
+        background: #eef1f4;
+        color: var(--ink);
+        font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+    .page {
+        max-width: 8.5in;
+        margin: 24px auto;
+        background: #fff;
+        padding: 0.45in 0.55in;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+
+    /* ---------- Masthead ---------- */
+    .masthead {
+        background: var(--navy);
+        color: #fff;
+        padding: 18px 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 6px;
+    }
+    .masthead h1 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.55rem;
+        margin: 0;
+        line-height: 1.15;
+    }
+    .masthead .subtitle {
+        font-size: 0.82rem;
+        opacity: 0.85;
+        margin-top: 2px;
+        letter-spacing: 0.02em;
+    }
+    .masthead .day-badge {
+        text-align: right;
+    }
+    .masthead .day-badge .day {
+        font-size: 1.35rem;
+        font-weight: 700;
+    }
+    .masthead .day-badge .date {
+        font-size: 0.8rem;
+        opacity: 0.85;
+    }
+
+    /* ---------- Section headers ---------- */
+    .section {
+        margin-top: 22px;
+    }
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .section-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--navy);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+    .section-title {
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: var(--navy);
+        letter-spacing: 0.01em;
+    }
+    .section-sub {
+        font-size: 0.74rem;
+        color: var(--muted);
+        margin-left: auto;
+    }
+
+    /* ---------- Students section ---------- */
+    .students-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+    }
+    .winners-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+    }
+    .winners-table th {
+        background: var(--navy);
+        color: #fff;
+        text-align: left;
+        padding: 6px 10px;
+        font-weight: 600;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .winners-table td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--hairline);
+    }
+    .winners-table tr:nth-child(even) td {
+        background: #f7f8fa;
+    }
+    .stat-callout {
+        background: #fdf6e8;
+        border: 1px solid #f2dfb0;
+        border-radius: 8px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+    }
+    .stat-callout .big-num {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--gold);
+        line-height: 1;
+    }
+    .stat-callout .stat-label {
+        font-size: 0.78rem;
+        color: var(--ink);
+        margin-top: 6px;
+        max-width: 180px;
+    }
+
+    /* ---------- Teachers section (table) ---------- */
+    .grade-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.84rem;
+    }
+    .grade-table th {
+        background: var(--navy);
+        color: #fff;
+        text-align: left;
+        padding: 7px 12px;
+        font-weight: 600;
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .grade-table td {
+        padding: 6px 12px;
+        border-bottom: 1px solid var(--hairline);
+    }
+    .grade-table tr:nth-child(even) td {
+        background: #f7f8fa;
+    }
+    .grade-table td.pct {
+        font-weight: 700;
+        text-align: right;
+    }
+    .school-winner {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%);
+        color: var(--navy);
+        border-radius: 999px;
+        padding: 1px 9px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-left: 6px;
+    }
+
+    /* ---------- Teams section ---------- */
+    .teams-compare {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86rem;
+    }
+    .teams-compare th {
+        padding: 8px 10px;
+        font-size: 0.78rem;
+        text-align: center;
+    }
+    .teams-compare th.metric-col {
+        text-align: left;
+        background: transparent;
+    }
+    .teams-compare th.team-dragons {
+        background: var(--navy);
+        color: #fff;
+        border-radius: 6px 6px 0 0;
+    }
+    .teams-compare th.team-phoenix {
+        background: var(--gold);
+        color: var(--navy);
+        border-radius: 6px 6px 0 0;
+    }
+    .teams-compare td {
+        padding: 9px 10px;
+        border-bottom: 1px solid var(--hairline);
+        text-align: center;
+        font-weight: 600;
+    }
+    .teams-compare td.metric-col {
+        text-align: left;
+        font-weight: 500;
+        color: var(--muted);
+        font-size: 0.8rem;
+    }
+    .team-name-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+    .team-name-badge.dragons { background: var(--navy); color: #fff; }
+    .team-name-badge.phoenix { background: var(--gold); color: var(--navy); }
+    .win-cell {
+        position: relative;
+    }
+    .win-cell.leader {
+        color: var(--navy);
+    }
+    .leader-oval {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%);
+        border-radius: 999px;
+        padding: 2px 10px 2px 8px;
+    }
+    .leader-oval i { font-size: 0.7rem; }
+
+    /* ---------- Footer ---------- */
+    .report-footer {
+        margin-top: 22px;
+        padding-top: 10px;
+        border-top: 1px solid var(--hairline);
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.68rem;
+        color: var(--muted);
+    }
+
+    /* ---------- Print controls (screen only) ---------- */
+    .print-bar {
+        max-width: 8.5in;
+        margin: 0 auto 10px auto;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    /* ---------- Print styles ---------- */
+    @media print {
+        @page {
+            size: letter;
+            margin: 0.4in;
+        }
+        body {
+            background: #fff;
+        }
+        .print-bar {
+            display: none;
+        }
+        .page {
+            box-shadow: none;
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+        }
+        * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .section {
+            break-inside: avoid;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="print-bar">
+    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+        <i class="bi bi-printer"></i> Print / Save as PDF
+    </button>
+</div>
+
+<div class="page">
+
+    <!-- Masthead -->
+    <div class="masthead">
+        <div>
+            <h1>Lincoln Elementary Read-a-Thon</h1>
+            <div class="subtitle">DAILY UPDATE — GENERATED AUTOMATICALLY FROM LIVE CAMPAIGN DATA</div>
+        </div>
+        <div class="day-badge">
+            <div class="day">Day 7 of 10</div>
+            <div class="date">October 16, 2026</div>
+        </div>
+    </div>
+
+    <!-- Students section -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="section-title">Students</div>
+            <div class="section-sub">Today's prize drawing &amp; overall reach</div>
+        </div>
+        <div class="students-grid">
+            <table class="winners-table">
+                <thead>
+                    <tr><th>Grade</th><th>Today's Prize Drawing Winner</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Kindergarten</td><td>Ava Thompson</td></tr>
+                    <tr><td>1st Grade</td><td>Liam Brooks</td></tr>
+                    <tr><td>2nd Grade</td><td>Noah Kim</td></tr>
+                    <tr><td>3rd Grade</td><td>Mia Fischer</td></tr>
+                    <tr><td>4th Grade</td><td>Ethan Ward</td></tr>
+                    <tr><td>5th Grade</td><td>Sophia Reyes</td></tr>
+                </tbody>
+            </table>
+            <div class="stat-callout">
+                <div class="big-num">76.8%</div>
+                <div class="stat-label">of students have recorded reading for at least one day of the read-a-thon</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teachers section -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-icon"><i class="bi bi-mortarboard-fill"></i></div>
+            <div class="section-title">Teachers</div>
+            <div class="section-sub">Leading class by grade, % participation</div>
+        </div>
+        <table class="grade-table">
+            <thead>
+                <tr><th>Grade</th><th>Leading Class</th><th style="text-align:right;">% Participation</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Kindergarten</td><td>Mrs. Alvarez</td><td class="pct">68.4%</td></tr>
+                <tr><td>1st Grade</td><td>Mr. Chen <span class="school-winner"><i class="bi bi-star-fill"></i> Top School-Wide</span></td><td class="pct">71.2%</td></tr>
+                <tr><td>2nd Grade</td><td>Ms. Patel</td><td class="pct">66.9%</td></tr>
+                <tr><td>3rd Grade</td><td>Mrs. Novak</td><td class="pct">63.5%</td></tr>
+                <tr><td>4th Grade</td><td>Mr. Delgado</td><td class="pct">60.8%</td></tr>
+                <tr><td>5th Grade</td><td>Mrs. Ibarra</td><td class="pct">58.3%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Teams section -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div class="section-title">Teams</div>
+            <div class="section-sub">Head-to-head, cumulative to date</div>
+        </div>
+        <table class="teams-compare">
+            <thead>
+                <tr>
+                    <th class="metric-col"></th>
+                    <th class="team-dragons">
+                        <div><i class="bi bi-shield-fill"></i></div>
+                        <span class="team-name-badge dragons">Dragons</span>
+                    </th>
+                    <th class="team-phoenix">
+                        <div><i class="bi bi-fire"></i></div>
+                        <span class="team-name-badge phoenix">Phoenix</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="metric-col">Participation %</td>
+                    <td>61.2%</td>
+                    <td class="win-cell leader"><span class="leader-oval"><i class="bi bi-star-fill"></i> 64.5%</span></td>
+                </tr>
+                <tr>
+                    <td class="metric-col">Minutes Read</td>
+                    <td>35,410</td>
+                    <td class="win-cell leader"><span class="leader-oval"><i class="bi bi-star-fill"></i> 39,820</span></td>
+                </tr>
+                <tr>
+                    <td class="metric-col">Money Raised</td>
+                    <td>$13,450</td>
+                    <td class="win-cell leader"><span class="leader-oval"><i class="bi bi-star-fill"></i> $15,780</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="report-footer">
+        <span>PROTOTYPE — mock data only, for layout review. Team names anonymized (Phoenix / Dragons) per project convention.</span>
+        <span>Lincoln Elementary Read-a-Thon 2026</span>
+    </div>
+
+</div>
+
+</body>
+</html>

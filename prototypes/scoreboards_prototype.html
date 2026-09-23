@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scoreboards — Prototype</title>
+<style>
+    :root { --navy: #1e3a5f; --gold: #f59e0b; }
+    html, body { height: 100%; margin: 0; }
+    body { display: flex; flex-direction: column; background: #eef1f4; font-family: -apple-system, "Segoe UI", Arial, sans-serif; }
+    /* Mimics the planned "🏆 Scoreboards" menu in the app */
+    .tabs { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; background: var(--navy); padding: 8px 16px 0 16px; }
+    .tabs .title { color: #fff; font-weight: 700; margin-right: 16px; padding-bottom: 8px; }
+    .tabs button { border: 0; background: transparent; color: #d7e2f0; font-size: 0.9rem; font-weight: 600; padding: 8px 16px; border-radius: 6px 6px 0 0; cursor: pointer; }
+    .tabs button:hover { color: #fff; }
+    .tabs button.active { background: #eef1f4; color: var(--navy); }
+    /* Each prototype runs in its own frame so its styles and scripts stay separate */
+    iframe { flex: 1 1 auto; width: 100%; border: 0; }
+</style>
+</head>
+<body>
+    <div class="tabs">
+        <span class="title">🏆 Scoreboards</span>
+        <button data-src="daily_report_prototype_v2_scoreboard.html" data-hash="daily">Daily Scoreboard</button>
+        <button data-src="prize_scoreboard_prototype.html" data-hash="prize">Prize Scoreboard</button>
+    </div>
+    <iframe id="frame" title="Scoreboard prototype" allow="clipboard-write"></iframe>
+
+<script>
+    const buttons = document.querySelectorAll('.tabs button');
+    function show(hash) {
+        const btn = [...buttons].find(b => b.dataset.hash === hash) || buttons[0];
+        buttons.forEach(b => b.classList.toggle('active', b === btn));
+        document.getElementById('frame').src = btn.dataset.src;
+        history.replaceState(null, '', '#' + btn.dataset.hash);
+    }
+    buttons.forEach(b => b.addEventListener('click', () => show(b.dataset.hash)));
+    show(location.hash.slice(1));
+</script>
+</body>
+</html>
