@@ -9,10 +9,11 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- crossorigin lets the scoreboards' "Copy as image" embed CDN fonts/icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" crossorigin="anonymous">
 
     <style>
         /* v3.0 - Clean white navigation styling (from dashboard_school_tab_v2 prototype) */
@@ -112,6 +113,19 @@
             border: 1px solid #dee2e6;
             transition: all 0.3s ease;
         }
+
+        /* Simple view: toggle next to the database selector; hides full-view-only controls */
+        .view-toggle {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 0.3rem;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #1e3a5f;
+            white-space: nowrap;
+        }
+        .view-toggle:hover { background: #f1f5f9; }
+        .simple-view .full-view-only { display: none !important; }
 
         /* Highlight selector when in sample mode */
         .sample-mode .env-selector {
@@ -844,7 +858,7 @@
 
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% if simple_view %}simple-view{% endif %}">
     <!-- Navigation -->
     <div class="top-nav {% if is_sample_database %}sample-mode{% endif %}">
         <div class="d-flex align-items-center justify-content-between">
@@ -854,14 +868,28 @@
                 </a>
 
                 <div class="nav-links ms-4">
+                    {# Simple view keeps only the daily job: Upload, Scoreboards, Help (+ database selector) #}
+                    {% if not simple_view %}
                     <a href="/school" class="nav-link-item {% if request.path == '/' or request.path == '/school' %}active{% endif %}">🏫 School</a>
                     <a href="/teams" class="nav-link-item {% if request.path == '/teams' %}active{% endif %}">⚔️ Teams</a>
                     <a href="/classes" class="nav-link-item {% if request.path == '/classes' %}active{% endif %}">🎓 Grade Level</a>
                     <a href="/students" class="nav-link-item {% if request.path == '/students' %}active{% endif %}">👤 Students</a>
+                    {% endif %}
                     <a href="/upload" class="nav-link-item {% if request.path == '/upload' %}active{% endif %}">📤 Upload</a>
 
                     <div class="nav-dropdown">
-                        <button class="nav-link-item {% if request.path in ['/reports', '/workflows'] %}active{% endif %}" onclick="toggleReportsDropdown()">
+                        <button class="nav-link-item {% if request.path.startswith('/scoreboards') %}active{% endif %}" onclick="toggleNavDropdown('scoreboardsDropdown')">
+                            🏆 Scoreboards <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <div class="dropdown-menu-custom" id="scoreboardsDropdown">
+                            <a href="/scoreboards/daily" class="dropdown-item-custom">📅 Daily Scoreboard</a>
+                            <a href="/scoreboards/prize" class="dropdown-item-custom">🏅 Prize Scoreboard</a>
+                        </div>
+                    </div>
+
+                    {% if not simple_view %}
+                    <div class="nav-dropdown">
+                        <button class="nav-link-item {% if request.path in ['/reports', '/workflows'] %}active{% endif %}" onclick="toggleNavDropdown('reportsDropdown')">
                             📊 Reports & Data <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
                         <div class="dropdown-menu-custom" id="reportsDropdown">
@@ -871,9 +899,10 @@
                     </div>
 
                     <a href="/admin" class="nav-link-item {% if request.path == '/admin' %}active{% endif %}">⚙️ Admin</a>
+                    {% endif %}
 
                     <div class="nav-dropdown">
-                        <button class="nav-link-item {% if request.path in ['/help', '/help/claude', '/help/requirements', '/help/installation'] %}active{% endif %}" onclick="toggleHelpDropdown()">
+                        <button class="nav-link-item {% if request.path in ['/help', '/help/claude', '/help/requirements', '/help/installation'] %}active{% endif %}" onclick="toggleNavDropdown('helpDropdown')">
                             ❓ Help <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
                         <div class="dropdown-menu-custom" id="helpDropdown">
@@ -886,9 +915,16 @@
                 </div>
             </div>
 
-            <select class="env-selector" id="databaseSelector" onchange="switchDatabase()">
-                <!-- Dynamically populated from registry -->
-            </select>
+            <div class="d-flex align-items-center gap-2">
+                {% if simple_view %}
+                <button class="view-toggle" id="viewToggle" onclick="setViewMode('full')" title="Show every page (dashboards, reports, admin)">☰ Full view</button>
+                {% else %}
+                <button class="view-toggle" id="viewToggle" onclick="setViewMode('simple')" title="Show only Upload, Scoreboards and Help">✨ Simple view</button>
+                {% endif %}
+                <select class="env-selector" id="databaseSelector" onchange="switchDatabase()">
+                    <!-- Dynamically populated from registry -->
+                </select>
+            </div>
         </div>
     </div>
 
@@ -902,18 +938,22 @@
 
     <!-- Navigation Dropdown Toggles -->
     <script>
-        function toggleReportsDropdown() {
-            const dropdown = document.getElementById('reportsDropdown');
-            const helpDropdown = document.getElementById('helpDropdown');
-            helpDropdown.classList.remove('show');
-            dropdown.classList.toggle('show');
+        // Open one nav dropdown and close the others
+        function toggleNavDropdown(id) {
+            document.querySelectorAll('.dropdown-menu-custom').forEach(dropdown => {
+                if (dropdown.id !== id) dropdown.classList.remove('show');
+            });
+            document.getElementById(id).classList.toggle('show');
         }
 
-        function toggleHelpDropdown() {
-            const dropdown = document.getElementById('helpDropdown');
-            const reportsDropdown = document.getElementById('reportsDropdown');
-            reportsDropdown.classList.remove('show');
-            dropdown.classList.toggle('show');
+        // Simple view <-> full view (remembered by the app)
+        async function setViewMode(mode) {
+            await fetch('/api/view_mode', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({mode: mode})
+            });
+            window.location.href = mode === 'simple' ? '/' : window.location.href;
         }
 
         // Close dropdowns when clicking outside

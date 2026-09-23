@@ -320,7 +320,7 @@
                         </div>
                         <div class="mt-3">
                             <small class="text-muted">
-                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Upload_History, Team_Color_Bonus, and README with export details (Database_Registry excluded)
+                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Upload_History, Team_Color_Bonus, and README with export details (Database_Registry excluded)
                             </small>
                         </div>
                     </div>
@@ -345,6 +345,33 @@
                                 <i class="bi bi-diagram-3"></i> Run Workflows
                             </a>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoreboard Settings (saved in the registry, applies to every database) -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header card-header-blue">
+                        <h5 class="mb-0"><i class="bi bi-trophy"></i> Scoreboard Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="settingsForm" onsubmit="saveSettings(event)">
+                            <div class="mb-3">
+                                <label for="settingSchoolName" class="form-label fw-bold">School name</label>
+                                <input type="text" class="form-control" id="settingSchoolName" maxlength="80" placeholder="e.g. Lincoln Elementary">
+                                <div class="form-text">Scoreboard masthead shows "{school name} Read-a-Thon" (just "Read-a-Thon" when empty).</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="settingContestDays" class="form-label fw-bold">Contest days</label>
+                                <input type="number" class="form-control" id="settingContestDays" min="1" max="60" required style="max-width: 8rem;">
+                                <div class="form-text">Planned number of reading days ("Day 7 of 10"). Weekends that are skipped don't count. The Prize Scoreboard shows final results once this day is reached.</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Settings</button>
+                            <span id="settingsStatus" class="ms-2 small text-muted"></span>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -389,8 +416,8 @@
                             <p class="text-muted small mb-3">Select tables to clear. This permanently deletes event data and cannot be undone.</p>
 
                             <!-- Transactional Table Cards -->
-                            <div class="row g-3 mb-4">
-                            <div class="col-md-3">
+                            <div class="row g-3 mb-4 row-cols-1 row-cols-md-3 row-cols-xl-5">
+                            <div class="col">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -407,7 +434,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -424,7 +451,24 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearReaderCumulativeHistory" value="Reader_Cumulative_History">
+                                            <label class="form-check-label" for="clearReaderCumulativeHistory">
+                                                <h6 class="mb-1 text-break">Reader_Cumulative_History</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear the saved daily copies of the cumulative upload (money raised as of past days)</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countReaderCumulativeHistory">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -441,7 +485,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
                                         <div class="form-check">
@@ -540,6 +584,24 @@
                                         </p>
                                         <p class="mb-0">
                                             <span class="badge bg-secondary" id="countDatabaseRegistry">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <div class="card border-2" style="border-color: #4a90e2 !important;">
+                                    <div class="card-body">
+                                        <h6 class="mb-1">
+                                            <i class="bi bi-sliders"></i> App_Settings
+                                            <span class="badge bg-info ms-2">Separate Database</span>
+                                        </h6>
+                                        <p class="small text-muted mb-2">
+                                            App-wide settings (school name, contest days) - edit them in Actions &rarr; Scoreboard Settings
+                                            <br>
+                                            <strong>Location:</strong> <code>db/readathon_registry.db</code> (not in current contest database)
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countAppSettings">Loading...</span>
                                         </p>
                                     </div>
                                 </div>
@@ -1712,6 +1774,7 @@ async function exportAllData() {
 document.addEventListener('DOMContentLoaded', function() {
     loadDatabases();
     loadTableCounts();
+    loadSettings();
 });
 
 async function loadDatabases() {
@@ -1936,6 +1999,40 @@ function showSuccess(message) {
 // ========== Clear Data Tables Functions ==========
 
 // Load table record counts
+// ========== Scoreboard Settings ==========
+async function loadSettings() {
+    try {
+        const result = await (await fetch('/api/settings')).json();
+        if (result.success) {
+            document.getElementById('settingSchoolName').value = result.settings.school_name;
+            document.getElementById('settingContestDays').value = result.settings.contest_days;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function saveSettings(event) {
+    event.preventDefault();
+    const status = document.getElementById('settingsStatus');
+    try {
+        const response = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                school_name: document.getElementById('settingSchoolName').value,
+                contest_days: document.getElementById('settingContestDays').value
+            })
+        });
+        const result = await response.json();
+        status.textContent = result.success ? 'Saved' : result.error;
+        status.className = 'ms-2 small ' + (result.success ? 'text-success' : 'text-danger');
+    } catch (error) {
+        status.textContent = error.message;
+        status.className = 'ms-2 small text-danger';
+    }
+}
+
 async function loadTableCounts() {
     try {
         const response = await fetch('/api/table_counts');
@@ -1945,6 +2042,7 @@ async function loadTableCounts() {
             // Transactional tables
             document.getElementById('countUploadHistory').textContent = `${result.counts.Upload_History} records`;
             document.getElementById('countReaderCumulative').textContent = `${result.counts.Reader_Cumulative} records`;
+            document.getElementById('countReaderCumulativeHistory').textContent = `${result.counts.Reader_Cumulative_History} records`;
             document.getElementById('countDailyLogs').textContent = `${result.counts.Daily_Logs} records`;
             document.getElementById('countTeamColorBonus').textContent = `${result.counts.Team_Color_Bonus} records`;
 
@@ -1959,6 +2057,12 @@ async function loadTableCounts() {
         const databases = await regResponse.json();
         if (databases && Array.isArray(databases)) {
             document.getElementById('countDatabaseRegistry').textContent = `${databases.length} databases`;
+        }
+
+        // App_Settings also lives in the registry database
+        const settings = await (await fetch('/api/settings')).json();
+        if (settings.success) {
+            document.getElementById('countAppSettings').textContent = `${settings.saved_count} saved settings`;
         }
 
     } catch (error) {

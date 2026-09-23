@@ -152,6 +152,20 @@
                         </div>
                     </div>
 
+                    <!-- Snapshot date: which contest day this cumulative file covers -->
+                    <div class="mb-4 mx-auto" style="max-width: 600px;">
+                        <label for="snapshot_date" class="form-label fw-bold">
+                            <i class="bi bi-calendar-check"></i> Snapshot date (contest day this file covers)
+                        </label>
+                        <input type="date" class="form-control" id="snapshot_date" name="snapshot_date"
+                               value="{{ default_snapshot_date }}" required>
+                        <div class="form-text">
+                            Defaults to the latest day with daily minutes{% if contest_dates %} ({{ contest_dates[-1] }}){% endif %}.
+                            A copy of this upload is saved for that day so the scoreboards can show money raised as of any day;
+                            uploading again for the same day replaces that day's copy.
+                        </div>
+                    </div>
+
                     <!-- CSV Format Example - Collapsible -->
                     <details class="mb-3">
                         <summary class="fw-bold text-secondary" style="cursor: pointer; padding: 0.5rem; background: #f8f9fa; border-left: 3px solid #6c757d;">
@@ -176,6 +190,7 @@
                                 <li>ALL existing cumulative data is replaced (not incremental)</li>
                                 <li>Students not in roster are imported with "ERROR: NO ROSTER MATCH" tag</li>
                                 <li>Successfully processed entries are saved to the database</li>
+                                <li>A copy is saved as the snapshot for the chosen snapshot date (replacing any earlier copy for that date)</li>
                                 <li>Upload history is updated with status and student counts</li>
                             </ol>
                         </div>
@@ -257,7 +272,7 @@
                     <i class="bi bi-clock-history"></i> Upload History
                     <i class="bi bi-chevron-down"></i>
                 </h5>
-                <button id="deleteSelectedBtn" class="btn btn-sm btn-danger" style="display: none;" onclick="deleteSelectedUploads(); event.stopPropagation();">
+                <button id="deleteSelectedBtn" class="btn btn-sm btn-danger full-view-only" style="display: none;" onclick="deleteSelectedUploads(); event.stopPropagation();">
                     <i class="bi bi-trash"></i> Delete Selected
                 </button>
             </div>
@@ -611,12 +626,14 @@ function showBatchUploadResults(results, successCount, errorCount) {
 }
 
 // Cumulative Upload Handler
-async function performCumulativeUpload(confirmed = false) {
+async function performCumulativeUpload(confirmed = false, snapshotConfirmed = false) {
     const formData = new FormData();
     const cumulativeFile = document.getElementById('cumulative_file').files[0];
 
     formData.append('cumulative_file', cumulativeFile);
     formData.append('confirmed', confirmed ? 'true' : 'false');
+    formData.append('snapshot_date', document.getElementById('snapshot_date').value);
+    formData.append('snapshot_confirmed', snapshotConfirmed ? 'true' : 'false');
 
     // Show loading
     const resultArea = document.getElementById('resultArea');
@@ -645,11 +662,25 @@ async function performCumulativeUpload(confirmed = false) {
                 `Are you SURE you want to upload sample data to production?`;
 
             if (confirm(confirmMsg)) {
-                await performCumulativeUpload(true);
+                await performCumulativeUpload(true, snapshotConfirmed);
             } else {
                 resultCard.innerHTML = `
                     <div class="alert alert-warning">
                         <i class="bi bi-shield-exclamation"></i> Upload cancelled - sample data protection
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        // Snapshot date with no daily minutes yet - make sure the date is intended
+        if (result.needs_snapshot_confirmation) {
+            if (confirm(`⚠️ ${result.error}`)) {
+                await performCumulativeUpload(confirmed, true);
+            } else {
+                resultCard.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-calendar-x"></i> Upload cancelled - pick the contest day this file covers and upload again
                     </div>
                 `;
             }
@@ -701,6 +732,7 @@ function showUploadResult(result, logDate, uploadType) {
         } else {
             details = `
                 <strong>Environment:</strong> ${result.environment.toUpperCase()}<br>
+                <strong>Snapshot Date:</strong> ${result.snapshot_date}${result.snapshot_replaced ? ' (replaced the earlier copy for this day)' : ''}<br>
                 <strong>Rows Processed:</strong> ${result.rows_processed}<br>
                 <strong>Students Matched:</strong> ${result.students_matched}<br>
                 <strong>Students Unmatched:</strong> ${result.students_unmatched}
@@ -770,7 +802,7 @@ async function loadUploadHistory() {
                     <table class="table table-sm table-hover" style="table-layout: fixed; width: 100%;">
                         <thead>
                             <tr>
-                                <th style="width: 40px;"><input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes(this)"></th>
+                                <th class="full-view-only" style="width: 40px;"><input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes(this)"></th>
                                 <th style="width: 100px;">Date</th>
                                 <th style="width: 140px;">Uploaded</th>
                                 <th style="width: 200px;">File</th>
@@ -780,7 +812,7 @@ async function loadUploadHistory() {
                                 <th style="width: 80px;">Replaced</th>
                                 <th style="width: 140px;">Type</th>
                                 <th style="width: 80px;">Audit</th>
-                                <th style="width: 80px;">Actions</th>
+                                <th class="full-view-only" style="width: 80px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -830,7 +862,7 @@ async function loadUploadHistory() {
 
                                 return `
                                     <tr>
-                                        <td><input type="checkbox" class="upload-checkbox" value="${h.upload_id}" onchange="updateDeleteButton()"></td>
+                                        <td class="full-view-only"><input type="checkbox" class="upload-checkbox" value="${h.upload_id}" onchange="updateDeleteButton()"></td>
                                         <td><strong>${h.log_date || 'N/A'}</strong></td>
                                         <td><small>${new Date(h.upload_timestamp).toLocaleString()}</small></td>
                                         <td style="word-wrap: break-word; overflow-wrap: break-word;"><small>${h.filename || '-'}</small></td>
@@ -840,7 +872,7 @@ async function loadUploadHistory() {
                                         <td>${replacedDisplay}</td>
                                         <td><span class="badge ${statusBadge}">${h.status}</span><br><span class="badge bg-primary">${h.upload_type}</span></td>
                                         <td>${auditButton}</td>
-                                        <td style="white-space: nowrap;">${deleteButton}</td>
+                                        <td class="full-view-only" style="white-space: nowrap;">${deleteButton}</td>
                                     </tr>
                                 `;
                             }).join('')}
@@ -1102,6 +1134,7 @@ async function deleteCumulative() {
         `- ALL donation amounts\n` +
         `- ALL sponsor counts\n` +
         `- ALL cumulative minutes\n` +
+        `- ALL saved daily snapshots (Reader_Cumulative_History)\n` +
         `- ALL cumulative upload history\n\n` +
         `This affects EVERY STUDENT in the database!\n` +
         `This action CANNOT be undone!\n\n` +

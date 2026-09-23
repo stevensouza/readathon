@@ -1,0 +1,109 @@
+{# Scoreboard styles (Feature 39) - copied from prototypes/daily_report_prototype_v2_scoreboard.html and
+   prototypes/prize_scoreboard_prototype.html, scoped under .scoreboard-page so they can't affect base.html #}
+<style>
+    .scoreboard-page { --navy: #1e3a5f; --gold: #f59e0b; --ink: #1f2937; --muted: #6b7280; --hairline: #e2e6ea; --year-now: var(--navy); --year-past: #64748b;
+        background: #eef1f4; color: var(--ink); font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+        margin: -1.5rem calc(-0.5 * var(--bs-gutter-x)) 0; padding: 1px 12px 24px; min-height: calc(100vh - 64px); }
+    .scoreboard-page .page { max-width: 8.5in; margin: 0 auto 24px auto; background: #fff; padding: 0.45in 0.55in; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+
+    /* Toolbar: controls live outside .page so they never appear in the copied image */
+    .scoreboard-page .toolbar { max-width: 8.5in; margin: 16px auto 10px auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.8rem; }
+    .scoreboard-page .toolbar .tb-label { font-weight: 700; color: var(--navy); }
+    .scoreboard-page .toolbar select, .scoreboard-page .toolbar button { font-size: 0.8rem; }
+    .scoreboard-page .toolbar .tb-spacer { flex: 1 1 auto; }
+    .scoreboard-page .toolbar .tb-status { color: var(--muted); font-style: italic; }
+
+    /* Masthead with medallion stat */
+    .scoreboard-page .masthead { background: var(--navy); color: #fff; padding: 16px 24px; border-radius: 6px; display: flex; align-items: center; gap: 18px; }
+    .scoreboard-page .mh-title { flex: 1 1 auto; min-width: 0; }
+    .scoreboard-page .mh-title h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; margin: 0; line-height: 1.15; }
+    .scoreboard-page .mh-title .report-name { font-size: 0.86rem; font-weight: 700; font-style: italic; color: #ffd873; margin-top: 3px; letter-spacing: 0.02em; }
+    .scoreboard-page .mh-title .subtitle { font-size: 0.68rem; opacity: 0.8; margin-top: 3px; letter-spacing: 0.03em; text-transform: uppercase; }
+    .scoreboard-page .mh-medallion { flex: 0 0 auto; width: 106px; height: 80px; border-radius: 50%; background: radial-gradient(ellipse at 35% 30%, #ffe6ad 0%, var(--gold) 68%); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-align: center; }
+    .scoreboard-page .mh-medallion .num { font-size: 1.4rem; font-weight: 800; color: var(--navy); line-height: 1; }
+    .scoreboard-page .mh-medallion .label { font-size: 0.48rem; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.3; margin-top: 4px; }
+    .scoreboard-page .mh-day { text-align: right; white-space: nowrap; flex: 0 0 auto; border-left: 1px solid rgba(255,255,255,0.25); padding-left: 18px; }
+    .scoreboard-page .mh-day .day { font-size: 1.25rem; font-weight: 700; }
+    .scoreboard-page .mh-day .date { font-size: 0.72rem; opacity: 0.85; }
+
+    /* Editorial section headers */
+    .scoreboard-page .section { margin-top: 26px; }
+    .scoreboard-page .section-header-v3 { margin-bottom: 12px; }
+    .scoreboard-page .section-header-v3 .cat { font-family: Georgia, "Times New Roman", serif; font-weight: 700; color: var(--navy); font-size: 1.3rem; }
+    .scoreboard-page .section-header-v3 .desc { display: block; font-size: 0.78rem; color: var(--muted); font-style: italic; margin-top: 1px; }
+    .scoreboard-page .section-header-v3 .rule { height: 2px; background: var(--navy); width: 42px; margin-top: 6px; }
+    .scoreboard-page .sub-head { font-weight: 700; color: var(--navy); font-size: 0.9rem; margin-bottom: 2px; }
+    .scoreboard-page .empty-note { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+
+    /* Prize tag: what the winner gets */
+    .scoreboard-page .prize-tag { display: inline-flex; align-items: center; gap: 5px; background: #fff7e6; border: 1px solid #f7d58c; color: #7a4f06; border-radius: 999px; padding: 1px 10px; font-size: 0.66rem; font-weight: 700; margin: 2px 0 8px 0; }
+    .scoreboard-page .prize-tag i { color: #c8890a; }
+    .scoreboard-page .prize-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+    /* Newsletter twin columns with a rule between (Prize Scoreboard: wider right column) */
+    .scoreboard-page .twin-cols { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 24px; }
+    .scoreboard-page .twin-cols.wide-right { grid-template-columns: 1fr 1px 1.3fr; }
+    .scoreboard-page .twin-cols .col-rule { background: var(--hairline); }
+
+    .scoreboard-page table.report-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .scoreboard-page table.report-table th { background: var(--navy) !important; color: #fff !important; text-align: left; padding: 6px 10px; font-weight: 600; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.03em; vertical-align: bottom; }
+    .scoreboard-page table.report-table th .th-prize { display: block; text-transform: none; letter-spacing: 0; font-weight: 700; font-style: italic; color: #ffd873; font-size: 0.64rem; margin-top: 2px; }
+    .scoreboard-page table.report-table th.num-col { text-align: right; white-space: nowrap; }
+    .scoreboard-page table.report-table td { padding: 5px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+    .scoreboard-page table.report-table td.num-col { text-align: right; font-weight: 700; }
+    .scoreboard-page table.report-table tr:nth-child(even) td { background: #f7f8fa; }
+    .scoreboard-page table.report-table td.grade-cell { font-weight: 700; color: var(--navy); white-space: nowrap; }
+    .scoreboard-page .school-winner { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #ffd873 0%, var(--gold) 100%); color: var(--navy); border-radius: 999px; padding: 0px 8px; font-size: 0.62rem; font-weight: 700; margin-left: 5px; white-space: nowrap; }
+    .scoreboard-page .w-name { display: block; line-height: 1.35; }
+    .scoreboard-page .w-val { display: block; font-size: 0.68rem; color: var(--muted); font-weight: 700; }
+    .scoreboard-page .tie-tag { display: inline-block; background: var(--navy); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 0.56rem; font-weight: 700; margin-left: 4px; text-transform: uppercase; vertical-align: 1px; }
+
+    /* Spotlight card: the school-wide class winner(s) */
+    .scoreboard-page .spotlight { border-radius: 8px; padding: 16px 18px; background: linear-gradient(135deg, #fff7e6 0%, #ffe8b3 100%); border: 1px solid #f7d58c; text-align: center; }
+    .scoreboard-page .spotlight .medal { width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(ellipse at 35% 30%, #ffe6ad 0%, var(--gold) 68%); display: inline-flex; align-items: center; justify-content: center; color: var(--navy); font-size: 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+    .scoreboard-page .spotlight .who { font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; font-weight: 700; color: var(--navy); margin-top: 6px; }
+    .scoreboard-page .spotlight .meta { font-size: 0.75rem; color: var(--muted); }
+    .scoreboard-page .spotlight .big { font-size: 1.6rem; font-weight: 800; color: var(--navy); line-height: 1.1; margin-top: 4px; }
+
+    /* Scoreboard (teams, and the same layout reused for year vs year) */
+    .scoreboard-page .scoreboard { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: 8px; overflow: hidden; }
+    .scoreboard-page .score-panel { padding: 16px 20px; color: #fff; }
+    /* extra room on the inner edges so the VS badge never crowds the labels/values */
+    .scoreboard-page .score-panel:first-child { padding-right: 34px; }
+    .scoreboard-page .score-panel:nth-child(2) { padding-left: 34px; }
+    .scoreboard-page .score-panel.team-blue { background: var(--navy); }
+    .scoreboard-page .score-panel.team-gold { background: var(--gold); color: var(--navy); }
+    .scoreboard-page .score-panel.year-now { background: var(--year-now); }
+    .scoreboard-page .score-panel.year-past { background: var(--year-past); }
+    .scoreboard-page .score-panel .team-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; margin-bottom: 9px; opacity: 0.95; }
+    .scoreboard-page .score-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.18); min-height: 38px; }
+    .scoreboard-page .score-panel.team-gold .score-row { border-bottom-color: rgba(30,58,95,0.18); }
+    .scoreboard-page .score-row:last-child { border-bottom: none; }
+    .scoreboard-page .score-row .metric-label { font-size: 0.72rem; opacity: 0.85; line-height: 1.25; }
+    .scoreboard-page .score-row .metric-delta { display: block; font-size: 0.62rem; font-weight: 700; opacity: 0.9; }
+
+    /* Value + trophy slot: every row reserves the same fixed-width slot on the
+       right, filled or empty, so the numbers always land on the same vertical line */
+    .scoreboard-page .metric-val-wrap { display: inline-flex; align-items: center; gap: 7px; text-align: right; }
+    .scoreboard-page .metric-val { font-size: 1.15rem; font-weight: 800; }
+    .scoreboard-page .metric-val.name { font-size: 0.9rem; line-height: 1.2; }
+    .scoreboard-page .metric-val.name small { display: block; font-size: 0.66rem; font-weight: 700; opacity: 0.85; }
+    .scoreboard-page .metric-val.na { font-size: 0.8rem; font-weight: 700; font-style: italic; opacity: 0.85; }
+    .scoreboard-page .trophy-slot { width: 22px; height: 22px; flex-shrink: 0; }
+    .scoreboard-page .win-trophy-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; background: #fff; border: 2px solid var(--gold); box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+    .scoreboard-page .win-trophy-badge i { color: #c8890a; font-size: 0.72rem; text-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+    .scoreboard-page .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid var(--navy); color: var(--navy); font-weight: 800; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 2; }
+    .scoreboard-page .scoreboard-note { font-size: 0.66rem; color: var(--muted); font-style: italic; margin-top: 6px; }
+
+    /* Goal Getters: every name. Grade label sits in a left column; names run down
+       6 columns (alphabetical by last name) and wrap rather than truncate */
+    .scoreboard-page .gg-grade { display: grid; grid-template-columns: 84px 1fr; column-gap: 10px; padding: 5px 0; border-top: 1px solid var(--hairline); }
+    .scoreboard-page .gg-grade:first-of-type { border-top: 2px solid var(--navy); }
+    .scoreboard-page .gg-grade .g { font-weight: 700; color: var(--navy); font-size: 0.74rem; line-height: 1.3; }
+    .scoreboard-page .gg-grade .n { display: block; font-size: 0.64rem; color: var(--muted); font-weight: 700; }
+    .scoreboard-page .gg-names { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: column; column-gap: 8px; font-size: 0.68rem; line-height: 1.45; }
+    .scoreboard-page .gg-names span { overflow-wrap: anywhere; }
+
+    .scoreboard-page .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; gap: 16px; font-size: 0.68rem; color: var(--muted); }
+    .scoreboard-page .report-footer span:last-child { white-space: nowrap; }
+</style>

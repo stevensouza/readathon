@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script to FULLY RESET a contest database
-Wipes: Daily_Logs, Reader_Cumulative, Team_Color_Bonus, and ALL Upload_History
+Wipes: Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Team_Color_Bonus, and ALL Upload_History
 Preserves: Roster, Class_Info, Grade_Rules
 
 Usage: python3 clear_all_data.py readathon_2026.db
@@ -20,6 +20,7 @@ def clear_all_data(db_path):
     print("\n⚠️  WARNING: This will PERMANENTLY DELETE:")
     print("  ❌ ALL Daily_Logs records (all dates, all students)")
     print("  ❌ ALL Reader_Cumulative records (donations, sponsors, cumulative minutes)")
+    print("  ❌ ALL Reader_Cumulative_History records (saved daily snapshots)")
     print("  ❌ ALL Upload_History records (both daily AND cumulative)")
     print("  ❌ ALL Team_Color_Bonus records (team color day bonuses)")
     print("\n✅ This will PRESERVE:")
@@ -57,6 +58,9 @@ def clear_all_data(db_path):
         cursor.execute("SELECT COALESCE(SUM(donation_amount), 0) FROM Reader_Cumulative")
         total_donations = cursor.fetchone()[0]
 
+        cursor.execute("SELECT COUNT(*) FROM Reader_Cumulative_History")
+        history_count = cursor.fetchone()[0]
+
         cursor.execute("SELECT COUNT(*) FROM Upload_History")
         upload_history_count = cursor.fetchone()[0]
 
@@ -68,11 +72,12 @@ def clear_all_data(db_path):
 
         print(f"Daily_Logs: {daily_logs_count} records ({unique_dates_count} unique dates)")
         print(f"Reader_Cumulative: {reader_cumulative_count} records (${total_donations:,.2f} total donations)")
+        print(f"Reader_Cumulative_History: {history_count} records")
         print(f"Upload_History: {upload_history_count} records")
         print(f"Team_Color_Bonus: {team_color_bonus_count} records")
         print(f"Roster: {roster_count} students (will be PRESERVED)")
 
-        if daily_logs_count == 0 and reader_cumulative_count == 0 and upload_history_count == 0 and team_color_bonus_count == 0:
+        if daily_logs_count == 0 and reader_cumulative_count == 0 and history_count == 0 and upload_history_count == 0 and team_color_bonus_count == 0:
             print("\n⚠️  Database already empty - nothing to delete")
             db.close()
             return True
@@ -90,6 +95,11 @@ def clear_all_data(db_path):
         print("🗑️  Deleting Reader_Cumulative...")
         cursor.execute("DELETE FROM Reader_Cumulative")
         deleted_cumulative = cursor.rowcount
+
+        # Delete all saved daily snapshots of Reader_Cumulative
+        print("🗑️  Deleting Reader_Cumulative_History...")
+        cursor.execute("DELETE FROM Reader_Cumulative_History")
+        deleted_snapshots = cursor.rowcount
 
         # Delete ALL Upload_History (both daily and cumulative)
         print("🗑️  Deleting ALL Upload_History...")
@@ -109,6 +119,9 @@ def clear_all_data(db_path):
 
         cursor.execute("SELECT COUNT(*) FROM Reader_Cumulative")
         remaining_cumulative = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM Reader_Cumulative_History")
+        remaining_snapshots = cursor.fetchone()[0]
 
         cursor.execute("SELECT COUNT(*) FROM Upload_History")
         remaining_history = cursor.fetchone()[0]
@@ -131,11 +144,13 @@ def clear_all_data(db_path):
         print(f"\n📊 DELETED:")
         print(f"  ❌ Daily_Logs: {deleted_daily} records")
         print(f"  ❌ Reader_Cumulative: {deleted_cumulative} records")
+        print(f"  ❌ Reader_Cumulative_History: {deleted_snapshots} records")
         print(f"  ❌ Upload_History: {deleted_history} records")
         print(f"  ❌ Team_Color_Bonus: {deleted_team_color_bonus} records")
         print(f"\n📊 CLEARED (verified 0 records):")
         print(f"  ✓ Daily_Logs: {remaining_daily} records")
         print(f"  ✓ Reader_Cumulative: {remaining_cumulative} records")
+        print(f"  ✓ Reader_Cumulative_History: {remaining_snapshots} records")
         print(f"  ✓ Upload_History: {remaining_history} records")
         print(f"  ✓ Team_Color_Bonus: {remaining_team_color_bonus} records")
         print(f"\n📊 PRESERVED SYSTEM TABLES:")

@@ -105,6 +105,22 @@ CREATE_TABLE_TEAM_COLOR_BONUS = """
     )
 """
 
+# One saved copy of Reader_Cumulative per contest day (Feature 39). Every cumulative
+# upload replaces the copy for its snapshot_date, so past days' money can be shown.
+CREATE_TABLE_READER_CUMULATIVE_HISTORY = """
+    CREATE TABLE IF NOT EXISTS Reader_Cumulative_History (
+        snapshot_date TEXT NOT NULL,
+        student_name TEXT NOT NULL,
+        teacher_name TEXT,
+        team_name TEXT,
+        donation_amount REAL DEFAULT 0.0,
+        sponsors INTEGER DEFAULT 0,
+        cumulative_minutes INTEGER DEFAULT 0,
+        upload_timestamp TEXT NOT NULL,
+        PRIMARY KEY (snapshot_date, student_name)
+    )
+"""
+
 # Registry database (db/readathon_registry.db) - catalog of per-year contest databases
 SAMPLE_DB_FILENAME = 'readathon_sample.db'
 YEAR_DB_FILENAME_PATTERN = re.compile(r'readathon_(\d{4})\.db')  # one contest database per event year
@@ -122,6 +138,23 @@ CREATE_TABLE_DATABASE_REGISTRY = """
         total_days INTEGER DEFAULT 0,
         total_donations REAL DEFAULT 0.0
     )
+"""
+
+# App-wide settings (school name, contest length) - lives in the registry, not in tracked files
+CREATE_TABLE_APP_SETTINGS = """
+    CREATE TABLE IF NOT EXISTS App_Settings (
+        setting_key TEXT PRIMARY KEY,
+        setting_value TEXT,
+        updated_timestamp TEXT NOT NULL
+    )
+"""
+SELECT_APP_SETTINGS = "SELECT setting_key, setting_value FROM App_Settings"
+SELECT_COUNT_APP_SETTINGS = "SELECT COUNT(*) FROM App_Settings"
+UPSERT_APP_SETTING = """
+    INSERT INTO App_Settings (setting_key, setting_value, updated_timestamp)
+    VALUES (?, ?, ?)
+    ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value,
+                                           updated_timestamp = excluded.updated_timestamp
 """
 
 # ============================================================================
@@ -144,6 +177,8 @@ DELETE_ALL_READER_CUMULATIVE = "DELETE FROM Reader_Cumulative"
 DELETE_DAY_DATA = "DELETE FROM Daily_Logs WHERE log_date = ?"
 DELETE_UPLOAD_HISTORY_BY_DATE = "DELETE FROM Upload_History WHERE log_date = ?"
 DELETE_UPLOAD_HISTORY_CUMULATIVE = "DELETE FROM Upload_History WHERE log_date IS NULL"
+DELETE_ALL_READER_CUMULATIVE_HISTORY = "DELETE FROM Reader_Cumulative_History"
+DELETE_READER_CUMULATIVE_SNAPSHOT = "DELETE FROM Reader_Cumulative_History WHERE snapshot_date = ?"
 
 def get_delete_upload_history_batch_query(upload_ids):
     """Generate DELETE query for multiple upload history records"""
@@ -181,6 +216,14 @@ INSERT_READER_CUMULATIVE = """
     INSERT INTO Reader_Cumulative
     (student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp)
     VALUES (?, ?, ?, ?, ?, ?, ?)
+"""
+
+# Copy the current Reader_Cumulative in as the snapshot for one date
+INSERT_READER_CUMULATIVE_SNAPSHOT = """
+    INSERT INTO Reader_Cumulative_History
+    (snapshot_date, student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp)
+    SELECT ?, student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp
+    FROM Reader_Cumulative
 """
 
 INSERT_DAILY_LOGS_UPSERT = """
@@ -235,6 +278,15 @@ SELECT_COUNT_GRADE_RULES = "SELECT COUNT(*) FROM Grade_Rules"
 SELECT_COUNT_DAILY_LOGS = "SELECT COUNT(*) FROM Daily_Logs"
 SELECT_COUNT_READER_CUMULATIVE = "SELECT COUNT(*) FROM Reader_Cumulative"
 SELECT_COUNT_TEAM_COLOR_BONUS = "SELECT COUNT(*) FROM Team_Color_Bonus"
+SELECT_COUNT_READER_CUMULATIVE_HISTORY = "SELECT COUNT(*) FROM Reader_Cumulative_History"
+
+SELECT_TABLE_EXISTS = "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?"
+SELECT_LATEST_LOG_DATE = "SELECT MAX(log_date) FROM Daily_Logs"
+SELECT_SNAPSHOT_DATES = "SELECT DISTINCT snapshot_date FROM Reader_Cumulative_History ORDER BY snapshot_date"
+SELECT_SNAPSHOT_SUMMARY = """
+    SELECT COUNT(*) as row_count, COALESCE(ROUND(SUM(donation_amount), 2), 0) as total_donations
+    FROM Reader_Cumulative_History WHERE snapshot_date = ?
+"""
 
 SELECT_ALL_DATES = "SELECT DISTINCT log_date FROM Daily_Logs ORDER BY log_date DESC"
 
@@ -626,16 +678,37 @@ QUERY_Q8_STUDENT_READING_DETAILS = """
 """
 
 # ============================================================================
+# PRIZE REPORT QUERIES (Q9-Q20) - "as of" a contest date
+# ============================================================================
+# Reading-based queries take the named parameter :as_of (YYYY-MM-DD) and only
+# count Daily_Logs / Team_Color_Bonus rows on or before it; pass
+# AS_OF_ALL_DATES for the whole contest (what the Reports page shows).
+# Money-based queries read Reader_Cumulative (the latest upload) or, with
+# from_snapshot=True, the saved copy for :snapshot_date in
+# Reader_Cumulative_History.
+
+AS_OF_ALL_DATES = '9999-12-31'  # sorts after every YYYY-MM-DD date
+
+
+def _cumulative_source(from_snapshot=False):
+    """Table expression for per-student donations/sponsors (latest upload or one day's snapshot)"""
+    if from_snapshot:
+        return "(SELECT * FROM Reader_Cumulative_History WHERE snapshot_date = :snapshot_date)"
+    return "Reader_Cumulative"
+
+# ============================================================================
 # REPORT QUERIES - Q9 Most Donations by Grade
 # ============================================================================
 
-QUERY_Q9_MOST_DONATIONS_BY_GRADE = """
+def get_q9_most_donations_by_grade_query(from_snapshot=False):
+    source = _cumulative_source(from_snapshot)
+    return f"""
     WITH MaxByGrade AS (
         SELECT
             r.grade_level,
             MAX(COALESCE(rc.donation_amount, 0)) as max_donation
         FROM Roster r
-        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        LEFT JOIN {source} rc ON r.student_name = rc.student_name
         GROUP BY r.grade_level
     )
     SELECT
@@ -646,7 +719,7 @@ QUERY_Q9_MOST_DONATIONS_BY_GRADE = """
         r.team_name,
         r.class_name
     FROM Roster r
-    LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+    LEFT JOIN {source} rc ON r.student_name = rc.student_name
     INNER JOIN MaxByGrade mbg ON r.grade_level = mbg.grade_level
         AND COALESCE(rc.donation_amount, 0) = mbg.max_donation
     WHERE mbg.max_donation > 0
@@ -667,7 +740,7 @@ QUERY_Q10_MOST_MINUTES_BY_GRADE = """
             SUM(MIN(dl.minutes_read, 120)) as total_minutes_capped,
             COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated
         FROM Roster r
-        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
         GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name
     ),
     MaxByGrade AS (
@@ -695,13 +768,15 @@ QUERY_Q10_MOST_MINUTES_BY_GRADE = """
 # REPORT QUERIES - Q11 Most Sponsors by Grade
 # ============================================================================
 
-QUERY_Q11_MOST_SPONSORS_BY_GRADE = """
+def get_q11_most_sponsors_by_grade_query(from_snapshot=False):
+    source = _cumulative_source(from_snapshot)
+    return f"""
     WITH MaxByGrade AS (
         SELECT
             r.grade_level,
             MAX(COALESCE(rc.sponsors, 0)) as max_sponsors
         FROM Roster r
-        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        LEFT JOIN {source} rc ON r.student_name = rc.student_name
         GROUP BY r.grade_level
     )
     SELECT
@@ -712,7 +787,7 @@ QUERY_Q11_MOST_SPONSORS_BY_GRADE = """
         r.team_name,
         r.class_name
     FROM Roster r
-    LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+    LEFT JOIN {source} rc ON r.student_name = rc.student_name
     INNER JOIN MaxByGrade mbg ON r.grade_level = mbg.grade_level
         AND COALESCE(rc.sponsors, 0) = mbg.max_sponsors
     WHERE mbg.max_sponsors > 0
@@ -727,12 +802,14 @@ QUERY_Q12_BEST_CLASS_BY_GRADE = """
     WITH TotalDays AS (
         SELECT COUNT(DISTINCT log_date) as total_days
         FROM Daily_Logs
+        WHERE log_date <= :as_of
     ),
     BonusData AS (
         SELECT
             class_name,
             SUM(bonus_participation_points) as total_bonus
         FROM Team_Color_Bonus
+        WHERE event_date <= :as_of
         GROUP BY class_name
     ),
     ClassStats AS (
@@ -752,7 +829,7 @@ QUERY_Q12_BEST_CLASS_BY_GRADE = """
         FROM Roster r
         INNER JOIN Class_Info ci ON r.class_name = ci.class_name
         CROSS JOIN TotalDays td
-        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
         LEFT JOIN BonusData bd ON r.class_name = bd.class_name
         GROUP BY r.class_name, r.teacher_name, r.grade_level, r.team_name, ci.total_students, td.total_days, bd.total_bonus
         HAVING td.total_days > 0
@@ -784,12 +861,14 @@ QUERY_Q13_OVERALL_BEST_CLASS = """
     WITH TotalDays AS (
         SELECT COUNT(DISTINCT log_date) as total_days
         FROM Daily_Logs
+        WHERE log_date <= :as_of
     ),
     BonusData AS (
         SELECT
             class_name,
             SUM(bonus_participation_points) as total_bonus
         FROM Team_Color_Bonus
+        WHERE event_date <= :as_of
         GROUP BY class_name
     )
     SELECT
@@ -806,7 +885,7 @@ QUERY_Q13_OVERALL_BEST_CLASS = """
     FROM Roster r
     INNER JOIN Class_Info ci ON r.class_name = ci.class_name
     CROSS JOIN TotalDays td
-    LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+    LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
     LEFT JOIN BonusData bd ON r.class_name = bd.class_name
     GROUP BY r.class_name, r.teacher_name, r.grade_level, r.team_name, ci.total_students, td.total_days, bd.total_bonus
     HAVING td.total_days > 0
@@ -821,6 +900,7 @@ QUERY_Q14_TEAM_PARTICIPATION = """
     WITH TotalDays AS (
         SELECT COUNT(DISTINCT log_date) as total_days
         FROM Daily_Logs
+        WHERE log_date <= :as_of
     ),
     TeamBonusData AS (
         SELECT
@@ -828,6 +908,7 @@ QUERY_Q14_TEAM_PARTICIPATION = """
             SUM(tcb.bonus_participation_points) as total_bonus
         FROM Team_Color_Bonus tcb
         INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+        WHERE tcb.event_date <= :as_of
         GROUP BY ci.team_name
     )
     SELECT
@@ -843,7 +924,7 @@ QUERY_Q14_TEAM_PARTICIPATION = """
               (COUNT(DISTINCT r.student_name) * td.total_days), 2) as avg_participation_rate_with_color
     FROM Roster r
     CROSS JOIN TotalDays td
-    LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+    LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
     LEFT JOIN TeamBonusData tbd ON r.team_name = tbd.team_name
     GROUP BY r.team_name, td.total_days, tbd.total_bonus
     HAVING td.total_days > 0
@@ -858,6 +939,7 @@ QUERY_Q15_GOAL_GETTERS = """
     WITH TotalDays AS (
         SELECT COUNT(DISTINCT log_date) as total_days
         FROM Daily_Logs
+        WHERE log_date <= :as_of
     ),
     StudentGoalDays AS (
         SELECT
@@ -870,7 +952,7 @@ QUERY_Q15_GOAL_GETTERS = """
             td.total_days
         FROM Roster r
         CROSS JOIN TotalDays td
-        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
         LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
         GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name, td.total_days
         HAVING days_met_goal = td.total_days AND days_with_data = td.total_days
@@ -886,17 +968,21 @@ QUERY_Q15_GOAL_GETTERS = """
     ORDER BY grade_level ASC, student_name ASC
 """
 
+SELECT_TOTAL_DAYS_AS_OF = "SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE log_date <= :as_of"
+
 # ============================================================================
 # REPORT QUERIES - Q16 Top Earner Per Team
 # ============================================================================
 
-QUERY_Q16_TOP_EARNER_PER_TEAM = """
+def get_q16_top_earner_per_team_query(from_snapshot=False):
+    source = _cumulative_source(from_snapshot)
+    return f"""
     WITH MaxByTeam AS (
         SELECT
             r.team_name,
             MAX(COALESCE(rc.donation_amount, 0)) as max_donation
         FROM Roster r
-        LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+        LEFT JOIN {source} rc ON r.student_name = rc.student_name
         GROUP BY r.team_name
     )
     SELECT
@@ -907,7 +993,7 @@ QUERY_Q16_TOP_EARNER_PER_TEAM = """
         r.grade_level,
         r.class_name
     FROM Roster r
-    LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+    LEFT JOIN {source} rc ON r.student_name = rc.student_name
     INNER JOIN MaxByTeam mbt ON r.team_name = mbt.team_name
         AND COALESCE(rc.donation_amount, 0) = mbt.max_donation
     WHERE mbt.max_donation > 0
@@ -922,12 +1008,14 @@ QUERY_Q18_LEAD_CLASS_BY_GRADE = """
     WITH TotalDays AS (
         SELECT COUNT(DISTINCT log_date) as total_days
         FROM Daily_Logs
+        WHERE log_date <= :as_of
     ),
     BonusData AS (
         SELECT
             class_name,
             SUM(bonus_participation_points) as total_bonus
         FROM Team_Color_Bonus
+        WHERE event_date <= :as_of
         GROUP BY class_name
     ),
     ClassStats AS (
@@ -948,7 +1036,7 @@ QUERY_Q18_LEAD_CLASS_BY_GRADE = """
         FROM Roster r
         INNER JOIN Class_Info ci ON r.class_name = ci.class_name
         CROSS JOIN TotalDays td
-        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
         LEFT JOIN BonusData bd ON r.class_name = bd.class_name
         GROUP BY r.class_name, r.teacher_name, r.grade_level, r.team_name, ci.total_students, td.total_days, bd.total_bonus
         HAVING td.total_days > 0
@@ -986,6 +1074,7 @@ QUERY_Q19_TEAM_MINUTES = """
             SUM(tcb.bonus_minutes) as total_bonus
         FROM Team_Color_Bonus tcb
         INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+        WHERE tcb.event_date <= :as_of
         GROUP BY ci.team_name
     ),
     TeamTotals AS (
@@ -1000,7 +1089,7 @@ QUERY_Q19_TEAM_MINUTES = """
             ROUND(1.0 * COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) / COUNT(DISTINCT r.student_name), 1) as avg_minutes_per_student,
             ROUND(1.0 * (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(tbm.total_bonus, 0)) / COUNT(DISTINCT r.student_name), 1) as avg_minutes_per_student_with_color
         FROM Roster r
-        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
         LEFT JOIN TeamBonusMinutes tbm ON r.team_name = tbm.team_name
         GROUP BY r.team_name, tbm.total_bonus
     ),
@@ -1039,7 +1128,9 @@ QUERY_Q19_TEAM_MINUTES = """
 # REPORT QUERIES - Q20 Team Donations
 # ============================================================================
 
-QUERY_Q20_TEAM_DONATIONS = """
+def get_q20_team_donations_query(from_snapshot=False):
+    source = _cumulative_source(from_snapshot)
+    return f"""
     SELECT
         r.team_name,
         ROUND(SUM(COALESCE(rc.donation_amount, 0)), 2) as total_donations,
@@ -1047,9 +1138,95 @@ QUERY_Q20_TEAM_DONATIONS = """
         COUNT(DISTINCT r.student_name) as total_students,
         ROUND(SUM(COALESCE(rc.donation_amount, 0)) / COUNT(DISTINCT r.student_name), 2) as avg_donation_per_student
     FROM Roster r
-    LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
+    LEFT JOIN {source} rc ON r.student_name = rc.student_name
     GROUP BY r.team_name
     ORDER BY total_donations DESC
+"""
+
+# ============================================================================
+# SCOREBOARD QUERIES (Feature 39) - whole-school and single-day figures
+# ============================================================================
+
+# Whole school as of :as_of - same definitions as the team card (Q14/Q19):
+# average daily participation incl. color-bonus points, capped minutes incl. bonus minutes
+QUERY_SCHOOL_TOTALS_AS_OF = """
+    SELECT
+        (SELECT COUNT(*) FROM Roster) as total_students,
+        (SELECT COUNT(DISTINCT log_date) FROM Daily_Logs WHERE log_date <= :as_of) as total_days,
+        (SELECT COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || dl.student_name END)
+           FROM Daily_Logs dl INNER JOIN Roster r ON r.student_name = dl.student_name
+           WHERE dl.log_date <= :as_of) as participations_base,
+        (SELECT COALESCE(SUM(MIN(dl.minutes_read, 120)), 0)
+           FROM Daily_Logs dl INNER JOIN Roster r ON r.student_name = dl.student_name
+           WHERE dl.log_date <= :as_of) as minutes_base,
+        (SELECT COALESCE(SUM(bonus_participation_points), 0) FROM Team_Color_Bonus WHERE event_date <= :as_of) as bonus_points,
+        (SELECT COALESCE(SUM(bonus_minutes), 0) FROM Team_Color_Bonus WHERE event_date <= :as_of) as bonus_minutes
+"""
+
+# One contest day (:day) per team: readers that day, capped minutes that day, that day's color bonus
+QUERY_TEAM_DAY_FIGURES = """
+    WITH DayBonus AS (
+        SELECT
+            ci.team_name,
+            SUM(tcb.bonus_participation_points) as bonus_points,
+            SUM(tcb.bonus_minutes) as bonus_minutes
+        FROM Team_Color_Bonus tcb
+        INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
+        WHERE tcb.event_date = :day
+        GROUP BY ci.team_name
+    )
+    SELECT
+        r.team_name,
+        COUNT(DISTINCT r.student_name) as total_students,
+        COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN r.student_name END) as readers,
+        COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as minutes_base,
+        COALESCE(db.bonus_points, 0) as bonus_points,
+        COALESCE(db.bonus_minutes, 0) as bonus_minutes
+    FROM Roster r
+    LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date = :day
+    LEFT JOIN DayBonus db ON r.team_name = db.team_name
+    GROUP BY r.team_name, db.bonus_points, db.bonus_minutes
+    ORDER BY r.team_name
+"""
+
+SELECT_DISTINCT_TEAM_NAMES = "SELECT DISTINCT team_name FROM Roster ORDER BY team_name"
+SELECT_DISTINCT_GRADE_LEVELS = "SELECT DISTINCT grade_level FROM Roster"
+SELECT_TEACHERS_WITH_MULTIPLE_CLASSES = "SELECT teacher_name FROM Class_Info GROUP BY teacher_name HAVING COUNT(*) > 1"
+
+SELECT_SCHOOL_DONATIONS_SNAPSHOT = """
+    SELECT COALESCE(ROUND(SUM(h.donation_amount), 2), 0) as total_donations
+    FROM Reader_Cumulative_History h
+    INNER JOIN Roster r ON r.student_name = h.student_name
+    WHERE h.snapshot_date = :snapshot_date
+"""
+
+# ============================================================================
+# REPORT QUERIES - Q25 Fundraising by Day (Reader_Cumulative_History)
+# ============================================================================
+
+QUERY_Q25_FUNDRAISING_BY_DAY = """
+    WITH Daily AS (
+        SELECT
+            snapshot_date,
+            ROUND(SUM(donation_amount), 2) as total_donations,
+            SUM(sponsors) as total_sponsors,
+            SUM(CASE WHEN donation_amount > 0 THEN 1 ELSE 0 END) as students_with_donations,
+            COUNT(*) as students_in_upload,
+            MAX(upload_timestamp) as uploaded_at
+        FROM Reader_Cumulative_History
+        GROUP BY snapshot_date
+    )
+    SELECT
+        snapshot_date,
+        total_donations,
+        ROUND(total_donations - LAG(total_donations) OVER (ORDER BY snapshot_date), 2) as donations_added,
+        total_sponsors,
+        total_sponsors - LAG(total_sponsors) OVER (ORDER BY snapshot_date) as sponsors_added,
+        students_with_donations,
+        students_in_upload,
+        uploaded_at
+    FROM Daily
+    ORDER BY snapshot_date ASC
 """
 
 # ============================================================================
@@ -2266,10 +2443,14 @@ def get_db_comparison_school_sponsors(date_filter=None):
     """
 
 def get_db_comparison_school_participation(date_filter=None):
-    """Get school-wide participation percentage and top class"""
-    date_where = ""
+    """Get school-wide participation percentage and top class
+
+    The date filter sits in the JOIN (not WHERE) so students with no reading yet
+    still count in the denominator.
+    """
+    date_join = ""
     if date_filter and date_filter != 'all':
-        date_where = f"AND dl.log_date <= '{date_filter}'"
+        date_join = f"AND dl.log_date <= '{date_filter}'"
 
     return f"""
         WITH SchoolParticipation AS (
@@ -2278,8 +2459,7 @@ def get_db_comparison_school_participation(date_filter=None):
                 COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) as participating_count,
                 COUNT(DISTINCT r.student_name) as total_count
             FROM Roster r
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            WHERE 1=1 {date_where}
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_join}
         ),
         TopClass AS (
             SELECT
@@ -2290,8 +2470,7 @@ def get_db_comparison_school_participation(date_filter=None):
                 COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / NULLIF(ci.total_students, 0) as class_participation
             FROM Class_Info ci
             LEFT JOIN Roster r ON ci.class_name = r.class_name
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            WHERE 1=1 {date_where}
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_join}
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students
             ORDER BY class_participation DESC
             LIMIT 1
@@ -2734,8 +2913,10 @@ def get_db_comparison_class_top(metric, date_filter=None):
 def get_db_comparison_school_avg_participation(date_filter=None):
     """Get school-wide average participation % with color bonus"""
     date_where = ""
+    bonus_where = ""
     if date_filter and date_filter != 'all':
         date_where = f"AND dl.log_date <= '{date_filter}'"
+        bonus_where = f"WHERE event_date <= '{date_filter}'"
 
     return f"""
         WITH TotalDays AS (
@@ -2746,6 +2927,7 @@ def get_db_comparison_school_avg_participation(date_filter=None):
         ColorBonus AS (
             SELECT COALESCE(SUM(bonus_participation_points), 0) as total_bonus
             FROM Team_Color_Bonus
+            {bonus_where}
         )
         SELECT
             ROUND(100.0 * COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || dl.student_name END) /
@@ -2758,8 +2940,8 @@ def get_db_comparison_school_avg_participation(date_filter=None):
         FROM Roster r
         CROSS JOIN TotalDays td
         CROSS JOIN ColorBonus cb
-        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-        WHERE td.total_days > 0 {date_where}
+        LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+        WHERE td.total_days > 0
     """
 
 def get_db_comparison_school_goal_met(date_filter=None):
@@ -2774,9 +2956,8 @@ def get_db_comparison_school_goal_met(date_filter=None):
                 r.student_name,
                 MAX(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 ELSE 0 END) as met_goal
             FROM Roster r
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
             LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
-            WHERE 1=1 {date_where}
             GROUP BY r.student_name
         )
         SELECT

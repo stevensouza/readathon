@@ -90,6 +90,10 @@ GLOBAL_TERMS = {
         'definition': 'The Reader_Cumulative database table containing summary totals for each student: total cumulative minutes read, total donations raised, and sponsor information. Downloaded as a single cumulative stats file from the online system. May include minutes from non-sanctioned dates if parents entered them.',
         'see_also': ['Daily Logs', 'Cumulative']
     },
+    'Snapshot': {
+        'definition': 'A saved copy of the cumulative upload (donations, sponsors, minutes per student) for one contest day, kept in the Reader_Cumulative_History table. Each cumulative upload is saved under the contest day it covers; uploading again for the same day replaces that day. Lets reports and scoreboards show money raised as of a past day.',
+        'see_also': ['Reader Cumulative', 'Donations / Sponsors']
+    },
     'Roster': {
         'definition': 'The master list of all students in the school, stored in the Roster database table. Includes each student\'s name, class, teacher, team, and grade level. This is the authoritative source for student information and is used to join data from Daily_Logs and Reader_Cumulative.',
         'see_also': ['Student']
@@ -890,6 +894,46 @@ COLUMN_METADATA = {
             'description': 'OK if student exists in Roster, MISSING_FROM_ROSTER if they have reading data but no roster entry'
         }
     },
+    'q25': {
+        'snapshot_date': {
+            'source': 'Reader_Cumulative_History.snapshot_date',
+            'description': 'Contest day the cumulative upload covers (chosen on the Upload page; the latest upload for a day replaces that day)'
+        },
+        'total_donations': {
+            'source': 'Reader_Cumulative_History.donation_amount',
+            'formula': 'SUM(donation_amount)',
+            'description': 'Total money raised school-wide as of this day'
+        },
+        'donations_added': {
+            'source': 'Calculated',
+            'formula': 'total_donations - previous snapshot total_donations',
+            'description': 'Money added since the previous saved day (blank for the first saved day)'
+        },
+        'total_sponsors': {
+            'source': 'Reader_Cumulative_History.sponsors',
+            'formula': 'SUM(sponsors)',
+            'description': 'Total sponsors school-wide as of this day'
+        },
+        'sponsors_added': {
+            'source': 'Calculated',
+            'formula': 'total_sponsors - previous snapshot total_sponsors',
+            'description': 'Sponsors added since the previous saved day (blank for the first saved day)'
+        },
+        'students_with_donations': {
+            'source': 'Reader_Cumulative_History.donation_amount',
+            'formula': 'COUNT(donation_amount > 0)',
+            'description': 'Students who had raised any money as of this day'
+        },
+        'students_in_upload': {
+            'source': 'Reader_Cumulative_History',
+            'formula': 'COUNT(*)',
+            'description': 'Rows in the cumulative upload saved for this day'
+        },
+        'uploaded_at': {
+            'source': 'Reader_Cumulative_History.upload_timestamp',
+            'description': 'When the copy for this day was uploaded'
+        }
+    },
 }
 
 # ============================================================================
@@ -1337,6 +1381,7 @@ REPORT_TERM_SETS = {
     'q18': ['Class', 'Grade Level', 'Participation', 'Team'],
     'q19': ['Team', 'Cumulative', 'Reader Cumulative'],
     'q20': ['Team', 'Donations / Sponsors', 'Reader Cumulative'],
+    'q25': ['Snapshot', 'Donations / Sponsors', 'Reader Cumulative'],
 }
 
 
