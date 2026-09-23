@@ -39,8 +39,8 @@ This index helps you find features by **what they do**, not by feature number. U
 - **[Database Creation Tool](features/feature-35-database-creation-tool.md)** - Web UI to create new databases (empty, clone, or sample data)
 
 ### 📱 Slides & Presentations
-- **[Scoreboards](features/feature-39-scoreboards.md)** - Daily Scoreboard + Prize Scoreboard, emailable as an image (supersedes Slides Tab)
-- **[Slides Tab](features/feature-21-slides-tab-new.md)** - Presentation mode for read-a-thon slides
+- **[Scoreboards](features/feature-39-scoreboards.md)** - Daily Scoreboard + Prize Scoreboard, emailable as an image (✅ built in v2026.16.0; supersedes Slides Tab)
+- **[Slides Tab](features/feature-21-slides-tab-new.md)** - Presentation mode for read-a-thon slides (superseded by Scoreboards)
 - **[Slide Column Indicators](features/feature-11-slide-column-indicators.md)** - Visual indicators for slide columns
 
 ### 📚 Documentation & Help
@@ -97,7 +97,7 @@ This index helps you find features by **what they do**, not by feature number. U
 | Save Error/Warning Messages | [feature-18-save-errorwarning-messages.md](features/feature-18-save-errorwarning-messages.md) | TBD | Medium |
 | Selective Table Clearing | [feature-29-selective-table-clearing.md](features/feature-29-selective-table-clearing.md) | NEW | Medium |
 | Slide Column Indicators | [feature-11-slide-column-indicators.md](features/feature-11-slide-column-indicators.md) | TBD | Low |
-| Slides Tab | [feature-21-slides-tab-new.md](features/feature-21-slides-tab-new.md) | New | Medium |
+| Slides Tab | [feature-21-slides-tab-new.md](features/feature-21-slides-tab-new.md) | SUPERSEDED (by Scoreboards) | Medium |
 | Table Selection Capability | [feature-15-table-selection-capability.md](features/feature-15-table-selection-capability.md) | TBD | Low |
 | Upload Audit Trail System | [feature-28-upload-audit-trail-system-completed.md](features/feature-28-upload-audit-trail-system-completed.md) | ✅ COMPLETED | High |
 | Upload Screen Redesign | [feature-05-upload-screen-redesign.md](features/feature-05-upload-screen-redesign.md) | TBD | Medium |
@@ -110,7 +110,7 @@ This index helps you find features by **what they do**, not by feature number. U
 | Database Comparison Tool | [feature-34-database-comparison-tool.md](features/feature-34-database-comparison-tool.md) | NEW | Medium-High |
 | Database Creation Tool | [feature-35-database-creation-tool.md](features/feature-35-database-creation-tool.md) | NEW | Medium-High |
 | Tag-Based Reporting System | [feature-38-tag-based-reporting-system.md](features/feature-38-tag-based-reporting-system.md) | FUTURE | High |
-| Scoreboards | [feature-39-scoreboards.md](features/feature-39-scoreboards.md) | PROTOTYPE | High |
+| Scoreboards | [feature-39-scoreboards.md](features/feature-39-scoreboards.md) | ✅ COMPLETED (v2026.16.0) | High |
 
 ---
 

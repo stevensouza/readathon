@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% import "_scoreboard_macros.html" as sb %}
+
+{% block title %}Daily Scoreboard - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}{% include "_scoreboard_styles.html" %}{% endblock %}
+
+{% block content %}
+<div class="scoreboard-page">
+
+{{ sb.toolbar(calendar, url_for('daily_scoreboard', day=calendar.day, draw=drawing_number + 1) if board else None) }}
+
+<div class="page" id="report">
+{% if not board %}
+    {{ sb.no_data(masthead, 'Daily Scoreboard') }}
+{% else %}
+
+    <div class="masthead">
+        <div class="mh-title">
+            <h1>{{ masthead.title }}</h1>
+            <div class="report-name">{{ masthead.year }} Daily Scoreboard</div>
+            <div class="subtitle">Results through {{ calendar.date_short }}</div>
+        </div>
+        <div class="mh-medallion">
+            <div class="num">{{ board.medallion }}</div>
+            <div class="label">Of Students Read<br>at Least 1 Day</div>
+        </div>
+        {{ sb.masthead_day(calendar) }}
+    </div>
+
+    <div class="section">
+        <div class="twin-cols">
+            <div>
+                <div class="section-header-v3">
+                    <span class="cat">Students</span>
+                    <span class="desc">Daily Prize Winners &middot; Drawing #{{ board.drawing_number }}</span>
+                    <div class="rule"></div>
+                </div>
+                <table class="report-table" id="winners-table">
+                    <thead><tr><th>Grade</th><th>Winner</th></tr></thead>
+                    <tbody>
+                        {% for w in board.winners %}
+                        <tr><td>{{ w.grade }}</td><td>{% if w.student_name %}{{ w.student_name }}{% else %}<span class="empty-note">No one met the goal</span>{% endif %}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-rule"></div>
+            <div>
+                <div class="section-header-v3">
+                    <span class="cat">Classes</span>
+                    <span class="desc">Highest Participation % by Grade, Cumulative</span>
+                    <div class="rule"></div>
+                </div>
+                <table class="report-table" id="classes-table">
+                    <thead><tr><th>Grade</th><th>Class</th><th class="num-col">Participation %</th></tr></thead>
+                    <tbody>
+                        {% for c in board.classes %}
+                        <tr><td>{{ c.grade }}</td><td>{{ c.class_label }}{% if c.school_top %} <span class="school-winner"><i class="bi bi-star-fill"></i> Top</span>{% endif %}</td><td class="num-col">{{ c.participation }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if board.teams %}
+    <div class="section">
+        <div class="section-header-v3">
+            <span class="cat">Teams</span>
+            <span class="desc">Head-to-Head, Cumulative</span>
+            <div class="rule"></div>
+        </div>
+        <div class="scoreboard" id="teams-scoreboard">
+            {% for team in board.teams %}
+            <div class="score-panel {{ team.css }}">
+                <div class="team-label"><i class="bi {{ team.icon }}"></i> {{ team.label }}</div>
+                {% for row in team.rows %}
+                <div class="score-row"><span class="metric-label">{{ row.label }}{% if row.delta %}<span class="metric-delta">{{ row.delta }}</span>{% endif %}</span>{{ sb.value_with_trophy(row.value, row.na, row.trophy) }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <div class="vs-badge">VS</div>
+        </div>
+        {% if board.teams_money_note %}<div class="scoreboard-note">{{ board.teams_money_note }}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if board.showdown %}{{ sb.showdown(board.showdown) }}{% endif %}
+
+    {{ sb.footer(masthead) }}
+{% endif %}
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}{{ sb.capture_script('daily_scoreboard', calendar.day) }}{% endblock %}

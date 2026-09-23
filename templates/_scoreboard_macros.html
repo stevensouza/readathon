@@ -1,0 +1,135 @@
+{# Shared scoreboard pieces (Feature 39). Layout matches the approved prototypes. #}
+
+{# Controls sit outside .page: "Copy as image" captures only .page, so the emailed image never shows pickers or buttons #}
+{% macro toolbar(calendar, redraw_href=None) %}
+<div class="toolbar">
+    {% if calendar.options %}
+    <span class="tb-label">As of</span>
+    <select id="day-picker" class="form-select form-select-sm w-auto" onchange="pickDay(this.value)">
+        {% for opt in calendar.options %}
+        <option value="{{ opt.day }}" {% if opt.day == calendar.day %}selected{% endif %}>{{ opt.label }}</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+    {% if redraw_href %}
+    <a id="redraw-btn" class="btn btn-sm btn-outline-secondary" href="{{ redraw_href }}"><i class="bi bi-shuffle"></i> Redraw prize winners</a>
+    {% endif %}
+    <span class="tb-spacer"></span>
+    <span id="tb-status" class="tb-status"></span>
+    {% if calendar.options %}
+    <button id="copy-btn" class="btn btn-sm btn-primary"><i class="bi bi-clipboard-check"></i> Copy as image</button>
+    <button id="download-btn" class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i> Download PNG</button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# Right side of the masthead: Day N of TOTAL + date #}
+{% macro masthead_day(calendar) %}
+<div class="mh-day">
+    <div class="day">Day {{ calendar.day }} of {{ calendar.total_days }}</div>
+    <div class="date">{{ calendar.date_long }}</div>
+</div>
+{% endmacro %}
+
+{# Value + trophy slot: every row reserves the same slot so numbers line up #}
+{% macro value_with_trophy(value, na=False, trophy=False, name_detail=None) %}
+<span class="metric-val-wrap">
+    {% if name_detail is not none %}
+    <span class="metric-val name{% if na %} na{% endif %}">{{ value }}<small>{{ name_detail }}</small></span>
+    {% else %}
+    <span class="metric-val{% if na %} na{% endif %}">{{ value }}</span>
+    {% endif %}
+    {% if trophy %}<span class="win-trophy-badge"><i class="bi bi-trophy-fill"></i></span>{% else %}<span class="trophy-slot"></span>{% endif %}
+</span>
+{% endmacro %}
+
+{# 2026 vs 2025 Showdown: whole school, this year (navy) vs last year (slate) #}
+{% macro showdown(sd) %}
+<div class="section">
+    <div class="section-header-v3">
+        <span class="cat">{{ sd.year }} vs {{ sd.prior_year }} Showdown</span>
+        {% if sd.final %}
+        <span class="desc">Whole school, final totals</span>
+        {% else %}
+        <span class="desc">Whole school, Day {{ sd.day }} this year vs Day {{ sd.day }} last year</span>
+        {% endif %}
+        <div class="rule"></div>
+    </div>
+    <div class="scoreboard years">
+        <div class="score-panel year-now">
+            <div class="team-label"><i class="bi bi-rocket-takeoff-fill"></i> {{ sd.year }}</div>
+            {% for row in sd.rows %}
+            <div class="score-row"><span class="metric-label">{{ row.label }}</span>{{ value_with_trophy(row.now, row.now_na, row.now_trophy) }}</div>
+            {% endfor %}
+        </div>
+        <div class="score-panel year-past">
+            <div class="team-label"><i class="bi bi-clock-history"></i> {{ sd.prior_year }}</div>
+            {% for row in sd.rows %}
+            <div class="score-row"><span class="metric-label">{{ row.label }}</span>{{ value_with_trophy(row.past, row.past_na, row.past_trophy) }}</div>
+            {% endfor %}
+        </div>
+        <div class="vs-badge">VS</div>
+    </div>
+    {% for note in sd.notes %}
+    <div class="scoreboard-note">{{ note }}</div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro footer(masthead) %}
+<div class="report-footer">
+    <span>Read-a-Thon {{ masthead.year }} &middot; minutes capped at 120 per day, team color bonus included</span>
+    <span>Generated {{ masthead.generated }}</span>
+</div>
+{% endmacro %}
+
+{% macro no_data(masthead, report_name) %}
+<div class="masthead">
+    <div class="mh-title">
+        <h1>{{ masthead.title }}</h1>
+        <div class="report-name">{{ masthead.year }} {{ report_name }}</div>
+        <div class="subtitle">No reading data yet</div>
+    </div>
+</div>
+<div class="section">
+    <p class="empty-note">This scoreboard fills in once the first day of reading minutes is uploaded (Upload &rarr; Daily Minutes).</p>
+</div>
+{% endmacro %}
+
+{# Day picker navigation and Copy as image / Download PNG (captures only .page) #}
+{% macro capture_script(file_prefix, day) %}
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js" crossorigin="anonymous"></script>
+<script>
+    function pickDay(day) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('day', day);
+        url.searchParams.delete('draw');  // a new day starts at drawing #1
+        window.location.href = url.toString();
+    }
+
+    (function () {
+        const copyBtn = document.getElementById('copy-btn');
+        if (!copyBtn) return;
+        const status = document.getElementById('tb-status');
+        const capture = () => htmlToImage.toBlob(document.getElementById('report'), { pixelRatio: 2, backgroundColor: '#ffffff', style: { margin: '0' } });
+        function flash(msg) { status.textContent = msg; setTimeout(() => status.textContent = '', 3000); }
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': capture() })]);
+                flash('Copied — paste into your email');
+            } catch (e) {
+                flash('Copy not allowed here — use Download PNG');
+            }
+        });
+        document.getElementById('download-btn').addEventListener('click', async () => {
+            const blob = await capture();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '{{ file_prefix }}_day{{ day }}.png';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+    })();
+</script>
+{% endmacro %}

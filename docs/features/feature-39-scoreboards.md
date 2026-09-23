@@ -4,7 +4,7 @@
 
 ---
 
-**Status:** PROTOTYPE APPROVED — not yet built into the app
+**Status:** ✅ BUILT in v2026.16.0 — `/scoreboards/daily`, `/scoreboards/prize` (menu 🏆 Scoreboards). See "As built" at the end.
 **Priority:** High (the daily scoreboard is the key daily deliverable during the contest)
 **Type:** New pages
 **Supersedes:** [Feature 21: Slides Tab](feature-21-slides-tab-new.md) (clipboard cards for Google Slides) — the format no longer has to be a slide deck.
@@ -115,3 +115,38 @@ Gaps to close:
 - Suggested order: upload history table → as-of-date filters on the source methods → Daily Scoreboard → Prize Scoreboard → school-name setting → nav menu.
 - Tests modeled on `tests/test_school_page.py` (mandatory list in `md/RULES.md`), run against the sample DB; for the drawing, assert the winner belongs to the eligible pool and is stable for the same (date, drawing #). Include a test that a missing prior-year value renders "Not available".
 - Docs: `md/RULES.md` (data rules above), `md/UI_PATTERNS.md` (scoreboard components), `templates/help.html`, `md/CHANGELOG.md` + `VERSION` minor bump; mark Feature 21 superseded.
+
+## As built (v2026.16.0)
+
+Where things live:
+
+| Piece | Location |
+|---|---|
+| Page data (as-of logic, trophies, ties, footnotes) | `scoreboards.py` (`build_daily_scoreboard`, `build_prize_scoreboard`, `build_showdown`) |
+| Routes | `app.py`: `/scoreboards/daily?day=N&draw=N`, `/scoreboards/prize?day=N`, `/api/settings` |
+| Templates | `templates/daily_scoreboard.html`, `prize_scoreboard.html`, shared `_scoreboard_styles.html` (prototype CSS scoped under `.scoreboard-page`) and `_scoreboard_macros.html` (toolbar, showdown, image capture) |
+| As-of queries | `queries.py` "PRIZE REPORT QUERIES (Q9-Q20)": `:as_of` named parameter (`AS_OF_ALL_DATES` = whole contest); money queries read `Reader_Cumulative_History` with `from_snapshot=True` |
+| Snapshots | `Reader_Cumulative_History` (created + backfilled in `ReadathonDB.initialize_database`), written by `upload_cumulative_stats(..., snapshot_date)` |
+| Settings | `App_Settings` table in the registry (`school_name`, `contest_days`, default 10); Admin → Actions → Scoreboard Settings |
+| New report | Q25 Fundraising by Day (one row per snapshot, $ added since the previous one) |
+| Tests | `tests/test_scoreboards_page.py` |
+
+Decisions made while building:
+
+- **Contest days:** one app-wide setting (default 10). "Day N of T" uses `max(setting, days uploaded)`; the Prize
+  Scoreboard switches to "Final Prize Winners" when the as-of day reaches it. Day N is always the Nth uploaded date,
+  so skipped weekends never count and no start/end dates are needed.
+- **Latest day = whole contest** for reading data, so the latest scoreboard equals the Reports page exactly (a color
+  bonus uploaded with a later date still counts). Earlier days count data through that day only.
+- **Money is exact-day:** a day without its own snapshot shows "Not available\*" (no carrying forward an older
+  upload), which also flags a forgotten cumulative upload.
+- **Snapshot date** defaults to the latest `Daily_Logs` date (the Day N file is often uploaded the morning of Day N+1)
+  and is editable on the Upload page; a date with no daily minutes asks for confirmation.
+- **Class prizes are per class** (`class_name`): half-day kindergarten AM and PM classes compete separately and are
+  labeled "Teacher AM" / "Teacher PM" (any class named "<teacher> am/pm", as on the 2025 prize slides).
+- **Prize wording** comes from each report's `note` (e.g. "Grandpa Joe's $25 Gift Card"), except Team Participation
+  and Goal Getters, which use the wording above.
+- **"Today" participation** includes that day's color-bonus points, so it can exceed 100% on a color day (same rule as
+  Avg. Participation (With Color)).
+- Fixed on the way: the database comparison's date filter dropped students who hadn't read yet from the
+  participation denominator (and counted color bonus from after the date); the medallion uses that query.

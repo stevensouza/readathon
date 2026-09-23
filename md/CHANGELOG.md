@@ -9,6 +9,37 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.16.0] - 2026-09-23 - Scoreboards
+
+### Added
+- **🏆 Scoreboards** menu (Feature 39) replacing the hand-built daily PowerPoint and the prize deck:
+  - **Daily Scoreboard** (`/scoreboards/daily`): % of students who read at least 1 day, daily prize drawing winner
+    per grade, top class per grade, team head-to-head (participation, minutes, money raised, with today's figures and
+    trophies), and a this-year vs last-year Showdown for the same contest day
+  - **Prize Scoreboard** (`/scoreboards/prize`): all eight prizes as of any day ("Prize Leaders") or at the end
+    ("Final Prize Winners"); every tied winner is listed
+  - "As of" day picker, **Copy as image** and **Download PNG** (the image contains only the scoreboard)
+  - Daily drawing is repeatable (seeded by date + drawing #); **Redraw** picks new winners and prints "Drawing #N"
+- **Money raised as of any day:** every cumulative upload is also saved under a **snapshot date** (new
+  `Reader_Cumulative_History` table; Upload page field, defaults to the latest day with minutes; uploading again for
+  the same day replaces that day's copy). Existing databases get the table on first open, with their current totals
+  saved as the last contest day
+- **Q25: Fundraising by Day** report (money and sponsors per saved day, and the amount added since the previous day)
+- **Scoreboard Settings** in Admin → Actions: school name for the masthead and contest days (default 10)
+- Prize reports Q9-Q16, Q18-Q20 accept an "as of" date (Reports page results unchanged)
+
+### Changed
+- The new history table is included in table counts (Q1), table views, export ZIP, Admin table clearing,
+  `clear_all_data.py`, and "Delete all cumulative data"
+- Top navigation dropdowns share one toggle; Bootstrap CDN links load with `crossorigin` so page images keep their icons
+
+### Fixed
+- Pages crashed with "Database ID N not found in registry" when the browser still held a database choice from
+  another copy of the app on the same address (e.g. a second checkout); unknown IDs now fall back to the startup database
+- Database comparison "Through Day N": school participation, average participation and goal-met percentages dropped
+  students with no reading yet from the denominator (overstating them), and average participation counted color
+  bonus points from after that day
+
 ### Fixed
 - `install.sh` failed with `error: externally-managed-environment` on Homebrew Python (PEP 668) when installing
   dependencies; it now creates a project virtualenv (`venv/`) and installs `requirements.txt` into it. `run.sh` and

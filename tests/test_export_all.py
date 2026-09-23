@@ -63,6 +63,7 @@ def test_export_all_contains_all_tables(client):
         'Grade_Rules.csv',
         'Daily_Logs.csv',
         'Reader_Cumulative.csv',
+        'Reader_Cumulative_History.csv',
         'Upload_History.csv',
         'Team_Color_Bonus.csv'
     ]
@@ -111,6 +112,7 @@ def test_export_readme_has_table_counts(client):
         assert 'Grade_Rules:' in readme_content
         assert 'Daily_Logs:' in readme_content
         assert 'Reader_Cumulative:' in readme_content
+        assert 'Reader_Cumulative_History:' in readme_content
         assert 'Upload_History:' in readme_content
         assert 'Team_Color_Bonus:' in readme_content
 
@@ -173,6 +175,7 @@ def test_export_metadata_method():
     assert 'Grade_Rules' in metadata['counts']
     assert 'Daily_Logs' in metadata['counts']
     assert 'Reader_Cumulative' in metadata['counts']
+    assert 'Reader_Cumulative_History' in metadata['counts']
     assert 'Upload_History' in metadata['counts']
     assert 'Team_Color_Bonus' in metadata['counts']
 
@@ -183,13 +186,14 @@ def test_export_all_tables_method():
 
     all_tables = db.export_all_tables()
 
-    # Check all 7 tables are present
+    # Check all 8 tables are present
     expected_tables = [
         'Roster',
         'Class_Info',
         'Grade_Rules',
         'Daily_Logs',
         'Reader_Cumulative',
+        'Reader_Cumulative_History',
         'Upload_History',
         'Team_Color_Bonus'
     ]
@@ -213,8 +217,8 @@ def test_export_zip_structure_integrity(client):
         bad_files = zip_file.testzip()
         assert bad_files is None, f"ZIP contains corrupted files: {bad_files}"
 
-        # Should have exactly 8 files (7 CSVs + 1 README)
-        assert len(zip_file.namelist()) == 8
+        # Should have exactly 9 files (8 CSVs + 1 README)
+        assert len(zip_file.namelist()) == 9
 
 
 def test_export_readme_has_database_info(client):

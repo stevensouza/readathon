@@ -479,6 +479,38 @@ function sortTable(columnIndex) {
 
 ---
 
+### 7. Scoreboard Components (Feature 39)
+
+Used only by the Daily and Prize Scoreboards (`templates/_scoreboard_styles.html`, `_scoreboard_macros.html`), styled
+as a printed newsletter rather than a dashboard, and captured as an image. CSS is scoped under `.scoreboard-page`.
+
+- **Page + toolbar:** the report is an 8.5in white `.page#report` on a `#eef1f4` background. All controls (As of
+  picker, Redraw, Copy as image, Download PNG) sit in `.toolbar` **outside** `#report`, so the captured image never
+  shows them. Capture uses `html-to-image` (`pixelRatio: 2`, margin zeroed); CDN stylesheets need
+  `crossorigin="anonymous"` (set in `base.html`) so fonts and icons embed.
+- **Masthead:** navy `#1e3a5f` bar; Georgia serif title "{school} Read-a-Thon", gold italic report name (`#ffd873`),
+  uppercase subtitle; gold oval **medallion** (radial gradient to `#f59e0b`) with one big number; "Day N of T" + date
+  at the right behind a thin divider.
+- **Section header (`.section-header-v3`):** Georgia serif category (1.3rem navy), italic gray description, 42px navy rule.
+- **Twin columns:** two columns with a 1px hairline rule between (`.twin-cols`; `.wide-right` = 1fr / 1.3fr).
+- **Report table:** navy header row (uppercase 0.66rem), zebra rows `#f7f8fa`, right-aligned bold numbers;
+  optional gold italic prize line under a header (`.th-prize`); stacked winner names (`.w-name`) with a gray value
+  line (`.w-val`) and a navy **"N-way tie"** pill (`.tie-tag`).
+- **VS scoreboard:** two panels in a rounded grid with a white circular **VS** badge centered. Teams use the team
+  colors (alphabetical first = navy `team-blue`, second = gold `team-gold`); year-vs-year uses school colors (this year
+  navy `year-now`, last year slate `#64748b` `year-past`). Inner edges get 34px padding so the badge never crowds labels.
+- **Value + trophy slot:** every row reserves a 22px slot right of the value, filled with a white-circle gold
+  trophy (`.win-trophy-badge`) or left empty (`.trophy-slot`), so numbers line up. Gold is reserved for trophies and
+  the gold team. Missing values: italic **"Not available\*"** (`.metric-val.na`) plus a `.scoreboard-note` footnote.
+- **Prize tag:** cream pill with a gift icon (`.prize-tag`) saying what the winner gets.
+- **Spotlight card:** cream-to-gold gradient card with a gold medal, Georgia winner name and one big percentage
+  (school-wide class winner; tied classes are all listed).
+- **"Top" pill:** gold gradient pill with a star (`.school-winner`) marking the school-wide leader in a table.
+- **Goal Getters list:** grade label + count in an 84px left column; names in 6 columns reading **down**
+  (alphabetical by last name), wrapping rather than truncating.
+
+---
+
 ## Layout Templates
 
 ### Card-Based Page Template
@@ -514,6 +546,7 @@ Before implementing a new page, verify:
 - [ ] Data sources footer is present and collapsible
 - [ ] Sticky filter saves to sessionStorage
 - [ ] All interactive elements have hover states
+- [ ] Image-style pages (scoreboards) use component 7 instead of the filter/banner/footer items above
 
 ---
 

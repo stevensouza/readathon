@@ -56,14 +56,15 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 - **Number of Sponsors** (sponsor count per student)
 - **Team Color Bonus** (bonus minutes for team spirit events)
 
-**Reporting:** Per-day and full-contest views with 22 pre-configured reports
+**Reporting:** Per-day and full-contest views with 24 pre-configured reports, plus a Daily Scoreboard and Prize Scoreboard to email as an image
 
 ## ✨ Features
 
-- **Modern Dashboard**: Clean Bootstrap 5 interface with 9 tabs (School, Teams, Grade Level, Students, Upload, Reports, Workflows, Admin, Help)
+- **Modern Dashboard**: Clean Bootstrap 5 interface with 10 tabs (School, Teams, Grade Level, Students, Upload, Scoreboards, Reports, Workflows, Admin, Help)
+- **Scoreboards**: Daily Scoreboard and Prize Scoreboard for any contest day, copied or downloaded as an image for email
 - **Local SQLite Database**: All data stored locally - no server needed
 - **Multi-File CSV Upload**: Upload multiple daily files at once with automatic date extraction
-- **22 Pre-configured Reports**: Comprehensive analysis covering all metrics
+- **24 Pre-configured Reports**: Comprehensive analysis covering all metrics
 - **Enhanced Report Metadata**: Column descriptions, data sources, automated analysis
 - **Workflow Automation**: Run multiple reports in sequence for daily updates
 - **Team Competition Tracking**: Real-time team standings with color bonus support
@@ -197,24 +198,30 @@ Zipping the whole folder (code + `db/`) also works, but moving code with `git pu
    - Navigate to "Upload Data" page
    - Select the date
    - Upload your minutes CSV file (columns: `Reader Name`, `Minutes`)
-   - Upload your donations CSV file (columns: `Reader Name`, `Donations`)
+   - Upload your donations CSV file (columns: `Reader Name`, `Donations`); its **snapshot date** defaults to the
+     latest day with minutes, so money raised can be shown as of each day
    - Click "Upload Data"
 
-2. **Run Reports**
+2. **Send the Daily Scoreboard**
+   - Navigate to "🏆 Scoreboards" → "Daily Scoreboard" (defaults to the latest day)
+   - Click "Copy as image" (or "Download PNG") and paste it into the email
+   - At the end, use "Prize Scoreboard" for the final winners
+
+3. **Run Reports**
    - Navigate to "Reports" page
    - Select a report from the list
    - Configure options if needed
    - Click "Run Report"
    - Use "Copy to Clipboard" or "Export CSV" buttons
 
-3. **Run Workflows**
+4. **Run Workflows**
    - Navigate to "Workflows" page
    - Choose "Daily Slide Update" or "Cumulative Workflow"
    - Click to run all reports in sequence
 
 ## 📊 Reports & Workflows
 
-The system includes 22 pre-configured reports covering:
+The system includes 24 pre-configured reports covering:
 - **Daily metrics** - Day-by-day performance tracking
 - **Cumulative stats** - Full contest summaries and leaderboards
 - **Team competitions** - Team standings and comparisons
@@ -234,11 +241,14 @@ Group multiple reports to run in sequence:
 ### Core Tables
 1. **Roster** - Student roster with grade, teacher, team assignments
 2. **Daily_Logs** - Daily reading minutes per student (stores both capped and uncapped values)
-3. **Reader_Cumulative** - Cumulative donations and sponsor counts per student
-4. **Class_Info** - Teacher assignments and grade levels for each class
-5. **Grade_Rules** - Grade-specific reading goals (daily minimums and caps)
-6. **Upload_History** - Audit trail for all CSV uploads with timestamps and row counts
-7. **Team_Color_Bonus** - Bonus minutes for team spirit participation events
+3. **Reader_Cumulative** - Cumulative donations and sponsor counts per student (latest upload)
+4. **Reader_Cumulative_History** - A saved copy of the cumulative upload for each contest day (money raised as of any day)
+5. **Class_Info** - Teacher assignments and grade levels for each class
+6. **Grade_Rules** - Grade-specific reading goals (daily minimums and caps)
+7. **Upload_History** - Audit trail for all CSV uploads with timestamps and row counts
+8. **Team_Color_Bonus** - Bonus minutes for team spirit participation events
+
+The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name and contest days for the scoreboards.
 
 ### Entity Relationships
 - Students → Classes → Teams → School
@@ -258,6 +268,8 @@ Configurable by grade level:
 readathon/
 ├── app.py                  # Flask web application
 ├── database.py             # Database and report logic
+├── queries.py              # All SQL
+├── scoreboards.py          # Daily / Prize Scoreboard page data
 ├── init_data.py            # Create + register db/readathon_<YEAR>.db from roster CSVs
 ├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster)
 ├── package_data.sh         # Zip db/ to move data to another computer

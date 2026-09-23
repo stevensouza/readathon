@@ -4,6 +4,10 @@
 
 ---
 
+> **SUPERSEDED** by [Feature 39: Scoreboards](feature-39-scoreboards.md) (v2026.16.0). The daily update and the prize
+> results are now the Daily Scoreboard and Prize Scoreboard pages, copied or downloaded as an image instead of
+> slides. Kept for history only.
+
 ### Feature 21: Slides Tab ✨ NEW
 **Feature:** Dedicated "Slides" tab for presentation-ready output that can be copied directly to Google Slides.
 

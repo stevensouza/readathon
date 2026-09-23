@@ -1,6 +1,6 @@
 # Read-a-Thon Application Rules
 
-**Last Updated:** 2025-11-02
+**Last Updated:** 2026-09-23
 
 This file contains universal rules that apply across all pages and features in the Read-a-Thon application. These rules MUST be followed for every implementation.
 
@@ -13,7 +13,8 @@ This file contains universal rules that apply across all pages and features in t
 - **Reading Minutes:** `Daily_Logs` table (capped at 120 minutes/day, includes color bonus)
 - **Participation:** `Daily_Logs` table (students with >0 minutes for a given day)
 - **Goals Met:** `Daily_Logs` table (students who met ≥1 day reading goal)
-- **Fundraising/Sponsors:** `Reader_Cumulative` table (aggregated totals per student)
+- **Fundraising/Sponsors:** `Reader_Cumulative` table (aggregated totals per student, latest upload)
+- **Fundraising as of a past day:** `Reader_Cumulative_History` (one saved copy of the cumulative upload per contest day - see Scoreboards)
 - **Team Assignments:** `Roster.team_name` column
 
 ### Data Calculation Rules
@@ -222,6 +223,52 @@ GROUP BY ci.class_name, ci.teacher_name, ci.grade_level
 # WRONG - Group by teacher_name (aggregates multiple classes)
 GROUP BY ci.teacher_name, ci.grade_level
 ```
+
+---
+
+## Scoreboards (Feature 39)
+
+Daily Scoreboard (`/scoreboards/daily`) and Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
+
+### Contest days and "as of"
+- **Day N = the Nth date uploaded to `Daily_Logs`.** Skipped weekends never appear, so no start/end dates are stored.
+- **"Day N of T":** T = the `contest_days` setting (Admin → Actions → Scoreboard Settings, default 10), never less
+  than the days uploaded. The Prize Scoreboard shows "Final Prize Winners" once the as-of day reaches T.
+- **Reading data** (minutes, participation, goals, color bonus) counts through day N (`log_date <= day N`,
+  `event_date <= day N`). **The latest day counts the whole contest**, so it matches the Reports page exactly.
+- The source methods take `as_of_date=None` (default = whole contest, unchanged Reports results).
+
+### Money as of a day (snapshots)
+- Every cumulative upload is also saved in `Reader_Cumulative_History` under a **snapshot date** (Upload page;
+  defaults to the latest `Daily_Logs` date because the Day N file is often uploaded the morning of Day N+1).
+- **The latest upload for a day wins:** re-uploading for the same date replaces that day's whole copy (not a merge).
+- Money for day N comes **only from day N's snapshot**. No snapshot → "Not available\*" with a footnote, and no
+  trophy for that row. Never carry an older day's money forward.
+- When the table is first added to an existing database, the current `Reader_Cumulative` becomes the snapshot for
+  its last contest date (how 2025 got its final totals).
+- "+$ today" = snapshot(day N) − snapshot(day N−1), shown only when both exist.
+
+### Definitions
+- **Team participation / Showdown participation:** Avg. Participation (With Color) (Q14 formula) through day N.
+- **Minutes:** capped at 120/day plus color-bonus minutes through day N (Q19).
+- **Today's participation %:** students with minutes > 0 that day + that day's color-bonus points, ÷ team size
+  (can exceed 100% on a color day). **+minutes today:** capped minutes that day + that day's bonus minutes.
+- **Medallion (daily):** % of students with minutes > 0 on at least one day (not "goal met ≥1 day").
+- **Medallion (prize):** distinct students winning any student prize (Top Earner, Top Minutes/Donations/Sponsors, Goal Getters).
+- **Class prizes are per class (`class_name`), not per teacher.** A half-day kindergarten teacher's AM and PM classes
+  compete separately. Any class named "<teacher> am/pm" is shown as "Teacher AM" / "Teacher PM" (even a teacher with
+  a single half-day class). Ties: every tied class/student wins.
+- **Daily drawing:** one winner per grade from students who met their grade goal that day, picked with a seed of
+  (date, grade, drawing #). Same drawing # → same winners; "Redraw" bumps the # (in the URL, printed in the header).
+- **Showdown:** the registry database whose `year` = this year − 1, using its own Nth contest date (final vs final
+  on the Prize Scoreboard's final view). Hidden when there is no prior-year database.
+- **School name:** `school_name` setting (registry, not tracked files); masthead "{school} Read-a-Thon", or
+  "Read-a-Thon" when unset.
+
+### Scoreboard page tests
+The 8 mandatory page tests apply with the scoreboard components standing in for the dashboard ones: team panels
+(`score-panel team-blue/team-gold`) for team badges, `win-trophy-badge` for winning-value ovals, and the masthead +
+medallion for the headline banner. See `tests/test_scoreboards_page.py`.
 
 ---
 

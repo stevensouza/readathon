@@ -45,6 +45,7 @@ class DatabaseRegistry:
         """
         cursor = self.conn.cursor()
         cursor.execute(CREATE_TABLE_DATABASE_REGISTRY)
+        cursor.execute(CREATE_TABLE_APP_SETTINGS)
         self.conn.commit()
 
         cursor.execute('SELECT COUNT(*) FROM Database_Registry')
@@ -101,6 +102,31 @@ class DatabaseRegistry:
         """Close registry database connection"""
         if self.conn:
             self.conn.close()
+
+    # App-wide settings (Admin -> Actions -> Scoreboard Settings). Defaults apply until saved.
+    SETTING_DEFAULTS = {'school_name': '', 'contest_days': '10'}
+
+    def get_settings(self) -> Dict[str, str]:
+        """All app settings, with defaults filled in"""
+        settings = dict(self.SETTING_DEFAULTS)
+        for row in self.conn.execute(SELECT_APP_SETTINGS).fetchall():
+            settings[row['setting_key']] = row['setting_value']
+        return settings
+
+    def count_saved_settings(self) -> int:
+        """Number of settings saved in App_Settings (defaults aren't stored)"""
+        return self.conn.execute(SELECT_COUNT_APP_SETTINGS).fetchone()[0]
+
+    def set_setting(self, key: str, value: str) -> None:
+        """Save one app setting (key must be one of SETTING_DEFAULTS)"""
+        if key not in self.SETTING_DEFAULTS:
+            raise ValueError(f'Unknown setting: {key}')
+        self.conn.execute(UPSERT_APP_SETTING, (key, value, datetime.now().isoformat()))
+        self.conn.commit()
+
+    def get_database_by_year(self, year: int) -> Optional[Dict[str, Any]]:
+        """Registered database for an event year (None if there isn't one)"""
+        return next((db for db in self.list_databases() if db['year'] == year), None)
 
     def list_databases(self) -> List[Dict[str, Any]]:
         """
@@ -519,6 +545,16 @@ class ReadathonDB:
         # Team_Color_Bonus table - tracks special team color day bonuses
         cursor.execute(CREATE_TABLE_TEAM_COLOR_BONUS)
 
+        # Reader_Cumulative_History - one copy of the cumulative upload per contest day.
+        # When first added to an existing database, the current Reader_Cumulative becomes
+        # the snapshot for the last contest date (gives older years their final totals).
+        history_is_new = cursor.execute(SELECT_TABLE_EXISTS, ('Reader_Cumulative_History',)).fetchone() is None
+        cursor.execute(CREATE_TABLE_READER_CUMULATIVE_HISTORY)
+        if history_is_new:
+            last_date = cursor.execute(SELECT_LATEST_LOG_DATE).fetchone()[0]
+            if last_date:
+                cursor.execute(INSERT_READER_CUMULATIVE_SNAPSHOT, (last_date,))
+
         conn.commit()
 
     def load_roster_data(self, csv_data: str) -> int:
@@ -753,8 +789,9 @@ class ReadathonDB:
             # Delete all cumulative data
             cursor.execute(DELETE_ALL_READER_CUMULATIVE)
 
-            # Delete cumulative upload history
+            # Delete cumulative upload history and the per-day snapshots
             cursor.execute(DELETE_UPLOAD_HISTORY_CUMULATIVE)
+            cursor.execute(DELETE_ALL_READER_CUMULATIVE_HISTORY)
 
             conn.commit()
 
@@ -816,14 +853,18 @@ class ReadathonDB:
             'sponsors': any(h in headers_lower for h in ['sponsors', 'sponsor count', 'sponsor_count'])
         }
 
-    def upload_cumulative_stats(self, cumulative_file, confirmed: bool = False) -> Dict[str, Any]:
+    def upload_cumulative_stats(self, cumulative_file, confirmed: bool = False,
+                                snapshot_date: Optional[str] = None) -> Dict[str, Any]:
         """
         Upload cumulative stats from CSV file
         CSV columns: Reader Name, Teacher, Email (ignore), Raised, Sponsors, Sessions (ignore), PageCreated (ignore), Minutes
+        Also saves the upload as the Reader_Cumulative_History snapshot for snapshot_date
+        (default: latest Daily_Logs date), replacing any earlier copy for that date.
         Returns dict with success status, counts, and any errors
         """
         conn = self.get_connection()
         cursor = conn.cursor()
+        snapshot_date = snapshot_date or self.get_default_snapshot_date()
 
         result = {
             'success': True,
@@ -995,6 +1036,13 @@ class ReadathonDB:
                               (student_name, data['teacher_name'], data['team_name'],
                                data['donation_amount'], data['sponsors'], data['cumulative_minutes'], upload_timestamp))
 
+            # Save this upload as the snapshot for its contest day (latest upload for a day wins)
+            previous_snapshot = self.execute_query(SELECT_SNAPSHOT_SUMMARY, (snapshot_date,))[0]
+            cursor.execute(DELETE_READER_CUMULATIVE_SNAPSHOT, (snapshot_date,))
+            cursor.execute(INSERT_READER_CUMULATIVE_SNAPSHOT, (snapshot_date,))
+            result['snapshot_date'] = snapshot_date
+            result['snapshot_replaced'] = previous_snapshot['row_count'] > 0
+
             conn.commit()
 
             # Build audit details
@@ -1009,8 +1057,14 @@ class ReadathonDB:
                 'new_total': len(cumulative_data),
                 'students_removed': len(students_removed),
                 'students_added': len(students_added),
-                'students_updated': len(students_updated)
+                'students_updated': len(students_updated),
+                'snapshot_date': snapshot_date
             }
+            if previous_snapshot['row_count'] > 0:
+                audit_details['snapshot_replaced'] = {
+                    'rows': previous_snapshot['row_count'],
+                    'total_donations': previous_snapshot['total_donations']
+                }
 
             # Add errors/warnings to audit
             if result['errors']:
@@ -1216,7 +1270,7 @@ class ReadathonDB:
         cursor = conn.cursor()
 
         counts = {}
-        for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs', 'Reader_Cumulative', 'Team_Color_Bonus']:
+        for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Team_Color_Bonus']:
             cursor.execute(get_table_count_query(table))
             counts[table] = cursor.fetchone()[0]
 
@@ -1315,6 +1369,23 @@ class ReadathonDB:
                     {'name': 'bonus_points', 'description': 'Bonus participation points awarded'},
                 ]
             },
+            'reader_cumulative_history': {
+                'table_name': 'Reader_Cumulative_History',
+                'primary_key': 'snapshot_date, student_name',
+                'description': 'One saved copy of every cumulative upload per contest day (the latest upload for a day replaces that day). Lets the scoreboards show money raised as of a past day; Reader_Cumulative stays the latest copy.',
+                'referenced_by': [],
+                'references': ['Roster'],
+                'columns': [
+                    {'name': 'snapshot_date', 'description': 'Contest day the upload covers (chosen on the Upload page)'},
+                    {'name': 'student_name', 'description': 'Student full name'},
+                    {'name': 'teacher_name', 'description': 'Teacher name from the upload'},
+                    {'name': 'team_name', 'description': 'Team from Roster at upload time'},
+                    {'name': 'donation_amount', 'description': 'Total raised as of that day'},
+                    {'name': 'sponsors', 'description': 'Sponsor count as of that day'},
+                    {'name': 'cumulative_minutes', 'description': 'Minutes reported by the upload (uncapped)'},
+                    {'name': 'upload_timestamp', 'description': 'When that day\'s copy was uploaded'},
+                ]
+            },
             'upload_history': {
                 'table_name': 'Upload_History',
                 'primary_key': 'upload_id',
@@ -1388,6 +1459,15 @@ class ReadathonDB:
             results.append(dict(zip(columns, row)))
 
         return results
+
+    def get_default_snapshot_date(self) -> str:
+        """Contest day a cumulative upload covers by default: the latest Daily_Logs date (today if none)"""
+        latest = self.get_connection().execute(SELECT_LATEST_LOG_DATE).fetchone()[0]
+        return latest or datetime.now().strftime('%Y-%m-%d')
+
+    def get_snapshot_dates(self) -> List[str]:
+        """Dates that have a saved Reader_Cumulative_History snapshot, ascending"""
+        return [row[0] for row in self.get_connection().execute(SELECT_SNAPSHOT_DATES).fetchall()]
 
     def get_all_dates(self) -> List[str]:
         """Get all unique dates from Daily_Logs"""
@@ -1970,13 +2050,14 @@ class ReadathonDB:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # All 7 tables to export (Database_Registry excluded - separate database file)
+        # All 8 tables to export (Database_Registry excluded - separate database file)
         tables = [
             'Roster',
             'Class_Info',
             'Grade_Rules',
             'Daily_Logs',
             'Reader_Cumulative',
+            'Reader_Cumulative_History',
             'Upload_History',
             'Team_Color_Bonus'
         ]
@@ -2003,7 +2084,7 @@ class ReadathonDB:
         # Get table counts
         counts = {}
         for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs',
-                      'Reader_Cumulative', 'Upload_History', 'Team_Color_Bonus']:
+                      'Reader_Cumulative', 'Reader_Cumulative_History', 'Upload_History', 'Team_Color_Bonus']:
             cursor.execute(f"SELECT COUNT(*) FROM {table}")
             counts[table] = cursor.fetchone()[0]
 
@@ -2091,6 +2172,24 @@ class ReportGenerator:
     def _get_report_timestamp(self) -> str:
         """Get current timestamp for report generation"""
         return f"Report generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
+    @staticmethod
+    def _as_of_params(as_of_date: Optional[str]) -> Dict[str, str]:
+        """Named parameters for the reading-based prize queries (None = whole contest)"""
+        return {'as_of': as_of_date or AS_OF_ALL_DATES}
+
+    def _run_money_query(self, query_builder, as_of_date: Optional[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        """Run a donations/sponsors query against the latest upload, or the snapshot saved for as_of_date.
+
+        Returns (rows, as_of): as_of is empty for the latest upload, otherwise
+        {'as_of_date', 'available'} - available is False when that day has no snapshot.
+        """
+        if as_of_date is None:
+            return self.db.execute_query(query_builder()), {}
+        if as_of_date not in self.db.get_snapshot_dates():
+            return [], {'as_of_date': as_of_date, 'available': False}
+        rows = self.db.execute_query(query_builder(from_snapshot=True), {'snapshot_date': as_of_date})
+        return rows, {'as_of_date': as_of_date, 'available': True}
 
     def q1_table_counts(self) -> Dict[str, Any]:
         """Q1: Total Row Count - utility report"""
@@ -2263,26 +2362,15 @@ class ReportGenerator:
             }
         }
 
-    def q4_prize_drawing(self, log_date: str) -> Dict[str, Any]:
-        """Q4/Slide 4: Prize Drawing Entrants - Daily random selection"""
+    def q4_prize_drawing(self, log_date: str, drawing_number: Optional[int] = None) -> Dict[str, Any]:
+        """Q4/Slide 4: Prize Drawing Entrants - Daily random selection
 
-        # Get all students who met their daily reading goal on this date
-        query = """
-            SELECT DISTINCT
-                r.student_name,
-                r.grade_level,
-                r.class_name,
-                r.teacher_name,
-                dl.minutes_read,
-                gr.min_daily_minutes
-            FROM Roster r
-            INNER JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            INNER JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
-            WHERE dl.log_date = ? AND dl.minutes_read >= gr.min_daily_minutes
-            ORDER BY r.grade_level, r.student_name
+        drawing_number: pick winners with a seed of (date, grade, drawing #) so the same
+        drawing always gives the same winners (Daily Scoreboard). None = new random pick each run.
         """
 
-        participants = self.db.execute_query(query, (log_date,))
+        # Get all students who met their daily reading goal on this date
+        participants = self.db.execute_query(QUERY_Q4_PRIZE_DRAWING, (log_date,))
 
         # Group by grade
         by_grade = {}
@@ -2296,7 +2384,10 @@ class ReportGenerator:
         winners = []
         for grade in sorted(by_grade.keys()):
             if by_grade[grade]:
-                winner = random.choice(by_grade[grade])
+                if drawing_number is None:
+                    winner = random.choice(by_grade[grade])
+                else:
+                    winner = random.Random(f"{log_date}|{grade}|{drawing_number}").choice(by_grade[grade])
                 winner['total_eligible'] = len(by_grade[grade])
                 winners.append(winner)
 
@@ -2480,43 +2571,11 @@ class ReportGenerator:
             }
         }
 
-    def q14_team_participation(self) -> Dict[str, Any]:
+    def q14_team_participation(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q14/Slide 3: Team Participation Winner - Cumulative"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH TotalDays AS (
-                SELECT COUNT(DISTINCT log_date) as total_days
-                FROM Daily_Logs
-            ),
-            TeamBonusData AS (
-                SELECT
-                    ci.team_name,
-                    SUM(tcb.bonus_participation_points) as total_bonus
-                FROM Team_Color_Bonus tcb
-                INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-                GROUP BY ci.team_name
-            )
-            SELECT
-                r.team_name,
-                COUNT(DISTINCT r.student_name) as total_students,
-                td.total_days as days_with_data,
-                COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) as total_participations_base,
-                COALESCE(tbd.total_bonus, 0) as color_bonus_points,
-                COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) + COALESCE(tbd.total_bonus, 0) as total_participations_with_color,
-                ROUND(100.0 * COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) /
-                      (COUNT(DISTINCT r.student_name) * td.total_days), 2) as avg_participation_rate,
-                ROUND(100.0 * (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) + COALESCE(tbd.total_bonus, 0)) /
-                      (COUNT(DISTINCT r.student_name) * td.total_days), 2) as avg_participation_rate_with_color
-            FROM Roster r
-            CROSS JOIN TotalDays td
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            LEFT JOIN TeamBonusData tbd ON r.team_name = tbd.team_name
-            GROUP BY r.team_name, td.total_days, tbd.total_bonus
-            HAVING td.total_days > 0
-            ORDER BY avg_participation_rate_with_color DESC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q14_TEAM_PARTICIPATION, self._as_of_params(as_of_date))
 
         # Find winners (handle ties) - use WITH COLOR version
         winners = []
@@ -2541,67 +2600,11 @@ class ReportGenerator:
             }
         }
 
-    def q18_lead_class_by_grade(self) -> Dict[str, Any]:
+    def q18_lead_class_by_grade(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q18/Slide 2: Lead Class by Grade - Cumulative"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH TotalDays AS (
-                SELECT COUNT(DISTINCT log_date) as total_days
-                FROM Daily_Logs
-            ),
-            BonusData AS (
-                SELECT
-                    class_name,
-                    SUM(bonus_participation_points) as total_bonus
-                FROM Team_Color_Bonus
-                GROUP BY class_name
-            ),
-            ClassStats AS (
-                SELECT
-                    r.class_name,
-                    r.teacher_name,
-                    r.grade_level,
-                    r.team_name,
-                    ci.total_students,
-                    td.total_days as days_with_data,
-                    COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) as total_participations_base,
-                    COALESCE(bd.total_bonus, 0) as color_bonus_points,
-                    COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) + COALESCE(bd.total_bonus, 0) as total_participations_with_color,
-                    ROUND(100.0 * COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) /
-                          (ci.total_students * td.total_days), 2) as avg_participation_rate,
-                    ROUND(100.0 * (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) + COALESCE(bd.total_bonus, 0)) /
-                          (ci.total_students * td.total_days), 2) as avg_participation_rate_with_color
-                FROM Roster r
-                INNER JOIN Class_Info ci ON r.class_name = ci.class_name
-                CROSS JOIN TotalDays td
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                LEFT JOIN BonusData bd ON r.class_name = bd.class_name
-                GROUP BY r.class_name, r.teacher_name, r.grade_level, r.team_name, ci.total_students, td.total_days, bd.total_bonus
-                HAVING td.total_days > 0
-            ),
-            MaxByGrade AS (
-                SELECT grade_level, MAX(avg_participation_rate_with_color) as max_rate
-                FROM ClassStats
-                GROUP BY grade_level
-            )
-            SELECT
-                cs.grade_level,
-                cs.class_name,
-                cs.teacher_name,
-                cs.team_name,
-                cs.total_students,
-                cs.days_with_data,
-                cs.total_participations_base,
-                cs.color_bonus_points,
-                cs.total_participations_with_color,
-                cs.avg_participation_rate,
-                cs.avg_participation_rate_with_color
-            FROM ClassStats cs
-            INNER JOIN MaxByGrade mbg ON cs.grade_level = mbg.grade_level AND cs.avg_participation_rate_with_color = mbg.max_rate
-            ORDER BY cs.grade_level ASC, cs.class_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q18_LEAD_CLASS_BY_GRADE, self._as_of_params(as_of_date))
 
         return {
             'title': 'Q18/Slide 2: Leading Class by Grade (Cumulative)',
@@ -2618,66 +2621,11 @@ class ReportGenerator:
             }
         }
 
-    def q19_team_minutes(self) -> Dict[str, Any]:
+    def q19_team_minutes(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q19/Slide 5: Cumulative Team Minutes"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH TeamBonusMinutes AS (
-                SELECT
-                    ci.team_name,
-                    SUM(tcb.bonus_minutes) as total_bonus
-                FROM Team_Color_Bonus tcb
-                INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-                GROUP BY ci.team_name
-            ),
-            TeamTotals AS (
-                SELECT
-                    r.team_name,
-                    COUNT(DISTINCT r.student_name) as total_students,
-                    COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) as total_minutes_base,
-                    COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) / 60 as total_hours_base,
-                    COALESCE(tbm.total_bonus, 0) as bonus_minutes,
-                    COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(tbm.total_bonus, 0) as total_minutes_with_color,
-                    (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(tbm.total_bonus, 0)) / 60 as total_hours_with_color,
-                    ROUND(1.0 * COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) / COUNT(DISTINCT r.student_name), 1) as avg_minutes_per_student,
-                    ROUND(1.0 * (COALESCE(SUM(MIN(dl.minutes_read, 120)), 0) + COALESCE(tbm.total_bonus, 0)) / COUNT(DISTINCT r.student_name), 1) as avg_minutes_per_student_with_color
-                FROM Roster r
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                LEFT JOIN TeamBonusMinutes tbm ON r.team_name = tbm.team_name
-                GROUP BY r.team_name, tbm.total_bonus
-            ),
-            CombinedResults AS (
-                SELECT
-                    team_name,
-                    total_students,
-                    total_minutes_base,
-                    total_hours_base,
-                    bonus_minutes,
-                    total_minutes_with_color,
-                    total_hours_with_color,
-                    avg_minutes_per_student,
-                    avg_minutes_per_student_with_color
-                FROM TeamTotals
-                UNION ALL
-                SELECT
-                    'TOTAL' as team_name,
-                    SUM(total_students) as total_students,
-                    SUM(total_minutes_base) as total_minutes_base,
-                    SUM(total_hours_base) as total_hours_base,
-                    SUM(bonus_minutes) as bonus_minutes,
-                    SUM(total_minutes_with_color) as total_minutes_with_color,
-                    SUM(total_hours_with_color) as total_hours_with_color,
-                    ROUND(1.0 * SUM(total_minutes_base) / SUM(total_students), 1) as avg_minutes_per_student,
-                    ROUND(1.0 * SUM(total_minutes_with_color) / SUM(total_students), 1) as avg_minutes_per_student_with_color
-                FROM TeamTotals
-            )
-            SELECT * FROM CombinedResults
-            ORDER BY
-                CASE WHEN team_name = 'TOTAL' THEN 2 ELSE 1 END,
-                total_minutes_with_color DESC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q19_TEAM_MINUTES, self._as_of_params(as_of_date))
 
         return {
             'title': 'Q19/Slide 5: Cumulative Team Minutes',
@@ -2700,25 +2648,14 @@ Calculation Rules:<br>
             }
         }
 
-    def q20_team_donations(self) -> Dict[str, Any]:
+    def q20_team_donations(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q20/Slide 6: Cumulative Team Donations"""
+        # as_of_date (YYYY-MM-DD): read that day's Reader_Cumulative_History snapshot instead of the latest upload
 
-        query = """
-            SELECT
-                r.team_name,
-                ROUND(SUM(COALESCE(rc.donation_amount, 0)), 2) as total_donations,
-                SUM(COALESCE(rc.sponsors, 0)) as total_sponsors,
-                COUNT(DISTINCT r.student_name) as total_students,
-                ROUND(SUM(COALESCE(rc.donation_amount, 0)) / COUNT(DISTINCT r.student_name), 2) as avg_donation_per_student
-            FROM Roster r
-            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            GROUP BY r.team_name
-            ORDER BY total_donations DESC
-        """
-
-        results = self.db.execute_query(query)
+        results, as_of = self._run_money_query(get_q20_team_donations_query, as_of_date)
 
         return {
+            **as_of,
             'title': 'Q20/Slide 6: Cumulative Team Donations',
             'description': 'Total donations and sponsors by each team (from Reader_Cumulative)',
             'columns': ['team_name', 'total_donations', 'total_sponsors', 'total_students', 'avg_donation_per_student'],
@@ -3016,36 +2953,83 @@ Calculation Rules:<br>
             }
         }
 
-    def q9_most_donations_by_grade(self) -> Dict[str, Any]:
-        """Q9: Most Donations by Grade - Per Grade Level (1 winner per grade)"""
-
-        query = """
-            WITH MaxByGrade AS (
-                SELECT
-                    r.grade_level,
-                    MAX(COALESCE(rc.donation_amount, 0)) as max_donation
-                FROM Roster r
-                LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-                GROUP BY r.grade_level
-            )
-            SELECT
-                r.grade_level,
-                r.student_name,
-                COALESCE(rc.donation_amount, 0) as donation_amount,
-                COALESCE(rc.sponsors, 0) as sponsors,
-                r.team_name,
-                r.class_name
-            FROM Roster r
-            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            INNER JOIN MaxByGrade mbg ON r.grade_level = mbg.grade_level
-                AND COALESCE(rc.donation_amount, 0) = mbg.max_donation
-            WHERE mbg.max_donation > 0
-            ORDER BY r.grade_level ASC, r.student_name ASC
-        """
-
-        results = self.db.execute_query(query)
+    def q25_fundraising_by_day(self) -> Dict[str, Any]:
+        """Q25: Fundraising by Day - one row per saved cumulative snapshot"""
+        results = self.db.execute_query(QUERY_Q25_FUNDRAISING_BY_DAY)
 
         return {
+            'title': 'Q25: Fundraising by Day',
+            'description': 'School-wide money raised and sponsors as of each contest day, from the copy of the cumulative upload saved for that day, with the amount added since the previous saved day',
+            'columns': ['snapshot_date', 'total_donations', 'donations_added', 'total_sponsors', 'sponsors_added',
+                        'students_with_donations', 'students_in_upload', 'uploaded_at'],
+            'data': results,
+            'sort': 'snapshot_date (asc)',
+            'note': 'Only days with a saved cumulative upload appear. Databases from before snapshots were kept have one row: their final totals.',
+            'last_updated': self._get_report_timestamp(),
+            'metadata': {
+                'source_tables': 'Reader_Cumulative_History',
+                'columns': COLUMN_METADATA['q25'],
+                'terms': get_report_terms('q25')
+            }
+        }
+
+    # ------------------------------------------------------------------
+    # Scoreboard figures (Feature 39) - whole-school totals and "today"
+    # ------------------------------------------------------------------
+
+    def school_totals_as_of(self, as_of_date: Optional[str], snapshot_date: Optional[str]) -> Dict[str, Any]:
+        """Whole-school figures for the year-vs-year Showdown.
+
+        as_of_date: count reading/color-bonus data through this day (None = whole contest)
+        snapshot_date: contest day whose saved cumulative upload gives the money raised
+        participation: average daily participation incl. color-bonus points (same definition as Q14)
+        minutes: capped minutes incl. color-bonus minutes (same definition as Q19)
+        donations: None when snapshot_date has no snapshot
+        """
+        row = self.db.execute_query(QUERY_SCHOOL_TOTALS_AS_OF, self._as_of_params(as_of_date))[0]
+        slots = row['total_students'] * row['total_days']
+        donations = None
+        if snapshot_date in self.db.get_snapshot_dates():
+            donations = self.db.execute_query(SELECT_SCHOOL_DONATIONS_SNAPSHOT,
+                                              {'snapshot_date': snapshot_date})[0]['total_donations']
+        return {
+            'participation': round(100.0 * (row['participations_base'] + row['bonus_points']) / slots, 2) if slots else None,
+            'minutes': row['minutes_base'] + row['bonus_minutes'],
+            'donations': donations,
+        }
+
+    def team_day_figures(self, day: str, previous_day: Optional[str]) -> Dict[str, Dict[str, Any]]:
+        """Per-team figures for one contest day ("today" on the Daily Scoreboard).
+
+        participation: students with minutes > 0 that day plus that day's color-bonus points, / team size
+        minutes: capped minutes that day incl. that day's bonus minutes
+        donations_added: snapshot(day) - snapshot(previous_day); None unless both snapshots exist
+        """
+        snapshots = self.db.get_snapshot_dates()
+        money_now = money_before = None
+        if previous_day and day in snapshots and previous_day in snapshots:
+            money_now = {r['team_name']: r['total_donations'] for r in self.q20_team_donations(day)['data']}
+            money_before = {r['team_name']: r['total_donations'] for r in self.q20_team_donations(previous_day)['data']}
+
+        figures = {}
+        for row in self.db.execute_query(QUERY_TEAM_DAY_FIGURES, {'day': day}):
+            team = row['team_name']
+            figures[team] = {
+                'participation': round(100.0 * (row['readers'] + row['bonus_points']) / row['total_students'], 2)
+                                 if row['total_students'] else 0.0,
+                'minutes': row['minutes_base'] + row['bonus_minutes'],
+                'donations_added': round(money_now[team] - money_before[team], 2) if money_now is not None else None,
+            }
+        return figures
+
+    def q9_most_donations_by_grade(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
+        """Q9: Most Donations by Grade - Per Grade Level (1 winner per grade)"""
+        # as_of_date (YYYY-MM-DD): read that day's Reader_Cumulative_History snapshot instead of the latest upload
+
+        results, as_of = self._run_money_query(get_q9_most_donations_by_grade_query, as_of_date)
+
+        return {
+            **as_of,
             'title': 'Q9: Most Donations Per Grade Level',
             'description': 'Student with highest donation amount in each grade (1 winner per grade, ties shown)',
             'columns': ['grade_level', 'student_name', 'donation_amount', 'sponsors', 'team_name', 'class_name'],
@@ -3060,44 +3044,11 @@ Calculation Rules:<br>
             }
         }
 
-    def q10_most_minutes_by_grade(self) -> Dict[str, Any]:
+    def q10_most_minutes_by_grade(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q10: Most Minutes Read by Grade - Per Grade Level (1 winner per grade)"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH StudentMinutes AS (
-                SELECT
-                    r.student_name,
-                    r.grade_level,
-                    r.team_name,
-                    r.class_name,
-                    SUM(MIN(dl.minutes_read, 120)) as total_minutes_capped,
-                    COUNT(CASE WHEN dl.minutes_read > 0 THEN 1 END) as days_participated
-                FROM Roster r
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name
-            ),
-            MaxByGrade AS (
-                SELECT
-                    grade_level,
-                    MAX(total_minutes_capped) as max_minutes
-                FROM StudentMinutes
-                GROUP BY grade_level
-            )
-            SELECT
-                sm.grade_level,
-                sm.student_name,
-                sm.total_minutes_capped,
-                sm.days_participated,
-                sm.team_name,
-                sm.class_name
-            FROM StudentMinutes sm
-            INNER JOIN MaxByGrade mbg ON sm.grade_level = mbg.grade_level
-                AND sm.total_minutes_capped = mbg.max_minutes
-            WHERE sm.total_minutes_capped > 0
-            ORDER BY sm.grade_level ASC, sm.student_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q10_MOST_MINUTES_BY_GRADE, self._as_of_params(as_of_date))
 
         return {
             'title': 'Q10: Most Minutes Read Per Grade Level',
@@ -3114,36 +3065,14 @@ Calculation Rules:<br>
             }
         }
 
-    def q11_most_sponsors_by_grade(self) -> Dict[str, Any]:
+    def q11_most_sponsors_by_grade(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q11: Most Sponsors by Grade - Per Grade Level (1 winner per grade)"""
+        # as_of_date (YYYY-MM-DD): read that day's Reader_Cumulative_History snapshot instead of the latest upload
 
-        query = """
-            WITH MaxByGrade AS (
-                SELECT
-                    r.grade_level,
-                    MAX(COALESCE(rc.sponsors, 0)) as max_sponsors
-                FROM Roster r
-                LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-                GROUP BY r.grade_level
-            )
-            SELECT
-                r.grade_level,
-                r.student_name,
-                COALESCE(rc.sponsors, 0) as sponsor_count,
-                COALESCE(rc.donation_amount, 0) as donation_amount,
-                r.team_name,
-                r.class_name
-            FROM Roster r
-            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            INNER JOIN MaxByGrade mbg ON r.grade_level = mbg.grade_level
-                AND COALESCE(rc.sponsors, 0) = mbg.max_sponsors
-            WHERE mbg.max_sponsors > 0
-            ORDER BY r.grade_level ASC, r.student_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results, as_of = self._run_money_query(get_q11_most_sponsors_by_grade_query, as_of_date)
 
         return {
+            **as_of,
             'title': 'Q11: Most Sponsors Per Grade Level',
             'description': 'Student with most sponsors in each grade (1 winner per grade, ties shown)',
             'columns': ['grade_level', 'student_name', 'sponsor_count', 'donation_amount', 'team_name', 'class_name'],
@@ -3158,63 +3087,11 @@ Calculation Rules:<br>
             }
         }
 
-    def q12_best_class_by_grade_simplified(self) -> Dict[str, Any]:
+    def q12_best_class_by_grade_simplified(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q12: Best Class Per Grade - Simplified (1 winner per grade)"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH TotalDays AS (
-                SELECT COUNT(DISTINCT log_date) as total_days
-                FROM Daily_Logs
-            ),
-            BonusData AS (
-                SELECT
-                    class_name,
-                    SUM(bonus_participation_points) as total_bonus
-                FROM Team_Color_Bonus
-                GROUP BY class_name
-            ),
-            ClassStats AS (
-                SELECT
-                    r.class_name,
-                    r.teacher_name,
-                    r.grade_level,
-                    r.team_name,
-                    ci.total_students,
-                    td.total_days as days_with_data,
-                    COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) as total_participations_base,
-                    COALESCE(bd.total_bonus, 0) as color_bonus_points,
-                    ROUND(100.0 * COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) /
-                          (ci.total_students * td.total_days), 2) as avg_participation_rate,
-                    ROUND(100.0 * (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) + COALESCE(bd.total_bonus, 0)) /
-                          (ci.total_students * td.total_days), 2) as avg_participation_rate_with_color
-                FROM Roster r
-                INNER JOIN Class_Info ci ON r.class_name = ci.class_name
-                CROSS JOIN TotalDays td
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                LEFT JOIN BonusData bd ON r.class_name = bd.class_name
-                GROUP BY r.class_name, r.teacher_name, r.grade_level, r.team_name, ci.total_students, td.total_days, bd.total_bonus
-                HAVING td.total_days > 0
-            ),
-            MaxByGrade AS (
-                SELECT grade_level, MAX(avg_participation_rate_with_color) as max_rate
-                FROM ClassStats
-                GROUP BY grade_level
-            )
-            SELECT
-                cs.grade_level,
-                cs.class_name,
-                cs.teacher_name,
-                cs.team_name,
-                cs.total_participations_base,
-                cs.color_bonus_points,
-                cs.avg_participation_rate,
-                cs.avg_participation_rate_with_color
-            FROM ClassStats cs
-            INNER JOIN MaxByGrade mbg ON cs.grade_level = mbg.grade_level AND cs.avg_participation_rate_with_color = mbg.max_rate
-            ORDER BY cs.grade_level ASC, cs.class_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q12_BEST_CLASS_BY_GRADE, self._as_of_params(as_of_date))
 
         return {
             'title': 'Q12: Best Class Per Grade (Simplified)',
@@ -3231,43 +3108,11 @@ Calculation Rules:<br>
             }
         }
 
-    def q13_overall_best_class_simplified(self) -> Dict[str, Any]:
+    def q13_overall_best_class_simplified(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q13: Overall Best Class in School - Simplified (1 winner school-wide)"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH TotalDays AS (
-                SELECT COUNT(DISTINCT log_date) as total_days
-                FROM Daily_Logs
-            ),
-            BonusData AS (
-                SELECT
-                    class_name,
-                    SUM(bonus_participation_points) as total_bonus
-                FROM Team_Color_Bonus
-                GROUP BY class_name
-            )
-            SELECT
-                r.class_name,
-                r.teacher_name,
-                r.grade_level,
-                r.team_name,
-                COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) as total_participations_base,
-                COALESCE(bd.total_bonus, 0) as color_bonus_points,
-                ROUND(100.0 * COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) /
-                      (ci.total_students * td.total_days), 2) as avg_participation_rate,
-                ROUND(100.0 * (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || r.student_name END) + COALESCE(bd.total_bonus, 0)) /
-                      (ci.total_students * td.total_days), 2) as avg_participation_rate_with_color
-            FROM Roster r
-            INNER JOIN Class_Info ci ON r.class_name = ci.class_name
-            CROSS JOIN TotalDays td
-            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-            LEFT JOIN BonusData bd ON r.class_name = bd.class_name
-            GROUP BY r.class_name, r.teacher_name, r.grade_level, r.team_name, ci.total_students, td.total_days, bd.total_bonus
-            HAVING td.total_days > 0
-            ORDER BY avg_participation_rate_with_color DESC, r.class_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q13_OVERALL_BEST_CLASS, self._as_of_params(as_of_date))
 
         # Get only the winner(s) - handle ties - use WITH COLOR version
         winners = []
@@ -3294,47 +3139,16 @@ Calculation Rules:<br>
             }
         }
 
-    def q15_goal_getters(self) -> Dict[str, Any]:
+    def q15_goal_getters(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q15: Goal Getters - All Students Who Met Goal Every Day (All qualifying students)"""
+        # as_of_date (YYYY-MM-DD): only count reading/color-bonus data through that day
 
-        query = """
-            WITH TotalDays AS (
-                SELECT COUNT(DISTINCT log_date) as total_days
-                FROM Daily_Logs
-            ),
-            StudentGoalDays AS (
-                SELECT
-                    r.student_name,
-                    r.grade_level,
-                    r.team_name,
-                    r.class_name,
-                    COUNT(DISTINCT dl.log_date) as days_with_data,
-                    SUM(CASE WHEN dl.minutes_read >= gr.min_daily_minutes THEN 1 ELSE 0 END) as days_met_goal,
-                    td.total_days
-                FROM Roster r
-                CROSS JOIN TotalDays td
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
-                GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name, td.total_days
-                HAVING days_met_goal = td.total_days AND days_with_data = td.total_days
-            )
-            SELECT
-                student_name,
-                grade_level,
-                days_met_goal,
-                total_days,
-                team_name,
-                class_name
-            FROM StudentGoalDays
-            ORDER BY grade_level ASC, student_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results = self.db.execute_query(QUERY_Q15_GOAL_GETTERS, self._as_of_params(as_of_date))
 
         # Get total days for note
         conn = self.db.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(DISTINCT log_date) FROM Daily_Logs")
+        cursor.execute(SELECT_TOTAL_DAYS_AS_OF, self._as_of_params(as_of_date))
         total_days = cursor.fetchone()[0]
 
         return {
@@ -3352,36 +3166,14 @@ Calculation Rules:<br>
             }
         }
 
-    def q16_top_earner_per_team(self) -> Dict[str, Any]:
+    def q16_top_earner_per_team(self, as_of_date: Optional[str] = None) -> Dict[str, Any]:
         """Q16: Top Earner Per Team (1 winner per team, 2 total)"""
+        # as_of_date (YYYY-MM-DD): read that day's Reader_Cumulative_History snapshot instead of the latest upload
 
-        query = """
-            WITH MaxByTeam AS (
-                SELECT
-                    r.team_name,
-                    MAX(COALESCE(rc.donation_amount, 0)) as max_donation
-                FROM Roster r
-                LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-                GROUP BY r.team_name
-            )
-            SELECT
-                r.team_name,
-                r.student_name,
-                COALESCE(rc.donation_amount, 0) as donation_amount,
-                COALESCE(rc.sponsors, 0) as sponsors,
-                r.grade_level,
-                r.class_name
-            FROM Roster r
-            LEFT JOIN Reader_Cumulative rc ON r.student_name = rc.student_name
-            INNER JOIN MaxByTeam mbt ON r.team_name = mbt.team_name
-                AND COALESCE(rc.donation_amount, 0) = mbt.max_donation
-            WHERE mbt.max_donation > 0
-            ORDER BY r.team_name ASC, r.student_name ASC
-        """
-
-        results = self.db.execute_query(query)
+        results, as_of = self._run_money_query(get_q16_top_earner_per_team_query, as_of_date)
 
         return {
+            **as_of,
             'title': 'Q16: Top Earner Per Team',
             'description': 'Student with highest donation amount on each team (1 winner per team, ties shown)',
             'columns': ['team_name', 'student_name', 'donation_amount', 'sponsors', 'grade_level', 'class_name'],

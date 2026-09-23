@@ -210,3 +210,18 @@ class TestCopiedDatabases:
     def test_register_existing_database_rejects_bad_input(self, client, filename):
         response = client.post('/api/databases/register', json={'year': 2098, 'db_filename': filename})
         assert response.status_code == 400
+
+
+class TestStaleSessionDatabase:
+    """The session cookie is shared by every copy of the app on 127.0.0.1:5001, so it can
+    name a database ID this registry doesn't have - pages must fall back, not crash"""
+
+    @pytest.mark.parametrize('page', ['/school', '/teams', '/classes', '/students', '/upload',
+                                      '/scoreboards/daily', '/scoreboards/prize', '/admin'])
+    def test_unknown_database_id_falls_back(self, client, page):
+        with client.session_transaction() as sess:
+            sess['active_database_id'] = 999999
+        response = client.get(page)
+        assert response.status_code == 200
+        with client.session_transaction() as sess:
+            assert 'active_database_id' not in sess

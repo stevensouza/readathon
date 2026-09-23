@@ -25,23 +25,23 @@ class TestGroupSystemStructure:
     def test_total_item_count(self):
         """Verify total number of items is correct"""
         all_items = get_unified_items()
-        # 23 reports + 8 tables + 4 workflows = 35 items
+        # 24 reports + 9 tables + 4 workflows = 37 items
         # Note: Database_Metadata removed, now external registry database
-        assert len(all_items) == 35, f"Expected 35 items, got {len(all_items)}"
+        assert len(all_items) == 37, f"Expected 37 items, got {len(all_items)}"
 
     def test_report_count(self):
         """Verify number of reports"""
         reports = [item for item in get_unified_items() if is_report(item)]
-        # Q1-Q24 (with gaps: no Q17) = 23 reports
-        assert len(reports) == 23, f"Expected 23 reports, got {len(reports)}"
+        # Q1-Q25 (with gaps: no Q17) = 24 reports
+        assert len(reports) == 24, f"Expected 24 reports, got {len(reports)}"
 
     def test_table_count(self):
         """Verify number of tables"""
         tables = [item for item in get_unified_items() if is_table(item)]
-        # 8 tables: Roster, Class_Info, Grade_Rules, Daily_Logs,
-        #           Reader_Cumulative, Team_Color_Bonus, Upload_History, Complete_Log
+        # 9 tables: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative,
+        #           Reader_Cumulative_History, Team_Color_Bonus, Upload_History, Complete_Log
         # Note: Database_Metadata removed, replaced with external registry database
-        assert len(tables) == 8, f"Expected 8 tables, got {len(tables)}"
+        assert len(tables) == 9, f"Expected 9 tables, got {len(tables)}"
 
     def test_workflow_count(self):
         """Verify number of workflows"""
@@ -82,8 +82,8 @@ class TestWorkflowTags:
     def test_qa_workflow_count(self):
         """Verify QA workflow has correct number of reports"""
         qa_reports = get_workflow_reports('qa')
-        # QA should have all 23 reports + Q24
-        assert len(qa_reports) == 23, f"Expected 23 reports in QA, got {len(qa_reports)}"
+        # QA runs all 24 reports (Q1-Q25, no Q17)
+        assert len(qa_reports) == 24, f"Expected 24 reports in QA, got {len(qa_reports)}"
 
     def test_qd_workflow_count(self):
         """Verify QD workflow has correct number of reports"""
@@ -273,9 +273,9 @@ class TestReportsPageIntegration:
         assert response.status_code == 200
         html = response.data.decode('utf-8')
 
-        # Should show "All Items (35)"
+        # Should show "All Items (37)"
         assert 'All Items' in html, "Should show 'All Items' label"
-        assert '(35)' in html or '35' in html, "Should show count of 35 items"
+        assert "(37)" in html, "Should show count of 37 items"
 
     def test_reports_page_group_filters(self, client):
         """Test all group filters work"""

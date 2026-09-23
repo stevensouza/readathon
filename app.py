@@ -6,6 +6,7 @@ Flask-based browser interface for managing and reporting on read-a-thon data
 from flask import Flask, render_template, request, jsonify, send_file, Response, session, redirect, url_for
 from database import ReadathonDB, ReportGenerator, DatabaseRegistry
 from queries import get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query
+import scoreboards
 import csv
 import io
 import zipfile
@@ -121,10 +122,21 @@ def get_database(db_id: int):
 
     return database_cache[db_id]
 
+def current_db_id():
+    """Database chosen in this browser session, else the one the app started with.
+
+    The session cookie is shared by every copy of the app on 127.0.0.1:5001 (e.g. a second
+    checkout), so it can hold an ID from another registry - ignore IDs this registry doesn't know.
+    """
+    db_id = session.get('active_database_id')
+    if db_id is not None and registry.get_database(db_id):
+        return db_id
+    session.pop('active_database_id', None)
+    return DEFAULT_DATABASE_ID
+
 def get_current_db():
     """Get currently active database"""
-    db_id = session.get('active_database_id', DEFAULT_DATABASE_ID)
-    return get_database(db_id)
+    return get_database(current_db_id())
 
 def get_current_reports():
     """Get report generator for current environment"""
@@ -143,7 +155,7 @@ def get_setup_tables_timestamp():
     When the setup tables (Roster, Class_Info, Grade_Rules) were loaded.
     They are loaded once when a database is created, so use the registry's created_timestamp.
     """
-    db_info = registry.get_database(session.get('active_database_id', DEFAULT_DATABASE_ID))
+    db_info = registry.get_database(current_db_id())
     if not db_info or not db_info.get('created_timestamp'):
         return 'Unknown'
     try:
@@ -188,18 +200,18 @@ def is_sample_db_info(db_info):
 
 def get_current_db_label():
     """Display name of the active database (e.g. '2026 Read-a-Thon'), used in logs and API responses"""
-    db_info = registry.get_database(session.get('active_database_id', DEFAULT_DATABASE_ID))
+    db_info = registry.get_database(current_db_id())
     return db_info['display_name'] if db_info else 'unknown'
 
 def is_production_db():
     """True if the active database holds real contest data (anything other than the sample database)"""
-    db_info = registry.get_database(session.get('active_database_id', DEFAULT_DATABASE_ID))
+    db_info = registry.get_database(current_db_id())
     return bool(db_info) and not is_sample_db_info(db_info)
 
 @app.context_processor
 def inject_database_info():
     """Inject database information into all templates"""
-    db_id = session.get('active_database_id', DEFAULT_DATABASE_ID)
+    db_id = current_db_id()
     db_info = registry.get_database(db_id)
 
     if db_info:
@@ -242,6 +254,7 @@ def get_unified_items():
         {'id': 'q18', 'name': 'Q18/Slide 2: Lead Class by Grade', 'description': 'Leading class in each grade by average daily participation rate', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc']},
         {'id': 'q19', 'name': 'Q19/Slide 5: Team Minutes', 'description': 'Total minutes read by each team', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc', 'workflow.qf']},
         {'id': 'q20', 'name': 'Q20/Slide 6: Team Donations', 'description': 'Total donations raised by each team', 'groups': ['report', 'cumulative', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qc']},
+        {'id': 'q25', 'name': 'Q25: Fundraising by Day', 'description': 'Money raised and sponsors as of each contest day, with the amount added since the previous day (from saved cumulative uploads)', 'groups': ['report', 'cumulative', 'fundraising', 'workflow.qa']},
     ])
 
     # Admin Reports (from /admin route)
@@ -260,6 +273,7 @@ def get_unified_items():
         {'id': 'grade_rules', 'name': 'Grade Rules', 'description': 'Minimum and maximum daily reading minutes by grade level', 'groups': ['table', 'database']},
         {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'reading']},
         {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
+        {'id': 'reader_cumulative_history', 'name': 'Reader Cumulative History', 'description': 'Saved copy of the cumulative upload for each contest day (the latest upload for a day replaces it) - used for money raised as of a past day', 'groups': ['table', 'fundraising']},
         {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table']},
         {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'database']},
         {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'export']},
@@ -2598,7 +2612,60 @@ def index():
 def upload_page():
     """Data upload page"""
     env = get_current_db_label()
-    return render_template('upload.html', environment=env)
+    db = get_current_db()
+    return render_template('upload.html', environment=env,
+                           default_snapshot_date=db.get_default_snapshot_date(),
+                           contest_dates=sorted(db.get_all_dates()))
+
+
+# ========== Scoreboards (Feature 39) ==========
+
+def int_arg(name, default=None):
+    """Positive integer query-string argument, or default"""
+    value = request.args.get(name, '')
+    return int(value) if value.isdigit() and int(value) > 0 else default
+
+
+def scoreboard_context():
+    """What both scoreboards share: database, contest calendar, masthead and the prior-year database"""
+    db_id = current_db_id()
+    db_info = registry.get_database(db_id)
+    reports = get_current_reports()
+    settings = registry.get_settings()
+    calendar = scoreboards.contest_calendar(reports.db, int_arg('day'), int(settings['contest_days']))
+    year = scoreboards.event_year(db_info, calendar)
+
+    # 2026 vs 2025 Showdown: the registered database for the previous event year, if any
+    prior_reports = None
+    if db_info and db_info.get('year'):
+        prior_info = registry.get_database_by_year(int(db_info['year']) - 1)
+        if prior_info and os.path.exists(f"db/{prior_info['db_filename']}"):
+            prior_reports = ReportGenerator(get_database(prior_info['db_id']))
+
+    return reports, calendar, year, prior_reports, scoreboards.masthead(settings, year, calendar)
+
+
+@app.route('/scoreboards/daily')
+def daily_scoreboard():
+    """Daily Scoreboard: ?day=N (default latest), ?draw=N (prize drawing number, default 1)"""
+    reports, calendar, year, prior_reports, masthead = scoreboard_context()
+    drawing_number = int_arg('draw', 1)
+    board = None
+    if calendar['dates']:
+        board = scoreboards.build_daily_scoreboard(reports, calendar, drawing_number, prior_reports, year)
+    return render_template('daily_scoreboard.html', environment=get_current_db_label(),
+                           masthead=masthead, calendar=calendar, board=board, drawing_number=drawing_number)
+
+
+@app.route('/scoreboards/prize')
+def prize_scoreboard():
+    """Prize Scoreboard: ?day=N (default latest); final winners once the last contest day is reached"""
+    reports, calendar, year, prior_reports, masthead = scoreboard_context()
+    board = None
+    if calendar['dates']:
+        board = scoreboards.build_prize_scoreboard(reports, calendar, prior_reports, year)
+    return render_template('prize_scoreboard.html', environment=get_current_db_label(),
+                           masthead=masthead, calendar=calendar, board=board)
 
 
 @app.route('/api/set_active_database', methods=['POST'])
@@ -2665,7 +2732,7 @@ def delete_cumulative():
         db = get_current_db()
         env = get_current_db_label()
 
-        # Delete from Reader_Cumulative
+        # Delete Reader_Cumulative and its saved daily snapshots
         result = db.delete_cumulative_data()
         result['environment'] = env
 
@@ -2752,7 +2819,24 @@ def upload_cumulative():
                 }), 400
 
         db = get_current_db()
-        result = db.upload_cumulative_stats(cumulative_file, confirmed)
+
+        # Contest day this upload covers (saved as that day's snapshot for the scoreboards)
+        snapshot_date = request.form.get('snapshot_date') or db.get_default_snapshot_date()
+        try:
+            datetime.strptime(snapshot_date, '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'success': False, 'error': f'Invalid snapshot date: {snapshot_date} (expected YYYY-MM-DD)'}), 400
+
+        snapshot_confirmed = request.form.get('snapshot_confirmed', 'false').lower() == 'true'
+        if snapshot_date not in db.get_all_dates() and not snapshot_confirmed:
+            return jsonify({
+                'success': False,
+                'needs_snapshot_confirmation': True,
+                'snapshot_date': snapshot_date,
+                'error': f'No daily minutes have been uploaded for {snapshot_date}. Save this cumulative upload as the snapshot for {snapshot_date} anyway?'
+            }), 400
+
+        result = db.upload_cumulative_stats(cumulative_file, confirmed, snapshot_date)
 
         # Add environment info to result
         result['environment'] = env
@@ -3052,6 +3136,8 @@ def run_report(report_id):
             result = reports.q16_top_earner_per_team()
         elif report_id == 'q24':
             result = reports.q24_database_metadata()
+        elif report_id == 'q25':
+            result = reports.q25_fundraising_by_day()
         else:
             return jsonify({'error': 'Unknown report'}), 404
 
@@ -3124,6 +3210,8 @@ def export_report(report_id):
             result = reports.q16_top_earner_per_team()
         elif report_id == 'q24':
             result = reports.q24_database_metadata()
+        elif report_id == 'q25':
+            result = reports.q25_fundraising_by_day()
         else:
             return jsonify({'error': 'Unknown report'}), 404
 
@@ -3168,7 +3256,7 @@ def export_all():
         metadata['version'] = version
 
         # Get registry info for current database
-        db_id = session.get('active_database_id', DEFAULT_DATABASE_ID)
+        db_id = current_db_id()
         db_info = registry.get_database(db_id)
         if db_info:
             metadata['database_info'] = {
@@ -3277,6 +3365,7 @@ def generate_export_readme(metadata: dict) -> str:
 #### Transactional Tables (Event Data)
 - **Daily_Logs:** {counts['Daily_Logs']:,} reading log entries
 - **Reader_Cumulative:** {counts['Reader_Cumulative']:,} cumulative records
+- **Reader_Cumulative_History:** {counts['Reader_Cumulative_History']:,} saved daily snapshot records
 - **Upload_History:** {counts['Upload_History']:,} upload events
 - **Team_Color_Bonus:** {counts['Team_Color_Bonus']:,} bonus records
 
@@ -3289,8 +3378,9 @@ def generate_export_readme(metadata: dict) -> str:
 3. **Grade_Rules.csv** - Grade-specific reading goals (min/max daily minutes)
 4. **Daily_Logs.csv** - Daily reading minutes per student (capped and uncapped)
 5. **Reader_Cumulative.csv** - Cumulative fundraising stats (donations, sponsors)
-6. **Upload_History.csv** - Audit trail of all CSV uploads
-7. **Team_Color_Bonus.csv** - Special team color day bonus records
+6. **Reader_Cumulative_History.csv** - Copy of the cumulative upload saved for each contest day
+7. **Upload_History.csv** - Audit trail of all CSV uploads
+8. **Team_Color_Bonus.csv** - Special team color day bonus records
 
 ## Data Notes
 
@@ -3631,6 +3721,27 @@ def delete_database_registration(db_id):
 
 # ========== Clear Data Tables Endpoints (Feature 29) ==========
 
+@app.route('/api/settings', methods=['GET', 'POST'])
+def app_settings():
+    """Read or save app-wide settings (school name, contest days) kept in the registry"""
+    if request.method == 'GET':
+        return jsonify({'success': True, 'settings': registry.get_settings(),
+                        'saved_count': registry.count_saved_settings()})
+
+    data = request.json or {}
+    school_name = str(data.get('school_name', '')).strip()[:80]
+    try:
+        contest_days = int(data.get('contest_days', 0))
+    except (TypeError, ValueError):
+        contest_days = 0
+    if not 1 <= contest_days <= 60:
+        return jsonify({'success': False, 'error': 'Contest days must be a number from 1 to 60'}), 400
+
+    registry.set_setting('school_name', school_name)
+    registry.set_setting('contest_days', str(contest_days))
+    return jsonify({'success': True, 'settings': registry.get_settings()})
+
+
 @app.route('/api/table_counts', methods=['GET'])
 def get_table_counts():
     """Get record counts for clearable tables"""
@@ -3641,7 +3752,7 @@ def get_table_counts():
 
         counts = {}
         # Transactional tables (clearable)
-        transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs', 'Team_Color_Bonus']
+        transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus']
         # System tables (reference only)
         system_tables = ['Roster', 'Class_Info', 'Grade_Rules']
 
@@ -3669,7 +3780,7 @@ def clear_tables():
         tables = data.get('tables', [])
 
         # Validate table names
-        valid_tables = ['Upload_History', 'Reader_Cumulative', 'Daily_Logs', 'Team_Color_Bonus']
+        valid_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus']
         for table in tables:
             if table not in valid_tables:
                 return jsonify({
@@ -3814,6 +3925,7 @@ def view_table(table_id):
             'grade_rules': 'Grade_Rules',
             'daily_logs': 'Daily_Logs',
             'reader_cumulative': 'Reader_Cumulative',
+            'reader_cumulative_history': 'Reader_Cumulative_History',
             'team_color_bonus': 'Team_Color_Bonus',
             'upload_history': 'Upload_History'
         }
@@ -3829,6 +3941,8 @@ def view_table(table_id):
             query += " ORDER BY log_date DESC, student_name ASC"
         elif table_id == 'reader_cumulative':
             query += " ORDER BY team_name ASC, student_name ASC"
+        elif table_id == 'reader_cumulative_history':
+            query += " ORDER BY snapshot_date DESC, student_name ASC"
         elif table_id == 'team_color_bonus':
             query += " ORDER BY event_date DESC, class_name ASC"
         elif table_id == 'upload_history':
@@ -4007,6 +4121,8 @@ def run_workflow(workflow_id):
                 results.append(reports.q23_roster_integrity_check())
             elif rid == 'q24':
                 results.append(reports.q24_database_metadata())
+            elif rid == 'q25':
+                results.append(reports.q25_fundraising_by_day())
             elif rid == 'q9':
                 results.append(reports.q9_most_donations_by_grade())
             elif rid == 'q10':

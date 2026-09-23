@@ -60,6 +60,7 @@
                         <a href="#grade-tab" class="toc-link" style="padding-left: 2rem;">Grade Level Tab</a>
                         <a href="#students-tab" class="toc-link" style="padding-left: 2rem;">Students Tab</a>
                         <a href="#upload-tab" class="toc-link" style="padding-left: 2rem;">Upload Tab</a>
+                        <a href="#scoreboards-tab" class="toc-link" style="padding-left: 2rem;">Scoreboards</a>
                         <a href="#reports-tab" class="toc-link" style="padding-left: 2rem;">Reports & Data Tab</a>
                         <a href="#workflows-tab" class="toc-link" style="padding-left: 2rem;">Workflows Tab</a>
                         <a href="#admin-tab" class="toc-link" style="padding-left: 2rem;">Admin Tab</a>
@@ -137,14 +138,15 @@
                 </ol>
 
                 <h5 class="mt-4">Navigation Overview</h5>
-                <p>The application has 9 main tabs:</p>
+                <p>The application has 10 main tabs:</p>
                 <ul>
                     <li><strong>School:</strong> School-wide overview with team competition</li>
                     <li><strong>Teams:</strong> Head-to-head team comparison metrics</li>
                     <li><strong>Grade Level:</strong> Grade-by-grade and class-by-class breakdown</li>
                     <li><strong>Students:</strong> Individual student performance (master-detail view)</li>
                     <li><strong>Upload:</strong> Import daily reading and cumulative stats</li>
-                    <li><strong>Reports & Data:</strong> 22 pre-configured reports, table views, and workflows</li>
+                    <li><strong>🏆 Scoreboards:</strong> Daily Scoreboard and Prize Scoreboard, ready to copy into an email as an image</li>
+                    <li><strong>Reports & Data:</strong> 24 pre-configured reports, table views, and workflows</li>
                     <li><strong>Workflows:</strong> Run multiple reports in sequence</li>
                     <li><strong>Admin:</strong> Database management, creation, registry, and comparison tools</li>
                     <li><strong>Help:</strong> Comprehensive documentation and guides</li>
@@ -232,11 +234,11 @@
                 <h4 class="mb-0"><i class="bi bi-grid-3x3"></i> Interface: All Application Tabs</h4>
             </div>
             <div class="card-body">
-                <p class="lead">The application provides 9 main tabs for navigating different aspects of the read-a-thon. Each tab serves a specific purpose, from viewing school-wide metrics to managing databases.</p>
+                <p class="lead">The application provides 10 main tabs for navigating different aspects of the read-a-thon. Each tab serves a specific purpose, from viewing school-wide metrics to managing databases.</p>
 
                 <div class="alert alert-info">
                     <strong><i class="bi bi-info-circle"></i> Quick Links:</strong>
-                    Jump to: <a href="#school-tab">School</a> • <a href="#teams-tab">Teams</a> • <a href="#grade-tab">Grade Level</a> • <a href="#students-tab">Students</a> • <a href="#upload-tab">Upload</a> • <a href="#reports-tab">Reports</a> • <a href="#workflows-tab">Workflows</a> • <a href="#admin-tab">Admin</a> • <a href="#help-tab">Help</a>
+                    Jump to: <a href="#school-tab">School</a> • <a href="#teams-tab">Teams</a> • <a href="#grade-tab">Grade Level</a> • <a href="#students-tab">Students</a> • <a href="#upload-tab">Upload</a> • <a href="#scoreboards-tab">Scoreboards</a> • <a href="#reports-tab">Reports</a> • <a href="#workflows-tab">Workflows</a> • <a href="#admin-tab">Admin</a> • <a href="#help-tab">Help</a>
                 </div>
 
                 <!-- School Tab -->
@@ -340,9 +342,10 @@
                             <div class="card-body p-2">
                                 <p class="small mb-1"><strong>2. Cumulative Stats Upload</strong></p>
                                 <ul class="small mb-1">
-                                    <li><strong>When:</strong> When donations change</li>
+                                    <li><strong>When:</strong> Once per contest day (after that day's minutes)</li>
                                     <li><strong>File:</strong> CSV with Reader Name + Donations + Sponsors</li>
-                                    <li><strong>Updates:</strong> Reader_Cumulative table</li>
+                                    <li><strong>Snapshot date:</strong> the contest day the file covers. Defaults to the latest day with daily minutes (the Day 5 file is often uploaded the morning of Day 6); change it if needed</li>
+                                    <li><strong>Updates:</strong> Reader_Cumulative (latest) and a saved copy for that day in Reader_Cumulative_History. Uploading again for the same day replaces that day's copy</li>
                                 </ul>
                             </div>
                         </div>
@@ -351,9 +354,51 @@
 
                 <p class="small"><strong>Process:</strong> Select date (for daily upload) → Choose CSV file → Click Upload button → System validates names against roster and shows warnings for unrecognized students.</p>
 
+                <!-- Scoreboards -->
+                <h5 id="scoreboards-tab" class="mt-4"><i class="bi bi-trophy"></i> 🏆 Scoreboards</h5>
+                <p><strong>Purpose:</strong> The daily update and the prize results as one-page scoreboards, built from the data and meant to be emailed as an image.</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#upload-tab">Upload Tab</a> (upload the cumulative file each day so money raised can be shown for that day), <a href="#admin-tab">Admin Tab</a> (school name and contest days)</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-2">
+                            <div class="card-body p-2">
+                                <p class="small mb-1"><strong>Daily Scoreboard</strong></p>
+                                <ul class="small mb-1">
+                                    <li>% of students who read at least 1 day, Day N of the contest</li>
+                                    <li><strong>Students:</strong> daily prize drawing winner per grade (from students who met their grade goal that day)</li>
+                                    <li><strong>Classes:</strong> highest participation % in each grade, school-wide leader tagged "Top"</li>
+                                    <li><strong>Teams:</strong> participation, minutes and money raised, with today's figures and trophies for the leader</li>
+                                    <li><strong>Showdown:</strong> this year vs last year on the same contest day (when last year's database is registered)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success mb-2">
+                            <div class="card-body p-2">
+                                <p class="small mb-1"><strong>Prize Scoreboard</strong></p>
+                                <ul class="small mb-1">
+                                    <li>"Prize Leaders — as of Day N" during the contest; "Final Prize Winners" once the last contest day is reached</li>
+                                    <li>Team Participation, Top Student Earner, Highest Class Participation, Grade Level Participation, Top Minutes / Donations / Sponsors per grade, Goal Getters</li>
+                                    <li>Every tied winner is listed ("N-way tie")</li>
+                                    <li>Kindergarten AM and PM classes compete as separate classes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h6>Using them</h6>
+                <ul class="small">
+                    <li><strong>As of:</strong> pick any contest day (defaults to the latest). Minutes and participation count through that day.</li>
+                    <li><strong>Redraw prize winners</strong> (Daily): the drawing is repeatable - reloading shows the same winners. Redraw picks new ones and the header shows "Drawing #N" so everyone knows which draw it is.</li>
+                    <li><strong>Copy as image / Download PNG:</strong> captures only the scoreboard (not the buttons) - paste it into an email.</li>
+                    <li><strong>Not available*:</strong> money raised is only known for days with a saved cumulative upload (see Upload → snapshot date). Earlier years kept only their final totals.</li>
+                    <li><strong>Settings:</strong> Admin → Actions → Scoreboard Settings: school name (masthead) and contest days (default 10, for "Day 7 of 10").</li>
+                </ul>
+
                 <!-- Reports & Data Tab -->
                 <h5 id="reports-tab" class="mt-4"><i class="bi bi-graph-up"></i> Reports & Data Tab</h5>
-                <p><strong>Purpose:</strong> Run 22 pre-configured reports, view database tables, and access workflows.</p>
+                <p><strong>Purpose:</strong> Run 24 pre-configured reports (including Q25 Fundraising by Day), view database tables, and access workflows.</p>
                 <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#workflows-tab">Workflows Tab</a> to run multiple reports in sequence, <a href="#upload-tab">Upload Tab</a> to import data for reports</p>
 
                 <h6>Three Accordion Sections</h6>
@@ -428,7 +473,7 @@
                             <div class="card-body p-2">
                                 <p class="small mb-1"><strong>QA: All Main Reports</strong></p>
                                 <p class="small mb-1">Runs all 23 main reports in sequence</p>
-                                <p class="small mb-0 text-muted">Includes Q1-Q24 (comprehensive report package)</p>
+                                <p class="small mb-0 text-muted">Includes Q1-Q25 (comprehensive report package)</p>
                             </div>
                         </div>
                     </div>
@@ -465,6 +510,7 @@
                             <li><strong>Tab 1: Actions</strong>
                                 <ul class="small">
                                     <li>Selective table clearing (clear specific tables without affecting others)</li>
+                                    <li>Scoreboard Settings: school name and contest days</li>
                                     <li>Upload history viewer</li>
                                     <li>Database integrity tools</li>
                                 </ul>

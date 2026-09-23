@@ -48,5 +48,17 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
+echo "🧪 Running scoreboards page tests..."
+"$PYTHON" -m pytest tests/test_scoreboards_page.py -v
+
+# If tests fail, prevent commit
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Scoreboards page tests failed! Commit aborted."
+    echo "Fix the failing tests before committing, or use 'git commit --no-verify' to skip tests."
+    exit 1
+fi
+
+echo ""
 echo "✅ All tests passed!"
 exit 0
