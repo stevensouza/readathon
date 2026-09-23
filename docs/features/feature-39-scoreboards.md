@@ -73,8 +73,45 @@ Eight prizes (the daily drawing is excluded), runnable for any day ("Prize Leade
 
 **Year-to-year tolerance:** each metric is either available for the requested day or not. Missing values show **"Not available\*"** with a footnote (e.g. "2025 only kept final fundraising totals, not day-by-day amounts. 2025 finished with $X raised.") and no trophy is awarded for that row. This covers older databases without special per-year code.
 
+## Data sources (existing `ReportGenerator` methods in `database.py`)
+
+| Section | Source | Notes |
+|---|---|---|
+| Daily prize winners | `q4_prize_drawing(log_date)` | Currently `random.choice()` per grade — change to the seeded (date, drawing #) pick |
+| Classes by grade / Grade Level Participation | `q18_lead_class_by_grade`, `q12_best_class_by_grade_simplified` | Use the `avg_participation_rate_with_color` figure (matches the 2025 closing deck) |
+| Highest Class Participation | `q13_overall_best_class_simplified` | Deck says ties go to a raffle (never implemented); new rule: all tied classes win |
+| Team participation / minutes / money | `q14_team_participation`, `q19_team_minutes`, `q20_team_donations` | Minutes are capped at 120/day; color-bonus minutes included |
+| Top Student Earner (per team) | `q16_top_earner_per_team` | |
+| Top Minutes / Donations / Sponsors (per grade) | `q10_most_minutes_by_grade`, `q9_most_donations_by_grade`, `q11_most_sponsors_by_grade` | All tied students listed |
+| Goal Getters | `q15_goal_getters` | Mid-contest meaning: met the grade goal every day so far |
+| Medallion "% read at least 1 day" | `get_db_comparison_school_participation(date_filter)` in `queries.py` | Minutes > 0 on at least one day — **not** the stricter "goal met ≥1 day" |
+| Prize text | the `note` field in each method's metadata (e.g. "Prize: Grandpa Joe's $25 Gift Card per grade level") | Team Participation's prize: losing team's captain does something silly; Goal Getters: a book |
+
+Gaps to close:
+- The cumulative methods above take **no date parameter** — add an "as of date" filter (Daily_Logs `log_date <= ?`; money/sponsors from the snapshot for that day). Several have inline SQL in `database.py`; per project convention new SQL goes in `queries.py`.
+- Keep the existing Reports page results unchanged (as-of defaults to "all data").
+
+### Definitions
+
+- **Today (daily page):** today's participation % = students with minutes > 0 that day (plus that day's color-bonus points) ÷ roster size; +minutes today = capped minutes that day, including that day's bonus minutes; +$ today = snapshot(day N) − snapshot(day N−1), shown only when both snapshots exist.
+- **Prize medallion "Students Winning a Prize":** distinct students winning any student prize (Top Earner, Top Minutes/Donations/Sponsors, Goal Getters).
+- **Showdown prior year:** the registry database whose year = this year − 1; day N maps to that database's Nth contest date (same as the database comparison page, `get_database_comparison(..., 'dayN')`). If no prior-year database exists, hide the section.
+- **URLs:** `?day=N` (default latest) and `?draw=N` (daily page, default 1).
+
+### Upload history table (decisions)
+
+- New table (e.g. `Reader_Cumulative_History`): same columns as `Reader_Cumulative` + `snapshot_date`, primary key (`snapshot_date`, `student_name`).
+- Every cumulative upload also writes a snapshot. `snapshot_date` defaults to the latest `Daily_Logs` date at upload time, shown (and changeable) on the upload page. A re-upload for the same date replaces that date's snapshot.
+- Backfill: when the table is first created in an existing database, copy the current `Reader_Cumulative` in as the snapshot for its last contest date (gives 2025 its final totals through the same code path). **Creating/backfilling this in a real year database is a write — ask the user first** (develop against the sample DB).
+- Include the table in the places that list/clear tables: `/tables`, table counts (Q1), `clear_all_data.py`, selective clearing, and deleting cumulative data.
+
+### Settings
+
+- School name: new one-line setting in Admin (not in tracked files). Masthead shows "{school} Read-a-Thon" and "{year} Daily Scoreboard"; fall back to "Read-a-Thon" when unset.
+
 ## Build notes (next step)
 
-- Follow the prototype → production rules in `CLAUDE.md` and `md/RULES.md`.
-- Reuse the day-N mapping from the database comparison page (`get_database_comparison(..., 'dayN')`) for the Showdown.
-- Tests modeled on `tests/test_school_page.py`; for the drawing, assert the winner belongs to the eligible pool and is stable for the same (date, drawing #).
+- Follow the prototype → production rules in `CLAUDE.md` and `md/RULES.md`; read the whole prototypes first.
+- Suggested order: upload history table → as-of-date filters on the source methods → Daily Scoreboard → Prize Scoreboard → school-name setting → nav menu.
+- Tests modeled on `tests/test_school_page.py` (mandatory list in `md/RULES.md`), run against the sample DB; for the drawing, assert the winner belongs to the eligible pool and is stable for the same (date, drawing #). Include a test that a missing prior-year value renders "Not available".
+- Docs: `md/RULES.md` (data rules above), `md/UI_PATTERNS.md` (scoreboard components), `templates/help.html`, `md/CHANGELOG.md` + `VERSION` minor bump; mark Feature 21 superseded.
