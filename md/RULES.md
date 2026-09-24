@@ -226,13 +226,15 @@ GROUP BY ci.teacher_name, ci.grade_level
 
 ---
 
-## Scoreboards (Feature 39)
+## Bulletins: Scoreboards (Feature 39) and Meet the Teams (Feature 41)
 
-Daily Scoreboard (`/scoreboards/daily`) and Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
+The **📰 Bulletins** menu (named "Scoreboards" until v2026.17.0; URLs, `scoreboards.py` and the `_scoreboard_*`
+templates keep the old name): Meet the Teams (`/scoreboards/teams`), Daily Scoreboard (`/scoreboards/daily`) and
+Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
 
 ### Contest days and "as of"
 - **Day N = the Nth date uploaded to `Daily_Logs`.** Skipped weekends never appear, so no start/end dates are stored.
-- **"Day N of T":** T = the `contest_days` setting (Admin → Actions → Scoreboard Settings, default 10), never less
+- **"Day N of T":** T = the `contest_days` setting (Admin → Actions → Bulletin Settings, default 10), never less
   than the days uploaded. The Prize Scoreboard shows "Final Prize Winners" once the as-of day reaches T.
 - **Reading data** (minutes, participation, goals, color bonus) counts through day N (`log_date <= day N`,
   `event_date <= day N`). **The latest day counts the whole contest**, so it matches the Reports page exactly.
@@ -265,10 +267,20 @@ Daily Scoreboard (`/scoreboards/daily`) and Prize Scoreboard (`/scoreboards/priz
 - **School name:** `school_name` setting (registry, not tracked files); masthead "{school} Read-a-Thon", or
   "Read-a-Thon" when unset.
 
+### Meet the Teams (Feature 41)
+`/scoreboards/teams` (📰 Bulletins → Meet the Teams). **Roster only** - no reading data, so it works before day 1.
+- Student counts are `COUNT(*)` from `Roster` per class (`SELECT_TEAM_CLASS_COUNTS`), not `Class_Info.total_students`.
+- One row per class (`class_name`), labeled like the scoreboards (`class_label`: "Teacher AM" / "Teacher PM"), sorted
+  by grade (K first) then label. Teams use the same alphabetical navy/gold sides (`team_sides`); with other than two
+  teams the matchup and rosters are replaced by a note.
+- Year in the masthead ("Meet the {year} Teams") = the event year (registry year, else first contest date).
+- Copy/Download capture at `pixel_ratio=3` (sharp when printed or zoomed); the scoreboards stay at 2.
+
 ### Scoreboard page tests
 The 8 mandatory page tests apply with the scoreboard components standing in for the dashboard ones: team panels
 (`score-panel team-blue/team-gold`) for team badges, `win-trophy-badge` for winning-value ovals, and the masthead +
-medallion for the headline banner. See `tests/test_scoreboards_page.py`.
+medallion for the headline banner. See `tests/test_scoreboards_page.py`. Meet the Teams has no percentages, money or
+winners, so those checks are replaced by roster counts verified against SQL (`TestMeetTheTeamsPage`).
 
 ---
 

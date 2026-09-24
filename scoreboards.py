@@ -1,7 +1,8 @@
 """
-Scoreboards (Feature 39): data for the Daily Scoreboard and Prize Scoreboard pages.
+Bulletins menu: data for the Daily Scoreboard and Prize Scoreboard pages (Feature 39), and
+Meet the Teams (Feature 41: each team's classes and student counts, from the roster only).
 
-Every figure comes from the existing ReportGenerator methods, "as of" a contest day:
+Scoreboard figures come from the existing ReportGenerator methods, "as of" a contest day:
 - Day N is the Nth date uploaded to Daily_Logs (skipped weekends never appear).
 - Reading data (minutes, participation, goals, color bonus) counts through day N; the
   latest day counts the whole contest, so it matches the Reports page exactly.
@@ -14,7 +15,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from queries import (SELECT_DISTINCT_GRADE_LEVELS, SELECT_DISTINCT_TEAM_NAMES,
+from queries import (SELECT_DISTINCT_GRADE_LEVELS, SELECT_DISTINCT_TEAM_NAMES, SELECT_TEAM_CLASS_COUNTS,
                      SELECT_TEACHERS_WITH_MULTIPLE_CLASSES, get_db_comparison_school_participation)
 
 GRADE_LABELS = {'K': 'Kindergarten', '1': '1st Grade', '2': '2nd Grade', '3': '3rd Grade',
@@ -410,4 +411,48 @@ def build_prize_scoreboard(reports, calendar: Dict[str, Any], prior_reports=None
         'goal_getter_prize': GOAL_GETTER_PRIZE,
         'notes': notes,
         'showdown': build_showdown(reports, prior_reports, year, calendar, final=final) if year else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Meet the Teams
+# ---------------------------------------------------------------------------
+
+def grade_range(grades) -> str:
+    """{'K', '1', '5'} -> 'K–5'; a single grade -> 'K'"""
+    ordered = sorted({str(g).upper() for g in grades}, key=grade_sort_key)
+    if not ordered:
+        return ''
+    return ordered[0] if len(ordered) == 1 else f'{ordered[0]}–{ordered[-1]}'
+
+
+def build_meet_the_teams(reports) -> Optional[Dict[str, Any]]:
+    """Each team's classes and how many students each brings, from the roster (no reading data needed).
+
+    None when the roster is empty. teams is None unless there are exactly two teams (the VS layout).
+    """
+    rows = reports.db.execute_query(SELECT_TEAM_CLASS_COUNTS)
+    if not rows:
+        return None
+
+    teachers = multi_class_teachers(reports)
+    sides = team_sides(reports)
+    teams = None
+    if sides:
+        teams = []
+        for side in sides:
+            team_rows = sorted((r for r in rows if r['team_name'] == side['team_name']),
+                               key=lambda r: (grade_sort_key(r['grade_level']), class_label(r, teachers)))
+            teams.append({**side,
+                          'students': sum(r['students'] for r in team_rows),
+                          'class_count': len(team_rows),
+                          'grade_range': grade_range(r['grade_level'] for r in team_rows),
+                          'classes': [{'grade': str(r['grade_level']).upper(), 'class_label': class_label(r, teachers),
+                                       'students': r['students']} for r in team_rows]})
+
+    return {
+        'total_students': sum(r['students'] for r in rows),
+        'total_classes': len(rows),
+        'grade_range': grade_range(r['grade_level'] for r in rows),
+        'teams': teams,
     }

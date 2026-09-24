@@ -1,5 +1,6 @@
 """
-Test suite for the Scoreboards (Feature 39): Daily Scoreboard and Prize Scoreboard.
+Test suite for the Bulletins menu: Daily Scoreboard and Prize Scoreboard (Feature 39) and
+Meet the Teams (Feature 41).
 
 Page tests run against the sample database (7 students, 2 contest days: 2025-10-10/11,
 one saved cumulative snapshot on 2025-10-11). Tests that write data use temporary copies.
@@ -119,8 +120,9 @@ class _ScoreboardPageChecks:
 
     def test_nav_menu(self, client):
         html = client.get(self.url).data.decode('utf-8')
-        assert '🏆 Scoreboards' in html
-        assert 'href="/scoreboards/daily"' in html and 'href="/scoreboards/prize"' in html
+        assert '📰 Bulletins' in html
+        for href in ['/scoreboards/teams', '/scoreboards/daily', '/scoreboards/prize']:
+            assert f'href="{href}"' in html
 
     def test_invalid_day_falls_back_to_latest(self, client):
         for bad in ['0', '99', 'abc', '-1']:
@@ -229,6 +231,75 @@ class TestPrizeScoreboardPage(_ScoreboardPageChecks):
             registry.set_setting('contest_days', original)
 
 
+def sample_event_year(sample_db):
+    """Same rule as the masthead: the registry year, else the first contest date's year"""
+    year = registry.get_database(sample_db_id())['year']
+    return year or int(sorted(sample_db.get_all_dates())[0][:4])
+
+
+class TestMeetTheTeamsPage:
+    """Mandatory page tests (md/RULES.md) that apply to a roster-only bulletin: it has no
+    percentages, money or winners, so those checks are replaced by roster counts from SQL"""
+    url = '/scoreboards/teams'
+
+    def test_page_loads_successfully(self, client):
+        response = client.get(self.url)
+        assert response.status_code == 200
+        assert b'Read-a-Thon System' in response.data
+
+    def test_no_error_messages(self, client):
+        html = client.get(self.url).data.decode('utf-8').lower()
+        for pattern in ['error:', 'exception:', 'traceback', 'error occurred']:
+            assert pattern not in html
+
+    def test_team_panels_present(self, client):
+        """Team colors: alphabetical first team = navy, second = gold (panels and roster tables)"""
+        html = report_html(client.get(self.url).data.decode('utf-8'))
+        blue = html.index('score-panel team-blue')
+        gold = html.index('score-panel team-gold')
+        assert blue < gold
+        assert 'Team Team1' in html[blue:gold] and 'Team Team2' in html[gold:]
+        assert html.index('roster-head team-blue') < html.index('roster-head team-gold')
+
+    def test_masthead(self, client, sample_db):
+        html = client.get(self.url).data.decode('utf-8')
+        text = page_text(html)
+        assert 'class="masthead"' in html and 'mh-medallion' in html
+        assert f'Meet the {sample_event_year(sample_db)} Teams' in text
+        assert '4 classes · Grades K–2' in text.replace('&middot;', '·').replace('&ndash;', '–')
+        assert '2 Teams' in text
+
+    def test_counts_match_roster(self, client, sample_db):
+        """Medallion, team totals and every class row come straight from the roster"""
+        html = client.get(self.url).data.decode('utf-8')
+        roster = sample_db.execute_query("SELECT COUNT(*) as n FROM Roster")[0]['n']
+        assert re.search(rf'<div class="num">{roster}</div>', html)
+        for team in sample_db.execute_query("SELECT team_name, COUNT(*) as n FROM Roster GROUP BY team_name"):
+            table = re.search(rf'id="roster-{team["team_name"]}".*?</table>', html, re.S).group(0)
+            label = f'Team {scoreboards.team_display_name(team["team_name"])}'
+            assert re.search(rf'{label} total</td><td class="num-col">{team["n"]}<', table)
+            for row in sample_db.execute_query(
+                    "SELECT teacher_name, COUNT(*) as n FROM Roster WHERE team_name = ? GROUP BY class_name",
+                    (team['team_name'],)):
+                assert re.search(rf'<td>{scoreboards.display_name(row["teacher_name"])}</td><td class="num-col">{row["n"]}<', table)
+
+    def test_classes_sorted_by_grade(self, client):
+        html = client.get(self.url).data.decode('utf-8')
+        table = re.search(r'id="roster-team1".*?</table>', html, re.S).group(0)
+        assert re.findall(r'<td class="grade-cell">(\w+)</td>', table) == ['K', '1']
+
+    def test_controls_outside_report(self, client, sample_db):
+        """Copy/Download work without a day picker; the captured image holds no controls"""
+        html = client.get(self.url).data.decode('utf-8')
+        report = report_html(html)
+        assert 'copy-btn' in html and 'download-btn' in html and 'day-picker' not in html
+        assert 'copy-btn' not in report and '<button' not in report
+        assert f"meet_the_teams_{sample_event_year(sample_db)}.png" in html
+
+    def test_ignores_day_argument(self, client):
+        assert client.get(f'{self.url}?day=abc').status_code == 200
+
+
 class TestEmptyDatabase:
     """A new year's database before the first upload (like the 2026 database today)"""
 
@@ -256,6 +327,24 @@ class TestEmptyDatabase:
         response = client.get(url)
         assert response.status_code == 200
         assert 'No reading data yet' in response.data.decode('utf-8')
+
+    def test_meet_the_teams_before_first_upload(self, client, empty_db_id):
+        """Meet the Teams only needs the roster, so it is ready before the contest starts"""
+        with client.session_transaction() as sess:
+            sess['active_database_id'] = empty_db_id
+        html = client.get('/scoreboards/teams').data.decode('utf-8')
+        assert 'No roster yet' not in html
+        assert 'Meet the 2097 Teams' in html and 'Team Team1 total' in html
+
+    def test_meet_the_teams_without_roster(self, client, empty_db_id):
+        with sqlite3.connect('db/readathon_test_scoreboard_empty.db') as conn:
+            conn.execute('DELETE FROM Roster')
+        with client.session_transaction() as sess:
+            sess['active_database_id'] = empty_db_id
+        response = client.get('/scoreboards/teams')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert 'No roster yet' in html and 'id="copy-btn"' not in html
 
 
 class TestShowdown:
@@ -393,6 +482,9 @@ class TestScoreboardData:
         assert scoreboards.prize_text("Prize: Grandpa Joe's $25 Gift Card per grade level. Uses 120-minute daily cap.") == "Grandpa Joe's $25 Gift Card"
         assert scoreboards.leaders({'a': 1, 'b': 1}) == {'a', 'b'}
         assert scoreboards.leaders({'a': 1, 'b': None}) == set()
+        assert scoreboards.grade_range(['5', 'K', '1']) == 'K–5'
+        assert scoreboards.grade_range(['2', '2']) == '2'
+        assert scoreboards.grade_range([]) == ''
 
     def test_half_day_kindergarten_classes_labeled_separately(self):
         """Class prizes are per class: a teacher's AM and PM classes compete separately"""

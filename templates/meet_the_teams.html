@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% import "_scoreboard_macros.html" as sb %}
+
+{% block title %}Meet the Teams - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}{% include "_scoreboard_styles.html" %}{% endblock %}
+
+{% block content %}
+<div class="scoreboard-page">
+
+{{ sb.toolbar(None, can_copy=board is not none) }}
+
+<div class="page" id="report">
+{% if not board %}
+    {{ sb.no_data(masthead, 'Meet the Teams', 'No roster yet',
+                  'This bulletin fills in once the roster is loaded (Admin &rarr; Database Registry &rarr; Create New Database).') }}
+{% else %}
+
+    <div class="masthead">
+        <div class="mh-title">
+            <h1>{{ masthead.title }}</h1>
+            <div class="report-name">Meet the {% if masthead.year %}{{ masthead.year }} {% endif %}Teams</div>
+            <div class="subtitle">{{ board.total_classes }} classes &middot; Grades {{ board.grade_range }}</div>
+        </div>
+        <div class="mh-medallion">
+            <div class="num">{{ '{:,}'.format(board.total_students) }}</div>
+            <div class="label">Readers<br>Ready to Read</div>
+        </div>
+        <div class="mh-day">
+            <div class="day">{% if board.teams %}{{ board.teams|length }} Teams{% else %}Teams{% endif %}</div>
+            <div class="date">As of {{ masthead.generated }}</div>
+        </div>
+    </div>
+
+    <p class="tagline">Every minute counts for your team. Grab a book and read!</p>
+
+    {% if board.teams %}
+    <div class="scoreboard" id="teams-scoreboard">
+        {% for team in board.teams %}
+        <div class="score-panel {{ team.css }}">
+            <div class="team-label"><i class="bi {{ team.icon }}"></i> {{ team.label }}</div>
+            <div class="score-row"><span class="metric-label">Readers</span><span class="metric-val big">{{ '{:,}'.format(team.students) }}</span></div>
+            <div class="score-row"><span class="metric-label">Classes</span><span class="metric-val">{{ team.class_count }}</span></div>
+            <div class="score-row"><span class="metric-label">Grades</span><span class="metric-val">{{ team.grade_range }}</span></div>
+        </div>
+        {% endfor %}
+        <div class="vs-badge">VS</div>
+    </div>
+
+    <div class="section">
+        <div class="section-header-v3">
+            <span class="cat">Team Rosters</span>
+            <span class="desc">Which classes are on each team, and how many readers each one brings</span>
+            <div class="rule"></div>
+        </div>
+        <div class="twin-cols">
+            {% for team in board.teams %}
+            {% if not loop.first %}<div class="col-rule"></div>{% endif %}
+            <div>
+                <div class="roster-head {{ team.css }}"><span><i class="bi bi-people-fill"></i> {{ team.label }}</span><span class="count">{{ team.class_count }} class{{ 'es' if team.class_count != 1 }}</span></div>
+                <table class="report-table roster-{{ 'blue' if team.css == 'team-blue' else 'gold' }}" id="roster-{{ team.team_name }}">
+                    <thead><tr><th>Grade</th><th>Teacher</th><th class="num-col">Readers</th></tr></thead>
+                    <tbody>
+                        {% for c in team.classes %}
+                        <tr><td class="grade-cell">{{ c.grade }}</td><td>{{ c.class_label }}</td><td class="num-col">{{ c.students }}</td></tr>
+                        {% endfor %}
+                        <tr class="total-row"><td></td><td>{{ team.label }} total</td><td class="num-col">{{ '{:,}'.format(team.students) }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="section">
+        <p class="empty-note">The team matchup needs exactly two teams in the roster.</p>
+    </div>
+    {% endif %}
+
+    <div class="report-footer">
+        <span>Read-a-Thon {{ masthead.year }}{% if board.teams %} &middot; {% for team in board.teams %}Go {{ team.label }}! {% endfor %}{% endif %}</span>
+        <span>Generated {{ masthead.generated }}</span>
+    </div>
+{% endif %}
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}{{ sb.capture_script('meet_the_teams_%s.png'|format(masthead.year), pixel_ratio=3) }}{% endblock %}

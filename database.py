@@ -103,7 +103,7 @@ class DatabaseRegistry:
         if self.conn:
             self.conn.close()
 
-    # App-wide settings (Admin -> Actions -> Scoreboard Settings). Defaults apply until saved.
+    # App-wide settings (Admin -> Actions -> Bulletin Settings). Defaults apply until saved.
     SETTING_DEFAULTS = {'school_name': '', 'contest_days': '10'}
 
     def get_settings(self) -> Dict[str, str]:

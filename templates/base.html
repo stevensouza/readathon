@@ -868,7 +868,7 @@
                 </a>
 
                 <div class="nav-links ms-4">
-                    {# Simple view keeps only the daily job: Upload, Scoreboards, Help (+ database selector) #}
+                    {# Simple view keeps only the daily job: Upload, Bulletins, Help (+ database selector) #}
                     {% if not simple_view %}
                     <a href="/school" class="nav-link-item {% if request.path == '/' or request.path == '/school' %}active{% endif %}">🏫 School</a>
                     <a href="/teams" class="nav-link-item {% if request.path == '/teams' %}active{% endif %}">⚔️ Teams</a>
@@ -879,9 +879,10 @@
 
                     <div class="nav-dropdown">
                         <button class="nav-link-item {% if request.path.startswith('/scoreboards') %}active{% endif %}" onclick="toggleNavDropdown('scoreboardsDropdown')">
-                            🏆 Scoreboards <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                            📰 Bulletins <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
                         </button>
                         <div class="dropdown-menu-custom" id="scoreboardsDropdown">
+                            <a href="/scoreboards/teams" class="dropdown-item-custom">👋 Meet the Teams</a>
                             <a href="/scoreboards/daily" class="dropdown-item-custom">📅 Daily Scoreboard</a>
                             <a href="/scoreboards/prize" class="dropdown-item-custom">🏅 Prize Scoreboard</a>
                         </div>
@@ -919,7 +920,7 @@
                 {% if simple_view %}
                 <button class="view-toggle" id="viewToggle" onclick="setViewMode('full')" title="Show every page (dashboards, reports, admin)">☰ Full view</button>
                 {% else %}
-                <button class="view-toggle" id="viewToggle" onclick="setViewMode('simple')" title="Show only Upload, Scoreboards and Help">✨ Simple view</button>
+                <button class="view-toggle" id="viewToggle" onclick="setViewMode('simple')" title="Show only Upload, Bulletins and Help">✨ Simple view</button>
                 {% endif %}
                 <select class="env-selector" id="databaseSelector" onchange="switchDatabase()">
                     <!-- Dynamically populated from registry -->

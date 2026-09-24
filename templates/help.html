@@ -62,7 +62,7 @@
                         <a href="#grade-tab" class="toc-link" style="padding-left: 2rem;">Grade Level Tab</a>
                         <a href="#students-tab" class="toc-link" style="padding-left: 2rem;">Students Tab</a>
                         <a href="#upload-tab" class="toc-link" style="padding-left: 2rem;">Upload Tab</a>
-                        <a href="#scoreboards-tab" class="toc-link" style="padding-left: 2rem;">Scoreboards</a>
+                        <a href="#scoreboards-tab" class="toc-link" style="padding-left: 2rem;">Bulletins</a>
                         <a href="#reports-tab" class="toc-link" style="padding-left: 2rem;">Reports & Data Tab</a>
                         <a href="#workflows-tab" class="toc-link" style="padding-left: 2rem;">Workflows Tab</a>
                         <a href="#admin-tab" class="toc-link" style="padding-left: 2rem;">Admin Tab</a>
@@ -88,10 +88,10 @@
                 <ol class="mb-2">
                     <li><strong>Upload the day's minutes:</strong> 📤 Upload &rarr; Daily Minutes Upload &rarr; choose the day's CSV file(s) from ReadAThon.com.</li>
                     <li><strong>Upload the cumulative file:</strong> 📤 Upload &rarr; Cumulative Stats Upload. <strong>Check the snapshot date</strong> - it should be the contest day the file covers (it defaults to the latest day with minutes).</li>
-                    <li><strong>Open the Daily Scoreboard:</strong> 🏆 Scoreboards &rarr; Daily Scoreboard (it opens on the latest day).</li>
+                    <li><strong>Open the Daily Scoreboard:</strong> 📰 Bulletins &rarr; Daily Scoreboard (it opens on the latest day).</li>
                     <li><strong>Copy as image</strong> and paste it into the email (or <strong>Download PNG</strong> and attach it).</li>
                 </ol>
-                <p class="small text-muted mb-0">After the last day: 🏆 Scoreboards &rarr; Prize Scoreboard shows the Final Prize Winners.</p>
+                <p class="small text-muted mb-0">Before the contest starts: 📰 Bulletins &rarr; Meet the Teams introduces the teams. After the last day: 📰 Bulletins &rarr; Prize Scoreboard shows the Final Prize Winners.</p>
             </div>
         </div>
 
@@ -101,7 +101,7 @@
                 <h4 class="mb-0"><i class="bi bi-magic"></i> Simple View</h4>
             </div>
             <div class="card-body">
-                <p>The <strong>✨ Simple view</strong> button (top right, next to the database selector) hides everything except the daily job: <strong>Upload, Scoreboards, Help</strong> and the database selector. The app opens on the Daily Scoreboard, and the Upload page hides its delete buttons.</p>
+                <p>The <strong>✨ Simple view</strong> button (top right, next to the database selector) hides everything except the daily job: <strong>Upload, Bulletins, Help</strong> and the database selector. The app opens on the Daily Scoreboard, and the Upload page hides its delete buttons.</p>
                 <ul class="small mb-0">
                     <li><strong>☰ Full view</strong> brings back every page: School, Teams, Grade Level, Students, Reports &amp; Data, Workflows, Admin.</li>
                     <li>The choice is remembered, even after restarting the app.</li>
@@ -179,7 +179,7 @@
                     <li><strong>Grade Level:</strong> Grade-by-grade and class-by-class breakdown</li>
                     <li><strong>Students:</strong> Individual student performance (master-detail view)</li>
                     <li><strong>Upload:</strong> Import daily reading and cumulative stats</li>
-                    <li><strong>🏆 Scoreboards:</strong> Daily Scoreboard and Prize Scoreboard, ready to copy into an email as an image</li>
+                    <li><strong>📰 Bulletins:</strong> Meet the Teams, Daily Scoreboard and Prize Scoreboard, ready to copy into an email as an image</li>
                     <li><strong>Reports & Data:</strong> 24 pre-configured reports, table views, and workflows</li>
                     <li><strong>Workflows:</strong> Run multiple reports in sequence</li>
                     <li><strong>Admin:</strong> Database management, creation, registry, and comparison tools</li>
@@ -272,7 +272,7 @@
 
                 <div class="alert alert-info">
                     <strong><i class="bi bi-info-circle"></i> Quick Links:</strong>
-                    Jump to: <a href="#school-tab">School</a> • <a href="#teams-tab">Teams</a> • <a href="#grade-tab">Grade Level</a> • <a href="#students-tab">Students</a> • <a href="#upload-tab">Upload</a> • <a href="#scoreboards-tab">Scoreboards</a> • <a href="#reports-tab">Reports</a> • <a href="#workflows-tab">Workflows</a> • <a href="#admin-tab">Admin</a> • <a href="#help-tab">Help</a>
+                    Jump to: <a href="#school-tab">School</a> • <a href="#teams-tab">Teams</a> • <a href="#grade-tab">Grade Level</a> • <a href="#students-tab">Students</a> • <a href="#upload-tab">Upload</a> • <a href="#scoreboards-tab">Bulletins</a> • <a href="#reports-tab">Reports</a> • <a href="#workflows-tab">Workflows</a> • <a href="#admin-tab">Admin</a> • <a href="#help-tab">Help</a>
                 </div>
 
                 <!-- School Tab -->
@@ -388,10 +388,20 @@
 
                 <p class="small"><strong>Process:</strong> Select date (for daily upload) → Choose CSV file → Click Upload button → System validates names against roster and shows warnings for unrecognized students.</p>
 
-                <!-- Scoreboards -->
-                <h5 id="scoreboards-tab" class="mt-4"><i class="bi bi-trophy"></i> 🏆 Scoreboards</h5>
-                <p><strong>Purpose:</strong> The daily update and the prize results as one-page scoreboards, built from the data and meant to be emailed as an image.</p>
+                <!-- Bulletins -->
+                <h5 id="scoreboards-tab" class="mt-4"><i class="bi bi-newspaper"></i> 📰 Bulletins</h5>
+                <p><strong>Purpose:</strong> Branded one-page bulletins (school masthead, team colors) built from the data and meant to be emailed as an image: the teams before the contest, the daily update, and the prize results.</p>
                 <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#upload-tab">Upload Tab</a> (upload the cumulative file each day so money raised can be shown for that day), <a href="#admin-tab">Admin Tab</a> (school name and contest days)</p>
+                <div class="card border-warning mb-2">
+                    <div class="card-body p-2">
+                        <p class="small mb-1"><strong>Meet the Teams</strong></p>
+                        <ul class="small mb-1">
+                            <li>Built from the roster only, so it is ready as soon as the year's database is created - send it before the contest starts</li>
+                            <li>Total students, the two teams side by side (students, classes, grades), and each team's classes with how many students each teacher brings</li>
+                            <li>Kindergarten AM and PM classes are listed separately; the download is extra sharp so it can be printed or zoomed</li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card border-primary mb-2">
@@ -423,11 +433,11 @@
                 </div>
                 <h6>Using them</h6>
                 <ul class="small">
-                    <li><strong>As of:</strong> pick any contest day (defaults to the latest). Minutes and participation count through that day.</li>
+                    <li><strong>As of</strong> (scoreboards): pick any contest day (defaults to the latest). Minutes and participation count through that day.</li>
                     <li><strong>Redraw prize winners</strong> (Daily): the drawing is repeatable - reloading shows the same winners. Redraw picks new ones and the header shows "Drawing #N" so everyone knows which draw it is.</li>
-                    <li><strong>Copy as image / Download PNG:</strong> captures only the scoreboard (not the buttons) - paste it into an email.</li>
+                    <li><strong>Copy as image / Download PNG:</strong> captures only the bulletin (not the buttons) - paste it into an email.</li>
                     <li><strong>Not available*:</strong> money raised is only known for days with a saved cumulative upload (see Upload → snapshot date). Earlier years kept only their final totals.</li>
-                    <li><strong>Settings:</strong> Admin → Actions → Scoreboard Settings: school name (masthead) and contest days (default 10, for "Day 7 of 10").</li>
+                    <li><strong>Settings:</strong> Admin → Actions → Bulletin Settings: school name (masthead) and contest days (default 10, for "Day 7 of 10").</li>
                 </ul>
 
                 <!-- Reports & Data Tab -->
@@ -544,7 +554,7 @@
                             <li><strong>Tab 1: Actions</strong>
                                 <ul class="small">
                                     <li>Selective table clearing (clear specific tables without affecting others)</li>
-                                    <li>Scoreboard Settings: school name and contest days</li>
+                                    <li>Bulletin Settings: school name and contest days</li>
                                     <li>Upload history viewer</li>
                                     <li>Database integrity tools</li>
                                 </ul>

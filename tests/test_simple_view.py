@@ -1,5 +1,5 @@
 """
-Tests for simple view: the nav shows only the daily job (Upload, Scoreboards, Help, database
+Tests for simple view: the nav shows only the daily job (Upload, Bulletins, Help, database
 selector), the app opens on the Daily Scoreboard, and the Upload page hides its delete controls.
 The preference lives in .readathon_config - tests point CONFIG_FILE at a temporary file.
 """
@@ -13,7 +13,7 @@ from app import app, registry
 
 FULL_ONLY_LINKS = ['href="/school"', 'href="/teams"', 'href="/classes"', 'href="/students"',
                    'href="/reports"', 'href="/workflows"', 'href="/admin"']
-CORE_LINKS = ['href="/upload"', 'href="/scoreboards/daily"', 'href="/scoreboards/prize"', 'href="/help"']
+CORE_LINKS = ['href="/upload"', 'href="/scoreboards/teams"', 'href="/scoreboards/daily"', 'href="/scoreboards/prize"', 'href="/help"']
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ class TestNav:
         assert '☰ Full view' in nav and 'databaseSelector' in nav
         assert '<body class="simple-view">' in html
 
-    @pytest.mark.parametrize('page', ['/scoreboards/daily', '/scoreboards/prize', '/help'])
+    @pytest.mark.parametrize('page', ['/scoreboards/teams', '/scoreboards/daily', '/scoreboards/prize', '/help'])
     def test_simple_view_pages_load(self, simple_client, page):
         assert simple_client.get(page).status_code == 200
 

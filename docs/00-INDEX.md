@@ -40,6 +40,7 @@ This index helps you find features by **what they do**, not by feature number. U
 
 ### 📱 Slides & Presentations
 - **[Scoreboards](features/feature-39-scoreboards.md)** - Daily Scoreboard + Prize Scoreboard, emailable as an image (✅ built in v2026.16.0; supersedes Slides Tab)
+- **[Meet the Teams](features/feature-41-meet-the-teams.md)** - Roster-only team bulletin; renames the menu to 📰 Bulletins (✅ built in v2026.17.0)
 - **[Slides Tab](features/feature-21-slides-tab-new.md)** - Presentation mode for read-a-thon slides (superseded by Scoreboards)
 - **[Slide Column Indicators](features/feature-11-slide-column-indicators.md)** - Visual indicators for slide columns
 
@@ -112,6 +113,7 @@ This index helps you find features by **what they do**, not by feature number. U
 | Database Creation Tool | [feature-35-database-creation-tool.md](features/feature-35-database-creation-tool.md) | NEW | Medium-High |
 | Tag-Based Reporting System | [feature-38-tag-based-reporting-system.md](features/feature-38-tag-based-reporting-system.md) | FUTURE | High |
 | Scoreboards | [feature-39-scoreboards.md](features/feature-39-scoreboards.md) | ✅ COMPLETED (v2026.16.0) | High |
+| Meet the Teams (Bulletins) | [feature-41-meet-the-teams.md](features/feature-41-meet-the-teams.md) | ✅ COMPLETED (v2026.17.0) | Medium |
 | Windows Compatibility | [feature-40-windows-compatibility.md](features/feature-40-windows-compatibility.md) | FUTURE | Low (High if needed) |
 
 ---

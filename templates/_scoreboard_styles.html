@@ -104,6 +104,17 @@
     .scoreboard-page .gg-names { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-flow: column; column-gap: 8px; font-size: 0.68rem; line-height: 1.45; }
     .scoreboard-page .gg-names span { overflow-wrap: anywhere; }
 
+    /* Meet the Teams: tagline, big reader count in the VS panels, one roster table per team under a team-colored band */
+    .scoreboard-page .tagline { font-family: Georgia, "Times New Roman", serif; font-size: 0.92rem; font-style: italic; color: var(--navy); text-align: center; margin: 18px 0; }
+    .scoreboard-page .metric-val.big { font-size: 1.7rem; }
+    .scoreboard-page .roster-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px 6px 0 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.85rem; }
+    .scoreboard-page .roster-head .count { font-size: 0.72rem; font-weight: 700; text-transform: none; letter-spacing: 0; opacity: 0.9; }
+    .scoreboard-page .roster-head.team-blue { background: var(--navy); color: #fff; }
+    .scoreboard-page .roster-head.team-gold { background: var(--gold); color: var(--navy); }
+    .scoreboard-page table.report-table.roster-blue th { background: #dbe3ee !important; color: var(--navy) !important; }
+    .scoreboard-page table.report-table.roster-gold th { background: #fde9c0 !important; color: var(--navy) !important; }
+    .scoreboard-page table.report-table tr.total-row td { background: #fff; border-top: 2px solid var(--navy); border-bottom: none; font-weight: 800; color: var(--navy); }
+
     .scoreboard-page .report-footer { margin-top: 22px; padding-top: 10px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; gap: 16px; font-size: 0.68rem; color: var(--muted); }
     .scoreboard-page .report-footer span:last-child { white-space: nowrap; }
 </style>
