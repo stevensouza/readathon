@@ -551,7 +551,8 @@ class TestCumulativeSnapshots:
         assert data[0]['donations_added'] is None
         assert data[1]['donations_added'] == round(280.0 - 40.0, 2)
 
-    def test_upload_route_asks_to_confirm_date_without_minutes(self, client):
+    def test_upload_route_asks_to_confirm_date_without_minutes(self, client, make_editable):
+        make_editable(sample_db_id())
         """A snapshot date with no daily minutes needs confirmation (nothing is written)"""
         response = client.post('/api/upload_cumulative', data={
             'cumulative_file': (io.BytesIO(self.CSV.encode()), 'cumulative.csv'),
@@ -559,7 +560,8 @@ class TestCumulativeSnapshots:
         assert response.status_code == 400
         assert response.get_json()['needs_snapshot_confirmation'] is True
 
-    def test_upload_route_rejects_bad_date(self, client):
+    def test_upload_route_rejects_bad_date(self, client, make_editable):
+        make_editable(sample_db_id())
         response = client.post('/api/upload_cumulative', data={
             'cumulative_file': (io.BytesIO(self.CSV.encode()), 'cumulative.csv'),
             'snapshot_date': '10/20/2025'}, content_type='multipart/form-data')

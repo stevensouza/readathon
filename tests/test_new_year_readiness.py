@@ -114,7 +114,8 @@ class TestFilterValidation:
 
 class TestProductionSafeguards:
 
-    def test_sample_file_upload_to_production_needs_confirmation(self, client, empty_year_db_id):
+    def test_sample_file_upload_to_production_needs_confirmation(self, client, empty_year_db_id, make_editable):
+        make_editable(empty_year_db_id)
         with client.session_transaction() as sess:
             sess['active_database_id'] = empty_year_db_id
         data = {

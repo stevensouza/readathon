@@ -503,6 +503,13 @@
                             </div>
                         </div>
 
+                        {% if is_read_only_database %}
+                        <div class="alert alert-secondary mb-3" id="clearTablesReadOnly" style="border-left: 5px solid #495057;">
+                            🔒 <strong>{{ current_database.display_name }}</strong> is read-only, so its tables can't be cleared.
+                            {% if editable_database %}Switch to <strong>{{ editable_database.display_name }}</strong>, or make this database editable in the Database Registry tab.{% else %}Make a database editable in the Database Registry tab.{% endif %}
+                        </div>
+                        {% endif %}
+
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="btn-group btn-group-sm" role="group">
@@ -514,7 +521,7 @@
                                 </button>
                             </div>
 
-                            <button id="clearTablesBtn" class="btn btn-danger btn-lg" onclick="clearSelectedTables()" disabled>
+                            <button id="clearTablesBtn" class="btn btn-danger btn-lg editable-only" onclick="clearSelectedTables()" disabled>
                                 <i class="bi bi-trash"></i> Clear Selected Tables
                             </button>
                         </div>
@@ -680,6 +687,17 @@
                                 </div>
                             </div>
 
+                            <!-- Editable: only one database accepts uploads; a new year's database normally takes over -->
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="dbMakeEditable" checked>
+                                <label class="form-check-label fw-bold" for="dbMakeEditable">
+                                    ✏️ Make this the editable database
+                                </label>
+                                <div class="small text-muted">
+                                    Uploads and deletes only work on the editable database; every other database (including {{ editable_database.display_name if editable_database else 'older years' }}) becomes read-only.
+                                </div>
+                            </div>
+
                             <hr class="my-4">
 
                             <!-- CSV File Uploads -->
@@ -808,6 +826,9 @@
                         <li><strong>Update Stats:</strong> Recalculates summary statistics (student count, days, donations) from the
                             contest database and updates the registry. Run this after uploading new data.</li>
                         <li><strong>Register:</strong> Add an existing database file to the registry so it appears in the dropdown.</li>
+                        <li><strong>✏️ Editable / 🔒 Read-only:</strong> Only ONE database accepts uploads, deletes and Clear Tables;
+                            every other database is read-only (grey header, 🔒 READ-ONLY label). Switching databases never changes
+                            which one is editable - click "Make Editable" below to change it.</li>
                     </ul>
                     <p class="small mb-0 text-muted">
                         <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Display names below match the database selector in the header.
@@ -1817,6 +1838,8 @@ function displayDatabases(databases) {
         const isActive = db.is_active === 1;
         const borderClass = isActive ? 'border-success' : 'border-secondary';
         const activeBadge = isActive ? '<span class="badge bg-success">ACTIVE</span>' : '<span class="badge bg-secondary">INACTIVE</span>';
+        const accessBadge = db.is_editable ? '<span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">✏️ EDITABLE</span>'
+                                           : '<span class="badge bg-dark">🔒 READ-ONLY</span>';
 
         html += `
             <div class="col-md-6 col-lg-4">
@@ -1826,7 +1849,7 @@ function displayDatabases(databases) {
                             <h5 class="mb-0">
                                 <i class="bi bi-database"></i> ${db.display_name}
                             </h5>
-                            ${activeBadge}
+                            <div class="text-end">${activeBadge}<br>${accessBadge}</div>
                         </div>
                         <p class="small text-muted mb-2">${db.description || 'No description'}</p>
                         <p class="small text-muted mb-3">
@@ -1850,10 +1873,13 @@ function displayDatabases(databases) {
                             ${!isActive ? `<button class="btn btn-sm btn-success" onclick="activateDatabase(${db.db_id})">
                                 <i class="bi bi-check-circle"></i> Activate
                             </button>` : ''}
+                            ${!db.is_editable ? `<button class="btn btn-sm btn-outline-dark" onclick="makeDatabaseEditable(${db.db_id})">
+                                ✏️ Make Editable
+                            </button>` : ''}
                             <button class="btn btn-sm btn-outline-primary" onclick="updateStats(${db.db_id})">
                                 <i class="bi bi-arrow-clockwise"></i> Update Stats
                             </button>
-                            ${!isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteDatabase(${db.db_id})">
+                            ${!isActive && !db.is_editable ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteDatabase(${db.db_id})">
                                 <i class="bi bi-trash"></i> Delete
                             </button>` : ''}
                         </div>
@@ -1934,6 +1960,28 @@ async function activateDatabase(dbId) {
 
     } catch (error) {
         alert('Activation failed: ' + error.message);
+    }
+}
+
+async function makeDatabaseEditable(dbId) {
+    const databases = await (await fetch('/api/databases')).json();
+    const db = databases.find(d => d.db_id === dbId);
+    const current = databases.find(d => d.is_editable);
+    if (!confirm(`Make "${db.display_name}" the editable database?\n\n` +
+                 `Uploads, deletes and Clear Tables will only work on "${db.display_name}".` +
+                 (current ? `\n"${current.display_name}" will become read-only.` : ''))) {
+        return;
+    }
+    try {
+        const result = await (await fetch(`/api/databases/${dbId}/editable`, {method: 'PUT'})).json();
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        showSuccess(result.message);
+        // Reload so the navigation bar shows the new read-only / editable state
+        setTimeout(() => location.reload(), 500);
+    } catch (error) {
+        alert('Could not change the editable database: ' + error.message);
     }
 }
 
@@ -2250,6 +2298,7 @@ async function createDatabase(event) {
     formData.append('year', year);
     formData.append('filename', filename);
     formData.append('description', description);
+    formData.append('make_editable', document.getElementById('dbMakeEditable').checked ? 'true' : 'false');
     formData.append('roster_csv', rosterFile);
     formData.append('class_info_csv', classInfoFile);
     formData.append('grade_rules_csv', gradeRulesFile);
@@ -2294,6 +2343,8 @@ async function createDatabase(event) {
                         <i class="bi bi-info-circle"></i> The new database has been registered in the central Database_Registry.
                         Switch to it using the "Database Registry" tab or the database selector in the header.
                     </p>
+                    <p class="mb-0 mt-2">${result.editable ? '✏️ It is now the <strong>editable</strong> database (all others are read-only).'
+                                                           : '🔒 It is <strong>read-only</strong>; make it editable in the Database Registry tab before uploading.'}</p>
                 </div>
             `;
 

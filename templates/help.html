@@ -259,6 +259,21 @@
                 <div class="alert alert-warning mt-3">
                     <strong>Note:</strong> The two environments are completely separate. Data uploaded to Sample will NOT appear in Production!
                 </div>
+
+                <h5 class="mt-4" id="editable-database">✏️ Editable vs 🔒 Read-only Databases</h5>
+                <p>You can <em>view</em> any database, but only <strong>one</strong> database can be <em>changed</em>: the
+                   <strong>editable</strong> database (normally this year's). Uploads, upload deletes and Clear Tables are
+                   blocked on every other database, so looking at last year's numbers can never send today's files to the wrong year.</p>
+                <ul>
+                    <li><strong>Editable:</strong> the database selector shows ✏️ and has a green left edge.</li>
+                    <li><strong>Read-only:</strong> grey header bar (amber for Sample), the selector shows 🔒 with a dashed border and a small
+                        <span class="badge bg-dark">🔒 READ-ONLY</span> label under it, and the Upload page is greyed out with a
+                        <em>Switch to ...</em> button that takes you to the editable database.</li>
+                    <li>The selector marks each database with ✏️ or 🔒. Switching databases never changes which one is editable.</li>
+                    <li>To change it, go to <strong>Admin → Database Registry</strong> and click <strong>Make Editable</strong> (you'll be asked to confirm).
+                        A new year's database created in <strong>Admin → Database Creation</strong> becomes editable automatically unless you untick the box.</li>
+                    <li>Until you choose, the newest year database (<code>readathon_YYYY.db</code>) is editable; Sample is read-only like any other database.</li>
+                </ul>
             </div>
         </div>
 
@@ -584,6 +599,7 @@
                                     <li>Switch active database via dropdown selector</li>
                                     <li>View database metadata (year, description, statistics)</li>
                                     <li>Only ONE database active at a time</li>
+                                    <li>Only ONE database editable at a time ("Make Editable"); the others are read-only</li>
                                 </ul>
                             </li>
                             <li><strong>Tab 5: Database Comparison</strong>

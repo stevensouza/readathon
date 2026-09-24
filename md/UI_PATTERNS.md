@@ -522,6 +522,23 @@ controls that should disappear in simple view (e.g. delete buttons) the class **
 
 ---
 
+### 9. Editable / Read-only Database
+
+Templates get `is_read_only_database` and `editable_database` from the context processor.
+- The **selector itself** shows the state (no pill next to it - the header row has no width to spare):
+  - Editable: `.env-selector.editable`, green left edge (5px `#198754`); nothing else is added.
+  - Read-only: `.env-selector.read-only`, dashed border (`#6c757d`; `#b45309` on sample), plus a small
+    `🔒 READ-ONLY` label stacked **under** it (`.db-stack` / `.db-read-only-label`, `#495057`; `#92400e` on sample)
+    whose tooltip says "To upload or delete, switch to <editable DB>". It fits in the nav row's existing two-line height.
+- Read-only also gets `.top-nav.read-only-mode` (slate grey `#e9ecef`, 3px `#6c757d` bottom border; sample keeps its
+  amber `sample-mode`) and `body.read-only-db`, which hides anything with class **`editable-only`** (delete buttons, Clear Tables).
+- Wording: read-only means blocked, not redirected - say "To upload or delete, switch to X", never "uploads go to X".
+- Pages that change data show a grey banner (`alert-secondary`, 5px `#495057` left border) naming the editable
+  database with a "Switch to ..." button, and wrap their forms in `<fieldset disabled>` when read-only.
+- Selector options are prefixed ✏️ / 🔒, and the selected option is the database being viewed (not the registry's `is_active`).
+
+---
+
 ## Layout Templates
 
 ### Card-Based Page Template

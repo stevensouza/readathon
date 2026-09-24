@@ -141,6 +141,7 @@ class TestDatabaseCreation:
             'year': '2027',
             'filename': TEST_DB_NAME,
             'description': '2027 Test Read-a-Thon',
+            'make_editable': 'false',  # keep the real registry's editable database unchanged
             'roster_csv': roster_file,
             'class_info_csv': class_info_file,
             'grade_rules_csv': grade_rules_file
@@ -155,6 +156,7 @@ class TestDatabaseCreation:
         assert data['counts']['roster'] == 5
         assert data['counts']['class_info'] == 3
         assert data['counts']['grade_rules'] == 3
+        assert data['editable'] is False
         print(f"✓ Database created successfully: {TEST_DB_PATH}")
         print(f"  - Roster: {data['counts']['roster']} students")
         print(f"  - Class Info: {data['counts']['class_info']} classes")
