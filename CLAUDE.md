@@ -24,7 +24,7 @@ venv/bin/pytest tests/test_school_page.py -k test_page_loads_successfully   # si
 
 `--db` accepts display name, filename, or alias (`sample`), case-insensitive. Startup DB priority: CLI arg > `.readathon_config` (gitignored, written when you switch DB in the UI) > registry's active DB. `.readathon_config` also holds `view_mode` (`simple`/`full`): simple view hides every nav item except Upload, Bulletins, Help and the DB selector, redirects `/` to the Daily Scoreboard, and hides elements with class `full-view-only` (Upload delete controls). Write it with `save_config()` (keeps other keys), not by overwriting the file.
 
-**Editable vs viewed DB:** switching DBs only changes what you *view*. Exactly one DB is *editable* (registry `App_Settings` key `editable_database_id`; default = newest `readathon_YYYY.db`; changed only via Admin → Database Registry → Make Editable or when creating a DB). Every contest-DB write route carries `@require_editable_db` (403 on read-only DBs); read-only DBs get a grey nav + 🔒 READ-ONLY pill and hide `editable-only` elements. Rules in `md/RULES.md` → "Editable Database".
+**Editable vs viewed DB:** switching DBs only changes what you *view*. Exactly one DB is *editable* (registry `App_Settings` key `editable_database_id`; default = newest `readathon_YYYY.db`; changed only via Admin → Database Registry → Make Editable or when creating a DB). Every contest-DB write route carries `@require_editable_db` (403 on read-only DBs); read-only DBs get a grey nav, a dashed selector with a 🔒 READ-ONLY label under it, and hide `editable-only` elements. Rules in `md/RULES.md` → "Editable Database".
 
 ### Testing gotchas (verified)
 

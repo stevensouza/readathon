@@ -17,8 +17,9 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
   Switching databases never changes which one is editable. Until you choose, the newest `readathon_YYYY.db` is editable
   - **Make Editable** button (with confirmation) in Admin → Database Registry, which also shows ✏️ EDITABLE / 🔒 READ-ONLY badges
   - A new database from Admin → Database Creation becomes editable ("Make this the editable database", on by default)
-  - Read-only databases get a grey header (Sample stays amber), a 🔒 READ-ONLY label next to the selector, ✏️ / 🔒 in the
-    selector, a greyed-out Upload page with a "Switch to ..." button, and no delete / Clear Tables buttons
+  - Read-only databases get a grey header (Sample stays amber), a dashed selector with a small 🔒 READ-ONLY label under
+    it, ✏️ / 🔒 in the selector, a greyed-out Upload page with a "Switch to ..." button, and no delete / Clear Tables
+    buttons. The editable database's selector has a green edge
   - The server refuses changes to a read-only database (403) even if requested directly
   - The editable database can't be unregistered
 

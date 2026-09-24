@@ -133,17 +133,24 @@
         .view-toggle:hover { background: #f1f5f9; }
         .simple-view .full-view-only { display: none !important; }
 
-        /* Editable / read-only pill next to the database selector; read-only pages hide editable-only controls */
-        .db-access-pill {
-            font-size: 0.75rem;
+        /* Editable / read-only: the selector shows it (green edge / dashed border), with a small READ-ONLY
+           label under it while read-only; read-only pages hide editable-only controls */
+        .env-selector.editable { border: 1px solid #a3cfbb; border-left: 5px solid #198754; }
+        .env-selector.read-only { border: 2px dashed #6c757d; color: #495057; }
+        .db-stack { display: flex; flex-direction: column; align-items: stretch; gap: 3px; }
+        .db-read-only-label {
+            font-size: 0.66rem;
             font-weight: 700;
-            padding: 0.3rem 0.6rem;
-            border-radius: 1rem;
+            letter-spacing: 0.06em;
+            text-align: center;
+            color: white;
+            background: #495057;
+            border-radius: 0.25rem;
+            padding: 0.1rem 0.4rem;
             white-space: nowrap;
-            letter-spacing: 0.02em;
+            cursor: help;
         }
-        .db-access-pill.read-only { background: #495057; color: white; }
-        .db-access-pill.editable { background: #d1e7dd; color: #0f5132; border: 1px solid #a3cfbb; }
+        .sample-mode .db-read-only-label { background: #92400e; }
         .read-only-db .editable-only { display: none !important; }
 
         /* Highlight selector when in sample mode */
@@ -154,6 +161,7 @@
             font-weight: 700;
             box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
         }
+        .sample-mode .env-selector.read-only { border: 3px dashed #b45309; }
         .report-table {
             font-size: 0.9rem;
         }
@@ -941,16 +949,16 @@
                 {% else %}
                 <button class="view-toggle" id="viewToggle" onclick="setViewMode('simple')" title="Show only Upload, Bulletins and Help">✨ Simple view</button>
                 {% endif %}
-                {% if is_read_only_database %}
-                <span class="db-access-pill read-only" id="dbAccessPill"
-                      title="Viewing only - uploads and deletes are blocked. Editable database: {{ editable_database.display_name if editable_database else 'none' }} (change it in Admin → Database Registry)">🔒 READ-ONLY</span>
-                {% else %}
-                <span class="db-access-pill editable" id="dbAccessPill"
-                      title="This is the editable database: uploads and deletes go here">✏️ EDITABLE</span>
-                {% endif %}
-                <select class="env-selector" id="databaseSelector" onchange="switchDatabase()">
-                    <!-- Dynamically populated from registry -->
-                </select>
+                <div class="db-stack">
+                    <select class="env-selector {{ 'read-only' if is_read_only_database else 'editable' }}" id="databaseSelector" onchange="switchDatabase()"
+                            title="{{ 'Read-only database' if is_read_only_database else 'Editable database: uploads and deletes happen here' }}">
+                        <!-- Dynamically populated from registry -->
+                    </select>
+                    {% if is_read_only_database %}
+                    <span class="db-read-only-label" id="dbReadOnlyLabel"
+                          title="{{ 'To upload or delete, switch to ' ~ editable_database.display_name if editable_database else 'No database is editable - choose one in Admin → Database Registry' }}">🔒 READ-ONLY</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

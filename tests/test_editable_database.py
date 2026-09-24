@@ -154,16 +154,18 @@ class TestReadOnlyDisplay:
         html = env['client'].get('/upload').data.decode('utf-8')
         assert 'class="top-nav read-only-mode sample-mode"' in html
         assert '<body class="read-only-db">' in html
-        assert '🔒 READ-ONLY' in html
+        assert 'class="env-selector read-only"' in html
+        assert 'id="dbReadOnlyLabel"' in html and 'title="To upload or delete, switch to 2099 Read-a-Thon"' in html
         assert 'id="readOnlyBanner"' in html and 'Switch to 2099 Read-a-Thon' in html
         assert '🔒 <strong>Sample</strong> is <strong>read-only</strong>' in html
+        assert 'To upload or delete, switch to <strong>2099 Read-a-Thon</strong>' in html
         assert '<fieldset disabled' in html
 
     def test_editable_nav_has_no_banner(self, env):
         env['view'](env['year_id'])
         html = env['client'].get('/upload').data.decode('utf-8')
         assert 'class="top-nav"' in html and '<body class="">' in html
-        assert '✏️ EDITABLE' in html
+        assert 'class="env-selector editable"' in html and 'id="dbReadOnlyLabel"' not in html
         assert 'id="readOnlyBanner"' not in html and '<fieldset disabled' not in html
 
     def test_admin_clear_tables_note(self, env):

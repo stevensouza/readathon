@@ -15,9 +15,9 @@
         <div class="alert alert-secondary d-flex align-items-center justify-content-between" id="readOnlyBanner"
              style="border-left: 5px solid #495057;">
             <div>
-                🔒 <strong>{{ current_database.display_name }}</strong> is <strong>read-only</strong>. Uploads and deletes are turned off here.
+                🔒 <strong>{{ current_database.display_name }}</strong> is <strong>read-only</strong>.
                 {% if editable_database %}
-                Uploads go to the editable database: <strong>{{ editable_database.display_name }}</strong>.
+                To upload or delete, switch to <strong>{{ editable_database.display_name }}</strong>.
                 {% else %}
                 No database is editable - choose one in Admin → Database Registry.
                 {% endif %}
