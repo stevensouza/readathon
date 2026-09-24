@@ -522,6 +522,19 @@ controls that should disappear in simple view (e.g. delete buttons) the class **
 
 ---
 
+### 9. Editable / Read-only Database
+
+Templates get `is_read_only_database` and `editable_database` from the context processor.
+- Read-only: `.top-nav.read-only-mode` (slate grey `#e9ecef`, 3px `#6c757d` bottom border; sample keeps its amber
+  `sample-mode`), a dark `🔒 READ-ONLY` pill (`.db-access-pill.read-only`, `#495057`) next to the selector, and
+  `body.read-only-db`, which hides anything with class **`editable-only`** (delete buttons, Clear Tables).
+- Editable: a small green `✏️ EDITABLE` pill (`.db-access-pill.editable`, `#d1e7dd` / `#0f5132`).
+- Pages that change data show a grey banner (`alert-secondary`, 5px `#495057` left border) naming the editable
+  database with a "Switch to ..." button, and wrap their forms in `<fieldset disabled>` when read-only.
+- Selector options are prefixed ✏️ / 🔒, and the selected option is the database being viewed (not the registry's `is_active`).
+
+---
+
 ## Layout Templates
 
 ### Card-Based Page Template

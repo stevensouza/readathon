@@ -168,6 +168,24 @@ The application uses **TWO distinct participation metrics**. DO NOT confuse them
 
 ---
 
+## Editable Database (read-only protection)
+
+- Exactly **one** database is editable; it is stored in the registry's `App_Settings` (`editable_database_id`,
+  `DatabaseRegistry.get_editable_database_id()` / `set_editable_database()`), not in `.readathon_config`.
+- It is **independent of the database being viewed**: switching (selector, Activate, `--db`) never changes it.
+  Change it only in Admin → Database Registry → Make Editable, or by creating a new database (`make_editable`, on by default).
+- Until one is chosen, the newest registered `readathon_YYYY.db` is picked and saved. Sample follows the same rules
+  (read-only unless made editable). If the chosen database is unregistered, nothing is editable; the editable
+  database can't be unregistered.
+- **Every route that writes to a contest database must use `@require_editable_db`** (`app.py`): it returns 403
+  `{read_only: true, error}` when the viewed database isn't the editable one. Currently: `upload_daily`,
+  `upload_cumulative`, `upload_team_color_bonus`, `delete_day`, `delete_cumulative`, `delete_upload_history_batch`,
+  `clear_tables`. CLI scripts (`clear_all_data.py`, `init_data.py`) are not guarded.
+- Tests that write through these routes use the `make_editable(db_id)` fixture (`tests/conftest.py`) so the real
+  registry's setting is never changed.
+
+---
+
 ## State Management & Persistence
 
 ### Sticky Filters (Cross-Page)

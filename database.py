@@ -110,7 +110,8 @@ class DatabaseRegistry:
         """All app settings, with defaults filled in"""
         settings = dict(self.SETTING_DEFAULTS)
         for row in self.conn.execute(SELECT_APP_SETTINGS).fetchall():
-            settings[row['setting_key']] = row['setting_value']
+            if row['setting_key'] in self.SETTING_DEFAULTS:
+                settings[row['setting_key']] = row['setting_value']
         return settings
 
     def count_saved_settings(self) -> int:
@@ -123,6 +124,48 @@ class DatabaseRegistry:
             raise ValueError(f'Unknown setting: {key}')
         self.conn.execute(UPSERT_APP_SETTING, (key, value, datetime.now().isoformat()))
         self.conn.commit()
+
+    # The one database that accepts uploads/deletes; independent of the database being viewed
+    EDITABLE_DATABASE_KEY = 'editable_database_id'
+
+    def get_editable_database_id(self) -> Optional[int]:
+        """
+        ID of the editable database (every other database is read-only).
+        Until one is chosen, the newest year database (readathon_YYYY.db) is picked and saved.
+        None if the saved choice is no longer registered, or there is no year database yet.
+        """
+        if self.conn.execute('SELECT 1 FROM App_Settings WHERE setting_key = ?', (self.EDITABLE_DATABASE_KEY,)).fetchone():
+            db_id = self._stored_editable_database_id()
+            return db_id if db_id and self.get_database(db_id) else None
+        year_dbs = [db for db in self.list_databases() if YEAR_DB_FILENAME_PATTERN.fullmatch(db['db_filename'])]
+        if not year_dbs:
+            return None
+        newest = max(year_dbs, key=lambda db: db['year'] or 0)
+        self._save_editable_database_id(newest['db_id'])
+        return newest['db_id']
+
+    def set_editable_database(self, db_id: int) -> Dict[str, Any]:
+        """Make one database editable (all others become read-only)"""
+        db = self.get_database(db_id)
+        if not db:
+            return {'success': False, 'error': f'Database ID {db_id} not found'}
+        self._save_editable_database_id(db_id)
+        return {'success': True, 'message': f'Editable database: {db["display_name"]}', 'database': db}
+
+    def _save_editable_database_id(self, db_id: int) -> None:
+        self.conn.execute(UPSERT_APP_SETTING, (self.EDITABLE_DATABASE_KEY, str(db_id), datetime.now().isoformat()))
+        self.conn.commit()
+
+    def _stored_editable_database_id(self) -> Optional[int]:
+        row = self.conn.execute('SELECT setting_value FROM App_Settings WHERE setting_key = ?',
+                                (self.EDITABLE_DATABASE_KEY,)).fetchone()
+        return int(row['setting_value']) if row and row['setting_value'] else None
+
+    def _to_dict(self, row) -> Dict[str, Any]:
+        """Registry row as a dict, plus is_editable"""
+        db = {key: row[key] for key in row.keys()}
+        db['is_editable'] = db['db_id'] == self._stored_editable_database_id()
+        return db
 
     def get_database_by_year(self, year: int) -> Optional[Dict[str, Any]]:
         """Registered database for an event year (None if there isn't one)"""
@@ -146,18 +189,7 @@ class DatabaseRegistry:
 
         results = []
         for row in cursor.fetchall():
-            results.append({
-                'db_id': row['db_id'],
-                'db_filename': row['db_filename'],
-                'display_name': row['display_name'],
-                'year': row['year'],
-                'description': row['description'],
-                'is_active': row['is_active'],
-                'created_timestamp': row['created_timestamp'],
-                'student_count': row['student_count'],
-                'total_days': row['total_days'],
-                'total_donations': row['total_donations']
-            })
+            results.append(self._to_dict(row))
 
         return results
 
@@ -184,18 +216,7 @@ class DatabaseRegistry:
         if not row:
             return None
 
-        return {
-            'db_id': row['db_id'],
-            'db_filename': row['db_filename'],
-            'display_name': row['display_name'],
-            'year': row['year'],
-            'description': row['description'],
-            'is_active': row['is_active'],
-            'created_timestamp': row['created_timestamp'],
-            'student_count': row['student_count'],
-            'total_days': row['total_days'],
-            'total_donations': row['total_donations']
-        }
+        return self._to_dict(row)
 
     def get_database_by_name(self, name: str) -> Optional[Dict[str, Any]]:
         """
@@ -221,18 +242,7 @@ class DatabaseRegistry:
 
         row = cursor.fetchone()
         if row:
-            return {
-                'db_id': row['db_id'],
-                'db_filename': row['db_filename'],
-                'display_name': row['display_name'],
-                'year': row['year'],
-                'description': row['description'],
-                'is_active': row['is_active'],
-                'created_timestamp': row['created_timestamp'],
-                'student_count': row['student_count'],
-                'total_days': row['total_days'],
-                'total_donations': row['total_donations']
-            }
+            return self._to_dict(row)
 
         # Special case: "sample" alias matches any database with "sample" in display_name
         if name.lower() == 'sample':
@@ -247,18 +257,7 @@ class DatabaseRegistry:
 
             row = cursor.fetchone()
             if row:
-                return {
-                    'db_id': row['db_id'],
-                    'db_filename': row['db_filename'],
-                    'display_name': row['display_name'],
-                    'year': row['year'],
-                    'description': row['description'],
-                    'is_active': row['is_active'],
-                    'created_timestamp': row['created_timestamp'],
-                    'student_count': row['student_count'],
-                    'total_days': row['total_days'],
-                    'total_donations': row['total_donations']
-                }
+                return self._to_dict(row)
 
         return None
 
@@ -283,18 +282,7 @@ class DatabaseRegistry:
         if not row:
             return None
 
-        return {
-            'db_id': row['db_id'],
-            'db_filename': row['db_filename'],
-            'display_name': row['display_name'],
-            'year': row['year'],
-            'description': row['description'],
-            'is_active': row['is_active'],
-            'created_timestamp': row['created_timestamp'],
-            'student_count': row['student_count'],
-            'total_days': row['total_days'],
-            'total_donations': row['total_donations']
-        }
+        return self._to_dict(row)
 
     def set_active_database(self, db_id: int) -> Dict[str, Any]:
         """
@@ -469,6 +457,8 @@ class DatabaseRegistry:
         # Don't allow deleting the active database
         if db['is_active']:
             return {'success': False, 'error': 'Cannot delete active database. Activate another database first.'}
+        if db['is_editable']:
+            return {'success': False, 'error': 'Cannot delete the editable database. Make another database editable first.'}
 
         cursor.execute('DELETE FROM Database_Registry WHERE db_id = ?', (db_id,))
         self.conn.commit()

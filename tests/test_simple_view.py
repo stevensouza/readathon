@@ -5,6 +5,7 @@ The preference lives in .readathon_config - tests point CONFIG_FILE at a tempora
 """
 
 import json
+import re
 
 import pytest
 
@@ -62,7 +63,7 @@ class TestNav:
         for link in CORE_LINKS:
             assert link in nav
         assert '☰ Full view' in nav and 'databaseSelector' in nav
-        assert '<body class="simple-view">' in html
+        assert re.search(r'<body class="[^"]*\bsimple-view\b', html)
 
     @pytest.mark.parametrize('page', ['/scoreboards/teams', '/scoreboards/daily', '/scoreboards/prize', '/help'])
     def test_simple_view_pages_load(self, simple_client, page):
@@ -89,9 +90,9 @@ class TestHomePage:
 class TestUploadPage:
     def test_delete_controls_marked_full_view_only(self, simple_client):
         html = simple_client.get('/upload').data.decode('utf-8')
-        assert 'id="deleteSelectedBtn" class="btn btn-sm btn-danger full-view-only"' in html
-        assert '<td class="full-view-only" style="white-space: nowrap;">${deleteButton}</td>' in html
-        assert '<th class="full-view-only" style="width: 40px;"><input type="checkbox" id="selectAll"' in html
+        assert 'id="deleteSelectedBtn" class="btn btn-sm btn-danger full-view-only editable-only"' in html
+        assert '<td class="full-view-only editable-only" style="white-space: nowrap;">${deleteButton}</td>' in html
+        assert '<th class="full-view-only editable-only" style="width: 40px;"><input type="checkbox" id="selectAll"' in html
         assert '.simple-view .full-view-only { display: none !important; }' in html
 
 

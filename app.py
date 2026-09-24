@@ -15,6 +15,7 @@ import os
 import argparse
 import json
 import sys
+from functools import wraps
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -78,6 +79,10 @@ registry = DatabaseRegistry()
 # Year databases copied into db/ (outside git) are registered automatically
 for new_db_filename in registry.register_year_databases():
     print(f"🗄️  Registered new database file: db/{new_db_filename}")
+
+# Only one database accepts uploads/deletes (the newest year database until one is chosen in Admin)
+editable_db = registry.get_database(registry.get_editable_database_id() or 0)
+print(f"✏️  Editable database: {editable_db['display_name'] if editable_db else 'none (all read-only)'}")
 
 # Determine startup database
 if args.db:
@@ -225,22 +230,41 @@ def is_production_db():
     db_info = registry.get_database(current_db_id())
     return bool(db_info) and not is_sample_db_info(db_info)
 
+def get_editable_database():
+    """Registry entry of the one database that accepts uploads and deletes (None if none is editable)"""
+    db_id = registry.get_editable_database_id()
+    return registry.get_database(db_id) if db_id else None
+
+def current_db_is_editable():
+    """True if the database being viewed is the editable one (all others are read-only)"""
+    return registry.get_editable_database_id() == current_db_id()
+
+def require_editable_db(route):
+    """Refuse (403) any change to a read-only database, so switching databases can't send data to the wrong year"""
+    @wraps(route)
+    def guarded(*args, **kwargs):
+        if current_db_is_editable():
+            return route(*args, **kwargs)
+        editable = get_editable_database()
+        where = (f"Only '{editable['display_name']}' can be changed; switch to it, or"
+                 if editable else "No database is editable;")
+        return jsonify({
+            'success': False,
+            'read_only': True,
+            'error': f"🔒 '{get_current_db_label()}' is read-only. {where} "
+                     f"change the editable database in Admin → Database Registry."
+        }), 403
+    return guarded
+
 @app.context_processor
 def inject_database_info():
     """Inject database information into all templates"""
-    db_id = current_db_id()
-    db_info = registry.get_database(db_id)
-
-    if db_info:
-        return {
-            'current_database': db_info,
-            'is_sample_database': is_sample_db_info(db_info),
-            'simple_view': VIEW_MODE == 'simple'
-        }
-
+    db_info = registry.get_database(current_db_id())
     return {
-        'current_database': None,
-        'is_sample_database': False,
+        'current_database': db_info,
+        'is_sample_database': bool(db_info) and is_sample_db_info(db_info),
+        'is_read_only_database': not current_db_is_editable(),
+        'editable_database': get_editable_database(),
         'simple_view': VIEW_MODE == 'simple'
     }
 
@@ -2757,6 +2781,7 @@ def get_upload_history():
 
 
 @app.route('/api/delete_day/<log_date>', methods=['DELETE'])
+@require_editable_db
 def delete_day(log_date):
     """Delete all data for a specific date"""
     try:
@@ -2773,6 +2798,7 @@ def delete_day(log_date):
 
 
 @app.route('/api/delete_cumulative', methods=['DELETE'])
+@require_editable_db
 def delete_cumulative():
     """Delete all cumulative data (donations, sponsors, cumulative minutes)"""
     try:
@@ -2789,6 +2815,7 @@ def delete_cumulative():
 
 
 @app.route('/api/upload_daily', methods=['POST'])
+@require_editable_db
 def upload_daily():
     """Handle daily minutes data upload"""
     try:
@@ -2838,6 +2865,7 @@ def upload_daily():
 
 
 @app.route('/api/upload_cumulative', methods=['POST'])
+@require_editable_db
 def upload_cumulative():
     """Handle cumulative stats upload"""
     try:
@@ -2900,6 +2928,7 @@ def upload_cumulative():
 
 
 @app.route('/api/upload_team_color_bonus', methods=['POST'])
+@require_editable_db
 def upload_team_color_bonus():
     """Handle Team Color Bonus data upload"""
     try:
@@ -2952,6 +2981,7 @@ def upload_team_color_bonus():
 
 
 @app.route('/api/delete_upload_history_batch', methods=['DELETE'])
+@require_editable_db
 def delete_upload_history_batch():
     """Delete multiple upload history records"""
     try:
@@ -3649,6 +3679,11 @@ def create_database():
             total_donations=0.0  # No data yet
         )
 
+        # A new year's database normally becomes the one that accepts uploads (checkbox, on by default)
+        make_editable = request.form.get('make_editable', 'true') == 'true'
+        if make_editable:
+            registry.set_editable_database(db_id)
+
         # Return success response
         return jsonify({
             'success': True,
@@ -3659,6 +3694,7 @@ def create_database():
                 'class_info': class_info_count,
                 'grade_rules': grade_rules_count
             },
+            'editable': make_editable,
             'message': f'Database for year {year} created successfully'
         })
 
@@ -3731,6 +3767,13 @@ def activate_database(db_id):
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/databases/<int:db_id>/editable', methods=['PUT'])
+def make_database_editable(db_id):
+    """Make a database the editable one; every other database becomes read-only"""
+    result = registry.set_editable_database(db_id)
+    return jsonify(result), 200 if result['success'] else 400
 
 
 @app.route('/api/databases/active', methods=['GET'])
@@ -3820,6 +3863,7 @@ def get_table_counts():
 
 
 @app.route('/api/clear_tables', methods=['DELETE'])
+@require_editable_db
 def clear_tables():
     """Clear selected data tables"""
     try:

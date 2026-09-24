@@ -24,6 +24,12 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
 
+        /* Read-only database (not the editable one) - slate grey; sample mode below keeps its amber */
+        .top-nav.read-only-mode {
+            background: #e9ecef;
+            border-bottom: 3px solid #6c757d;
+        }
+
         /* Sample mode styling - soft amber background */
         .top-nav.sample-mode {
             background: #fff9e6;
@@ -126,6 +132,19 @@
         }
         .view-toggle:hover { background: #f1f5f9; }
         .simple-view .full-view-only { display: none !important; }
+
+        /* Editable / read-only pill next to the database selector; read-only pages hide editable-only controls */
+        .db-access-pill {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 1rem;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        .db-access-pill.read-only { background: #495057; color: white; }
+        .db-access-pill.editable { background: #d1e7dd; color: #0f5132; border: 1px solid #a3cfbb; }
+        .read-only-db .editable-only { display: none !important; }
 
         /* Highlight selector when in sample mode */
         .sample-mode .env-selector {
@@ -858,9 +877,9 @@
 
     {% block extra_css %}{% endblock %}
 </head>
-<body class="{% if simple_view %}simple-view{% endif %}">
+<body class="{{ ['simple-view' if simple_view, 'read-only-db' if is_read_only_database] | select | join(' ') }}">
     <!-- Navigation -->
-    <div class="top-nav {% if is_sample_database %}sample-mode{% endif %}">
+    <div class="{{ ['top-nav', 'read-only-mode' if is_read_only_database, 'sample-mode' if is_sample_database] | select | join(' ') }}">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <a href="/" class="brand">
@@ -921,6 +940,13 @@
                 <button class="view-toggle" id="viewToggle" onclick="setViewMode('full')" title="Show every page (dashboards, reports, admin)">☰ Full view</button>
                 {% else %}
                 <button class="view-toggle" id="viewToggle" onclick="setViewMode('simple')" title="Show only Upload, Bulletins and Help">✨ Simple view</button>
+                {% endif %}
+                {% if is_read_only_database %}
+                <span class="db-access-pill read-only" id="dbAccessPill"
+                      title="Viewing only - uploads and deletes are blocked. Editable database: {{ editable_database.display_name if editable_database else 'none' }} (change it in Admin → Database Registry)">🔒 READ-ONLY</span>
+                {% else %}
+                <span class="db-access-pill editable" id="dbAccessPill"
+                      title="This is the editable database: uploads and deletes go here">✏️ EDITABLE</span>
                 {% endif %}
                 <select class="env-selector" id="databaseSelector" onchange="switchDatabase()">
                     <!-- Dynamically populated from registry -->
@@ -997,9 +1023,9 @@
             setTimeout(() => alert.remove(), 3000);
         }
 
-        // Database switcher
-        async function switchDatabase() {
-            const dbId = parseInt(document.getElementById('databaseSelector').value);
+        // Database switcher (viewing another database never changes which one is editable)
+        async function switchDatabase(dbId) {
+            dbId = dbId || parseInt(document.getElementById('databaseSelector').value);
             try {
                 const response = await fetch('/api/set_active_database', {
                     method: 'POST',
@@ -1023,12 +1049,13 @@
                 const selector = document.getElementById('databaseSelector');
                 selector.innerHTML = ''; // Clear loading message
 
-                // Populate dropdown with databases from registry
+                // Populate dropdown with databases from registry; select the one being viewed
+                const currentDbId = {{ current_database.db_id if current_database else 'null' }};
                 databases.forEach(db => {
                     const option = document.createElement('option');
                     option.value = db.db_id;
-                    option.textContent = db.display_name;
-                    if (db.is_active) {
+                    option.textContent = `${db.is_editable ? '✏️' : '🔒'} ${db.display_name}`;
+                    if (db.db_id === currentDbId) {
                         option.selected = true;
                     }
                     selector.appendChild(option);
