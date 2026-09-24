@@ -4,7 +4,7 @@
 # Usage: ./run.sh                          last database you used
 #        ./run.sh --db sample              sample data
 #        ./run.sh --db "2026 Read-a-Thon"  a specific year
-#        ./run.sh --simple                 simple view: Upload, Scoreboards, Help only (remembered; --full undoes)
+#        ./run.sh --simple                 simple view: Upload, Bulletins, Help only (remembered; --full undoes)
 #
 # Stop with CTRL+C (or: lsof -ti:5001 | xargs kill)
 

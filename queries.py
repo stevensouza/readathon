@@ -1193,6 +1193,13 @@ SELECT_DISTINCT_TEAM_NAMES = "SELECT DISTINCT team_name FROM Roster ORDER BY tea
 SELECT_DISTINCT_GRADE_LEVELS = "SELECT DISTINCT grade_level FROM Roster"
 SELECT_TEACHERS_WITH_MULTIPLE_CLASSES = "SELECT teacher_name FROM Class_Info GROUP BY teacher_name HAVING COUNT(*) > 1"
 
+# Meet the Teams bulletin: students per class on each team, counted from the roster
+SELECT_TEAM_CLASS_COUNTS = """
+    SELECT team_name, class_name, teacher_name, grade_level, COUNT(*) as students
+    FROM Roster
+    GROUP BY team_name, class_name, teacher_name, grade_level
+"""
+
 SELECT_SCHOOL_DONATIONS_SNAPSHOT = """
     SELECT COALESCE(ROUND(SUM(h.donation_amount), 2), 0) as total_donations
     FROM Reader_Cumulative_History h

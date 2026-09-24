@@ -60,7 +60,7 @@ parser.add_argument('--db',
                         'Case-insensitive.')
 view_group = parser.add_mutually_exclusive_group()
 view_group.add_argument('--simple', action='store_const', const='simple', dest='view_mode',
-                        help='Simple view: only Upload, Scoreboards, Help and the database selector (remembered)')
+                        help='Simple view: only Upload, Bulletins, Help and the database selector (remembered)')
 view_group.add_argument('--full', action='store_const', const='full', dest='view_mode',
                         help='Full view: every page (remembered)')
 args, unknown = parser.parse_known_args()
@@ -2652,7 +2652,7 @@ def upload_page():
                            contest_dates=sorted(db.get_all_dates()))
 
 
-# ========== Scoreboards (Feature 39) ==========
+# ========== Bulletins: Scoreboards (Feature 39) + Meet the Teams (Feature 41) ==========
 
 def int_arg(name, default=None):
     """Positive integer query-string argument, or default"""
@@ -2660,14 +2660,19 @@ def int_arg(name, default=None):
     return int(value) if value.isdigit() and int(value) > 0 else default
 
 
-def scoreboard_context():
-    """What both scoreboards share: database, contest calendar, masthead and the prior-year database"""
-    db_id = current_db_id()
-    db_info = registry.get_database(db_id)
+def bulletin_context():
+    """What every bulletin shares: database info, reports, contest calendar, event year and masthead"""
+    db_info = registry.get_database(current_db_id())
     reports = get_current_reports()
     settings = registry.get_settings()
     calendar = scoreboards.contest_calendar(reports.db, int_arg('day'), int(settings['contest_days']))
     year = scoreboards.event_year(db_info, calendar)
+    return db_info, reports, calendar, year, scoreboards.masthead(settings, year, calendar)
+
+
+def scoreboard_context():
+    """What both scoreboards share: the bulletin basics plus the prior-year database"""
+    db_info, reports, calendar, year, masthead = bulletin_context()
 
     # 2026 vs 2025 Showdown: the registered database for the previous event year, if any
     prior_reports = None
@@ -2676,7 +2681,7 @@ def scoreboard_context():
         if prior_info and os.path.exists(f"db/{prior_info['db_filename']}"):
             prior_reports = ReportGenerator(get_database(prior_info['db_id']))
 
-    return reports, calendar, year, prior_reports, scoreboards.masthead(settings, year, calendar)
+    return reports, calendar, year, prior_reports, masthead
 
 
 @app.route('/scoreboards/daily')
@@ -2700,6 +2705,14 @@ def prize_scoreboard():
         board = scoreboards.build_prize_scoreboard(reports, calendar, prior_reports, year)
     return render_template('prize_scoreboard.html', environment=get_current_db_label(),
                            masthead=masthead, calendar=calendar, board=board)
+
+
+@app.route('/scoreboards/teams')
+def meet_the_teams():
+    """Meet the Teams (Feature 41): each team's classes and student counts, from the roster only"""
+    _, reports, _, _, masthead = bulletin_context()
+    return render_template('meet_the_teams.html', environment=get_current_db_label(),
+                           masthead=masthead, board=scoreboards.build_meet_the_teams(reports))
 
 
 @app.route('/api/set_active_database', methods=['POST'])

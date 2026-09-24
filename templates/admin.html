@@ -350,19 +350,19 @@
             </div>
         </div>
 
-        <!-- Scoreboard Settings (saved in the registry, applies to every database) -->
+        <!-- Bulletin Settings (saved in the registry, applies to every database) -->
         <div class="row mt-4">
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-header card-header-blue">
-                        <h5 class="mb-0"><i class="bi bi-trophy"></i> Scoreboard Settings</h5>
+                        <h5 class="mb-0"><i class="bi bi-newspaper"></i> Bulletin Settings</h5>
                     </div>
                     <div class="card-body">
                         <form id="settingsForm" onsubmit="saveSettings(event)">
                             <div class="mb-3">
                                 <label for="settingSchoolName" class="form-label fw-bold">School name</label>
                                 <input type="text" class="form-control" id="settingSchoolName" maxlength="80" placeholder="e.g. Lincoln Elementary">
-                                <div class="form-text">Scoreboard masthead shows "{school name} Read-a-Thon" (just "Read-a-Thon" when empty).</div>
+                                <div class="form-text">Bulletin masthead shows "{school name} Read-a-Thon" (just "Read-a-Thon" when empty).</div>
                             </div>
                             <div class="mb-3">
                                 <label for="settingContestDays" class="form-label fw-bold">Contest days</label>
@@ -596,7 +596,7 @@
                                             <span class="badge bg-info ms-2">Separate Database</span>
                                         </h6>
                                         <p class="small text-muted mb-2">
-                                            App-wide settings (school name, contest days) - edit them in Actions &rarr; Scoreboard Settings
+                                            App-wide settings (school name, contest days) - edit them in Actions &rarr; Bulletin Settings
                                             <br>
                                             <strong>Location:</strong> <code>db/readathon_registry.db</code> (not in current contest database)
                                         </p>
@@ -1999,7 +1999,7 @@ function showSuccess(message) {
 // ========== Clear Data Tables Functions ==========
 
 // Load table record counts
-// ========== Scoreboard Settings ==========
+// ========== Bulletin Settings ==========
 async function loadSettings() {
     try {
         const result = await (await fetch('/api/settings')).json();

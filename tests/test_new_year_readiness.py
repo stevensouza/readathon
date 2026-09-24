@@ -217,7 +217,8 @@ class TestStaleSessionDatabase:
     name a database ID this registry doesn't have - pages must fall back, not crash"""
 
     @pytest.mark.parametrize('page', ['/school', '/teams', '/classes', '/students', '/upload',
-                                      '/scoreboards/daily', '/scoreboards/prize', '/admin'])
+                                      '/scoreboards/teams', '/scoreboards/daily', '/scoreboards/prize',
+                                      '/admin'])
     def test_unknown_database_id_falls_back(self, client, page):
         with client.session_transaction() as sess:
             sess['active_database_id'] = 999999

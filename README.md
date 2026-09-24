@@ -56,12 +56,14 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 - **Number of Sponsors** (sponsor count per student)
 - **Team Color Bonus** (bonus minutes for team spirit events)
 
-**Reporting:** Per-day and full-contest views with 24 pre-configured reports, plus a Daily Scoreboard and Prize Scoreboard to email as an image
+**Reporting:** Per-day and full-contest views with 24 pre-configured reports, plus branded bulletins (Meet the Teams, Daily Scoreboard, Prize Scoreboard) to email as an image
 
 ## ✨ Features
 
-- **Modern Dashboard**: Clean Bootstrap 5 interface with 10 tabs (School, Teams, Grade Level, Students, Upload, Scoreboards, Reports, Workflows, Admin, Help)
-- **Scoreboards**: Daily Scoreboard and Prize Scoreboard for any contest day, copied or downloaded as an image for email
+- **Modern Dashboard**: Clean Bootstrap 5 interface with 10 tabs (School, Teams, Grade Level, Students, Upload, Bulletins, Reports, Workflows, Admin, Help)
+- **Bulletins**: branded one-page bulletins copied or downloaded as an image for email - **Meet the Teams** (each
+  team's classes and student counts, from the roster, ready before the contest starts), and the **Daily Scoreboard**
+  and **Prize Scoreboard** for any contest day
 - **Local SQLite Database**: All data stored locally - no server needed
 - **Multi-File CSV Upload**: Upload multiple daily files at once with automatic date extraction
 - **24 Pre-configured Reports**: Comprehensive analysis covering all metrics
@@ -135,7 +137,7 @@ See the `sample_*.csv` files in the repository for examples.
 ./run.sh                              # last database you used (sample on first run)
 ./run.sh --db sample                  # sample database
 ./run.sh --db "2026 Read-a-Thon"      # a specific year (display name or filename)
-./run.sh --simple                     # simple view: only Upload, Scoreboards, Help (remembered; --full to undo)
+./run.sh --simple                     # simple view: only Upload, Bulletins, Help (remembered; --full to undo)
 ```
 
 `./run.sh` passes its options to `python3 app.py`, which you can also run directly.
@@ -143,7 +145,7 @@ Browser address: **http://127.0.0.1:5001**
 
 **Note:** The app remembers your last database choice in `.readathon_config`. You can also switch databases using the dropdown menu in the navigation bar.
 
-**Simple view:** the **✨ Simple view** button (top right) hides everything but the daily job - Upload, Scoreboards,
+**Simple view:** the **✨ Simple view** button (top right) hides everything but the daily job - Upload, Bulletins,
 Help and the database selector - opens the app on the Daily Scoreboard, and hides the Upload page's delete buttons.
 **☰ Full view** brings every page back. The choice is remembered in `.readathon_config` (also `--simple` / `--full`).
 
@@ -208,9 +210,9 @@ Zipping the whole folder (code + `db/`) also works, but moving code with `git pu
    - Click "Upload Data"
 
 2. **Send the Daily Scoreboard**
-   - Navigate to "🏆 Scoreboards" → "Daily Scoreboard" (defaults to the latest day)
+   - Navigate to "📰 Bulletins" → "Daily Scoreboard" (defaults to the latest day)
    - Click "Copy as image" (or "Download PNG") and paste it into the email
-   - At the end, use "Prize Scoreboard" for the final winners
+   - At the end, use "Prize Scoreboard" for the final winners; before the contest, "Meet the Teams" introduces the teams
 
 3. **Run Reports**
    - Navigate to "Reports" page
@@ -253,7 +255,7 @@ Group multiple reports to run in sequence:
 7. **Upload_History** - Audit trail for all CSV uploads with timestamps and row counts
 8. **Team_Color_Bonus** - Bonus minutes for team spirit participation events
 
-The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name and contest days for the scoreboards.
+The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name and contest days for the bulletins.
 
 ### Entity Relationships
 - Students → Classes → Teams → School
@@ -274,7 +276,7 @@ readathon/
 ├── app.py                  # Flask web application
 ├── database.py             # Database and report logic
 ├── queries.py              # All SQL
-├── scoreboards.py          # Daily / Prize Scoreboard page data
+├── scoreboards.py          # Bulletins page data: Daily / Prize Scoreboard, Meet the Teams
 ├── init_data.py            # Create + register db/readathon_<YEAR>.db from roster CSVs
 ├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster)
 ├── package_data.sh         # Zip db/ to move data to another computer

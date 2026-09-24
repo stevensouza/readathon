@@ -479,14 +479,14 @@ function sortTable(columnIndex) {
 
 ---
 
-### 7. Scoreboard Components (Feature 39)
+### 7. Bulletin Components (Scoreboards - Feature 39, Meet the Teams - Feature 41)
 
-Used only by the Daily and Prize Scoreboards (`templates/_scoreboard_styles.html`, `_scoreboard_macros.html`), styled
+Used only by the 📰 Bulletins pages (`templates/_scoreboard_styles.html`, `_scoreboard_macros.html`), styled
 as a printed newsletter rather than a dashboard, and captured as an image. CSS is scoped under `.scoreboard-page`.
 
 - **Page + toolbar:** the report is an 8.5in white `.page#report` on a `#eef1f4` background. All controls (As of
   picker, Redraw, Copy as image, Download PNG) sit in `.toolbar` **outside** `#report`, so the captured image never
-  shows them. Capture uses `html-to-image` (`pixelRatio: 2`, margin zeroed); CDN stylesheets need
+  shows them. Capture uses `html-to-image` (`capture_script(filename, pixel_ratio=2)`; Meet the Teams uses 3, margin zeroed); CDN stylesheets need
   `crossorigin="anonymous"` (set in `base.html`) so fonts and icons embed.
 - **Masthead:** navy `#1e3a5f` bar; Georgia serif title "{school} Read-a-Thon", gold italic report name (`#ffd873`),
   uppercase subtitle; gold oval **medallion** (radial gradient to `#f59e0b`) with one big number; "Day N of T" + date
@@ -506,6 +506,9 @@ as a printed newsletter rather than a dashboard, and captured as an image. CSS i
 - **Spotlight card:** cream-to-gold gradient card with a gold medal, Georgia winner name and one big percentage
   (school-wide class winner; tied classes are all listed).
 - **"Top" pill:** gold gradient pill with a star (`.school-winner`) marking the school-wide leader in a table.
+- **Roster tables (Meet the Teams):** a team-colored band (`.roster-head.team-blue/.team-gold`) with the team name
+  and class count, a report table with a light team-tinted header (`.roster-blue` `#dbe3ee` / `.roster-gold`
+  `#fde9c0`), and a bold **total row** (`tr.total-row`, 2px navy top border). Italic Georgia `.tagline` under the masthead.
 - **Goal Getters list:** grade label + count in an 84px left column; names in 6 columns reading **down**
   (alphabetical by last name), wrapping rather than truncating.
 
@@ -514,7 +517,7 @@ as a printed newsletter rather than a dashboard, and captured as an image. CSS i
 ### 8. Simple View
 
 `body.simple-view` (toggle next to the database selector, `VIEW_MODE` in `app.py`) keeps only the daily job in the
-nav: Upload, Scoreboards, Help, database selector. Wrap other nav items in `{% if not simple_view %}`; give
+nav: Upload, Bulletins, Help, database selector. Wrap other nav items in `{% if not simple_view %}`; give
 controls that should disappear in simple view (e.g. delete buttons) the class **`full-view-only`**.
 
 ---
@@ -554,7 +557,7 @@ Before implementing a new page, verify:
 - [ ] Data sources footer is present and collapsible
 - [ ] Sticky filter saves to sessionStorage
 - [ ] All interactive elements have hover states
-- [ ] Image-style pages (scoreboards) use component 7 instead of the filter/banner/footer items above
+- [ ] Image-style pages (bulletins) use component 7 instead of the filter/banner/footer items above
 
 ---
 

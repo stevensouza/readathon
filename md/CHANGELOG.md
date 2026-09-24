@@ -9,6 +9,18 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.17.0] - 2026-09-23 - Meet the Teams
+
+### Added
+- **Meet the Teams** bulletin (Feature 41, `/scoreboards/teams`): the school's masthead with total students, the two
+  teams side by side (students, classes, grades), and each team's classes with how many students each teacher brings.
+  Built from the roster only, so it is ready before the contest starts; Copy as image / Download PNG at 3x resolution
+  so it stays sharp when printed or zoomed
+
+### Changed
+- The **🏆 Scoreboards** menu is now **📰 Bulletins** (Meet the Teams, Daily Scoreboard, Prize Scoreboard), and Admin's
+  Scoreboard Settings card is now **Bulletin Settings**. Labels only: the `/scoreboards/...` addresses are unchanged
+
 ## [v2026.16.0] - 2026-09-23 - Scoreboards
 
 ### Added

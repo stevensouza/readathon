@@ -95,4 +95,4 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}{{ sb.capture_script('daily_scoreboard', calendar.day) }}{% endblock %}
+{% block extra_js %}{{ sb.capture_script('daily_scoreboard_day%s.png'|format(calendar.day)) }}{% endblock %}

@@ -1,9 +1,10 @@
-{# Shared scoreboard pieces (Feature 39). Layout matches the approved prototypes. #}
+{# Shared bulletin pieces (Scoreboards - Feature 39, Meet the Teams - Feature 41). Layout matches the approved prototypes. #}
 
 {# Controls sit outside .page: "Copy as image" captures only .page, so the emailed image never shows pickers or buttons #}
-{% macro toolbar(calendar, redraw_href=None) %}
+{# can_copy: show Copy/Download (default: only when there is a contest day to show) #}
+{% macro toolbar(calendar, redraw_href=None, can_copy=None) %}
 <div class="toolbar">
-    {% if calendar.options %}
+    {% if calendar and calendar.options %}
     <span class="tb-label">As of</span>
     <select id="day-picker" class="form-select form-select-sm w-auto" onchange="pickDay(this.value)">
         {% for opt in calendar.options %}
@@ -16,7 +17,8 @@
     {% endif %}
     <span class="tb-spacer"></span>
     <span id="tb-status" class="tb-status"></span>
-    {% if calendar.options %}
+    {% set show_copy = (calendar and calendar.options) if can_copy is none else can_copy %}
+    {% if show_copy %}
     <button id="copy-btn" class="btn btn-sm btn-primary"><i class="bi bi-clipboard-check"></i> Copy as image</button>
     <button id="download-btn" class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i> Download PNG</button>
     {% endif %}
@@ -83,21 +85,22 @@
 </div>
 {% endmacro %}
 
-{% macro no_data(masthead, report_name) %}
+{% macro no_data(masthead, report_name, subtitle='No reading data yet',
+                 message='This scoreboard fills in once the first day of reading minutes is uploaded (Upload &rarr; Daily Minutes).') %}
 <div class="masthead">
     <div class="mh-title">
         <h1>{{ masthead.title }}</h1>
         <div class="report-name">{{ masthead.year }} {{ report_name }}</div>
-        <div class="subtitle">No reading data yet</div>
+        <div class="subtitle">{{ subtitle }}</div>
     </div>
 </div>
 <div class="section">
-    <p class="empty-note">This scoreboard fills in once the first day of reading minutes is uploaded (Upload &rarr; Daily Minutes).</p>
+    <p class="empty-note">{{ message|safe }}</p>
 </div>
 {% endmacro %}
 
-{# Day picker navigation and Copy as image / Download PNG (captures only .page) #}
-{% macro capture_script(file_prefix, day) %}
+{# Day picker navigation and Copy as image / Download PNG (captures only .page; pixel_ratio 3 = sharp when zoomed or printed) #}
+{% macro capture_script(filename, pixel_ratio=2) %}
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js" crossorigin="anonymous"></script>
 <script>
     function pickDay(day) {
@@ -111,7 +114,7 @@
         const copyBtn = document.getElementById('copy-btn');
         if (!copyBtn) return;
         const status = document.getElementById('tb-status');
-        const capture = () => htmlToImage.toBlob(document.getElementById('report'), { pixelRatio: 2, backgroundColor: '#ffffff', style: { margin: '0' } });
+        const capture = () => htmlToImage.toBlob(document.getElementById('report'), { pixelRatio: {{ pixel_ratio }}, backgroundColor: '#ffffff', style: { margin: '0' } });
         function flash(msg) { status.textContent = msg; setTimeout(() => status.textContent = '', 3000); }
 
         copyBtn.addEventListener('click', async () => {
@@ -126,7 +129,7 @@
             const blob = await capture();
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = '{{ file_prefix }}_day{{ day }}.png';
+            a.download = '{{ filename }}';
             a.click();
             URL.revokeObjectURL(a.href);
         });

@@ -26,6 +26,7 @@ The 2025 daily update was a PowerPoint deck rebuilt by hand every contest day, a
 ## Placement and naming
 
 - New top-level nav menu **🏆 Scoreboards** with **Daily Scoreboard** and **Prize Scoreboard**.
+  Renamed **📰 Bulletins** in v2026.17.0 when [Meet the Teams](feature-41-meet-the-teams.md) was added (labels only; URLs unchanged).
 - Not under Reports & Data: these are fixed-format deliverables, not sortable/exportable tables. They still get their numbers from the existing `ReportGenerator` methods.
 - The word "update" is avoided because it's confused with the daily data upload.
 
@@ -127,7 +128,7 @@ Where things live:
 | Templates | `templates/daily_scoreboard.html`, `prize_scoreboard.html`, shared `_scoreboard_styles.html` (prototype CSS scoped under `.scoreboard-page`) and `_scoreboard_macros.html` (toolbar, showdown, image capture) |
 | As-of queries | `queries.py` "PRIZE REPORT QUERIES (Q9-Q20)": `:as_of` named parameter (`AS_OF_ALL_DATES` = whole contest); money queries read `Reader_Cumulative_History` with `from_snapshot=True` |
 | Snapshots | `Reader_Cumulative_History` (created + backfilled in `ReadathonDB.initialize_database`), written by `upload_cumulative_stats(..., snapshot_date)` |
-| Settings | `App_Settings` table in the registry (`school_name`, `contest_days`, default 10); Admin → Actions → Scoreboard Settings |
+| Settings | `App_Settings` table in the registry (`school_name`, `contest_days`, default 10); Admin → Actions → Bulletin Settings (named Scoreboard Settings until v2026.17.0) |
 | New report | Q25 Fundraising by Day (one row per snapshot, $ added since the previous one) |
 | Tests | `tests/test_scoreboards_page.py` |
 
