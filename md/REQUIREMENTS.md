@@ -103,7 +103,7 @@ Reports are numbered, grouped, and include column descriptions, data sources, a 
 | Q1 | Table Row Counts | Utility |
 | Q2 | Daily Summary (by class or team) | Daily |
 | Q3 | Reader Cumulative Enhanced | Cumulative |
-| Q4 / Slide 4 | Prize Drawing: one random goal-meeting student per grade | Daily |
+| Q4 / Slide 4 | Prize Drawing: random goal-meeting students per grade (2 since 2026; Admin → Bulletin Settings) | Daily |
 | Q5 | Student Cumulative (Top Readers, Goal Getters, Top Fundraisers) | Cumulative |
 | Q6 | Class Participation Winner | Cumulative |
 | Q7 | Complete Log (flat export) | Any |

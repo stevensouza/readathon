@@ -278,15 +278,21 @@ Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
 - **Class prizes are per class (`class_name`), not per teacher.** A half-day kindergarten teacher's AM and PM classes
   compete separately. Any class named "<teacher> am/pm" is shown as "Teacher AM" / "Teacher PM" (even a teacher with
   a single half-day class). Ties: every tied class/student wins.
-- **Daily drawing:** one winner per grade from students who met their grade goal that day, picked with a seed of
+- **Daily drawing:** N winners per grade (Admin → Bulletin Settings → "Drawing winners per grade", 1-5, default **2**
+  since the 2026 event; 1 before) from students who met their grade goal that day, picked with a seed of
   (date, grade, drawing #). Same drawing # → same winners; "Redraw" bumps the # (in the URL, printed in the header).
-  - **Saved winners (`Drawing_Winners`):** "Save winners" (editable database only) stores that day's winners; a saved
-    day always shows them, whatever `?draw=` says, and hides Redraw. Unsaved days are a *preview* (recomputed each load).
-    The server draws again when saving - winner names never come from the browser.
+  A grade with fewer goal-meeters than N gets them all. The bulletin shows one row per grade, names stacked.
+  - **Saved winners (`Drawing_Winners`, key date + grade + student):** "Save winners" (editable database only) stores
+    that day's winners; a saved day always shows them, whatever `?draw=` says or the setting is now, and hides Redraw.
+    Unsaved days are a *preview* (recomputed each load, with the current setting). The server draws again when
+    saving - winner names never come from the browser.
+  - **Read-only databases never draw:** a random preview of a past year isn't who really won, so they show the saved
+    winners, or "Prize winners were not saved for Day N." in place of the table.
   - **Win once per contest:** the preview leaves out every student saved as a winner on *any other* day (only saved
     winners count - an unsaved preview never excludes anyone).
-  - **Fallback:** if that leaves no one in a grade (everyone who met the goal already won), draw from all goal-meeters
-    that day, store `fallback = 1`, and show a note in the toolbar (not in the copied image).
+  - **Fallback:** students who haven't won are drawn first; if fewer than N are left in a grade, the remaining spots
+    are drawn from that day's goal-meeters who already won. Those rows store `fallback = 1` and a note shows in the
+    toolbar (not in the copied image).
   - **Clear is per day:** "Clear saved winners (Day N)" deletes only that day; its winners become eligible again in
     other days' previews, and other days' saved winners never change.
   - Q4 on the Reports page is unchanged (unseeded, ignores saved winners).

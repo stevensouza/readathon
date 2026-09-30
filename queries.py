@@ -121,10 +121,9 @@ CREATE_TABLE_READER_CUMULATIVE_HISTORY = """
     )
 """
 
-# Daily drawing winners saved from the Daily Scoreboard (one per grade per contest date).
-# A saved student can't win again on another date unless every goal-meeter in the grade already won (fallback = 1).
-CREATE_TABLE_DRAWING_WINNERS = """
-    CREATE TABLE IF NOT EXISTS Drawing_Winners (
+# Daily drawing winners saved from the Daily Scoreboard (N per grade per contest date, Admin setting).
+# A saved student can't win again on another date unless too few goal-meeters in the grade haven't won (fallback = 1).
+DRAWING_WINNERS_COLUMNS = """
         log_date TEXT NOT NULL,
         grade_level TEXT NOT NULL,
         student_name TEXT NOT NULL,
@@ -132,9 +131,20 @@ CREATE_TABLE_DRAWING_WINNERS = """
         drawing_number INTEGER NOT NULL,
         fallback INTEGER NOT NULL DEFAULT 0,
         saved_timestamp TEXT NOT NULL,
-        PRIMARY KEY (log_date, grade_level)
-    )
+        PRIMARY KEY (log_date, grade_level, student_name)
 """
+CREATE_TABLE_DRAWING_WINNERS = f"CREATE TABLE IF NOT EXISTS Drawing_Winners ({DRAWING_WINNERS_COLUMNS})"
+
+# Databases from v2026.19-20 keyed Drawing_Winners by (log_date, grade_level) - one winner per grade.
+# SQLite can't change a primary key, so the table is rebuilt (saved rows are kept).
+SELECT_DRAWING_WINNERS_PK_COLUMNS = "SELECT name FROM pragma_table_info('Drawing_Winners') WHERE pk > 0"
+REBUILD_DRAWING_WINNERS_KEY = [
+    f"CREATE TABLE Drawing_Winners_New ({DRAWING_WINNERS_COLUMNS})",
+    "INSERT INTO Drawing_Winners_New SELECT log_date, grade_level, student_name, class_name, drawing_number, "
+    "fallback, saved_timestamp FROM Drawing_Winners",
+    "DROP TABLE Drawing_Winners",
+    "ALTER TABLE Drawing_Winners_New RENAME TO Drawing_Winners",
+]
 
 # Registry database (db/readathon_registry.db) - catalog of per-year contest databases
 SAMPLE_DB_FILENAME = 'readathon_sample.db'
@@ -155,7 +165,7 @@ CREATE_TABLE_DATABASE_REGISTRY = """
     )
 """
 
-# App-wide settings (school name, contest length) - lives in the registry, not in tracked files
+# App-wide settings (school name, contest length, drawing winners per grade) - lives in the registry, not in tracked files
 CREATE_TABLE_APP_SETTINGS = """
     CREATE TABLE IF NOT EXISTS App_Settings (
         setting_key TEXT PRIMARY KEY,
@@ -304,7 +314,7 @@ SELECT_COUNT_READER_CUMULATIVE_HISTORY = "SELECT COUNT(*) FROM Reader_Cumulative
 
 SELECT_DRAWING_WINNERS_BY_DATE = """
     SELECT grade_level, student_name, class_name, drawing_number, fallback
-    FROM Drawing_Winners WHERE log_date = ? ORDER BY grade_level
+    FROM Drawing_Winners WHERE log_date = ? ORDER BY grade_level, student_name
 """
 SELECT_DRAWING_WINNERS_OTHER_DATES = "SELECT DISTINCT student_name FROM Drawing_Winners WHERE log_date <> ?"
 

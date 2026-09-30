@@ -369,6 +369,11 @@
                                 <input type="number" class="form-control" id="settingContestDays" min="1" max="60" required style="max-width: 8rem;">
                                 <div class="form-text">Planned number of reading days ("Day 7 of 10"). Weekends that are skipped don't count. The Prize Scoreboard shows final results once this day is reached.</div>
                             </div>
+                            <div class="mb-3">
+                                <label for="settingDrawingWinners" class="form-label fw-bold">Drawing winners per grade</label>
+                                <input type="number" class="form-control" id="settingDrawingWinners" min="1" max="5" required style="max-width: 8rem;">
+                                <div class="form-text">Students drawn per grade each day for the daily prize (Daily Scoreboard). Days whose winners are already saved keep them.</div>
+                            </div>
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Settings</button>
                             <span id="settingsStatus" class="ms-2 small text-muted"></span>
                         </form>
@@ -620,7 +625,7 @@
                                             <span class="badge bg-info ms-2">Separate Database</span>
                                         </h6>
                                         <p class="small text-muted mb-2">
-                                            App-wide settings (school name, contest days) - edit them in Actions &rarr; Bulletin Settings
+                                            App-wide settings (school name, contest days, drawing winners per grade) - edit them in Actions &rarr; Bulletin Settings
                                             <br>
                                             <strong>Location:</strong> <code>db/readathon_registry.db</code> (not in current contest database)
                                         </p>
@@ -2071,6 +2076,7 @@ async function loadSettings() {
         if (result.success) {
             document.getElementById('settingSchoolName').value = result.settings.school_name;
             document.getElementById('settingContestDays').value = result.settings.contest_days;
+            document.getElementById('settingDrawingWinners').value = result.settings.drawing_winners_per_grade;
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -2086,7 +2092,8 @@ async function saveSettings(event) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 school_name: document.getElementById('settingSchoolName').value,
-                contest_days: document.getElementById('settingContestDays').value
+                contest_days: document.getElementById('settingContestDays').value,
+                drawing_winners_per_grade: document.getElementById('settingDrawingWinners').value
             })
         });
         const result = await response.json();

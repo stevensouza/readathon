@@ -14,10 +14,11 @@ import sqlite3
 
 import pytest
 
+import app as app_module
 import scoreboards
 from app import app, registry
 from database import DatabaseRegistry, ReadathonDB, ReportGenerator
-from queries import get_db_comparison_school_participation
+from queries import SELECT_DRAWING_WINNERS_PK_COLUMNS, get_db_comparison_school_participation
 
 SAMPLE_DB_PATH = 'db/readathon_sample.db'
 DAY1, DAY2 = '2025-10-10', '2025-10-11'
@@ -38,6 +39,14 @@ def client():
 
 
 @pytest.fixture
+def winners_per_grade(monkeypatch):
+    """Pin the Admin setting "Drawing winners per grade" for page/route tests (the registry isn't changed)"""
+    def pin(count):
+        monkeypatch.setattr(app_module, 'drawing_winners_per_grade', lambda: count)
+    return pin
+
+
+@pytest.fixture
 def sample_db():
     return ReadathonDB(SAMPLE_DB_PATH)
 
@@ -55,6 +64,20 @@ def db_copy(tmp_path):
     db = ReadathonDB(str(path))
     yield db
     db.close()
+
+
+def meet_goal(db, log_date, *students):
+    """Give sample students 30 minutes on log_date (meets every sample grade's goal) - for bigger drawing pools"""
+    with db.get_connection() as conn:
+        conn.executemany('UPDATE Daily_Logs SET minutes_read = 30 WHERE log_date = ? AND student_name = ?',
+                         [(log_date, s) for s in students])
+
+
+def winner_cells(html):
+    """Daily Scoreboard winners table as {grade label: [names]}"""
+    table = re.search(r'id="winners-table".*?</table>', html, re.S).group(0)
+    return {grade: re.findall(r'class="winner-name">([^<]+)<', cell)
+            for grade, cell in re.findall(r'<tr><td>([^<]+)</td><td>(.*?)</td></tr>', table, re.S)}
 
 
 def report_html(html):
@@ -161,16 +184,52 @@ class TestDailyScoreboardPage(_ScoreboardPageChecks):
         assert 'Not available*' in text
         assert 'No fundraising total was saved for Day 1' in text
 
-    def test_drawing_number_in_header_and_redraw_link(self, client):
+    @pytest.fixture
+    def editable(self, make_editable, winners_per_grade):
+        """The drawing preview only runs on the editable database"""
+        make_editable(sample_db_id())
+        winners_per_grade(2)
+
+    def test_drawing_number_in_header_and_redraw_link(self, client, editable):
         html = client.get(f'{self.url}?day=2&draw=3').data.decode('utf-8')
         assert 'Drawing #3' in page_text(html)
         assert 'draw=4' in html  # Redraw bumps the drawing number
 
-    def test_drawing_is_stable(self, client):
+    def test_drawing_is_stable(self, client, editable):
         first = client.get(f'{self.url}?day=2&draw=5').data.decode('utf-8')
         again = client.get(f'{self.url}?day=2&draw=5').data.decode('utf-8')
-        pick = lambda h: re.search(r'id="winners-table".*?</table>', h, re.S).group(0)
-        assert pick(first) == pick(again)
+        assert winner_cells(first) == winner_cells(again)
+
+    def test_two_winners_stacked_per_grade(self, client, editable):
+        """Day 1 pools: K = student11, 1st = student21, 2nd = student31/student41 -> both 2nd graders win"""
+        html = client.get(f'{self.url}?day=1').data.decode('utf-8')
+        assert '<th>Winners</th>' in html
+        assert winner_cells(html) == {'Kindergarten': ['Student11'], '1st Grade': ['Student21'],
+                                      '2nd Grade': ['Student31', 'Student41']}
+
+    def test_winners_per_grade_setting(self, client, make_editable, winners_per_grade):
+        make_editable(sample_db_id())
+        winners_per_grade(1)
+        cells = winner_cells(client.get(f'{self.url}?day=1').data.decode('utf-8'))
+        assert [len(names) for names in cells.values()] == [1, 1, 1]
+        assert cells['2nd Grade'][0] in ('Student31', 'Student41')
+
+    def test_grade_without_goal_meeters(self, client, editable):
+        """Day 2: no kindergartner met the goal"""
+        html = client.get(f'{self.url}?day=2').data.decode('utf-8')
+        assert winner_cells(html)['Kindergarten'] == []
+        assert 'No one met the goal' in page_text(html)
+
+    def test_read_only_database_draws_nothing(self, client, make_editable):
+        """A past year's random preview isn't who really won: read-only databases show saved winners only"""
+        make_editable(-1)
+        html = client.get(f'{self.url}?day=2&draw=3').data.decode('utf-8')
+        text = page_text(html)
+        assert 'Prize winners were not saved for Day 2.' in text
+        assert 'Drawing #' not in text and 'winners-table' not in html
+        assert 'redraw-btn' not in html and 'save-drawing-btn' not in html
+        assert 'Winners not saved (read-only database, no drawing)' in html
+        assert 'read-only database' not in report_html(html)  # toolbar note stays out of the copied image
 
     def test_classes_by_grade_and_top_tag(self, client, sample_reports):
         text = page_text(client.get(self.url).data.decode('utf-8'))
@@ -453,22 +512,32 @@ class TestScoreboardData:
         total = sum(r['total_donations'] for r in result['data'])
         assert total == sample_db.execute_query("SELECT SUM(donation_amount) as s FROM Reader_Cumulative")[0]['s']
 
-    def test_drawing_winner_is_eligible_and_stable(self, sample_db, sample_reports):
-        eligible = {(r['grade_level'], r['student_name']) for r in sample_db.execute_query("""
+    def test_drawing_winner_is_eligible_and_stable(self, db_copy):
+        meet_goal(db_copy, DAY2, 'student32', 'student42')  # grade 2: four eligible, two win
+        reports = ReportGenerator(db_copy)
+        eligible = {(r['grade_level'], r['student_name']) for r in db_copy.execute_query("""
             SELECT r.grade_level, r.student_name FROM Roster r JOIN Daily_Logs dl ON dl.student_name = r.student_name
             JOIN Grade_Rules g ON g.grade_level = r.grade_level WHERE dl.log_date = ? AND dl.minutes_read >= g.min_daily_minutes""", (DAY2,))}
         for drawing in range(1, 20):
-            first = sample_reports.q4_prize_drawing(DAY2, drawing)['data']
-            again = sample_reports.q4_prize_drawing(DAY2, drawing)['data']
+            first = reports.q4_prize_drawing(DAY2, drawing)['data']
+            again = reports.q4_prize_drawing(DAY2, drawing)['data']
             assert [w['student_name'] for w in first] == [w['student_name'] for w in again]
-            for winner in first:
-                assert (winner['grade_level'], winner['student_name']) in eligible
+            picked = [(w['grade_level'], w['student_name']) for w in first]
+            assert len(set(picked)) == len(picked) and set(picked) <= eligible
+            assert [g for g, _ in picked].count('2') == 2 and [g for g, _ in picked].count('1') == 1
 
-    def test_redraw_can_change_winner(self, sample_reports):
-        """Grade 2 has two eligible students; some drawing number must pick the other one"""
-        picks = {next(w['student_name'] for w in sample_reports.q4_prize_drawing(DAY2, d)['data'] if w['grade_level'] == '2')
+    def test_redraw_can_change_winners(self, db_copy):
+        """Grade 2 with four eligible students: other drawing numbers pick other pairs"""
+        meet_goal(db_copy, DAY2, 'student32', 'student42')
+        reports = ReportGenerator(db_copy)
+        picks = {frozenset(w['student_name'] for w in reports.q4_prize_drawing(DAY2, d)['data'] if w['grade_level'] == '2')
                  for d in range(1, 20)}
-        assert len(picks) == 2
+        assert len(picks) > 1 and all(len(pair) == 2 for pair in picks)
+
+    def test_drawing_winners_per_grade(self, sample_reports):
+        for count, grade2 in ((1, 1), (2, 2), (5, 2)):  # never more winners than eligible students
+            data = sample_reports.q4_prize_drawing(DAY1, 1, count)['data']
+            assert [w['grade_level'] for w in data].count('2') == grade2
 
     def test_school_totals_and_today_figures(self, sample_reports):
         totals = sample_reports.school_totals_as_of(DAY1, DAY1)
@@ -591,7 +660,7 @@ class TestDrawingWinners:
     """Daily drawing: winners saved from the Daily Scoreboard, and a student wins only once per contest.
 
     Sample pools (met the goal): Day 1 = K: student11, 1: student21, 2: student31/student41;
-    Day 2 = 1: student21, 2: student31/student41.
+    Day 2 = 1: student21, 2: student31/student41. Two winners per grade unless a test says otherwise.
     """
 
     @pytest.fixture
@@ -602,35 +671,60 @@ class TestDrawingWinners:
         sample_db.get_connection().commit()
 
     @staticmethod
-    def names(drawing):
-        return {w['grade_level']: w['student_name'] for w in drawing['winners']}
+    def names(winners):
+        """{grade: {student: fallback}}"""
+        grades = {}
+        for w in winners:
+            grades.setdefault(w['grade_level'], {})[w['student_name']] = w.get('fallback', 0)
+        return grades
 
     def test_preview_matches_q4_when_nothing_saved(self, db_copy):
+        meet_goal(db_copy, DAY1, 'student32', 'student42')  # grade 2: four eligible
         reports = ReportGenerator(db_copy)
         for draw in range(1, 10):
             drawing = reports.daily_drawing(DAY1, draw)
             assert drawing['saved'] is False and drawing['drawing_number'] == draw
-            assert self.names(drawing) == {w['grade_level']: w['student_name'] for w in reports.q4_prize_drawing(DAY1, draw)['data']}
+            assert self.names(drawing['winners']) == self.names(reports.q4_prize_drawing(DAY1, draw)['data'])
             assert all(w['fallback'] == 0 for w in drawing['winners'])
 
     def test_saved_day_keeps_its_winners(self, db_copy):
         reports = ReportGenerator(db_copy)
-        saved = {w['grade_level']: w['student_name'] for w in reports.save_daily_drawing(DAY1, 3)}
+        saved = self.names(reports.save_daily_drawing(DAY1, 3))
         for draw in (1, 3, 7):
-            drawing = reports.daily_drawing(DAY1, draw)
+            drawing = reports.daily_drawing(DAY1, draw, winners_per_grade=3)  # a later setting doesn't change a saved day
             assert drawing['saved'] is True and drawing['drawing_number'] == 3
-            assert self.names(drawing) == saved
+            assert self.names(drawing['winners']) == saved
 
-    def test_previous_winners_excluded_with_fallback(self, db_copy):
+    def test_previous_winners_drawn_again_when_no_one_new(self, db_copy):
         reports = ReportGenerator(db_copy)
-        day1 = {w['grade_level']: w['student_name'] for w in reports.save_daily_drawing(DAY1, 1)}
+        reports.save_daily_drawing(DAY1, 1)  # K: student11, 1: student21, 2: student31 + student41
         for draw in range(1, 10):
-            winners = {w['grade_level']: w for w in reports.daily_drawing(DAY2, draw)['winners']}
-            # Grade 2: the other eligible student always wins
-            assert winners['2']['student_name'] == ({'student31', 'student41'} - {day1['2']}).pop()
-            assert winners['2']['fallback'] == 0
-            # Grade 1: the only eligible student already won Day 1 -> drawn again (fallback)
-            assert winners['1']['student_name'] == 'student21' and winners['1']['fallback'] == 1
+            winners = self.names(reports.daily_drawing(DAY2, draw)['winners'])
+            assert winners == {'1': {'student21': 1}, '2': {'student31': 1, 'student41': 1}}
+
+    def test_new_students_drawn_before_previous_winners(self, db_copy):
+        meet_goal(db_copy, DAY2, 'student32')  # grade 2 on Day 2: student32 is the only one who hasn't won
+        reports = ReportGenerator(db_copy)
+        reports.save_daily_drawing(DAY1, 1)
+        repeats = set()
+        for draw in range(1, 20):
+            grade2 = self.names(reports.daily_drawing(DAY2, draw)['winners'])['2']
+            assert len(grade2) == 2 and grade2.pop('student32') == 0
+            (repeat, fallback), = grade2.items()
+            assert repeat in ('student31', 'student41') and fallback == 1
+            repeats.add(repeat)
+        assert len(repeats) == 2  # the repeat winner is drawn at random
+
+        meet_goal(db_copy, DAY2, 'student42')  # now two new students: no repeat winner needed
+        assert self.names(reports.daily_drawing(DAY2, 1)['winners'])['2'] == {'student32': 0, 'student42': 0}
+
+    def test_one_winner_per_grade(self, db_copy):
+        reports = ReportGenerator(db_copy)
+        day1 = self.names(reports.save_daily_drawing(DAY1, 1, winners_per_grade=1))
+        assert [len(names) for names in day1.values()] == [1, 1, 1]
+        # Grade 2: the other eligible student wins Day 2
+        grade2 = self.names(reports.daily_drawing(DAY2, 1, winners_per_grade=1)['winners'])['2']
+        assert grade2 == {({'student31', 'student41'} - set(day1['2'])).pop(): 0}
 
     def test_save_replaces_only_that_day_and_clear_only_that_day(self, db_copy):
         reports = ReportGenerator(db_copy)
@@ -638,18 +732,40 @@ class TestDrawingWinners:
         reports.save_daily_drawing(DAY2, 1)
         reports.save_daily_drawing(DAY2, 2)
         count = lambda d: db_copy.execute_query('SELECT COUNT(*) as n FROM Drawing_Winners WHERE log_date = ?', (d,))[0]['n']
-        assert count(DAY1) == 3 and count(DAY2) == 2
-        assert reports.clear_daily_drawing(DAY1) == 3
-        assert count(DAY1) == 0 and count(DAY2) == 2
+        assert count(DAY1) == 4 and count(DAY2) == 3
+        assert reports.clear_daily_drawing(DAY1) == 4
+        assert count(DAY1) == 0 and count(DAY2) == 3
         assert reports.daily_drawing(DAY1, 1)['saved'] is False
 
-    def test_save_and_clear_routes(self, client, make_editable, sample_drawings):
+    def test_old_one_per_grade_table_is_rebuilt(self, tmp_path):
+        """Databases saved with v2026.19-20 keyed winners by (date, grade): opening them keeps the rows, allows two"""
+        path = tmp_path / 'old_year.db'
+        shutil.copy(SAMPLE_DB_PATH, path)
+        with sqlite3.connect(path) as conn:
+            conn.execute('DROP TABLE Drawing_Winners')
+            conn.execute("""CREATE TABLE Drawing_Winners (log_date TEXT NOT NULL, grade_level TEXT NOT NULL,
+                student_name TEXT NOT NULL, class_name TEXT, drawing_number INTEGER NOT NULL,
+                fallback INTEGER NOT NULL DEFAULT 0, saved_timestamp TEXT NOT NULL, PRIMARY KEY (log_date, grade_level))""")
+            conn.execute("INSERT INTO Drawing_Winners VALUES (?, '2', 'student31', 'class3', 5, 0, 'then')", (DAY1,))
+        db = ReadathonDB(str(path))
+        assert [r['name'] for r in db.execute_query(SELECT_DRAWING_WINNERS_PK_COLUMNS)] == ['log_date', 'grade_level', 'student_name']
+        assert db.execute_query('SELECT student_name, drawing_number FROM Drawing_Winners') == [
+            {'student_name': 'student31', 'drawing_number': 5}]
+        with db.get_connection() as conn:
+            conn.execute("INSERT INTO Drawing_Winners VALUES (?, '2', 'student41', 'class4', 5, 0, 'now')", (DAY1,))
+        db.close()
+        ReadathonDB(str(path)).close()  # opening again doesn't rebuild or lose rows
+        with sqlite3.connect(path) as conn:
+            assert conn.execute('SELECT COUNT(*) FROM Drawing_Winners').fetchone()[0] == 2
+
+    def test_save_and_clear_routes(self, client, make_editable, winners_per_grade, sample_drawings):
         make_editable(sample_db_id())
+        winners_per_grade(2)
         url = '/scoreboards/daily?day=2'
         assert 'Preview, not saved' in client.get(url).data.decode('utf-8')
 
         response = client.post('/api/daily_drawing', json={'day': 2, 'draw': 4})
-        assert response.status_code == 200 and response.get_json()['saved'] == 2
+        assert response.status_code == 200 and response.get_json()['saved'] == 3
         rows = sample_drawings.execute_query('SELECT log_date, drawing_number FROM Drawing_Winners')
         assert {(r['log_date'], r['drawing_number']) for r in rows} == {(DAY2, 4)}
 
@@ -660,15 +776,27 @@ class TestDrawingWinners:
         assert 'Winners saved' not in report_html(html)  # controls stay out of the copied image
 
         response = client.delete('/api/daily_drawing', json={'day': 2})
-        assert response.status_code == 200 and response.get_json()['deleted'] == 2
+        assert response.status_code == 200 and response.get_json()['deleted'] == 3
         assert sample_drawings.execute_query('SELECT COUNT(*) as n FROM Drawing_Winners')[0]['n'] == 0
 
-    def test_fallback_note_on_page(self, client, make_editable, sample_drawings):
+    def test_fallback_note_on_page(self, client, make_editable, winners_per_grade, sample_drawings):
         make_editable(sample_db_id())
+        winners_per_grade(2)
         client.post('/api/daily_drawing', json={'day': 1, 'draw': 1})
         html = client.get('/scoreboards/daily?day=2').data.decode('utf-8')
-        assert 'drawing-fallback-note' in html and '1st Grade' in html
+        note = re.search(r'id="drawing-fallback-note">(.*?)</span>', html, re.S).group(1)
+        assert '1st Grade, 2nd Grade' in note and 'a previous winner was drawn again' in note
         assert 'drawing-fallback-note' not in report_html(html)
+
+    def test_read_only_database_shows_saved_winners(self, client, make_editable, winners_per_grade, sample_drawings):
+        make_editable(sample_db_id())
+        winners_per_grade(2)
+        client.post('/api/daily_drawing', json={'day': 1, 'draw': 4})
+        make_editable(-1)
+        html = client.get('/scoreboards/daily?day=1').data.decode('utf-8')
+        assert 'Winners saved' in html and 'Drawing #4' in page_text(html)
+        assert winner_cells(html)['2nd Grade'] == ['Student31', 'Student41']
+        assert 'winners-not-saved' not in html
 
     def test_routes_reject_bad_day(self, client, make_editable, sample_drawings):
         make_editable(sample_db_id())
@@ -694,9 +822,12 @@ class TestSettings:
     def test_settings_api(self, client):
         original = registry.get_settings()
         try:
-            response = client.post('/api/settings', json={'school_name': 'Test School', 'contest_days': 12})
+            response = client.post('/api/settings', json={'school_name': 'Test School', 'contest_days': 12,
+                                                          'drawing_winners_per_grade': 3})
             assert response.get_json()['success']
-            assert client.get('/api/settings').get_json()['settings'] == {'school_name': 'Test School', 'contest_days': '12'}
+            assert client.get('/api/settings').get_json()['settings'] == {
+                'school_name': 'Test School', 'contest_days': '12', 'drawing_winners_per_grade': '3'}
+            assert app_module.drawing_winners_per_grade() == 3
             html = client.get('/scoreboards/daily').data.decode('utf-8')
             assert 'Test School Read-a-Thon' in html and 'Day 2 of 12' in html
         finally:
@@ -704,5 +835,14 @@ class TestSettings:
 
     @pytest.mark.parametrize('days', [0, 61, 'ten'])
     def test_contest_days_validated(self, client, days):
-        response = client.post('/api/settings', json={'school_name': '', 'contest_days': days})
+        response = client.post('/api/settings', json={'school_name': '', 'contest_days': days, 'drawing_winners_per_grade': 2})
         assert response.status_code == 400
+
+    @pytest.mark.parametrize('winners', [0, 6, 'two', None])
+    def test_drawing_winners_per_grade_validated(self, client, winners):
+        response = client.post('/api/settings', json={'school_name': '', 'contest_days': 10, 'drawing_winners_per_grade': winners})
+        assert response.status_code == 400
+        assert 'Drawing winners per grade' in response.get_json()['error']
+
+    def test_drawing_winners_per_grade_defaults_to_two(self):
+        assert DatabaseRegistry.SETTING_DEFAULTS['drawing_winners_per_grade'] == '2'

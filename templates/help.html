@@ -407,7 +407,7 @@
                 <!-- Bulletins -->
                 <h5 id="scoreboards-tab" class="mt-4"><i class="bi bi-newspaper"></i> 📰 Bulletins</h5>
                 <p><strong>Purpose:</strong> Branded one-page bulletins (school masthead, team colors) built from the data and meant to be emailed as an image: the teams before the contest, the daily update, and the prize results.</p>
-                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#upload-tab">Upload Tab</a> (upload the cumulative file each day so money raised can be shown for that day), <a href="#admin-tab">Admin Tab</a> (school name and contest days)</p>
+                <p class="small text-muted"><i class="bi bi-link-45deg"></i> Related: <a href="#upload-tab">Upload Tab</a> (upload the cumulative file each day so money raised can be shown for that day), <a href="#admin-tab">Admin Tab</a> (school name, contest days and drawing winners per grade)</p>
                 <div class="card border-warning mb-2">
                     <div class="card-body p-2">
                         <p class="small mb-1"><strong>Meet the Teams</strong></p>
@@ -425,7 +425,7 @@
                                 <p class="small mb-1"><strong>Daily Scoreboard</strong></p>
                                 <ul class="small mb-1">
                                     <li>% of students who read at least 1 day, Day N of the contest</li>
-                                    <li><strong>Students:</strong> daily prize drawing winner per grade (from students who met their grade goal that day)</li>
+                                    <li><strong>Students:</strong> daily prize drawing winners per grade - 2 by default, set in Admin (from students who met their grade goal that day), names stacked in one row per grade</li>
                                     <li><strong>Classes:</strong> highest participation % in each grade, school-wide leader tagged "Top"</li>
                                     <li><strong>Teams:</strong> participation, minutes and money raised, with today's figures and trophies for the leader</li>
                                     <li><strong>Showdown:</strong> this year vs last year on the same contest day (when last year's database is registered)</li>
@@ -451,10 +451,10 @@
                 <ul class="small">
                     <li><strong>As of</strong> (scoreboards): pick any contest day (defaults to the latest). Minutes and participation count through that day.</li>
                     <li><strong>Redraw prize winners</strong> (Daily): the drawing is repeatable - reloading shows the same winners. Redraw picks new ones and the header shows "Drawing #N" so everyone knows which draw it is.</li>
-                    <li><strong>Save winners</strong> (Daily, editable database only): until you save, the drawing is a <em>preview</em>. Saving keeps that day's winners for good (Redraw is hidden) and <strong>a student can win only once</strong>: every other day's drawing skips saved winners. If everyone in a grade who met the goal has already won, a previous winner is drawn again and a note says so. <strong>Clear saved winners (Day N)</strong> undoes one day only.</li>
+                    <li><strong>Save winners</strong> (Daily, editable database only): until you save, the drawing is a <em>preview</em>. Saving keeps that day's winners for good (Redraw is hidden) and <strong>a student can win only once</strong>: every other day's drawing skips saved winners. If too few students in a grade who met the goal haven't won yet, the remaining spots go to previous winners and a note says so. <strong>Clear saved winners (Day N)</strong> undoes one day only. Changing the number of winners later never changes a saved day. A <strong>read-only</strong> (past year) database doesn't draw at all: it shows the saved winners, or says they weren't saved.</li>
                     <li><strong>Copy as image / Download PNG:</strong> captures only the bulletin (not the buttons) - paste it into an email.</li>
                     <li><strong>Not available*:</strong> money raised is only known for days with a saved cumulative upload (see Upload → snapshot date). Earlier years kept only their final totals.</li>
-                    <li><strong>Settings:</strong> Admin → Actions → Bulletin Settings: school name (masthead) and contest days (default 10, for "Day 7 of 10").</li>
+                    <li><strong>Settings:</strong> Admin → Actions → Bulletin Settings: school name (masthead), contest days (default 10, for "Day 7 of 10") and drawing winners per grade (default 2).</li>
                 </ul>
 
                 <!-- Reports & Data Tab -->
@@ -571,7 +571,7 @@
                             <li><strong>Tab 1: Actions</strong>
                                 <ul class="small">
                                     <li>Selective table clearing (clear specific tables without affecting others)</li>
-                                    <li>Bulletin Settings: school name and contest days</li>
+                                    <li>Bulletin Settings: school name, contest days and drawing winners per grade</li>
                                     <li>Upload history viewer</li>
                                     <li>Database integrity tools</li>
                                 </ul>

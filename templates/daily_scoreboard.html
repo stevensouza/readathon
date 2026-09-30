@@ -10,10 +10,13 @@
 
 {{ sb.toolbar(calendar) }}
 {% if board %}
-{# Daily drawing: a preview until saved (editable database only); a saved day always shows its saved winners #}
+{# Daily drawing: a preview until saved (editable database only); a saved day always shows its saved winners.
+   Read-only databases never draw: saved winners or a "not saved" note. #}
 <div class="toolbar drawing-bar">
-    <span class="tb-label">Prize drawing #{{ board.drawing_number }}</span>
-    {% if board.drawing_saved %}
+    <span class="tb-label">Prize drawing{% if board.drawing_number %} #{{ board.drawing_number }}{% endif %}</span>
+    {% if not board.drawing_preview and not board.drawing_saved %}
+    <span id="drawing-status" class="tb-drawing locked"><i class="bi bi-lock-fill"></i> Winners not saved (read-only database, no drawing)</span>
+    {% elif board.drawing_saved %}
     <span id="drawing-status" class="tb-drawing saved"><i class="bi bi-check-circle-fill"></i> Winners saved</span>
     <button id="clear-drawing-btn" class="btn btn-sm btn-outline-danger editable-only" onclick="clearDrawing()"><i class="bi bi-x-circle"></i> Clear saved winners (Day {{ calendar.day }})</button>
     {% else %}
@@ -22,7 +25,7 @@
     <button id="save-drawing-btn" class="btn btn-sm btn-success editable-only" onclick="saveDrawing()"><i class="bi bi-check-lg"></i> Save winners</button>
     {% endif %}
     {% if board.fallback_grades %}
-    <span class="tb-note" id="drawing-fallback-note"><i class="bi bi-info-circle"></i> Everyone who met the goal in {{ board.fallback_grades|join(', ') }} has already won, so a previous winner was drawn again.</span>
+    <span class="tb-note" id="drawing-fallback-note"><i class="bi bi-info-circle"></i> Too few students who met the goal in {{ board.fallback_grades|join(', ') }} haven't won yet, so a previous winner was drawn again.</span>
     {% endif %}
 </div>
 {% endif %}
@@ -50,17 +53,21 @@
             <div>
                 <div class="section-header-v3">
                     <span class="cat">Students</span>
-                    <span class="desc">Daily Prize Winners &middot; Drawing #{{ board.drawing_number }}</span>
+                    <span class="desc">Daily Prize Winners{% if board.drawing_number %} &middot; Drawing #{{ board.drawing_number }}{% endif %}</span>
                     <div class="rule"></div>
                 </div>
+                {% if board.drawing_preview or board.drawing_saved %}
                 <table class="report-table" id="winners-table">
-                    <thead><tr><th>Grade</th><th>Winner</th></tr></thead>
+                    <thead><tr><th>Grade</th><th>Winners</th></tr></thead>
                     <tbody>
                         {% for w in board.winners %}
-                        <tr><td>{{ w.grade }}</td><td>{% if w.student_name %}{{ w.student_name }}{% else %}<span class="empty-note">No one met the goal</span>{% endif %}</td></tr>
+                        <tr><td>{{ w.grade }}</td><td>{% for name in w.names %}<div class="winner-name">{{ name }}</div>{% else %}<span class="empty-note">No one met the goal</span>{% endfor %}</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                {% else %}
+                <p class="empty-note" id="winners-not-saved">Prize winners were not saved for Day {{ calendar.day }}.</p>
+                {% endif %}
             </div>
             <div class="col-rule"></div>
             <div>
