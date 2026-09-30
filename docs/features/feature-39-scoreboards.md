@@ -41,7 +41,7 @@ The 2025 daily update was a PowerPoint deck rebuilt by hand every contest day, a
 ## Daily Scoreboard
 
 - Masthead: school name, "2026 Daily Scoreboard", "% of students read at least 1 day" medallion, Day N of TOTAL + date.
-- Students: daily prize drawing winner per grade.
+- Students: daily prize drawing winners per grade (2 since v2026.21.0, Admin setting), names stacked in one row per grade.
 - Classes: highest participation % per grade (cumulative), school-wide top class tagged.
 - Teams: participation, minutes, money (cumulative) with trophies on the leader, plus "today" figures (today's participation %, +minutes today, +$ today).
 - 2026 vs 2025 Showdown: whole school, **Day N this year vs Day N last year**; participation uses the same definition as the team card (average daily participation including color bonus).
@@ -53,6 +53,9 @@ The 2025 daily update was a PowerPoint deck rebuilt by hand every contest day, a
 - **Implemented (v2026.19.0):** "Save winners" stores a day's winners in `Drawing_Winners`, and a saved student is
   left out of every other day's drawing (win once per contest; if a grade runs out, a previous winner is drawn again
   and flagged as a fallback). Clear works on one day at a time. Rules in `md/RULES.md` → "Daily drawing".
+- **v2026.21.0:** N winners per grade (Admin → Bulletin Settings, default 2); students who haven't won fill the spots
+  first, previous winners fill the rest (fallback). `Drawing_Winners` key is now (date, grade, student); older tables
+  are rebuilt on open. Read-only databases show saved winners only (no generated drawing).
 
 ## Prize Scoreboard
 

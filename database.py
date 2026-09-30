@@ -19,6 +19,8 @@ from report_metadata import (
 )
 from queries import *
 
+DEFAULT_DRAWING_WINNERS_PER_GRADE = 2  # daily prize drawing winners per grade (Admin -> Bulletin Settings)
+
 
 class DatabaseRegistry:
     """
@@ -104,7 +106,8 @@ class DatabaseRegistry:
             self.conn.close()
 
     # App-wide settings (Admin -> Actions -> Bulletin Settings). Defaults apply until saved.
-    SETTING_DEFAULTS = {'school_name': '', 'contest_days': '10'}
+    SETTING_DEFAULTS = {'school_name': '', 'contest_days': '10',
+                        'drawing_winners_per_grade': str(DEFAULT_DRAWING_WINNERS_PER_GRADE)}
 
     def get_settings(self) -> Dict[str, str]:
         """All app settings, with defaults filled in"""
@@ -545,8 +548,12 @@ class ReadathonDB:
             if last_date:
                 cursor.execute(INSERT_READER_CUMULATIVE_SNAPSHOT, (last_date,))
 
-        # Drawing_Winners - daily drawing winners saved from the Daily Scoreboard
+        # Drawing_Winners - daily drawing winners saved from the Daily Scoreboard.
+        # Older tables allowed one winner per grade: rebuild them with the (date, grade, student) key.
         cursor.execute(CREATE_TABLE_DRAWING_WINNERS)
+        if 'student_name' not in {row[0] for row in cursor.execute(SELECT_DRAWING_WINNERS_PK_COLUMNS)}:
+            for statement in REBUILD_DRAWING_WINNERS_KEY:
+                cursor.execute(statement)
 
         conn.commit()
 
@@ -1382,8 +1389,8 @@ class ReadathonDB:
             },
             'drawing_winners': {
                 'table_name': 'Drawing_Winners',
-                'primary_key': 'log_date, grade_level',
-                'description': 'Daily prize drawing winners saved from the Daily Scoreboard, one per grade per contest day. A saved winner is left out of every other day\'s drawing (win once per contest) unless everyone in the grade who met the goal that day already won (fallback).',
+                'primary_key': 'log_date, grade_level, student_name',
+                'description': 'Daily prize drawing winners saved from the Daily Scoreboard, up to N per grade per contest day (Admin -> Bulletin Settings, default 2). A saved winner is left out of every other day\'s drawing (win once per contest) unless too few students in the grade who met the goal that day haven\'t won yet (fallback).',
                 'referenced_by': [],
                 'references': ['Roster'],
                 'columns': [
@@ -1392,7 +1399,7 @@ class ReadathonDB:
                     {'name': 'student_name', 'description': 'Winning student'},
                     {'name': 'class_name', 'description': 'Winner\'s class'},
                     {'name': 'drawing_number', 'description': 'Drawing # that was saved (1 unless Redraw was used)'},
-                    {'name': 'fallback', 'description': '1 = everyone eligible in the grade had already won, so a previous winner was drawn again'},
+                    {'name': 'fallback', 'description': '1 = too few eligible students in the grade hadn\'t won yet, so this previous winner was drawn again'},
                     {'name': 'saved_timestamp', 'description': 'When the winners were saved'},
                 ]
             },
@@ -2373,26 +2380,27 @@ class ReportGenerator:
             }
         }
 
-    def q4_prize_drawing(self, log_date: str, drawing_number: Optional[int] = None) -> Dict[str, Any]:
+    def q4_prize_drawing(self, log_date: str, drawing_number: Optional[int] = None,
+                         winners_per_grade: int = DEFAULT_DRAWING_WINNERS_PER_GRADE) -> Dict[str, Any]:
         """Q4/Slide 4: Prize Drawing Entrants - Daily random selection
 
         drawing_number: pick winners with a seed of (date, grade, drawing #) so the same
         drawing always gives the same winners (Daily Scoreboard). None = new random pick each run.
         """
 
-        # Select one winner per grade from students who met their daily reading goal on this date
+        # Select up to winners_per_grade winners per grade from students who met their daily reading goal on this date
         winners = []
         for grade, pool in sorted(self._drawing_pools(log_date).items()):
-            winner = self._draw_winner(pool, log_date, grade, drawing_number)
-            winner['total_eligible'] = len(pool)
-            winners.append(winner)
+            picks = self._drawing_rng(log_date, grade, drawing_number).sample(pool, min(winners_per_grade, len(pool)))
+            for winner in sorted(picks, key=lambda p: p['student_name']):
+                winners.append({**winner, 'total_eligible': len(pool)})
 
         return {
             'title': f'Q4/Slide 4: Prize Drawing Winners - {log_date}',
-            'description': 'Random selection of one winner per grade from students who met their daily reading goal',
+            'description': f'Random selection of up to {winners_per_grade} winner(s) per grade from students who met their daily reading goal',
             'columns': ['grade_level', 'student_name', 'class_name', 'teacher_name', 'minutes_read', 'min_daily_minutes', 'total_eligible'],
             'data': winners,
-            'sort': 'grade_level (asc)',
+            'sort': 'grade_level (asc), student_name (asc)',
             'note': 'Winners are randomly selected each time this report runs',
             'last_updated': self._get_report_timestamp(),
             'metadata': {
@@ -2410,38 +2418,48 @@ class ReportGenerator:
         return pools
 
     @staticmethod
-    def _draw_winner(pool: List[Dict[str, Any]], log_date: str, grade: str,
-                     drawing_number: Optional[int]) -> Dict[str, Any]:
-        """One random pick; with a drawing # the seed (date, grade, #) always gives the same winner"""
+    def _drawing_rng(log_date: str, grade: str, drawing_number: Optional[int]):
+        """Random source for one grade's drawing; with a drawing # the seed (date, grade, #) always gives the same winners"""
         if drawing_number is None:
-            return random.choice(pool)
-        return random.Random(f"{log_date}|{grade}|{drawing_number}").choice(pool)
+            return random
+        return random.Random(f"{log_date}|{grade}|{drawing_number}")
 
-    def daily_drawing(self, log_date: str, drawing_number: int) -> Dict[str, Any]:
+    def saved_drawing(self, log_date: str) -> List[Dict[str, Any]]:
+        """Winners saved for log_date (empty if that day wasn't saved)"""
+        return self.db.execute_query(SELECT_DRAWING_WINNERS_BY_DATE, (log_date,))
+
+    def daily_drawing(self, log_date: str, drawing_number: int,
+                      winners_per_grade: int = DEFAULT_DRAWING_WINNERS_PER_GRADE) -> Dict[str, Any]:
         """Daily Scoreboard drawing: the saved winners for log_date, else a preview draw.
 
-        Win once per contest: the preview leaves out students saved as winners on any other date.
-        If that empties a grade, it draws from everyone who met the goal (fallback = repeat winner allowed).
+        Win once per contest: the preview draws from students not saved as winners on any other date.
+        If too few are left in a grade, the remaining spots go to previous winners (fallback = 1).
         """
-        saved = self.db.execute_query(SELECT_DRAWING_WINNERS_BY_DATE, (log_date,))
+        saved = self.saved_drawing(log_date)
         if saved:
             return {'saved': True, 'drawing_number': saved[0]['drawing_number'], 'winners': saved}
 
         previous = {r['student_name'] for r in self.db.execute_query(SELECT_DRAWING_WINNERS_OTHER_DATES, (log_date,))}
         winners = []
         for grade, pool in sorted(self._drawing_pools(log_date).items()):
+            rng = self._drawing_rng(log_date, grade, drawing_number)
             new_pool = [p for p in pool if p['student_name'] not in previous]
-            winner = self._draw_winner(new_pool or pool, log_date, grade, drawing_number)
-            winners.append({'grade_level': grade, 'student_name': winner['student_name'],
-                            'class_name': winner['class_name'], 'drawing_number': drawing_number,
-                            'fallback': 0 if new_pool else 1})
+            repeat_pool = [p for p in pool if p['student_name'] in previous]
+            picks = [(p, 0) for p in rng.sample(new_pool, min(winners_per_grade, len(new_pool)))]
+            spots_left = min(winners_per_grade - len(picks), len(repeat_pool))
+            picks += [(p, 1) for p in rng.sample(repeat_pool, spots_left)]
+            for winner, fallback in sorted(picks, key=lambda pick: pick[0]['student_name']):
+                winners.append({'grade_level': grade, 'student_name': winner['student_name'],
+                                'class_name': winner['class_name'], 'drawing_number': drawing_number,
+                                'fallback': fallback})
         return {'saved': False, 'drawing_number': drawing_number, 'winners': winners}
 
-    def save_daily_drawing(self, log_date: str, drawing_number: int) -> List[Dict[str, Any]]:
+    def save_daily_drawing(self, log_date: str, drawing_number: int,
+                           winners_per_grade: int = DEFAULT_DRAWING_WINNERS_PER_GRADE) -> List[Dict[str, Any]]:
         """Save the drawing for log_date (drawn again here, never taken from the browser); replaces that date only"""
         with self.db.get_connection() as conn:  # commits, or rolls back on error
             conn.execute(DELETE_DRAWING_WINNERS_BY_DATE, (log_date,))
-            winners = self.daily_drawing(log_date, drawing_number)['winners']
+            winners = self.daily_drawing(log_date, drawing_number, winners_per_grade)['winners']
             for w in winners:
                 conn.execute(INSERT_DRAWING_WINNER, (log_date, w['grade_level'], w['student_name'], w['class_name'],
                                                      drawing_number, w['fallback']))

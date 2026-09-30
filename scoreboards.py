@@ -15,6 +15,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from database import DEFAULT_DRAWING_WINNERS_PER_GRADE
 from queries import (SELECT_DISTINCT_GRADE_LEVELS, SELECT_DISTINCT_TEAM_NAMES, SELECT_TEAM_CLASS_COUNTS,
                      SELECT_TEACHERS_WITH_MULTIPLE_CLASSES, get_db_comparison_school_participation)
 
@@ -237,8 +238,13 @@ def build_showdown(reports, prior_reports, year: int, calendar: Dict[str, Any], 
 # ---------------------------------------------------------------------------
 
 def build_daily_scoreboard(reports, calendar: Dict[str, Any], drawing_number: int,
-                           prior_reports=None, year: Optional[int] = None) -> Dict[str, Any]:
-    """Everything the Daily Scoreboard shows for contest day calendar['day']"""
+                           prior_reports=None, year: Optional[int] = None,
+                           winners_per_grade: int = DEFAULT_DRAWING_WINNERS_PER_GRADE,
+                           preview: bool = True) -> Dict[str, Any]:
+    """Everything the Daily Scoreboard shows for contest day calendar['day'].
+
+    preview=False (read-only database): only saved drawing winners are shown, nothing is drawn.
+    """
     db = reports.db
     date, as_of = calendar['date'], calendar['reading_as_of']
 
@@ -246,13 +252,19 @@ def build_daily_scoreboard(reports, calendar: Dict[str, Any], drawing_number: in
     medallion = db.execute_query(get_db_comparison_school_participation(as_of or 'all'))[0]['participation_pct'] or 0
 
     # Students: the saved drawing for this day, else a seeded preview (same winners for the same date + drawing #)
-    # that leaves out students saved as winners on other days
-    drawing = reports.daily_drawing(date, drawing_number)
-    by_grade = {w['grade_level']: w for w in drawing['winners']}
+    # that leaves out students saved as winners on other days. Read-only databases show saved winners only.
+    if preview:
+        drawing = reports.daily_drawing(date, drawing_number, winners_per_grade)
+    else:
+        saved = reports.saved_drawing(date)
+        drawing = {'saved': bool(saved), 'drawing_number': saved[0]['drawing_number'] if saved else None, 'winners': saved}
+    by_grade = {}
+    for w in drawing['winners']:
+        by_grade.setdefault(w['grade_level'], []).append(w)
     grades = sorted({r['grade_level'] for r in db.execute_query(SELECT_DISTINCT_GRADE_LEVELS)}, key=grade_sort_key)
     winners = [{'grade': format_grade_label(g),
-                'student_name': display_name(by_grade[g]['student_name']) if g in by_grade else None} for g in grades]
-    fallback_grades = [format_grade_label(g) for g in grades if g in by_grade and by_grade[g]['fallback']]
+                'names': [display_name(w['student_name']) for w in by_grade.get(g, [])]} for g in grades]
+    fallback_grades = [format_grade_label(g) for g in grades if any(w['fallback'] for w in by_grade.get(g, []))]
 
     # Classes: highest avg participation (with color) per grade; school-wide leader(s) tagged
     teachers = multi_class_teachers(reports)
@@ -299,6 +311,7 @@ def build_daily_scoreboard(reports, calendar: Dict[str, Any], drawing_number: in
         'medallion': f'{medallion:.0f}%',
         'drawing_number': drawing['drawing_number'],
         'drawing_saved': drawing['saved'],
+        'drawing_preview': preview,
         'fallback_grades': fallback_grades,
         'winners': winners,
         'classes': classes,

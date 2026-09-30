@@ -240,6 +240,10 @@ def current_db_is_editable():
     """True if the database being viewed is the editable one (all others are read-only)"""
     return registry.get_editable_database_id() == current_db_id()
 
+def drawing_winners_per_grade():
+    """Daily prize drawing winners per grade (Admin -> Bulletin Settings)"""
+    return int(registry.get_settings()['drawing_winners_per_grade'])
+
 def require_editable_db(route):
     """Refuse (403) any change to a read-only database, so switching databases can't send data to the wrong year"""
     @wraps(route)
@@ -294,7 +298,7 @@ def get_unified_items():
     items.extend([
         {'id': 'q2', 'name': 'Q2: Daily Summary Report', 'description': 'Daily summary by class or team with participation rates', 'groups': ['report', 'daily', 'slides', 'workflow.qa', 'requires.date', 'requires.group_by']},
         {'id': 'q3', 'name': 'Q3: Reader Cumulative Enhanced', 'description': 'Complete cumulative stats with class, teacher, team, and participation metrics', 'groups': ['report', 'cumulative', 'export', 'workflow.qa']},
-        {'id': 'q4', 'name': 'Q4/Slide 4: Prize Drawing', 'description': 'Random prize drawing - one winner per grade from students who met their goal', 'groups': ['report', 'prize', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qf', 'requires.date']},
+        {'id': 'q4', 'name': 'Q4/Slide 4: Prize Drawing', 'description': 'Random prize drawing - winners per grade (Admin setting, default 2) from students who met their goal', 'groups': ['report', 'prize', 'slides', 'workflow.qa', 'workflow.qd', 'workflow.qf', 'requires.date']},
         {'id': 'q5', 'name': 'Q5: Student Cumulative Report', 'description': 'Student cumulative stats - Top Readers, Goal Getters, Top Fundraisers', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qc']},
         {'id': 'q6', 'name': 'Q6: Class Participation Winner', 'description': 'Class participation winner ranked by average daily participation rate', 'groups': ['report', 'cumulative', 'prize', 'workflow.qa', 'workflow.qc']},
         {'id': 'q7', 'name': 'Q7: Complete Log', 'description': 'Complete denormalized log for export to Excel/CSV', 'groups': ['report', 'export', 'workflow.qa', 'requires.date']},
@@ -330,7 +334,7 @@ def get_unified_items():
         {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'reading']},
         {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
         {'id': 'reader_cumulative_history', 'name': 'Reader Cumulative History', 'description': 'Saved copy of the cumulative upload for each contest day (the latest upload for a day replaces it) - used for money raised as of a past day', 'groups': ['table', 'fundraising']},
-        {'id': 'drawing_winners', 'name': 'Drawing Winners', 'description': 'Daily prize drawing winners saved from the Daily Scoreboard (one per grade per day) - a saved winner is left out of later drawings', 'groups': ['table']},
+        {'id': 'drawing_winners', 'name': 'Drawing Winners', 'description': 'Daily prize drawing winners saved from the Daily Scoreboard (winners per grade per day set in Admin, default 2) - a saved winner is left out of later drawings', 'groups': ['table']},
         {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table']},
         {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'database']},
         {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'export']},
@@ -2717,7 +2721,8 @@ def daily_scoreboard():
     drawing_number = int_arg('draw', 1)
     board = None
     if calendar['dates']:
-        board = scoreboards.build_daily_scoreboard(reports, calendar, drawing_number, prior_reports, year)
+        board = scoreboards.build_daily_scoreboard(reports, calendar, drawing_number, prior_reports, year,
+                                                   drawing_winners_per_grade(), preview=current_db_is_editable())
     return render_template('daily_scoreboard.html', environment=get_current_db_label(),
                            masthead=masthead, calendar=calendar, board=board, drawing_number=drawing_number)
 
@@ -2737,7 +2742,7 @@ def save_daily_drawing():
     draw = (request.get_json(silent=True) or {}).get('draw', 1)
     if not log_date or not isinstance(draw, int) or draw < 1:
         return jsonify({'success': False, 'error': 'Unknown contest day or drawing #'}), 400
-    winners = get_current_reports().save_daily_drawing(log_date, draw)
+    winners = get_current_reports().save_daily_drawing(log_date, draw, drawing_winners_per_grade())
     return jsonify({'success': True, 'log_date': log_date, 'saved': len(winners)})
 
 
@@ -3205,7 +3210,7 @@ def run_report(report_id):
                 log_date = dates[0] if dates else None
             if not log_date:
                 return jsonify({'error': 'No data available'}), 400
-            result = reports.q4_prize_drawing(log_date)
+            result = reports.q4_prize_drawing(log_date, winners_per_grade=drawing_winners_per_grade())
         elif report_id == 'q5':
             result = reports.q5_student_cumulative(sort_by, limit)
         elif report_id == 'q6':
@@ -3279,7 +3284,7 @@ def export_report(report_id):
             if not log_date:
                 dates = db.get_all_dates()
                 log_date = dates[0] if dates else None
-            result = reports.q4_prize_drawing(log_date)
+            result = reports.q4_prize_drawing(log_date, winners_per_grade=drawing_winners_per_grade())
         elif report_id == 'q5':
             result = reports.q5_student_cumulative(sort_by)
         elif report_id == 'q6':
@@ -3846,7 +3851,7 @@ def delete_database_registration(db_id):
 
 @app.route('/api/settings', methods=['GET', 'POST'])
 def app_settings():
-    """Read or save app-wide settings (school name, contest days) kept in the registry"""
+    """Read or save app-wide settings (school name, contest days, drawing winners per grade) kept in the registry"""
     if request.method == 'GET':
         return jsonify({'success': True, 'settings': registry.get_settings(),
                         'saved_count': registry.count_saved_settings()})
@@ -3859,9 +3864,16 @@ def app_settings():
         contest_days = 0
     if not 1 <= contest_days <= 60:
         return jsonify({'success': False, 'error': 'Contest days must be a number from 1 to 60'}), 400
+    try:
+        winners_per_grade = int(data.get('drawing_winners_per_grade', 0))
+    except (TypeError, ValueError):
+        winners_per_grade = 0
+    if not 1 <= winners_per_grade <= 5:
+        return jsonify({'success': False, 'error': 'Drawing winners per grade must be a number from 1 to 5'}), 400
 
     registry.set_setting('school_name', school_name)
     registry.set_setting('contest_days', str(contest_days))
+    registry.set_setting('drawing_winners_per_grade', str(winners_per_grade))
     return jsonify({'success': True, 'settings': registry.get_settings()})
 
 
@@ -4247,7 +4259,7 @@ def run_workflow(workflow_id):
                     dates = db.get_all_dates()
                     log_date = dates[0] if dates else None
                 if log_date:
-                    results.append(reports.q4_prize_drawing(log_date))
+                    results.append(reports.q4_prize_drawing(log_date, winners_per_grade=drawing_winners_per_grade()))
                 else:
                     # Add error message if no data available
                     results.append({

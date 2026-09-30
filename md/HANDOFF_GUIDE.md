@@ -114,7 +114,7 @@ These are the rules the school app enforces. If a flyer or slide disagrees, the 
 - **Classes compete as classes:** a half-day kindergarten teacher's AM and PM classes compete separately.
 - **Ties:** every tied student or class wins (since 2025; before that, one winner per grade was drawn at random). [TBD: the 2025 slides said a tie for highest class is decided by raffle - the app lists all tied classes. Pick one]
 - **Money and sponsors:** totals come from ReadAThon.com.
-- **Daily drawing:** each day, one student per grade is drawn from the students who met their daily goal that day. **A student can win only once per contest** (the app leaves out saved winners). If everyone who met the goal has already won, anyone who met it can be drawn.
+- **Daily drawing:** each day, two students per grade are drawn from the students who met their daily goal that day (one per grade before 2026; the number is set in the app under Admin → Bulletin Settings). **A student can win only once per contest** (the app leaves out saved winners). If not enough students who met the goal are left who haven't won, the remaining spots go to students who already won.
 
 ### Prizes
 
@@ -122,7 +122,7 @@ Prize examples are from 2025; the prizes are chosen and approved each year.
 
 | Prize | Who wins | 2025 example |
 |---|---|---|
-| Daily drawing | 1 student per grade, each day (met that day's goal) | "Scoops Bucks" |
+| Daily drawing | 2 students per grade, each day (met that day's goal) | "Scoops Bucks" |
 | Goal Getters | every student who met the goal every day | a book of their choice, bought by the PTA |
 | Top Minutes | the student with the most minutes, per grade | $25 gift card |
 | Top Donations | the student who raised the most, per grade | $25 gift card |

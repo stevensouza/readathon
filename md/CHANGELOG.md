@@ -9,6 +9,22 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.21.0] - 2026-09-30 - Two Daily Drawing Winners per Grade
+
+### Changed
+- **The daily prize drawing picks 2 winners per grade** (2026 rule; it was 1). The Daily Scoreboard shows one row per
+  grade with the winners' names stacked, under a **Winners** header
+- **Admin → Bulletin Settings → Drawing winners per grade** (1-5, default 2). Days whose winners are already saved
+  keep them; only unsaved days use a new number. The Q4 Prize Drawing report uses it too
+- **Win once, with 2 winners:** students who haven't won are drawn first; if too few are left in a grade, the other
+  spots go to students who already won (the toolbar note says so). A grade with only one student who met the goal has
+  one winner
+- **Read-only (past year) databases don't draw:** the Daily Scoreboard shows the saved winners, or "Prize winners were
+  not saved for Day N." A random draw for a past year isn't who really won
+- `Drawing_Winners` is keyed by date, grade and student (was date and grade). Databases that already have the table
+  are updated when opened; saved winners are kept
+- Volunteer Handoff Guide, Help, RULES and README describe 2 winners per grade
+
 ## [v2026.20.0] - 2026-09-30 - Volunteer Handoff Guide
 
 ### Added

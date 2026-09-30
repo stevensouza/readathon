@@ -35,7 +35,7 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 - **Grade-Specific Goals**: Each grade level has different daily reading minimums (K-1: 20min, 2-3: 25min, 4-5: 30min)
 - **Daily Reading Caps**: We impose a 2-hour (120 minute) maximum per day for contest fairness
 - **Participation Tracking**: We track whether students participated at all each day (read any amount)
-- **Random Prize Drawings**: We select random students daily for prizes if they've read that day
+- **Random Prize Drawings**: We select random students daily for prizes (2 per grade) if they met that day's goal
 - **Detailed Daily Reports**: Their cumulative reports don't include our daily caps or grade-specific goals
 - **Team Color Bonus**: We award bonus minutes for team spirit participation
 
@@ -255,9 +255,9 @@ Group multiple reports to run in sequence:
 6. **Grade_Rules** - Grade-specific reading goals (daily minimums and caps)
 7. **Upload_History** - Audit trail for all CSV uploads with timestamps and row counts
 8. **Team_Color_Bonus** - Bonus minutes for team spirit participation events
-9. **Drawing_Winners** - Daily prize drawing winners saved from the Daily Scoreboard (a student wins only once per contest)
+9. **Drawing_Winners** - Daily prize drawing winners saved from the Daily Scoreboard (2 per grade by default - Admin → Bulletin Settings; a student wins only once per contest)
 
-The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name and contest days for the bulletins.
+The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name, contest days and drawing winners per grade for the bulletins.
 
 ### Entity Relationships
 - Students → Classes → Teams → School
