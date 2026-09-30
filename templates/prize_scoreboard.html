@@ -133,10 +133,7 @@
         {% for note in board.notes %}<div class="scoreboard-note">{{ note }}</div>{% endfor %}
     </div>
 
-    <!-- 4. Year vs year -->
-    {% if board.showdown %}{{ sb.showdown(board.showdown) }}{% endif %}
-
-    <!-- 5. Goal Getters last: longest section -->
+    <!-- 4. Goal Getters: longest section -->
     <div class="section">
         <div class="section-header-v3">
             <span class="cat">Goal Getters</span>
@@ -157,6 +154,9 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- 5. Year vs year: always the last section (both bulletins) -->
+    {% if board.showdown %}{{ sb.showdown(board.showdown) }}{% endif %}
 
     {{ sb.footer(masthead) }}
 {% endif %}

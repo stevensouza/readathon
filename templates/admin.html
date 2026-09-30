@@ -320,7 +320,7 @@
                         </div>
                         <div class="mt-3">
                             <small class="text-muted">
-                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Upload_History, Team_Color_Bonus, and README with export details (Database_Registry excluded)
+                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Upload_History, Team_Color_Bonus, Drawing_Winners, and README with export details (Database_Registry excluded)
                             </small>
                         </div>
                     </div>
@@ -416,7 +416,7 @@
                             <p class="text-muted small mb-3">Select tables to clear. This permanently deletes event data and cannot be undone.</p>
 
                             <!-- Transactional Table Cards -->
-                            <div class="row g-3 mb-4 row-cols-1 row-cols-md-3 row-cols-xl-5">
+                            <div class="row g-3 mb-4 row-cols-1 row-cols-md-3">
                             <div class="col">
                                 <div class="card h-100 border-2">
                                     <div class="card-body">
@@ -497,6 +497,23 @@
                                         <p class="small text-muted mb-2">Clear all team color day bonus records</p>
                                         <p class="mb-0">
                                             <span class="badge bg-secondary" id="countTeamColorBonus">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearDrawingWinners" value="Drawing_Winners">
+                                            <label class="form-check-label" for="clearDrawingWinners">
+                                                <h6 class="mb-1">Drawing_Winners</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear the saved daily drawing winners (every day becomes a preview again)</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countDrawingWinners">Loading...</span>
                                         </p>
                                     </div>
                                 </div>
@@ -2093,6 +2110,7 @@ async function loadTableCounts() {
             document.getElementById('countReaderCumulativeHistory').textContent = `${result.counts.Reader_Cumulative_History} records`;
             document.getElementById('countDailyLogs').textContent = `${result.counts.Daily_Logs} records`;
             document.getElementById('countTeamColorBonus').textContent = `${result.counts.Team_Color_Bonus} records`;
+            document.getElementById('countDrawingWinners').textContent = `${result.counts.Drawing_Winners} records`;
 
             // System tables
             document.getElementById('countRoster').textContent = `${result.counts.Roster} students`;

@@ -50,7 +50,9 @@ The 2025 daily update was a PowerPoint deck rebuilt by hand every contest day, a
 
 - Winners are picked with a seed of (date, drawing #): reloading shows the same winners, nothing is saved.
 - **Redraw** bumps the drawing # (kept in the URL); "Drawing #N" is printed in the section header so the image shows which draw it is. Covers the case where repeat winners are excluded outside the app.
-- Later options: store the chosen drawing # per day, or exclude past winners automatically.
+- **Implemented (v2026.19.0):** "Save winners" stores a day's winners in `Drawing_Winners`, and a saved student is
+  left out of every other day's drawing (win once per contest; if a grade runs out, a previous winner is drawn again
+  and flagged as a fallback). Clear works on one day at a time. Rules in `md/RULES.md` → "Daily drawing".
 
 ## Prize Scoreboard
 
@@ -59,8 +61,8 @@ Eight prizes (the daily drawing is excluded), runnable for any day ("Prize Leade
 1. **Teams** — Team Participation (trophy per team) and Top Student Earner (1 per team) in one VS card; prize tags under it.
 2. **Classes** — Highest Class Participation (spotlight card, $100 for the teacher) and Grade Level Participation (table, grade party/activity).
 3. **Students** — one table, grade rows × Top Minutes / Top Donations / Top Sponsors, prize in each column header, ties tagged "N-way tie".
-4. **2026 vs 2025 Showdown** — same day mid-contest, final vs final at the end.
-5. **Goal Getters** (last, longest) — every name, grade label in a left column, names in 6 columns reading down, long names wrap (never truncate).
+4. **Goal Getters** (longest) — every name, grade label in a left column, names in 6 columns reading down, long names wrap (never truncate).
+5. **2026 vs 2025 Showdown** (always last, on both bulletins) — same day mid-contest, final vs final at the end.
 
 ## Data availability ("as of" a past day)
 

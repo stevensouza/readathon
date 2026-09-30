@@ -121,6 +121,21 @@ CREATE_TABLE_READER_CUMULATIVE_HISTORY = """
     )
 """
 
+# Daily drawing winners saved from the Daily Scoreboard (one per grade per contest date).
+# A saved student can't win again on another date unless every goal-meeter in the grade already won (fallback = 1).
+CREATE_TABLE_DRAWING_WINNERS = """
+    CREATE TABLE IF NOT EXISTS Drawing_Winners (
+        log_date TEXT NOT NULL,
+        grade_level TEXT NOT NULL,
+        student_name TEXT NOT NULL,
+        class_name TEXT,
+        drawing_number INTEGER NOT NULL,
+        fallback INTEGER NOT NULL DEFAULT 0,
+        saved_timestamp TEXT NOT NULL,
+        PRIMARY KEY (log_date, grade_level)
+    )
+"""
+
 # Registry database (db/readathon_registry.db) - catalog of per-year contest databases
 SAMPLE_DB_FILENAME = 'readathon_sample.db'
 YEAR_DB_FILENAME_PATTERN = re.compile(r'readathon_(\d{4})\.db')  # one contest database per event year
@@ -179,6 +194,7 @@ DELETE_UPLOAD_HISTORY_BY_DATE = "DELETE FROM Upload_History WHERE log_date = ?"
 DELETE_UPLOAD_HISTORY_CUMULATIVE = "DELETE FROM Upload_History WHERE log_date IS NULL"
 DELETE_ALL_READER_CUMULATIVE_HISTORY = "DELETE FROM Reader_Cumulative_History"
 DELETE_READER_CUMULATIVE_SNAPSHOT = "DELETE FROM Reader_Cumulative_History WHERE snapshot_date = ?"
+DELETE_DRAWING_WINNERS_BY_DATE = "DELETE FROM Drawing_Winners WHERE log_date = ?"
 
 def get_delete_upload_history_batch_query(upload_ids):
     """Generate DELETE query for multiple upload history records"""
@@ -224,6 +240,12 @@ INSERT_READER_CUMULATIVE_SNAPSHOT = """
     (snapshot_date, student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp)
     SELECT ?, student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp
     FROM Reader_Cumulative
+"""
+
+INSERT_DRAWING_WINNER = """
+    INSERT INTO Drawing_Winners
+    (log_date, grade_level, student_name, class_name, drawing_number, fallback, saved_timestamp)
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
 """
 
 INSERT_DAILY_LOGS_UPSERT = """
@@ -279,6 +301,12 @@ SELECT_COUNT_DAILY_LOGS = "SELECT COUNT(*) FROM Daily_Logs"
 SELECT_COUNT_READER_CUMULATIVE = "SELECT COUNT(*) FROM Reader_Cumulative"
 SELECT_COUNT_TEAM_COLOR_BONUS = "SELECT COUNT(*) FROM Team_Color_Bonus"
 SELECT_COUNT_READER_CUMULATIVE_HISTORY = "SELECT COUNT(*) FROM Reader_Cumulative_History"
+
+SELECT_DRAWING_WINNERS_BY_DATE = """
+    SELECT grade_level, student_name, class_name, drawing_number, fallback
+    FROM Drawing_Winners WHERE log_date = ? ORDER BY grade_level
+"""
+SELECT_DRAWING_WINNERS_OTHER_DATES = "SELECT DISTINCT student_name FROM Drawing_Winners WHERE log_date <> ?"
 
 SELECT_TABLE_EXISTS = "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?"
 SELECT_LATEST_LOG_DATE = "SELECT MAX(log_date) FROM Daily_Logs"

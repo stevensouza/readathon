@@ -254,6 +254,7 @@ Group multiple reports to run in sequence:
 6. **Grade_Rules** - Grade-specific reading goals (daily minimums and caps)
 7. **Upload_History** - Audit trail for all CSV uploads with timestamps and row counts
 8. **Team_Color_Bonus** - Bonus minutes for team spirit participation events
+9. **Drawing_Winners** - Daily prize drawing winners saved from the Daily Scoreboard (a student wins only once per contest)
 
 The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name and contest days for the bulletins.
 

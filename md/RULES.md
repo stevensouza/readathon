@@ -280,8 +280,19 @@ Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
   a single half-day class). Ties: every tied class/student wins.
 - **Daily drawing:** one winner per grade from students who met their grade goal that day, picked with a seed of
   (date, grade, drawing #). Same drawing # → same winners; "Redraw" bumps the # (in the URL, printed in the header).
+  - **Saved winners (`Drawing_Winners`):** "Save winners" (editable database only) stores that day's winners; a saved
+    day always shows them, whatever `?draw=` says, and hides Redraw. Unsaved days are a *preview* (recomputed each load).
+    The server draws again when saving - winner names never come from the browser.
+  - **Win once per contest:** the preview leaves out every student saved as a winner on *any other* day (only saved
+    winners count - an unsaved preview never excludes anyone).
+  - **Fallback:** if that leaves no one in a grade (everyone who met the goal already won), draw from all goal-meeters
+    that day, store `fallback = 1`, and show a note in the toolbar (not in the copied image).
+  - **Clear is per day:** "Clear saved winners (Day N)" deletes only that day; its winners become eligible again in
+    other days' previews, and other days' saved winners never change.
+  - Q4 on the Reports page is unchanged (unseeded, ignores saved winners).
 - **Showdown:** the registry database whose `year` = this year − 1, using its own Nth contest date (final vs final
-  on the Prize Scoreboard's final view). Hidden when there is no prior-year database.
+  on the Prize Scoreboard's final view). Hidden when there is no prior-year database. Always the **last section** of
+  both bulletins (on the Prize Scoreboard, below Goal Getters).
 - **School name:** `school_name` setting (registry, not tracked files); masthead "{school} Read-a-Thon", or
   "Read-a-Thon" when unset.
 
