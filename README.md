@@ -86,6 +86,7 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
 > ```
 > This handles all prerequisites, dependencies, and setup automatically.
 > For full installation documentation, see the [Installation Guide](templates/installation.html) (also available in the app's Help menu).
+> Taking over the Read-a-Thon? Start with the [Volunteer Handoff Guide](md/HANDOFF_GUIDE.md) (roles, timeline, rules, glossary, the app in one page) - in the app it is Help → Volunteer Handoff Guide, downloadable as Word.
 >
 > **Repository:** [https://github.com/stevensouza/readathon](https://github.com/stevensouza/readathon)
 
