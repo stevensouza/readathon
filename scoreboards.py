@@ -245,12 +245,14 @@ def build_daily_scoreboard(reports, calendar: Dict[str, Any], drawing_number: in
     # Medallion: % of students who read (minutes > 0) at least one day so far
     medallion = db.execute_query(get_db_comparison_school_participation(as_of or 'all'))[0]['participation_pct'] or 0
 
-    # Students: seeded daily drawing (same winners for the same date + drawing #)
-    drawing = reports.q4_prize_drawing(date, drawing_number)['data']
-    by_grade = {w['grade_level']: w for w in drawing}
+    # Students: the saved drawing for this day, else a seeded preview (same winners for the same date + drawing #)
+    # that leaves out students saved as winners on other days
+    drawing = reports.daily_drawing(date, drawing_number)
+    by_grade = {w['grade_level']: w for w in drawing['winners']}
     grades = sorted({r['grade_level'] for r in db.execute_query(SELECT_DISTINCT_GRADE_LEVELS)}, key=grade_sort_key)
     winners = [{'grade': format_grade_label(g),
                 'student_name': display_name(by_grade[g]['student_name']) if g in by_grade else None} for g in grades]
+    fallback_grades = [format_grade_label(g) for g in grades if g in by_grade and by_grade[g]['fallback']]
 
     # Classes: highest avg participation (with color) per grade; school-wide leader(s) tagged
     teachers = multi_class_teachers(reports)
@@ -295,7 +297,9 @@ def build_daily_scoreboard(reports, calendar: Dict[str, Any], drawing_number: in
 
     return {
         'medallion': f'{medallion:.0f}%',
-        'drawing_number': drawing_number,
+        'drawing_number': drawing['drawing_number'],
+        'drawing_saved': drawing['saved'],
+        'fallback_grades': fallback_grades,
         'winners': winners,
         'classes': classes,
         'teams': teams,

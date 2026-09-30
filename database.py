@@ -545,6 +545,9 @@ class ReadathonDB:
             if last_date:
                 cursor.execute(INSERT_READER_CUMULATIVE_SNAPSHOT, (last_date,))
 
+        # Drawing_Winners - daily drawing winners saved from the Daily Scoreboard
+        cursor.execute(CREATE_TABLE_DRAWING_WINNERS)
+
         conn.commit()
 
     def load_roster_data(self, csv_data: str) -> int:
@@ -1260,7 +1263,8 @@ class ReadathonDB:
         cursor = conn.cursor()
 
         counts = {}
-        for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Team_Color_Bonus']:
+        for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs', 'Reader_Cumulative', 'Reader_Cumulative_History',
+                      'Team_Color_Bonus', 'Drawing_Winners']:
             cursor.execute(get_table_count_query(table))
             counts[table] = cursor.fetchone()[0]
 
@@ -1374,6 +1378,22 @@ class ReadathonDB:
                     {'name': 'sponsors', 'description': 'Sponsor count as of that day'},
                     {'name': 'cumulative_minutes', 'description': 'Minutes reported by the upload (uncapped)'},
                     {'name': 'upload_timestamp', 'description': 'When that day\'s copy was uploaded'},
+                ]
+            },
+            'drawing_winners': {
+                'table_name': 'Drawing_Winners',
+                'primary_key': 'log_date, grade_level',
+                'description': 'Daily prize drawing winners saved from the Daily Scoreboard, one per grade per contest day. A saved winner is left out of every other day\'s drawing (win once per contest) unless everyone in the grade who met the goal that day already won (fallback).',
+                'referenced_by': [],
+                'references': ['Roster'],
+                'columns': [
+                    {'name': 'log_date', 'description': 'Contest day of the drawing'},
+                    {'name': 'grade_level', 'description': 'Grade the winner was drawn for'},
+                    {'name': 'student_name', 'description': 'Winning student'},
+                    {'name': 'class_name', 'description': 'Winner\'s class'},
+                    {'name': 'drawing_number', 'description': 'Drawing # that was saved (1 unless Redraw was used)'},
+                    {'name': 'fallback', 'description': '1 = everyone eligible in the grade had already won, so a previous winner was drawn again'},
+                    {'name': 'saved_timestamp', 'description': 'When the winners were saved'},
                 ]
             },
             'upload_history': {
@@ -2040,7 +2060,7 @@ class ReadathonDB:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # All 8 tables to export (Database_Registry excluded - separate database file)
+        # All 9 tables to export (Database_Registry excluded - separate database file)
         tables = [
             'Roster',
             'Class_Info',
@@ -2049,7 +2069,8 @@ class ReadathonDB:
             'Reader_Cumulative',
             'Reader_Cumulative_History',
             'Upload_History',
-            'Team_Color_Bonus'
+            'Team_Color_Bonus',
+            'Drawing_Winners'
         ]
 
         export_data = {}
@@ -2074,7 +2095,7 @@ class ReadathonDB:
         # Get table counts
         counts = {}
         for table in ['Roster', 'Class_Info', 'Grade_Rules', 'Daily_Logs',
-                      'Reader_Cumulative', 'Reader_Cumulative_History', 'Upload_History', 'Team_Color_Bonus']:
+                      'Reader_Cumulative', 'Reader_Cumulative_History', 'Upload_History', 'Team_Color_Bonus', 'Drawing_Winners']:
             cursor.execute(f"SELECT COUNT(*) FROM {table}")
             counts[table] = cursor.fetchone()[0]
 
@@ -2359,27 +2380,12 @@ class ReportGenerator:
         drawing always gives the same winners (Daily Scoreboard). None = new random pick each run.
         """
 
-        # Get all students who met their daily reading goal on this date
-        participants = self.db.execute_query(QUERY_Q4_PRIZE_DRAWING, (log_date,))
-
-        # Group by grade
-        by_grade = {}
-        for p in participants:
-            grade = p['grade_level']
-            if grade not in by_grade:
-                by_grade[grade] = []
-            by_grade[grade].append(p)
-
-        # Select one winner per grade
+        # Select one winner per grade from students who met their daily reading goal on this date
         winners = []
-        for grade in sorted(by_grade.keys()):
-            if by_grade[grade]:
-                if drawing_number is None:
-                    winner = random.choice(by_grade[grade])
-                else:
-                    winner = random.Random(f"{log_date}|{grade}|{drawing_number}").choice(by_grade[grade])
-                winner['total_eligible'] = len(by_grade[grade])
-                winners.append(winner)
+        for grade, pool in sorted(self._drawing_pools(log_date).items()):
+            winner = self._draw_winner(pool, log_date, grade, drawing_number)
+            winner['total_eligible'] = len(pool)
+            winners.append(winner)
 
         return {
             'title': f'Q4/Slide 4: Prize Drawing Winners - {log_date}',
@@ -2395,6 +2401,56 @@ class ReportGenerator:
                 'terms': get_report_terms('q4')
             }
         }
+
+    def _drawing_pools(self, log_date: str) -> Dict[str, List[Dict[str, Any]]]:
+        """Students who met their grade's daily goal on log_date, grouped by grade"""
+        pools = {}
+        for p in self.db.execute_query(QUERY_Q4_PRIZE_DRAWING, (log_date,)):
+            pools.setdefault(p['grade_level'], []).append(p)
+        return pools
+
+    @staticmethod
+    def _draw_winner(pool: List[Dict[str, Any]], log_date: str, grade: str,
+                     drawing_number: Optional[int]) -> Dict[str, Any]:
+        """One random pick; with a drawing # the seed (date, grade, #) always gives the same winner"""
+        if drawing_number is None:
+            return random.choice(pool)
+        return random.Random(f"{log_date}|{grade}|{drawing_number}").choice(pool)
+
+    def daily_drawing(self, log_date: str, drawing_number: int) -> Dict[str, Any]:
+        """Daily Scoreboard drawing: the saved winners for log_date, else a preview draw.
+
+        Win once per contest: the preview leaves out students saved as winners on any other date.
+        If that empties a grade, it draws from everyone who met the goal (fallback = repeat winner allowed).
+        """
+        saved = self.db.execute_query(SELECT_DRAWING_WINNERS_BY_DATE, (log_date,))
+        if saved:
+            return {'saved': True, 'drawing_number': saved[0]['drawing_number'], 'winners': saved}
+
+        previous = {r['student_name'] for r in self.db.execute_query(SELECT_DRAWING_WINNERS_OTHER_DATES, (log_date,))}
+        winners = []
+        for grade, pool in sorted(self._drawing_pools(log_date).items()):
+            new_pool = [p for p in pool if p['student_name'] not in previous]
+            winner = self._draw_winner(new_pool or pool, log_date, grade, drawing_number)
+            winners.append({'grade_level': grade, 'student_name': winner['student_name'],
+                            'class_name': winner['class_name'], 'drawing_number': drawing_number,
+                            'fallback': 0 if new_pool else 1})
+        return {'saved': False, 'drawing_number': drawing_number, 'winners': winners}
+
+    def save_daily_drawing(self, log_date: str, drawing_number: int) -> List[Dict[str, Any]]:
+        """Save the drawing for log_date (drawn again here, never taken from the browser); replaces that date only"""
+        with self.db.get_connection() as conn:  # commits, or rolls back on error
+            conn.execute(DELETE_DRAWING_WINNERS_BY_DATE, (log_date,))
+            winners = self.daily_drawing(log_date, drawing_number)['winners']
+            for w in winners:
+                conn.execute(INSERT_DRAWING_WINNER, (log_date, w['grade_level'], w['student_name'], w['class_name'],
+                                                     drawing_number, w['fallback']))
+        return winners
+
+    def clear_daily_drawing(self, log_date: str) -> int:
+        """Delete the saved winners for one date (other dates are untouched)"""
+        with self.db.get_connection() as conn:
+            return conn.execute(DELETE_DRAWING_WINNERS_BY_DATE, (log_date,)).rowcount
 
     def q5_student_cumulative(self, sort_by: str = 'minutes', limit: int = None) -> Dict[str, Any]:
         """Q5: Student Cumulative Report (Top Readers, Goal Getters, Top Fundraisers)"""

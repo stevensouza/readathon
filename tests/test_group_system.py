@@ -25,9 +25,9 @@ class TestGroupSystemStructure:
     def test_total_item_count(self):
         """Verify total number of items is correct"""
         all_items = get_unified_items()
-        # 24 reports + 9 tables + 4 workflows = 37 items
+        # 24 reports + 10 tables + 4 workflows = 38 items
         # Note: Database_Metadata removed, now external registry database
-        assert len(all_items) == 37, f"Expected 37 items, got {len(all_items)}"
+        assert len(all_items) == 38, f"Expected 38 items, got {len(all_items)}"
 
     def test_report_count(self):
         """Verify number of reports"""
@@ -38,10 +38,10 @@ class TestGroupSystemStructure:
     def test_table_count(self):
         """Verify number of tables"""
         tables = [item for item in get_unified_items() if is_table(item)]
-        # 9 tables: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative,
-        #           Reader_Cumulative_History, Team_Color_Bonus, Upload_History, Complete_Log
+        # 10 tables: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative,
+        #           Reader_Cumulative_History, Drawing_Winners, Team_Color_Bonus, Upload_History, Complete_Log
         # Note: Database_Metadata removed, replaced with external registry database
-        assert len(tables) == 9, f"Expected 9 tables, got {len(tables)}"
+        assert len(tables) == 10, f"Expected 10 tables, got {len(tables)}"
 
     def test_workflow_count(self):
         """Verify number of workflows"""
@@ -273,9 +273,9 @@ class TestReportsPageIntegration:
         assert response.status_code == 200
         html = response.data.decode('utf-8')
 
-        # Should show "All Items (37)"
+        # Should show "All Items (38)"
         assert 'All Items' in html, "Should show 'All Items' label"
-        assert "(37)" in html, "Should show count of 37 items"
+        assert "(38)" in html, "Should show count of 38 items"
 
     def test_reports_page_group_filters(self, client):
         """Test all group filters work"""

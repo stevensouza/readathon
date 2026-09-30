@@ -2,7 +2,7 @@
 
 {# Controls sit outside .page: "Copy as image" captures only .page, so the emailed image never shows pickers or buttons #}
 {# can_copy: show Copy/Download (default: only when there is a contest day to show) #}
-{% macro toolbar(calendar, redraw_href=None, can_copy=None) %}
+{% macro toolbar(calendar, can_copy=None) %}
 <div class="toolbar">
     {% if calendar and calendar.options %}
     <span class="tb-label">As of</span>
@@ -11,9 +11,6 @@
         <option value="{{ opt.day }}" {% if opt.day == calendar.day %}selected{% endif %}>{{ opt.label }}</option>
         {% endfor %}
     </select>
-    {% endif %}
-    {% if redraw_href %}
-    <a id="redraw-btn" class="btn btn-sm btn-outline-secondary" href="{{ redraw_href }}"><i class="bi bi-shuffle"></i> Redraw prize winners</a>
     {% endif %}
     <span class="tb-spacer"></span>
     <span id="tb-status" class="tb-status"></span>

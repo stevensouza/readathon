@@ -329,6 +329,7 @@ def get_unified_items():
         {'id': 'daily_logs', 'name': 'Daily Logs', 'description': 'Daily reading minutes for each student by date (participation tracking)', 'groups': ['table', 'reading']},
         {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
         {'id': 'reader_cumulative_history', 'name': 'Reader Cumulative History', 'description': 'Saved copy of the cumulative upload for each contest day (the latest upload for a day replaces it) - used for money raised as of a past day', 'groups': ['table', 'fundraising']},
+        {'id': 'drawing_winners', 'name': 'Drawing Winners', 'description': 'Daily prize drawing winners saved from the Daily Scoreboard (one per grade per day) - a saved winner is left out of later drawings', 'groups': ['table']},
         {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table']},
         {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'database']},
         {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'export']},
@@ -2710,7 +2711,7 @@ def scoreboard_context():
 
 @app.route('/scoreboards/daily')
 def daily_scoreboard():
-    """Daily Scoreboard: ?day=N (default latest), ?draw=N (prize drawing number, default 1)"""
+    """Daily Scoreboard: ?day=N (default latest), ?draw=N (prize drawing number, default 1; ignored once the day is saved)"""
     reports, calendar, year, prior_reports, masthead = scoreboard_context()
     drawing_number = int_arg('draw', 1)
     board = None
@@ -2718,6 +2719,35 @@ def daily_scoreboard():
         board = scoreboards.build_daily_scoreboard(reports, calendar, drawing_number, prior_reports, year)
     return render_template('daily_scoreboard.html', environment=get_current_db_label(),
                            masthead=masthead, calendar=calendar, board=board, drawing_number=drawing_number)
+
+
+def posted_drawing_date():
+    """Contest date for the JSON body's day N, or None if there is no such contest day"""
+    day = (request.get_json(silent=True) or {}).get('day')
+    dates = sorted(get_current_db().get_all_dates())
+    return dates[day - 1] if isinstance(day, int) and 1 <= day <= len(dates) else None
+
+
+@app.route('/api/daily_drawing', methods=['POST'])
+@require_editable_db
+def save_daily_drawing():
+    """Save day N's drawing winners (JSON: day, draw); the winners are drawn again here, not sent by the browser"""
+    log_date = posted_drawing_date()
+    draw = (request.get_json(silent=True) or {}).get('draw', 1)
+    if not log_date or not isinstance(draw, int) or draw < 1:
+        return jsonify({'success': False, 'error': 'Unknown contest day or drawing #'}), 400
+    winners = get_current_reports().save_daily_drawing(log_date, draw)
+    return jsonify({'success': True, 'log_date': log_date, 'saved': len(winners)})
+
+
+@app.route('/api/daily_drawing', methods=['DELETE'])
+@require_editable_db
+def clear_daily_drawing():
+    """Clear the saved drawing winners for day N only (JSON: day)"""
+    log_date = posted_drawing_date()
+    if not log_date:
+        return jsonify({'success': False, 'error': 'Unknown contest day'}), 400
+    return jsonify({'success': True, 'log_date': log_date, 'deleted': get_current_reports().clear_daily_drawing(log_date)})
 
 
 @app.route('/scoreboards/prize')
@@ -3445,6 +3475,7 @@ def generate_export_readme(metadata: dict) -> str:
 - **Reader_Cumulative_History:** {counts['Reader_Cumulative_History']:,} saved daily snapshot records
 - **Upload_History:** {counts['Upload_History']:,} upload events
 - **Team_Color_Bonus:** {counts['Team_Color_Bonus']:,} bonus records
+- **Drawing_Winners:** {counts['Drawing_Winners']:,} saved daily drawing winners
 
 ## Files Included
 
@@ -3458,6 +3489,7 @@ def generate_export_readme(metadata: dict) -> str:
 6. **Reader_Cumulative_History.csv** - Copy of the cumulative upload saved for each contest day
 7. **Upload_History.csv** - Audit trail of all CSV uploads
 8. **Team_Color_Bonus.csv** - Special team color day bonus records
+9. **Drawing_Winners.csv** - Daily prize drawing winners saved from the Daily Scoreboard
 
 ## Data Notes
 
@@ -3842,7 +3874,8 @@ def get_table_counts():
 
         counts = {}
         # Transactional tables (clearable)
-        transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus']
+        transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus',
+                                'Drawing_Winners']
         # System tables (reference only)
         system_tables = ['Roster', 'Class_Info', 'Grade_Rules']
 
@@ -3871,7 +3904,8 @@ def clear_tables():
         tables = data.get('tables', [])
 
         # Validate table names
-        valid_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus']
+        valid_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus',
+                        'Drawing_Winners']
         for table in tables:
             if table not in valid_tables:
                 return jsonify({
@@ -4018,6 +4052,7 @@ def view_table(table_id):
             'reader_cumulative': 'Reader_Cumulative',
             'reader_cumulative_history': 'Reader_Cumulative_History',
             'team_color_bonus': 'Team_Color_Bonus',
+            'drawing_winners': 'Drawing_Winners',
             'upload_history': 'Upload_History'
         }
 
@@ -4036,6 +4071,8 @@ def view_table(table_id):
             query += " ORDER BY snapshot_date DESC, student_name ASC"
         elif table_id == 'team_color_bonus':
             query += " ORDER BY event_date DESC, class_name ASC"
+        elif table_id == 'drawing_winners':
+            query += " ORDER BY log_date DESC, grade_level ASC"
         elif table_id == 'upload_history':
             query += " ORDER BY upload_timestamp DESC"
         elif table_id == 'roster':

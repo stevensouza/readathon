@@ -392,6 +392,14 @@ class TestShowdown:
         finally:
             registry.set_setting('contest_days', '10')
 
+    @pytest.mark.parametrize('url, previous_section', [('/scoreboards/daily', 'Teams'), ('/scoreboards/prize', 'Goal Getters')])
+    def test_showdown_is_last_section(self, client, year_pair, url, previous_section):
+        with client.session_transaction() as sess:
+            sess['active_database_id'] = year_pair
+        sections = re.findall(r'<span class="cat">([^<]+)</span>', report_html(client.get(url).data.decode('utf-8')))
+        assert sections[-1].endswith('Showdown')
+        assert sections[-2] == previous_section
+
 
 class TestScoreboardData:
     """As-of filters, drawing, snapshots and helpers behind the pages"""
@@ -577,6 +585,109 @@ class TestCumulativeSnapshots:
         assert client.get('/api/table_counts').get_json()['counts']['Reader_Cumulative_History'] == 7
         assert client.get('/api/table/reader_cumulative_history').get_json()['row_count'] == 7
         assert sample_db.get_table_metadata('reader_cumulative_history')['row_count'] == 7
+
+
+class TestDrawingWinners:
+    """Daily drawing: winners saved from the Daily Scoreboard, and a student wins only once per contest.
+
+    Sample pools (met the goal): Day 1 = K: student11, 1: student21, 2: student31/student41;
+    Day 2 = 1: student21, 2: student31/student41.
+    """
+
+    @pytest.fixture
+    def sample_drawings(self, sample_db):
+        """Route tests write to the sample database: remove their saved winners afterwards"""
+        yield sample_db
+        sample_db.get_connection().execute('DELETE FROM Drawing_Winners')
+        sample_db.get_connection().commit()
+
+    @staticmethod
+    def names(drawing):
+        return {w['grade_level']: w['student_name'] for w in drawing['winners']}
+
+    def test_preview_matches_q4_when_nothing_saved(self, db_copy):
+        reports = ReportGenerator(db_copy)
+        for draw in range(1, 10):
+            drawing = reports.daily_drawing(DAY1, draw)
+            assert drawing['saved'] is False and drawing['drawing_number'] == draw
+            assert self.names(drawing) == {w['grade_level']: w['student_name'] for w in reports.q4_prize_drawing(DAY1, draw)['data']}
+            assert all(w['fallback'] == 0 for w in drawing['winners'])
+
+    def test_saved_day_keeps_its_winners(self, db_copy):
+        reports = ReportGenerator(db_copy)
+        saved = {w['grade_level']: w['student_name'] for w in reports.save_daily_drawing(DAY1, 3)}
+        for draw in (1, 3, 7):
+            drawing = reports.daily_drawing(DAY1, draw)
+            assert drawing['saved'] is True and drawing['drawing_number'] == 3
+            assert self.names(drawing) == saved
+
+    def test_previous_winners_excluded_with_fallback(self, db_copy):
+        reports = ReportGenerator(db_copy)
+        day1 = {w['grade_level']: w['student_name'] for w in reports.save_daily_drawing(DAY1, 1)}
+        for draw in range(1, 10):
+            winners = {w['grade_level']: w for w in reports.daily_drawing(DAY2, draw)['winners']}
+            # Grade 2: the other eligible student always wins
+            assert winners['2']['student_name'] == ({'student31', 'student41'} - {day1['2']}).pop()
+            assert winners['2']['fallback'] == 0
+            # Grade 1: the only eligible student already won Day 1 -> drawn again (fallback)
+            assert winners['1']['student_name'] == 'student21' and winners['1']['fallback'] == 1
+
+    def test_save_replaces_only_that_day_and_clear_only_that_day(self, db_copy):
+        reports = ReportGenerator(db_copy)
+        reports.save_daily_drawing(DAY1, 1)
+        reports.save_daily_drawing(DAY2, 1)
+        reports.save_daily_drawing(DAY2, 2)
+        count = lambda d: db_copy.execute_query('SELECT COUNT(*) as n FROM Drawing_Winners WHERE log_date = ?', (d,))[0]['n']
+        assert count(DAY1) == 3 and count(DAY2) == 2
+        assert reports.clear_daily_drawing(DAY1) == 3
+        assert count(DAY1) == 0 and count(DAY2) == 2
+        assert reports.daily_drawing(DAY1, 1)['saved'] is False
+
+    def test_save_and_clear_routes(self, client, make_editable, sample_drawings):
+        make_editable(sample_db_id())
+        url = '/scoreboards/daily?day=2'
+        assert 'Preview, not saved' in client.get(url).data.decode('utf-8')
+
+        response = client.post('/api/daily_drawing', json={'day': 2, 'draw': 4})
+        assert response.status_code == 200 and response.get_json()['saved'] == 2
+        rows = sample_drawings.execute_query('SELECT log_date, drawing_number FROM Drawing_Winners')
+        assert {(r['log_date'], r['drawing_number']) for r in rows} == {(DAY2, 4)}
+
+        html = client.get(f'{url}&draw=9').data.decode('utf-8')
+        assert 'Winners saved' in html and 'clear-drawing-btn' in html
+        assert 'redraw-btn' not in html and 'save-drawing-btn' not in html
+        assert 'Drawing #4' in page_text(html)
+        assert 'Winners saved' not in report_html(html)  # controls stay out of the copied image
+
+        response = client.delete('/api/daily_drawing', json={'day': 2})
+        assert response.status_code == 200 and response.get_json()['deleted'] == 2
+        assert sample_drawings.execute_query('SELECT COUNT(*) as n FROM Drawing_Winners')[0]['n'] == 0
+
+    def test_fallback_note_on_page(self, client, make_editable, sample_drawings):
+        make_editable(sample_db_id())
+        client.post('/api/daily_drawing', json={'day': 1, 'draw': 1})
+        html = client.get('/scoreboards/daily?day=2').data.decode('utf-8')
+        assert 'drawing-fallback-note' in html and '1st Grade' in html
+        assert 'drawing-fallback-note' not in report_html(html)
+
+    def test_routes_reject_bad_day(self, client, make_editable, sample_drawings):
+        make_editable(sample_db_id())
+        assert client.post('/api/daily_drawing', json={'day': 99, 'draw': 1}).status_code == 400
+        assert client.post('/api/daily_drawing', json={'day': 1, 'draw': 0}).status_code == 400
+        assert client.delete('/api/daily_drawing', json={'day': 'x'}).status_code == 400
+
+    def test_routes_refuse_read_only_database(self, client, make_editable, sample_drawings):
+        make_editable(-1)
+        assert client.post('/api/daily_drawing', json={'day': 1, 'draw': 1}).status_code == 403
+        assert client.delete('/api/daily_drawing', json={'day': 1}).status_code == 403
+        assert sample_drawings.execute_query('SELECT COUNT(*) as n FROM Drawing_Winners')[0]['n'] == 0
+
+    def test_table_listed_everywhere(self, client, sample_db):
+        assert 'Drawing_Winners' in sample_db.get_table_counts()
+        assert 'Drawing_Winners' in sample_db.export_all_tables()
+        assert client.get('/api/table_counts').get_json()['counts']['Drawing_Winners'] == 0
+        assert client.get('/api/table/drawing_winners').get_json()['row_count'] == 0
+        assert sample_db.get_table_metadata('drawing_winners')['row_count'] == 0
 
 
 class TestSettings:

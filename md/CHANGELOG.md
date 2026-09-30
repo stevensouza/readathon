@@ -9,6 +9,21 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.19.0] - 2026-09-30 - Saved Daily Drawing, Win Once
+
+### Added
+- **Save winners** on the Daily Scoreboard (editable database only): stores that day's prize drawing winners in the new
+  `Drawing_Winners` table. A saved day always shows the same winners, even if its reading data is uploaded again, and
+  Redraw is hidden. **Clear saved winners (Day N)** undoes one day only
+- **A student can win the daily drawing only once:** each day's drawing skips students saved as winners on other days.
+  If everyone in a grade who met the goal has already won, a previous winner is drawn again and a note says so (the
+  note is in the toolbar, not in the copied image)
+- `Drawing_Winners` appears in Tables, Export All, Admin → Clear Tables and `clear_all_data.py`
+
+### Changed
+- The Daily Scoreboard's drawing controls (status, Redraw, Save/Clear) sit on their own row under the toolbar
+- The Prize Scoreboard's year-vs-year Showdown is now the last section, below Goal Getters (as on the Daily Scoreboard)
+
 ## [v2026.18.0] - 2026-09-23 - Editable Database
 
 ### Added

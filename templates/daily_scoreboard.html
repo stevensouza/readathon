@@ -8,7 +8,24 @@
 {% block content %}
 <div class="scoreboard-page">
 
-{{ sb.toolbar(calendar, url_for('daily_scoreboard', day=calendar.day, draw=drawing_number + 1) if board else None) }}
+{{ sb.toolbar(calendar) }}
+{% if board %}
+{# Daily drawing: a preview until saved (editable database only); a saved day always shows its saved winners #}
+<div class="toolbar drawing-bar">
+    <span class="tb-label">Prize drawing #{{ board.drawing_number }}</span>
+    {% if board.drawing_saved %}
+    <span id="drawing-status" class="tb-drawing saved"><i class="bi bi-check-circle-fill"></i> Winners saved</span>
+    <button id="clear-drawing-btn" class="btn btn-sm btn-outline-danger editable-only" onclick="clearDrawing()"><i class="bi bi-x-circle"></i> Clear saved winners (Day {{ calendar.day }})</button>
+    {% else %}
+    <span id="drawing-status" class="tb-drawing preview"><i class="bi bi-eye"></i> Preview, not saved</span>
+    <a id="redraw-btn" class="btn btn-sm btn-outline-secondary" href="{{ url_for('daily_scoreboard', day=calendar.day, draw=drawing_number + 1) }}"><i class="bi bi-shuffle"></i> Redraw prize winners</a>
+    <button id="save-drawing-btn" class="btn btn-sm btn-success editable-only" onclick="saveDrawing()"><i class="bi bi-check-lg"></i> Save winners</button>
+    {% endif %}
+    {% if board.fallback_grades %}
+    <span class="tb-note" id="drawing-fallback-note"><i class="bi bi-info-circle"></i> Everyone who met the goal in {{ board.fallback_grades|join(', ') }} has already won, so a previous winner was drawn again.</span>
+    {% endif %}
+</div>
+{% endif %}
 
 <div class="page" id="report">
 {% if not board %}
@@ -95,4 +112,29 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}{{ sb.capture_script('daily_scoreboard_day%s.png'|format(calendar.day)) }}{% endblock %}
+{% block extra_js %}{{ sb.capture_script('daily_scoreboard_day%s.png'|format(calendar.day)) }}
+{% if board %}
+<script>
+    // Save / clear this day's drawing winners, then reload (the server draws again; the browser sends only day + drawing #)
+    async function drawingRequest(method, body) {
+        const response = await fetch('/api/daily_drawing', {
+            method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const result = await response.json();
+        if (!result.success) { alert(result.error || 'Request failed'); return; }
+        const url = new URL(window.location.href);
+        url.searchParams.set('day', {{ calendar.day }});
+        url.searchParams.delete('draw');
+        window.location.href = url.toString();
+    }
+    function saveDrawing() {
+        drawingRequest('POST', { day: {{ calendar.day }}, draw: {{ board.drawing_number }} });
+    }
+    function clearDrawing() {
+        if (confirm('Clear the saved winners for Day {{ calendar.day }} only?\n\nThey become eligible again in other days\' drawings. Other days\' saved winners are not changed.')) {
+            drawingRequest('DELETE', { day: {{ calendar.day }} });
+        }
+    }
+</script>
+{% endif %}
+{% endblock %}
