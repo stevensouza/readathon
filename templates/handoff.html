@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Volunteer Handoff Guide - Read-a-Thon System{% endblock %}
+
+{% block extra_css %}
+<style>
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Sticky TOC (same as the Installation Guide) */
+    #tocCard {
+        position: sticky;
+        top: 70px;
+        z-index: 100;
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
+    }
+    .toc-link {
+        text-decoration: none;
+        color: #495057;
+        display: block;
+        padding: 0.25rem 0;
+    }
+    .toc-link:hover {
+        color: #0d6efd;
+    }
+
+    /* Guide body (rendered from md/HANDOFF_GUIDE.md) */
+    .handoff-body h3 {
+        color: #1e3a5f;
+        border-bottom: 2px solid #dbeafe;
+        padding-bottom: 0.3rem;
+        margin-top: 2rem;
+        scroll-margin-top: 80px;
+    }
+    .handoff-body h4 {
+        color: #1e3a8a;
+        font-size: 1.1rem;
+        margin-top: 1.25rem;
+        scroll-margin-top: 80px;
+    }
+    .handoff-body li {
+        margin-bottom: 0.2rem;
+    }
+    .handoff-body ul.handoff-checklist {
+        list-style: none;
+        padding-left: 0.5rem;
+    }
+    .handoff-box {
+        color: #1e3a5f;
+        font-weight: bold;
+    }
+    .handoff-body .table-responsive {
+        margin-left: 2rem;  /* tables sit in from the text, level with the bullet text */
+    }
+    .handoff-table {
+        width: auto;
+        font-size: 0.92rem;
+    }
+    .handoff-table thead th {
+        background: #1e3a5f;
+        color: white;
+    }
+    mark.tbd {
+        background: #fff3cd;
+        border: 1px solid #f59e0b;
+        border-radius: 4px;
+        padding: 0 0.3rem;
+        font-weight: 600;
+        color: #7c4a03;
+    }
+    .handoff-code {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    .handoff-code pre {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 0.9rem;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+    }
+    .handoff-copy {
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        background: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sticky Table of Contents + downloads -->
+    <div class="col-lg-3">
+        <div class="card mb-4" id="tocCard">
+            <div class="card-header card-header-blue">
+                <h6 class="mb-0"><i class="bi bi-list"></i> Quick Navigation</h6>
+            </div>
+            <div class="card-body">
+                <nav class="nav flex-column mb-3">
+                    {% for item in guide.toc %}
+                    <a href="#{{ item.id }}" class="toc-link">{{ item.text }}</a>
+                    {% endfor %}
+                </nav>
+                <h6 class="text-muted small text-uppercase">Word documents</h6>
+                {% if docx_available %}
+                <a href="/help/handoff/download/guide" class="btn btn-primary btn-sm w-100 mb-2" id="downloadGuide">
+                    <i class="bi bi-file-earmark-word"></i> Download this guide
+                </a>
+                <a href="/help/handoff/download/contacts" class="btn btn-outline-secondary btn-sm w-100" id="downloadContacts">
+                    <i class="bi bi-file-earmark-lock"></i> Download Contacts &amp; Links template
+                </a>
+                <p class="small text-muted mt-2 mb-0">Fill in the Contacts &amp; Links sheet on the PTA Google Drive only - never in the app folder or on GitHub.</p>
+                {% else %}
+                <p class="small text-muted mb-0">Word downloads need the <code>python-docx</code> package: run <code>./install.sh</code>, then restart the app.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Guide -->
+    <div class="col-lg-9">
+        <h1 class="mb-3"><i class="bi bi-people"></i> {{ guide.title }}</h1>
+
+        {% if guide.tbds %}
+        <div class="alert alert-warning" id="tbdNotice">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Draft:</strong> {{ guide.tbds|length }} items still to look up, highlighted like <mark class="tbd">⚠ TBD</mark>.
+            All of them are listed at the end under <a href="#still-to-look-up">Still to look up</a>.
+        </div>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-body handoff-body">
+                {{ guide_html|safe }}
+            </div>
+        </div>
+        <p class="small text-muted">Source: <code>md/HANDOFF_GUIDE.md</code> in the app folder - edit it there and this page and the Word download both change.</p>
+    </div>
+</div>
+
+<script>
+function copyHandoffCode(button) {
+    const text = button.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        const original = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-check-lg"></i> Copied';
+        setTimeout(() => { button.innerHTML = original; }, 1500);
+    });
+}
+</script>
+{% endblock %}

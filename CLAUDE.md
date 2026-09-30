@@ -62,6 +62,7 @@ Full list in **`md/RULES.md`** (mandatory reading before implementing any featur
 - Team colors are assigned by **alphabetical order of team name** (first = blue `#1e3a5f`, second = yellow `#f59e0b`), never by DB order/ID.
 - Public files anonymize teams as "Phoenix" and "Dragons"; keep real names/PII out of tracked files, tests and docs.
 - `md/IMPLEMENTATION_PROMPT.md` is the source-of-truth requirements doc (very large — grep it, don't read it whole).
+- **Volunteer Handoff Guide** (`md/HANDOFF_GUIDE.md`): the non-technical "how to run the Read-a-Thon" doc (roles, timeline, rules, prizes, glossary, app steps, install). One source for Help → Volunteer Handoff Guide (`/help/handoff`) and its Word download (`handoff_doc.py`, python-docx). Supports only the Markdown subset listed in `handoff_doc.py`; `[TBD: what to look up]` marks missing facts (highlighted, listed under "Still to look up"). Update it when rules, prizes or daily steps change. Public file: no names/contacts/links to private docs - those go in the Contacts & Links sheet (`md/HANDOFF_PRIVATE_TEMPLATE.md` is only the blank template; the filled copy lives on the PTA Google Drive).
 
 ## Workflow Rules
 

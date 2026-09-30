@@ -9,6 +9,19 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.20.0] - 2026-09-30 - Volunteer Handoff Guide
+
+### Added
+- **🧭 Volunteer Handoff Guide** (Help menu, `/help/handoff`): how to run the Read-a-Thon for new parent volunteers -
+  at a glance, people and roles, timeline and checklist (key dates to put on the calendar), contest rules and prizes,
+  glossary, the school app on one page, installing, and appendices with the roster format to ask the school for and
+  AI prompts to convert the roster and make the teams
+  - One source, `md/HANDOFF_GUIDE.md`, for the Help page and a **Word download** (`handoff_doc.py`)
+  - `[TBD: ...]` placeholders are highlighted and listed at the end under **Still to look up**
+  - **Contacts & Links template** (Word): a blank sheet for names, emails, account info and links, filled in on the PTA
+    Google Drive only (the guide itself is public, so it has no names or contact details)
+- `python-docx` in `requirements.txt` (run `./install.sh` once to get the Word downloads)
+
 ## [v2026.19.0] - 2026-09-30 - Saved Daily Drawing, Win Once
 
 ### Added

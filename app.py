@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify, send_file, Response,
 from database import ReadathonDB, ReportGenerator, DatabaseRegistry
 from queries import get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query
 import scoreboards
+import handoff_doc
 import csv
 import io
 import zipfile
@@ -4137,6 +4138,37 @@ def download_requirements():
                         mimetype='text/markdown')
     except FileNotFoundError:
         return "File not found", 404
+
+HANDOFF_DOCUMENTS = {
+    'guide': (handoff_doc.GUIDE_PATH, 'Read-a-Thon Volunteer Handoff Guide.docx'),
+    'contacts': (handoff_doc.PRIVATE_TEMPLATE_PATH, 'Read-a-Thon Contacts and Links (PRIVATE).docx'),
+}
+
+
+@app.route('/help/handoff')
+def help_handoff():
+    """Volunteer Handoff Guide (md/HANDOFF_GUIDE.md), also downloadable as Word"""
+    env = get_current_db_label()
+    guide = handoff_doc.load(handoff_doc.GUIDE_PATH)
+    return render_template('handoff.html', environment=env, guide=guide,
+                           guide_html=handoff_doc.to_html(guide['blocks']),
+                           docx_available=handoff_doc.docx_available())
+
+
+@app.route('/help/handoff/download/<doc_id>')
+def download_handoff(doc_id):
+    """The handoff guide ('guide') or the blank Contacts & Links sheet ('contacts') as a Word document"""
+    if doc_id not in HANDOFF_DOCUMENTS:
+        return "Document not found", 404
+    if not handoff_doc.docx_available():
+        return "Word download needs the python-docx package: run ./install.sh, then restart the app.", 503
+    path, download_name = HANDOFF_DOCUMENTS[doc_id]
+    version = open('VERSION').read().strip() if os.path.exists('VERSION') else ''
+    footer = f"From the school Read-a-Thon app {version} · {datetime.now():%b %d, %Y} · source: {path}"
+    data = handoff_doc.to_docx(handoff_doc.load(path), footer=footer)
+    return send_file(io.BytesIO(data), as_attachment=True, download_name=download_name,
+                     mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
 
 @app.route('/prototypes/<path:filename>')
 def serve_prototype(filename):
