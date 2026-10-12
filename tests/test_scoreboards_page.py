@@ -826,7 +826,9 @@ class TestSettings:
                                                           'drawing_winners_per_grade': 3})
             assert response.get_json()['success']
             assert client.get('/api/settings').get_json()['settings'] == {
-                'school_name': 'Test School', 'contest_days': '12', 'drawing_winners_per_grade': '3'}
+                'school_name': 'Test School', 'contest_days': '12', 'drawing_winners_per_grade': '3',
+                'minutes_report_url': original['minutes_report_url'],
+                'readers_report_url': original['readers_report_url']}
             assert app_module.drawing_winners_per_grade() == 3
             html = client.get('/scoreboards/daily').data.decode('utf-8')
             assert 'Test School Read-a-Thon' in html and 'Day 2 of 12' in html

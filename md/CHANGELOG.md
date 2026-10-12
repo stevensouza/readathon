@@ -9,6 +9,42 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.22.0] - 2026-10-12 - Roster Name Matching + read-a-thon.com Download Links
+
+### Added
+- **Match names to the roster (Upload page):** parents type their child's name on read-a-thon.com, so uploads have
+  first names only ("Mateo"), nicknames ("Joey Lambert" for Joseph Lambert), typos and case differences - about a
+  fifth of the 2026 money and minutes. Before a daily or cumulative upload the files are checked
+  (`/api/check_upload_names`, saves nothing) and names that aren't on the roster are listed with a suggested student.
+  **Strong matches** are accepted for you: a single close match (first name only, nickname + same last name,
+  near-identical spelling) in the same class, for a student with no data of their own. **Possible matches** (same last
+  name with a different first name - sibling?, another teacher's student, two students who fit) are suggested but not
+  accepted. **Save accepted matches & upload** saves them. The panel explains Accept / Strong / Possible
+- **Names not on the roster alert** at the top of the Upload page: how many uploaded names aren't matched and the
+  minutes and money they hold (count for no class or team), with **Match names to the roster** to fix them after the
+  fact (`/api/unmatched_names`) and a link to the Q23 report
+- **Saved name corrections (`Name_Alias` table):** keyed by uploaded name + teacher (ignoring case, spacing and
+  Mr./Mrs./Ms.), applied to every later upload; "Not a roster student" leaves a page out. Saving one also moves data
+  uploaded earlier under that name (Daily_Logs, Reader_Cumulative, Reader_Cumulative_History). Upload → Saved Name
+  Corrections lists them, with **Change** and delete; in Tables, Export All and Admin → Clear Tables; kept by `clear_all_data.py`
+- **read-a-thon.com download links:** Upload page buttons **Open Minutes Report** (date picker, defaults to today, plus
+  a button per day already uploaded) and **Open Comprehensive Readers Report**. Links are editable in Admin → Bulletin
+  Settings (`{date}` = the chosen day)
+- `name_matching.py` (matching rules); RULES → "Roster Name Matching"; Help (Matching names to the roster, Undoing an
+  upload), README and Volunteer Handoff Guide updated
+
+### Changed
+- Names that differ from a roster name only in capitals or spaces ("Leo McKay", "jack  turner") are matched
+  automatically and reported as info (matching was case-sensitive, although the Upload page said it wasn't)
+- Two different students typed the same way in two classes (two "Ellie"s) are no longer merged once corrected
+- Duplicate-row warnings only when 2+ rows for a student have data (read-a-thon.com's readers report lists an empty
+  placeholder row beside each student's real page)
+- **A daily upload replaces everything saved for its date** (was: merged - students missing from the new file kept
+  their old rows), so changing a correction and uploading the day again leaves nothing stale
+
+### Fixed
+- Information messages (e.g. "Replaced N existing records") now show in the daily batch upload results
+
 ## [v2026.21.0] - 2026-09-30 - Two Daily Drawing Winners per Grade
 
 ### Changed

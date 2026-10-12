@@ -402,7 +402,31 @@
                     </div>
                 </div>
 
-                <p class="small"><strong>Process:</strong> Select date (for daily upload) → Choose CSV file → Click Upload button → System validates names against roster and shows warnings for unrecognized students.</p>
+                <p class="small"><strong>Process:</strong> Open the report from the Upload page (<strong>Open Minutes Report</strong> for a chosen day, <strong>Open Comprehensive Readers Report</strong>; links set in Admin → Bulletin Settings) and download the CSV → Choose the CSV file → Click Upload → names are checked against the roster first.</p>
+                <h6 id="name-matching">Matching names to the roster</h6>
+                <p class="small">Parents type their child's name on ReadAThon.com, so files contain first names only ("Mateo"), nicknames ("Joey Lambert" for Joseph Lambert) and typos. A name that isn't on the roster counts in school totals but for <strong>no class or team</strong>. When you upload, the app checks the names first:</p>
+                <ul class="small">
+                    <li><strong>Matched automatically:</strong> names with a saved <em>name correction</em>, and names that differ from a roster name only in capitals or spaces ("Leo McKay" = Leo Mckay). The upload results list them.</li>
+                    <li><strong>Match names to the roster:</strong> any other name is shown with a suggested roster student before anything is uploaded.
+                        <ul>
+                            <li><strong>Accept (box ticked):</strong> use the roster student shown. It's saved as a name correction, so this upload and every later one count that name's minutes and money for that student, their class and team. Data uploaded earlier under that name moves to the student too.</li>
+                            <li><strong>Not accepted (box empty):</strong> the name is uploaded as typed (counts for no class or team) and you're asked again next time.</li>
+                            <li><span class="badge bg-success">Strong match</span> - the app accepts it for you: the only close match in the same class (first name only, nickname + same last name, or nearly the same spelling) for a student who has no data of their own. Untick it if it's wrong.</li>
+                            <li><span class="badge bg-warning text-dark">Possible match</span> - suggested, not accepted: same last name but a different first name (could be a sibling), a student in another class, or two students who could fit. Tick Accept if it's right, or choose another student.</li>
+                            <li><strong>Not a roster student</strong> (end of the list): for pages that aren't a student - left out of this and later uploads.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Per class:</strong> a correction is for a typed name <em>and</em> teacher, so "Ellie" in one class and "Ellie" in another are separate corrections.</li>
+                    <li><strong>Names not on the roster</strong> (alert at the top of the Upload page): how many uploaded names still aren't matched and how many minutes and dollars they hold. <strong>Match names to the roster</strong> there fixes them after the fact - same panel, and their data uploaded so far moves to the student. The <a href="/reports?search=q23">Q23 Roster Integrity Check</a> report lists them too.</li>
+                    <li><strong>Saved Name Corrections</strong> (Upload page) lists every correction. <strong>Change</strong> picks a different student; the trash button deletes it. Either applies to uploads from then on - days already uploaded keep the earlier choice until you upload them again (the daily files for those days and the latest cumulative file).</li>
+                </ul>
+                <h6 id="undo-upload">Undoing an upload</h6>
+                <ul class="small">
+                    <li><strong>Upload the right file again:</strong> a daily file replaces everything saved for its date; a cumulative file replaces all current money totals and that snapshot date's saved copy. This is usually all you need.</li>
+                    <li><strong>Delete a day:</strong> Upload History → the trash button on that date's row deletes the day's minutes (full view only).</li>
+                    <li><strong>Delete cumulative data:</strong> the trash button on a cumulative row deletes <em>all</em> money data, including every day's saved copy - then upload the latest cumulative file again.</li>
+                    <li><strong>Delete Selected</strong> in Upload History only removes history rows, not the data.</li>
+                </ul>
 
                 <!-- Bulletins -->
                 <h5 id="scoreboards-tab" class="mt-4"><i class="bi bi-newspaper"></i> 📰 Bulletins</h5>
@@ -732,9 +756,9 @@
                             <div class="accordion-body">
                                 <strong>Solution:</strong>
                                 <ul>
-                                    <li>Check that student names match exactly (case-sensitive)</li>
+                                    <li>The name was typed by a parent on ReadAThon.com and isn't on the roster. On the Upload page, <strong>Match names to the roster</strong> (alert at the top) lets you pick the roster student; the correction is remembered for later days (see <a href="#name-matching">Matching names to the roster</a>)</li>
+                                    <li>If it's not a student (e.g. a sibling's page), pick <em>Not a roster student</em></li>
                                     <li>Verify CSV column names are correct</li>
-                                    <li>Look for extra spaces in student names</li>
                                 </ul>
                             </div>
                         </div>

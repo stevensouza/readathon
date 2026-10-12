@@ -28,6 +28,45 @@ This file contains universal rules that apply across all pages and features in t
 - **Start date and length may vary** between years - never hard-code dates or timestamps
 - **Out-of-range dates:** Cause reconciliation differences (tracked in reports Q21-Q23)
 
+### Roster Name Matching (uploads)
+Parents type their child's name on read-a-thon.com, so uploads contain first names only ("Mateo"), nicknames
+("Joey Lambert" for Joseph Lambert), typos and case differences. A name that isn't a `Roster.student_name` counts for
+**no class, grade or team** (those reports start from `Roster`), but still counts in school-wide totals that read
+`Daily_Logs`/`Reader_Cumulative` directly - so every name must be fixed or left out. Code: `name_matching.py`.
+- **Stored names are always roster spellings.** Uploads translate each name before saving, so every query keeps
+  comparing names exactly (no case-insensitive SQL needed).
+- **Order (`NameMatcher.resolve`):** exact roster name → saved correction (`Name_Alias`) → the only roster name that
+  differs just in capitals/spaces/punctuation (automatic, reported as info) → unmatched (imported under the typed name
+  with a "Student not found in roster" warning; cumulative rows get team `ERROR: NO ROSTER MATCH`).
+- **An unmatched name is saved with its teacher: "Ellie (Hart)"** (`unmatched_label` / `split_unmatched_label`), so
+  two unmatched "Ellie"s in different classes stay two rows, and matching them later knows the class (Daily_Logs has
+  no teacher column). Q23 and the Students page show that label.
+- **Corrections (`Name_Alias`) are keyed by uploaded name + teacher**, both compared ignoring case/spacing (teacher
+  also without Mr./Mrs./Ms.: "Mrs. Delgado" = "delgado"). Two kids typed "Ellie" in different classes map to different
+  students. `student_name` NULL = not a roster student: those rows are left out of uploads.
+- **Check before upload:** the Upload page posts the files to `/api/check_upload_names` (saves nothing). Unmatched
+  names are shown in a **Match names to the roster** panel with suggestions (`NameMatcher.suggest`).
+  Wording on the page (avoid "check"/"pre-check" - it reads like "examine"): **Accept** = the tick box (accepted rows are
+  saved as name corrections and used for this upload and every later one); **Strong match** = accepted for you;
+  **Possible match** = suggested, not accepted; **Your choice**; **No match found**; **Not a roster student**.
+- **Strong match** only when it's the only strong match (first name only, nickname + same last name, near-identical
+  spelling, same first + last name) **in the same class** and that student has no data of their own in the upload.
+  Same last name with an unrelated first name (preferred name or sibling?), another teacher's student, two possible
+  students, or a student who already has their own row are **possible matches**.
+- **After the fact:** `/api/unmatched_names` lists names already saved that aren't roster names (with their minutes and
+  money). The Upload page shows them in an alert at the top ("N uploaded names are not on the roster") with **Match names
+  to the roster** (same panel; saving moves their data) and a link to the Q23 report.
+- **Changing or deleting a correction** affects uploads from then on. Data already moved stays with the earlier student
+  until those days are uploaded again (daily files for those days + the latest cumulative file).
+- **Saving a correction moves data already saved** under that name (Daily_Logs, Reader_Cumulative,
+  Reader_Cumulative_History), adding to the student's row if there is one. Only that class's rows move ("Ellie (Hart)",
+  not "Ellie (Kim)").
+- **Duplicates are summed** (as before). read-a-thon.com's readers report lists an empty placeholder row
+  (PageCreated = No, all zeros) beside a student's real page, so a duplicate warning only appears when 2+ rows have data.
+- **A daily upload replaces everything saved for its date** (the file is the whole day from read-a-thon.com), so a
+  changed or deleted correction leaves nothing stale behind once the day is uploaded again.
+- `Name_Alias` belongs to the roster: `clear_all_data.py` keeps it (Admin → Clear Tables can clear it).
+
 ---
 
 ## Team Rules
@@ -180,7 +219,7 @@ The application uses **TWO distinct participation metrics**. DO NOT confuse them
 - **Every route that writes to a contest database must use `@require_editable_db`** (`app.py`): it returns 403
   `{read_only: true, error}` when the viewed database isn't the editable one. Currently: `upload_daily`,
   `upload_cumulative`, `upload_team_color_bonus`, `delete_day`, `delete_cumulative`, `delete_upload_history_batch`,
-  `clear_tables`. CLI scripts (`clear_all_data.py`, `init_data.py`) are not guarded.
+  `clear_tables`, `save_name_aliases`, `delete_name_alias`. CLI scripts (`clear_all_data.py`, `init_data.py`) are not guarded.
 - Tests that write through these routes use the `make_editable(db_id)` fixture (`tests/conftest.py`) so the real
   registry's setting is never changed.
 

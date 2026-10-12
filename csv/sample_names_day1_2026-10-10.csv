@@ -1,0 +1,17 @@
+ClassID,Teacher,ReaderID,ReaderName,Minutes
+2101,"Ms. Alvarez",2101001,"Maya",30
+2101,"Ms. Alvarez",2101002,"jack  turner",25
+2101,"Ms. Alvarez",2101003,"Lily Nguyen",40
+2101,"Ms. Alvarez",2101004,"Owen Davis",20
+2102,"Mr. Kim",2102001,"Noah",35
+2102,"Mr. Kim",2102002,"Sam Lee",45
+2102,"Mr. Kim",2102003,"Ava Johnson",30
+2102,"Mr. Kim",2102004,"Leo Garcia",20
+2201,"Mrs. Hart",2201001,"Olivia Chen",50
+2201,"Mrs. Hart",2201002,"Olivia Grant",40
+2201,"Mrs. Hart",2201003,"Ethan Brooks",60
+2201,"Mrs. Hart",2201004,"Zoe Adams",30
+2202,"Ms. Lopez",2202001,"Noah Martinez",45
+2202,"Ms. Lopez",2202002,"Emma Scott",35
+2202,"Ms. Lopez",2202003,"Lucas Reed",25
+2202,"Ms. Lopez",2202004,"Mia Torres",55

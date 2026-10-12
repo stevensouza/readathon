@@ -70,7 +70,7 @@ Put every row of **Key dates** on the calendar. Last year's dates are there for 
 
 - [ ] Roster arrives → convert it (Appendix A) → make the teams (Appendix B) → school OKs the teams.
 - [ ] **School app:** create this year's database from the roster (see **The school app**, Before the contest).
-- [ ] Get the students onto ReadAThon.com. [TBD: does ReadAThon.com get our roster, or do parents type names? Names must match the app's roster exactly]
+- [ ] Get the students onto ReadAThon.com. Parents type their child's name there, so names won't always match the roster ("Joey" for Joseph, first name only, typos) - the school app fixes them when you upload (see **Every morning**). [TBD: does the school send ReadAThon.com the roster?]
 - [ ] Parent letter written and approved; secretary prints the take-home packet (with the registration QR code).
 - [ ] **School app:** Bulletins → Meet the Teams → email to teachers and families.
 - [ ] Send the captains the teams, rules and goals for the kickoff assembly slides.
@@ -154,6 +154,7 @@ Prize examples are from 2025; the prizes are chosen and approved each year.
 - **Grade level:** K through 5. Goals and most prizes are per grade.
 - **Kickoff assembly:** the assembly on Day 1 that introduces the theme, the teams, their colors and the rules.
 - **Meet the Teams:** the bulletin that lists which classes are on which team.
+- **Name correction:** a saved link from a name a parent typed on ReadAThon.com (e.g. "Joey" in Mrs. Smith's class) to the roster student, so the minutes and money count for the right class and team. Made by accepting a match in the Upload page's **Match names to the roster** panel; used on every later upload. Each class is separate.
 - **Parent letter / take-home packet:** the letter to families about the contest (dates, goals, how to register), with the registration QR code.
 - **Participation:** logging more than 0 minutes on a day (see Rules).
 - **Planning kickoff meeting:** the volunteers' first planning meeting, months before the contest. Not the kickoff assembly.
@@ -183,9 +184,11 @@ Runs on a laptop at http://127.0.0.1:5001. **✨ Simple view** (top right) shows
 
 ### Every morning (Day 1 to Day 10, plus the morning after the last day)
 
-1. **ReadAThon.com:** download yesterday's **daily minutes** file and the **cumulative** file. [TBD: exact ReadAThon.com menu path and report names]
+1. **ReadAThon.com** (sign in first): on the app's Upload page, **Open Minutes Report** (pick yesterday's date) and **Open Comprehensive Readers Report** open the two reports - download each as CSV. By hand: View Reports → All Reports → Reports By Date (date + Minutes Read), and Reports By Reader → Comprehensive Report.
 2. **Upload → Daily Minutes Upload:** choose the day's file.
 3. **Upload → Cumulative Stats Upload:** check the **snapshot date** = the contest day the file covers.
+   - Either upload: if **Match names to the roster** appears (names parents typed that aren't on the roster): look at each suggested student. **Strong matches** are already accepted (ticked); **Possible matches** aren't - tick **Accept** if the student is right (a different first name may be a sibling), or choose another. Then **Save accepted matches & upload**. A saved name correction is remembered for every later day. Pick **Not a roster student** for pages that aren't a student (no money, no minutes).
+   - An alert at the top of the Upload page shows names still not on the roster - fix them there any time. Upload → **Saved Name Corrections** lists every correction (Change / delete).
 4. **Bulletins → Daily Scoreboard:** check the day, then **Save winners** (the drawing is final once saved).
 5. **Copy as image** → paste into the email to the school (or Download PNG and attach it).
 

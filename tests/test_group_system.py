@@ -25,9 +25,9 @@ class TestGroupSystemStructure:
     def test_total_item_count(self):
         """Verify total number of items is correct"""
         all_items = get_unified_items()
-        # 24 reports + 10 tables + 4 workflows = 38 items
+        # 24 reports + 11 tables + 4 workflows = 39 items
         # Note: Database_Metadata removed, now external registry database
-        assert len(all_items) == 38, f"Expected 38 items, got {len(all_items)}"
+        assert len(all_items) == 39, f"Expected 39 items, got {len(all_items)}"
 
     def test_report_count(self):
         """Verify number of reports"""
@@ -38,10 +38,10 @@ class TestGroupSystemStructure:
     def test_table_count(self):
         """Verify number of tables"""
         tables = [item for item in get_unified_items() if is_table(item)]
-        # 10 tables: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative,
-        #           Reader_Cumulative_History, Drawing_Winners, Team_Color_Bonus, Upload_History, Complete_Log
+        # 11 tables: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative,
+        #           Reader_Cumulative_History, Drawing_Winners, Name_Alias, Team_Color_Bonus, Upload_History, Complete_Log
         # Note: Database_Metadata removed, replaced with external registry database
-        assert len(tables) == 10, f"Expected 10 tables, got {len(tables)}"
+        assert len(tables) == 11, f"Expected 11 tables, got {len(tables)}"
 
     def test_workflow_count(self):
         """Verify number of workflows"""
@@ -273,9 +273,9 @@ class TestReportsPageIntegration:
         assert response.status_code == 200
         html = response.data.decode('utf-8')
 
-        # Should show "All Items (38)"
+        # Should show "All Items (39)"
         assert 'All Items' in html, "Should show 'All Items' label"
-        assert "(38)" in html, "Should show count of 38 items"
+        assert "(39)" in html, "Should show count of 39 items"
 
     def test_reports_page_group_filters(self, client):
         """Test all group filters work"""

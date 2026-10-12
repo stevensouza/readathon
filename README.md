@@ -65,7 +65,10 @@ While Read-A-Thon.com provides the core platform for tracking reading and donati
   team's classes and student counts, from the roster, ready before the contest starts), and the **Daily Scoreboard**
   and **Prize Scoreboard** for any contest day
 - **Local SQLite Database**: All data stored locally - no server needed
-- **Multi-File CSV Upload**: Upload multiple daily files at once with automatic date extraction
+- **Multi-File CSV Upload**: Upload multiple daily files at once with automatic date extraction; buttons on the
+  Upload page open the read-a-thon.com minutes and readers reports (links in Admin → Bulletin Settings)
+- **Roster Name Matching**: names parents typed on read-a-thon.com ("Joey" for Joseph, first name only, typos) are
+  listed before an upload with a suggested roster student; saved corrections are remembered for every later upload
 - **24 Pre-configured Reports**: Comprehensive analysis covering all metrics
 - **Enhanced Report Metadata**: Column descriptions, data sources, automated analysis
 - **Workflow Automation**: Run multiple reports in sequence for daily updates
@@ -256,8 +259,9 @@ Group multiple reports to run in sequence:
 7. **Upload_History** - Audit trail for all CSV uploads with timestamps and row counts
 8. **Team_Color_Bonus** - Bonus minutes for team spirit participation events
 9. **Drawing_Winners** - Daily prize drawing winners saved from the Daily Scoreboard (2 per grade by default - Admin → Bulletin Settings; a student wins only once per contest)
+10. **Name_Alias** - Saved corrections for reader names typed by parents on read-a-thon.com (uploaded name + teacher → roster student, or "not a roster student"), applied to every upload
 
-The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name, contest days and drawing winners per grade for the bulletins.
+The registry (`db/readathon_registry.db`) also holds **App_Settings**: school name, contest days and drawing winners per grade for the bulletins, and the Upload page's read-a-thon.com download links.
 
 ### Entity Relationships
 - Students → Classes → Teams → School
@@ -279,8 +283,9 @@ readathon/
 ├── database.py             # Database and report logic
 ├── queries.py              # All SQL
 ├── scoreboards.py          # Bulletins page data: Daily / Prize Scoreboard, Meet the Teams
+├── name_matching.py        # Match parent-typed reader names to roster names (uploads, Match names to the roster)
 ├── init_data.py            # Create + register db/readathon_<YEAR>.db from roster CSVs
-├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster)
+├── clear_all_data.py       # Wipe a year's uploaded data (keeps roster and name corrections)
 ├── package_data.sh         # Zip db/ to move data to another computer
 ├── install.sh              # One-time Mac setup + Desktop shortcuts
 ├── run.sh                  # Start the app (./run.sh [--db ...] [--simple|--full]) and open the browser
@@ -313,7 +318,8 @@ lsof -ti:5001 | xargs kill
 
 ### Upload Warnings
 If you see "Student not found in roster" warnings:
-- Check that student names match exactly (case-sensitive)
+- The name was typed by a parent on read-a-thon.com. Use **Match names to the roster** (alert at the top of the
+  Upload page) to pick the roster student (the correction is saved for later uploads), or choose *Not a roster student*
 - Verify CSV column names are correct: `Reader Name` and `Minutes` or `Donations`
 - Make sure CSV file is properly formatted
 

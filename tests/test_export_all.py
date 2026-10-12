@@ -52,7 +52,7 @@ def test_export_all_contains_readme(client):
 
 
 def test_export_all_contains_all_tables(client):
-    """Test that ZIP contains all 9 table CSV files"""
+    """Test that ZIP contains all 10 table CSV files"""
     response = client.get('/api/export_all')
 
     zip_buffer = io.BytesIO(response.data)
@@ -66,7 +66,8 @@ def test_export_all_contains_all_tables(client):
         'Reader_Cumulative_History.csv',
         'Upload_History.csv',
         'Team_Color_Bonus.csv',
-        'Drawing_Winners.csv'
+        'Drawing_Winners.csv',
+        'Name_Alias.csv'
     ]
 
     with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
@@ -117,6 +118,7 @@ def test_export_readme_has_table_counts(client):
         assert 'Upload_History:' in readme_content
         assert 'Team_Color_Bonus:' in readme_content
         assert 'Drawing_Winners:' in readme_content
+        assert 'Name_Alias:' in readme_content
 
         # Should include statistics
         assert 'students' in readme_content.lower()
@@ -181,6 +183,7 @@ def test_export_metadata_method():
     assert 'Upload_History' in metadata['counts']
     assert 'Team_Color_Bonus' in metadata['counts']
     assert 'Drawing_Winners' in metadata['counts']
+    assert 'Name_Alias' in metadata['counts']
 
 
 def test_export_all_tables_method():
@@ -189,7 +192,7 @@ def test_export_all_tables_method():
 
     all_tables = db.export_all_tables()
 
-    # Check all 9 tables are present
+    # Check all 10 tables are present
     expected_tables = [
         'Roster',
         'Class_Info',
@@ -199,7 +202,8 @@ def test_export_all_tables_method():
         'Reader_Cumulative_History',
         'Upload_History',
         'Team_Color_Bonus',
-        'Drawing_Winners'
+        'Drawing_Winners',
+        'Name_Alias'
     ]
 
     for table in expected_tables:
@@ -221,8 +225,8 @@ def test_export_zip_structure_integrity(client):
         bad_files = zip_file.testzip()
         assert bad_files is None, f"ZIP contains corrupted files: {bad_files}"
 
-        # Should have exactly 10 files (9 CSVs + 1 README)
-        assert len(zip_file.namelist()) == 10
+        # Should have exactly 11 files (10 CSVs + 1 README)
+        assert len(zip_file.namelist()) == 11
 
 
 def test_export_readme_has_database_info(client):

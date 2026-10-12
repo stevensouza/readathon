@@ -2,7 +2,7 @@
 """
 Script to FULLY RESET a contest database
 Wipes: Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Team_Color_Bonus, Drawing_Winners, and ALL Upload_History
-Preserves: Roster, Class_Info, Grade_Rules
+Preserves: Roster, Class_Info, Grade_Rules, Name_Alias (saved reader name corrections - they belong to the roster)
 
 Usage: python3 clear_all_data.py readathon_2026.db
 """
@@ -28,6 +28,7 @@ def clear_all_data(db_path):
     print("  ✓ Roster (all student records)")
     print("  ✓ Class_Info")
     print("  ✓ Grade_Rules")
+    print("  ✓ Name_Alias (saved reader name corrections)")
     print(f"\n🎯 Database: {db_path}")
     print("="*70)
 

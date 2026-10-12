@@ -146,6 +146,78 @@ REBUILD_DRAWING_WINNERS_KEY = [
     "ALTER TABLE Drawing_Winners_New RENAME TO Drawing_Winners",
 ]
 
+# Saved corrections for reader names typed by parents on read-a-thon.com ("Joey Lambert" -> "Joseph Lambert").
+# Keyed by the uploaded name + teacher, compared ignoring case/spacing (name_matching.name_key/teacher_key).
+# student_name NULL = not a roster student: those rows are left out of uploads.
+CREATE_TABLE_NAME_ALIAS = """
+    CREATE TABLE IF NOT EXISTS Name_Alias (
+        name_key TEXT NOT NULL,
+        teacher_key TEXT NOT NULL,
+        uploaded_name TEXT NOT NULL,
+        teacher_name TEXT,
+        student_name TEXT,
+        saved_timestamp TEXT NOT NULL,
+        PRIMARY KEY (name_key, teacher_key)
+    )
+"""
+SELECT_NAME_ALIASES = """
+    SELECT a.name_key, a.teacher_key, a.uploaded_name, a.teacher_name, a.student_name, r.class_name, a.saved_timestamp
+    FROM Name_Alias a LEFT JOIN Roster r ON r.student_name = a.student_name
+    ORDER BY a.teacher_key, a.uploaded_name
+"""
+UPSERT_NAME_ALIAS = """
+    INSERT INTO Name_Alias (name_key, teacher_key, uploaded_name, teacher_name, student_name, saved_timestamp)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(name_key, teacher_key) DO UPDATE SET
+        uploaded_name = excluded.uploaded_name, teacher_name = excluded.teacher_name,
+        student_name = excluded.student_name, saved_timestamp = excluded.saved_timestamp
+"""
+DELETE_NAME_ALIAS = "DELETE FROM Name_Alias WHERE name_key = ? AND teacher_key = ?"
+SELECT_ROSTER_FOR_NAME_MATCHING = "SELECT student_name, teacher_name, class_name FROM Roster"
+
+# Rows saved under a name that isn't on the roster (moved to the roster student once a correction is saved)
+SELECT_UNMATCHED_DAILY_LOGS = """
+    SELECT log_date, student_name, minutes_read FROM Daily_Logs
+    WHERE student_name NOT IN (SELECT student_name FROM Roster)
+"""
+SELECT_UNMATCHED_READER_CUMULATIVE = """
+    SELECT NULL as snapshot_date, student_name, teacher_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp
+    FROM Reader_Cumulative WHERE student_name NOT IN (SELECT student_name FROM Roster)
+"""
+SELECT_UNMATCHED_READER_CUMULATIVE_HISTORY = """
+    SELECT snapshot_date, student_name, teacher_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp
+    FROM Reader_Cumulative_History WHERE student_name NOT IN (SELECT student_name FROM Roster)
+"""
+ADD_DAILY_LOGS_MINUTES = """
+    INSERT INTO Daily_Logs (log_date, student_name, minutes_read) VALUES (?, ?, ?)
+    ON CONFLICT(log_date, student_name) DO UPDATE SET minutes_read = minutes_read + excluded.minutes_read
+"""
+SELECT_ROSTER_STUDENTS_WITH_DATA = """
+    SELECT student_name FROM Daily_Logs WHERE minutes_read > 0 AND student_name IN (SELECT student_name FROM Roster)
+    UNION
+    SELECT student_name FROM Reader_Cumulative
+    WHERE (donation_amount > 0 OR sponsors > 0 OR cumulative_minutes > 0) AND student_name IN (SELECT student_name FROM Roster)
+"""
+DELETE_DAILY_LOGS_ROW = "DELETE FROM Daily_Logs WHERE log_date = ? AND student_name = ?"
+ADD_READER_CUMULATIVE_TOTALS = """
+    INSERT INTO Reader_Cumulative
+    (student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp)
+    VALUES (?, ?, (SELECT team_name FROM Roster WHERE student_name = ?), ?, ?, ?, ?)
+    ON CONFLICT(student_name) DO UPDATE SET
+        team_name = excluded.team_name, donation_amount = donation_amount + excluded.donation_amount,
+        sponsors = sponsors + excluded.sponsors, cumulative_minutes = cumulative_minutes + excluded.cumulative_minutes
+"""
+DELETE_READER_CUMULATIVE_ROW = "DELETE FROM Reader_Cumulative WHERE student_name = ?"
+ADD_READER_CUMULATIVE_HISTORY_TOTALS = """
+    INSERT INTO Reader_Cumulative_History
+    (snapshot_date, student_name, teacher_name, team_name, donation_amount, sponsors, cumulative_minutes, upload_timestamp)
+    VALUES (?, ?, ?, (SELECT team_name FROM Roster WHERE student_name = ?), ?, ?, ?, ?)
+    ON CONFLICT(snapshot_date, student_name) DO UPDATE SET
+        team_name = excluded.team_name, donation_amount = donation_amount + excluded.donation_amount,
+        sponsors = sponsors + excluded.sponsors, cumulative_minutes = cumulative_minutes + excluded.cumulative_minutes
+"""
+DELETE_READER_CUMULATIVE_HISTORY_ROW = "DELETE FROM Reader_Cumulative_History WHERE snapshot_date = ? AND student_name = ?"
+
 # Registry database (db/readathon_registry.db) - catalog of per-year contest databases
 SAMPLE_DB_FILENAME = 'readathon_sample.db'
 YEAR_DB_FILENAME_PATTERN = re.compile(r'readathon_(\d{4})\.db')  # one contest database per event year
@@ -329,8 +401,6 @@ SELECT_SNAPSHOT_SUMMARY = """
 SELECT_ALL_DATES = "SELECT DISTINCT log_date FROM Daily_Logs ORDER BY log_date DESC"
 
 SELECT_TEAM_NAME_FROM_ROSTER = "SELECT team_name FROM Roster WHERE student_name = ?"
-
-SELECT_STUDENT_EXISTS_IN_ROSTER = "SELECT student_name FROM Roster WHERE student_name = ?"
 
 SELECT_COUNT_DAILY_LOGS_BY_DATE = "SELECT COUNT(*) FROM Daily_Logs WHERE log_date = ?"
 

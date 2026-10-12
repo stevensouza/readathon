@@ -30,6 +30,9 @@
         </div>
         {% endif %}
 
+        <!-- Names already uploaded that aren't on the roster (filled by loadUnmatchedAlert) -->
+        <div id="unmatchedNamesAlert" class="d-none"></div>
+
         <fieldset {% if is_read_only_database %}disabled style="opacity: 0.55;"{% endif %}>
         <!-- Daily Minutes Upload -->
         <div class="card mb-4">
@@ -42,8 +45,23 @@
             <div class="card-body">
                 <div class="collapse show" id="collapseDaily">
                 <p class="text-muted">Upload multiple daily reading minutes files at once. Dates are extracted from filenames automatically.</p>
-                <p class="text-muted"><strong>📥 How to Export from www.read-a-thon.com:</strong> View Reports → All Reports → Reports By Date → Select date and 'Minutes Read' from picklists</p>
-                <p class="text-muted"><strong>💡 Tip:</strong> Parents often enter minutes late—re-upload all past contest days daily for accuracy. Re-uploading merges/replaces data for that date.</p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1" id="minutesDownload">
+                    <strong class="text-muted">📥 Download from read-a-thon.com:</strong>
+                    <input type="date" class="form-control form-control-sm" id="minutesReportDate" value="{{ today }}"
+                           style="max-width: 11rem;" aria-label="Day of the minutes report">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="minutesReportBtn" onclick="openMinutesReport()">
+                        <i class="bi bi-box-arrow-up-right"></i> Open Minutes Report
+                    </button>
+                    {% if contest_dates %}
+                    <span class="small text-muted ms-2">Days already uploaded:</span>
+                    {% for d in contest_dates %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-0" onclick="openMinutesReport('{{ d }}')"
+                            title="Open the minutes report for {{ d }}">{{ d[5:] }} <i class="bi bi-box-arrow-up-right small"></i></button>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <p class="text-muted small">Opens in a new tab (sign in to read-a-thon.com first), then download the CSV - its file name already has the date. By hand: View Reports → All Reports → Reports By Date → select the date and 'Minutes Read'. Link: Admin → Bulletin Settings.</p>
+                <p class="text-muted"><strong>💡 Tip:</strong> Parents often enter minutes late—re-upload all past contest days daily for accuracy. Re-uploading a date replaces that date's data.</p>
 
                 <!-- Multi-File Selection - Prominent Card -->
                 <div class="card mb-4" style="border: 2px solid #1e3a5f; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); max-width: 800px; margin-left: auto; margin-right: auto;">
@@ -63,7 +81,7 @@
                                 <i class="bi bi-table"></i> <strong>Required columns:</strong> <code>ReaderName</code>, <code>Minutes</code>
                             </div>
                             <div>
-                                <i class="bi bi-shield-check"></i> <strong>Note:</strong> Student names must match roster exactly
+                                <i class="bi bi-shield-check"></i> <strong>Note:</strong> Names are checked against the roster first - you can match names parents typed differently
                             </div>
                         </div>
                     </div>
@@ -89,9 +107,10 @@
                     </summary>
                     <div class="alert alert-info mt-2 mb-0">
                         <ol class="mb-0 small">
-                            <li>System validates student names against the roster (case-insensitive)</li>
-                            <li>Unrecognized names are reported as warnings</li>
-                            <li>Data is merged with existing data for that date (if re-uploading)</li>
+                            <li>Names are checked against the roster first: saved name corrections and names that differ only in capitals/spaces are fixed automatically</li>
+                            <li>Other names that aren't on the roster are listed in <strong>Match names to the roster</strong> with a suggested student - accepted matches are saved as name corrections (remembered for later days)</li>
+                            <li>Names not accepted are imported as typed and reported as warnings (they count for no class or team; the alert at the top of this page lists them)</li>
+                            <li>Re-uploading a date replaces everything saved for that date</li>
                             <li>Upload history is updated with status (success/warning/error)</li>
                         </ol>
                     </div>
@@ -144,9 +163,15 @@
             </div>
             <div class="card-body">
                 <div class="collapse" id="collapseCumulative">
-                <p class="text-muted"><strong>📥 How to Export from www.read-a-thon.com:</strong> View Reports → All Reports → Reports By Reader → Comprehensive Report → Download Report (CSV)</p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <strong class="text-muted">📥 Download from read-a-thon.com:</strong>
+                    <a class="btn btn-sm btn-outline-primary" id="readersReportLink" href="{{ readers_report_url }}" target="_blank" rel="noopener">
+                        <i class="bi bi-box-arrow-up-right"></i> Open Comprehensive Readers Report
+                    </a>
+                </div>
+                <p class="text-muted small">Opens in a new tab (sign in to read-a-thon.com first). By hand: View Reports → All Reports → Reports By Reader → Comprehensive Report → Download Report (CSV). Link: Admin → Bulletin Settings.</p>
                 <p class="text-muted"><strong>⚠️ Warning:</strong> This replaces ALL existing cumulative data (not incremental). Upload daily as data changes—contains running totals.</p>
-                <p class="text-muted"><strong>💡 Note:</strong> Students not in roster will be imported with "ERROR: NO ROSTER MATCH" tag for review.</p>
+                <p class="text-muted"><strong>💡 Note:</strong> Names are checked against the roster first (see <strong>Match names to the roster</strong>); names not matched are imported with the "ERROR: NO ROSTER MATCH" tag.</p>
 
                 <form id="uploadCumulativeForm" enctype="multipart/form-data">
                     <!-- Cumulative File - Prominent Card -->
@@ -164,7 +189,7 @@
                                     <i class="bi bi-table"></i> <strong>Required columns:</strong> <code>"Reader Name"</code>, <code>Teacher</code>, <code>Raised</code>, <code>Sponsors</code>, <code>Minutes</code>
                                 </div>
                                 <div class="mb-1">
-                                    <i class="bi bi-shield-check"></i> <strong>Validation:</strong> Names and teachers must match student roster exactly
+                                    <i class="bi bi-shield-check"></i> <strong>Validation:</strong> Names are checked against the roster first - you can match names parents typed differently
                                 </div>
                                 <div>
                                     <i class="bi bi-currency-dollar"></i> <strong>Note:</strong> Fundraising in dollars, minutes are cumulative totals
@@ -207,9 +232,10 @@
                         </summary>
                         <div class="alert alert-info mt-2 mb-0">
                             <ol class="mb-0 small">
-                                <li>System validates student names and teachers against the roster (case-insensitive)</li>
+                                <li>Names are checked against the roster first: saved name corrections and names that differ only in capitals/spaces are matched automatically; other names are listed in <strong>Match names to the roster</strong></li>
                                 <li>ALL existing cumulative data is replaced (not incremental)</li>
-                                <li>Students not in roster are imported with "ERROR: NO ROSTER MATCH" tag</li>
+                                <li>Names not matched are imported with "ERROR: NO ROSTER MATCH" tag</li>
+                                <li>read-a-thon.com also lists an empty placeholder row (PageCreated = No) for students; it adds nothing, so it's only reported when two rows for a student both have data</li>
                                 <li>Successfully processed entries are saved to the database</li>
                                 <li>A copy is saved as the snapshot for the chosen snapshot date (replacing any earlier copy for that date)</li>
                                 <li>Upload history is updated with status and student counts</li>
@@ -286,6 +312,29 @@
         <!-- Result Area -->
         <div id="resultArea" class="mt-4" style="display: none;">
             <div id="resultCard"></div>
+        </div>
+
+        <!-- Saved Name Corrections (Name_Alias) -->
+        <div class="card mt-4" id="nameAliasCard">
+            <div class="card-header card-header-blue" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseNameAliases">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-check"></i> Saved Name Corrections
+                    <span class="badge bg-light text-dark ms-1" id="nameAliasCount"></span>
+                    <i class="bi bi-chevron-down float-end"></i>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="collapse" id="collapseNameAliases">
+                    <p class="text-muted small mb-2">A <strong>name correction</strong> links a name a parent typed on read-a-thon.com to a
+                        roster student. It's saved when you accept a match in <strong>Match names to the roster</strong>, and every upload
+                        uses it (same name and teacher, ignoring capitals and spaces). Each class is separate: "Ellie" in two classes is two corrections.</p>
+                    <p class="text-muted small"><strong>Change</strong> or delete one at any time - it applies to uploads from then on.
+                        Days already uploaded keep the earlier choice until you upload them again (the daily files for those days and the latest
+                        cumulative file).</p>
+                    <div id="nameAliasMessage" class="d-none"></div>
+                    <div id="nameAliasList"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Upload History -->
@@ -485,6 +534,11 @@ async function uploadMultipleFiles() {
         return;
     }
 
+    await checkNamesBeforeUpload('daily', selectedFiles.map(meta => meta.file), () => uploadDailyFiles(selectedFiles));
+}
+
+// Upload the selected daily files one at a time
+async function uploadDailyFiles(selectedFiles) {
     // Disable upload button
     const uploadBtn = document.getElementById('uploadMultipleBtn');
     uploadBtn.disabled = true;
@@ -536,6 +590,7 @@ async function uploadMultipleFiles() {
                     filename: meta.filename,
                     success: true,
                     minutes: result.minutes_processed || 0,
+                    info: result.info || [],
                     warnings: result.warnings || []
                 });
             } else {
@@ -584,7 +639,7 @@ function showBatchUploadResults(results, successCount, errorCount) {
     ).join('');
 
     // Collect all info messages from successful uploads
-    const allInfo = [];
+    const allInfo = takeNameFixNote();
     results.filter(r => r.success && r.info && r.info.length > 0).forEach(r => {
         r.info.forEach(i => {
             allInfo.push(`<strong>${r.date}</strong> (${r.filename}): ${i}`);
@@ -721,6 +776,7 @@ function showUploadResult(result, logDate, uploadType) {
     const resultCard = document.getElementById('resultCard');
 
     if (result.success) {
+        result.info = takeNameFixNote().concat(result.info || []);
         let info = '';
         if (result.info && result.info.length > 0) {
             info = `
@@ -813,6 +869,9 @@ function showErrorResult(errorMsg) {
 
 // Load upload history
 async function loadUploadHistory() {
+    // Called after every upload/delete - the names not on the roster may have changed. One request at a time:
+    // the app shares one database connection between requests
+    await loadUnmatchedAlert();
     try {
         const response = await fetch('/api/upload_history');
         const data = await response.json();
@@ -1102,10 +1161,395 @@ async function performBonusUpload(confirmed = false) {
     }
 }
 
+// ========== read-a-thon.com download links (Admin -> Bulletin Settings) ==========
+const MINUTES_REPORT_URL = {{ minutes_report_url|tojson }};
+
+function openMinutesReport(day) {
+    const date = day || document.getElementById('minutesReportDate').value;
+    if (!date) {
+        alert('Pick the day of the minutes report first.');
+        return;
+    }
+    window.open(MINUTES_REPORT_URL.replaceAll('{date}', date), '_blank', 'noopener');
+}
+
+// ========== Roster name matching (name_matching.py) ==========
+// Parents type their child's name on read-a-thon.com ("Joey Lambert" for Joseph Lambert). Names that aren't on the
+// roster are shown in a "Match names to the roster" panel with a suggested student: before an upload
+// (checkNamesBeforeUpload) and after the fact for names already uploaded (showUnmatchedNames). Accepted rows are
+// saved as name corrections (Name_Alias), used by this upload and every later one.
+const NOT_A_STUDENT = '__not_a_student__';
+let nameFix = null;    // {mode: 'upload' | 'uploaded', uploadType, unmatched, allStudents, corrected, proceed}
+let nameFixNote = '';  // shown with the upload results
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+}
+
+function money(value) {
+    return '$' + Number(value || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function takeNameFixNote() {
+    const note = nameFixNote ? [nameFixNote] : [];
+    nameFixNote = '';
+    return note;
+}
+
+function showResultCard(html) {
+    document.getElementById('resultArea').style.display = 'block';
+    document.getElementById('resultCard').innerHTML = html;
+}
+
+async function checkNamesBeforeUpload(uploadType, files, proceed) {
+    showResultCard(`<div class="alert alert-info"><div class="spinner-border spinner-border-sm me-2"></div>Checking names against the roster...</div>`);
+    let check = null;
+    try {
+        const formData = new FormData();
+        formData.append('upload_type', uploadType);
+        files.forEach(file => formData.append('files', file));
+        check = await (await fetch('/api/check_upload_names', {method: 'POST', body: formData})).json();
+    } catch (error) {
+        console.error('Name check failed:', error);
+    }
+    // No unmatched names (or the check failed - the upload itself reports file problems): upload now
+    if (!check || !check.success || check.unmatched.length === 0) {
+        await proceed();
+        return;
+    }
+    nameFix = {mode: 'upload', uploadType, unmatched: check.unmatched, allStudents: check.all_students,
+               corrected: check.corrected.length, proceed};
+    renderNameFixPanel();
+}
+
+// "Fix names" in the Names-not-on-the-roster alert: the same panel for names already uploaded
+async function showUnmatchedNames() {
+    showResultCard(`<div class="alert alert-info"><div class="spinner-border spinner-border-sm me-2"></div>Loading names not on the roster...</div>`);
+    const result = await (await fetch('/api/unmatched_names')).json();
+    if (!result.success || result.unmatched.length === 0) {
+        showResultCard(`<div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> Every uploaded name is on the roster.</div>`);
+        return;
+    }
+    nameFix = {mode: 'uploaded', uploadType: 'uploaded', unmatched: result.unmatched, allStudents: result.all_students, corrected: 0};
+    renderNameFixPanel();
+}
+
+// Names already uploaded that aren't on the roster - shown at the top of the page so they're easy to notice
+async function loadUnmatchedAlert() {
+    const alert = document.getElementById('unmatchedNamesAlert');
+    try {
+        const result = await (await fetch('/api/unmatched_names')).json();
+        const count = result.unmatched.length;
+        if (!count) {
+            alert.className = 'small text-success mb-3';
+            alert.innerHTML = '<i class="bi bi-check-circle-fill"></i> Every uploaded name is on the roster.';
+            return;
+        }
+        alert.className = 'alert alert-warning d-flex flex-wrap align-items-center gap-2 mb-3';
+        alert.innerHTML = `
+            <div class="me-auto">
+                <i class="bi bi-person-exclamation"></i> <strong>${count} uploaded name${count === 1 ? ' is' : 's are'} not on the roster.</strong>
+                Their ${[result.total_minutes ? `${result.total_minutes.toLocaleString()} minutes` : '',
+                         result.total_raised ? `${money(result.total_raised)} raised` : ''].filter(Boolean).join(' and ') || 'data'}
+                count in school totals but for no class or team.
+            </div>
+            <button class="btn btn-sm btn-warning editable-only" onclick="showUnmatchedNames()">
+                <i class="bi bi-person-check"></i> Match names to the roster</button>
+            <a class="btn btn-sm btn-outline-secondary" href="/reports?search=q23" title="Q23: Roster Integrity Check report">
+                <i class="bi bi-clipboard-check"></i> Q23 report</a>`;
+    } catch (error) {
+        alert.className = 'd-none';
+    }
+}
+
+function nameFixOptions(entry, allStudents, selected) {
+    const suggested = (entry.candidates || []).map(c => c.student_name);
+    const classLabel = entry.teacher_name ? `${entry.teacher_name}'s class` : 'Same class';
+    const inClass = entry.class_students.filter(name => !suggested.includes(name));
+    const others = allStudents.filter(s => !suggested.includes(s.student_name) && !entry.class_students.includes(s.student_name));
+    const option = (value, label) =>
+        `<option value="${escapeHtml(value)}"${value === selected ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+    return (selected ? '' : option('', '- choose a student -')) +
+        (suggested.length ? `<optgroup label="Suggested">${entry.candidates.map(c =>
+            option(c.student_name, `${c.student_name} (${c.class_name})`)).join('')}</optgroup>` : '') +
+        (inClass.length ? `<optgroup label="${escapeHtml(classLabel)}">${inClass.map(name => option(name, name)).join('')}</optgroup>` : '') +
+        `<optgroup label="Other classes">${others.map(s => option(s.student_name, `${s.student_name} (${s.class_name})`)).join('')}</optgroup>` +
+        `<optgroup label="Not a student">${option(NOT_A_STUDENT, 'Not a roster student - leave out of uploads')}</optgroup>`;
+}
+
+// Strong match = the app ticks Accept for you; Possible match = suggested, not ticked
+function nameFixMatch(entry, value) {
+    if (value === NOT_A_STUDENT) return ['<span class="badge bg-secondary">Not a student</span>', 'Left out of this and later uploads'];
+    if (!value) return ['<span class="badge bg-light text-dark border">No match found</span>', 'Pick a student, or leave it unaccepted'];
+    const candidate = (entry.candidates || []).find(c => c.student_name === value);
+    if (!candidate) return ['<span class="badge bg-primary">Your choice</span>', 'Chosen by you'];
+    return [value === entry.suggestion && entry.confident ? '<span class="badge bg-success">Strong match</span>'
+                                                          : '<span class="badge bg-warning text-dark">Possible match</span>',
+            candidate.reason];
+}
+
+function nameFixData(entry) {
+    if (nameFix.mode === 'uploaded') {
+        return `${entry.minutes} min${entry.days ? ` (${entry.days} day${entry.days === 1 ? '' : 's'})` : ''} · ${money(entry.raised)}`;
+    }
+    return `${entry.minutes} min${nameFix.uploadType === 'cumulative' ? ` · ${money(entry.raised)}` : ''}${entry.rows > 1 ? ` · ${entry.rows} rows` : ''}`;
+}
+
+function renderNameFixPanel() {
+    const uploading = nameFix.mode === 'upload';
+    const rows = nameFix.unmatched.map((entry, i) => {
+        const [badge, why] = nameFixMatch(entry, entry.suggestion);
+        return `
+        <tr>
+            <td class="text-center"><input class="form-check-input name-fix-accept" type="checkbox" data-index="${i}" ${entry.confident ? 'checked' : ''}
+                       aria-label="Accept the match for ${escapeHtml(entry.uploaded_name)}"></td>
+            <td><strong>${escapeHtml(entry.uploaded_name)}</strong></td>
+            <td>${escapeHtml(entry.teacher_name)}</td>
+            <td class="small text-nowrap">${nameFixData(entry)}</td>
+            <td><select class="form-select form-select-sm name-fix-select" data-index="${i}" onchange="nameFixChanged(${i})"
+                        aria-label="Roster student for ${escapeHtml(entry.uploaded_name)}">${nameFixOptions(entry, nameFix.allStudents, entry.suggestion)}</select></td>
+            <td id="nameFixBadge-${i}">${badge}</td>
+            <td class="small text-muted" id="nameFixWhy-${i}">${escapeHtml(why)}</td>
+        </tr>`;
+    }).join('');
+    const strong = nameFix.unmatched.filter(e => e.confident).length;
+    const title = uploading ? 'Match names to the roster' : 'Match names to the roster (already uploaded)';
+    const intro = uploading
+        ? `These reader names in the file aren't on the roster - parents type their child's name on read-a-thon.com.
+           Choose the roster student for each one, then upload.`
+        : `These names were uploaded but aren't on the roster, so their minutes and money count for no class or team.
+           Choose the roster student for each one; their data uploaded so far moves to that student.`;
+    const buttons = uploading
+        ? `<button class="btn btn-primary" id="saveNameFixesBtn" onclick="saveNameFixes()">
+               <i class="bi bi-check2-circle"></i> Save accepted matches &amp; upload</button>
+           <button class="btn btn-outline-secondary" onclick="runNameFixUpload()">
+               <i class="bi bi-cloud-upload"></i> Upload without saving matches</button>
+           <button class="btn btn-link text-danger" onclick="cancelNameFixes('Upload cancelled - nothing was saved')">Cancel</button>`
+        : `<button class="btn btn-primary" id="saveNameFixesBtn" onclick="saveNameFixes()">
+               <i class="bi bi-check2-circle"></i> Save accepted matches</button>
+           <button class="btn btn-link" onclick="cancelNameFixes('Closed - nothing was saved')">Close</button>`;
+
+    showResultCard(`
+        <div class="card border-warning" id="nameFixPanel">
+            <div class="card-header bg-warning-subtle">
+                <h5 class="mb-0"><i class="bi bi-person-exclamation"></i> ${title}
+                    <span class="badge bg-warning text-dark">${nameFix.unmatched.length}</span></h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">${intro}${nameFix.corrected ? ` (${nameFix.corrected} other name${nameFix.corrected === 1 ? ' was' : 's were'}
+                    already matched by saved name corrections or because only capitals/spaces differed.)` : ''}</p>
+                <div class="alert alert-light border small mb-3" id="nameFixLegend">
+                    <strong>How it works</strong>
+                    <ul class="mb-0 mt-1">
+                        <li><strong>Accept (box ticked):</strong> use the roster student shown. It's saved as a <em>name correction</em>, so this
+                            upload and every later one count that name's minutes and money for that student, their class and team.</li>
+                        <li><strong>Not accepted (box empty):</strong> the name is kept as typed. It counts in school totals but for no class or
+                            team, and you'll be asked again next time.</li>
+                        <li><span class="badge bg-success">Strong match</span> the app accepts these for you (${strong} here): the only close
+                            match in the same class - first name only, nickname + same last name, or nearly the same spelling - for a student
+                            with no data of their own. Untick any that are wrong.</li>
+                        <li><span class="badge bg-warning text-dark">Possible match</span> suggested but not accepted: same last name with a
+                            different first name (could be a sibling), a student in another class, or two students who could fit.
+                            Tick Accept if it's right, or choose another student.</li>
+                        <li><strong>Not a roster student</strong> (end of the list): for pages that aren't a student; left out of this and later uploads.</li>
+                        <li>Each class is separate: "Ellie" in one class and "Ellie" in another are two different corrections.</li>
+                    </ul>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center text-nowrap">Accept<br><input class="form-check-input" type="checkbox" onchange="acceptAllNameFixes(this)"
+                                    title="Accept all / none" aria-label="Accept all"></th>
+                                <th>Name typed</th><th>Teacher</th><th>${uploading ? 'In this upload' : 'Uploaded so far'}</th>
+                                <th style="min-width: 16rem;">Roster student</th><th>Match</th><th>Why</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div class="d-flex flex-wrap gap-2">${buttons}</div>
+                <div id="nameFixError" class="text-danger small mt-2"></div>
+            </div>
+        </div>`);
+    document.getElementById('resultArea').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function nameFixChanged(i) {
+    const value = document.querySelector(`.name-fix-select[data-index="${i}"]`).value;
+    const [badge, why] = nameFixMatch(nameFix.unmatched[i], value);
+    document.querySelector(`.name-fix-accept[data-index="${i}"]`).checked = !!value;
+    document.getElementById(`nameFixBadge-${i}`).innerHTML = badge;
+    document.getElementById(`nameFixWhy-${i}`).textContent = why;
+}
+
+function acceptAllNameFixes(checkbox) {
+    document.querySelectorAll('.name-fix-accept').forEach(box => {
+        box.checked = checkbox.checked && !!document.querySelector(`.name-fix-select[data-index="${box.dataset.index}"]`).value;
+    });
+}
+
+async function saveNameFixes() {
+    const corrections = [];
+    for (const box of document.querySelectorAll('.name-fix-accept:checked')) {
+        const entry = nameFix.unmatched[box.dataset.index];
+        const value = document.querySelector(`.name-fix-select[data-index="${box.dataset.index}"]`).value;
+        if (!value) {
+            document.getElementById('nameFixError').textContent = `Choose a roster student for "${entry.uploaded_name}" or untick Accept.`;
+            return;
+        }
+        corrections.push({uploaded_name: entry.uploaded_name, teacher_name: entry.teacher_name,
+                          student_name: value === NOT_A_STUDENT ? null : value});
+    }
+    if (!corrections.length && nameFix.mode === 'uploaded') {
+        document.getElementById('nameFixError').textContent = 'Nothing is accepted - tick Accept for the names to match.';
+        return;
+    }
+    if (corrections.length) {
+        const button = document.getElementById('saveNameFixesBtn');
+        button.disabled = true;
+        try {
+            const result = await (await fetch('/api/name_aliases', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({corrections})
+            })).json();
+            if (!result.success) {
+                document.getElementById('nameFixError').textContent = result.error || 'Could not save the name corrections';
+                button.disabled = false;
+                return;
+            }
+            nameFixNote = `Saved ${result.saved} name correction${result.saved === 1 ? '' : 's'}` +
+                (result.rows_moved ? `; moved ${result.rows_moved} rows uploaded earlier under those names to the roster students` : '') +
+                (result.names_left_for_next_upload.length ? `; upload these past days again to finish: ${result.names_left_for_next_upload.join(', ')}` : '');
+            await loadNameAliases();
+        } catch (error) {
+            document.getElementById('nameFixError').textContent = error.message;
+            button.disabled = false;
+            return;
+        }
+    }
+    if (nameFix.mode === 'upload') {
+        await runNameFixUpload();
+        return;
+    }
+    nameFix = null;
+    await loadUnmatchedAlert();
+    showResultCard(`<div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> ${escapeHtml(takeNameFixNote()[0])}.</div>`);
+}
+
+async function runNameFixUpload() {
+    const proceed = nameFix.proceed;
+    nameFix = null;
+    await proceed();
+}
+
+function cancelNameFixes(message) {
+    nameFix = null;
+    showResultCard(`<div class="alert alert-secondary"><i class="bi bi-x-circle"></i> ${message}</div>`);
+}
+
+// ========== Saved Name Corrections (change / delete) ==========
+let savedNameAliases = [];
+let aliasStudents = [];
+
+async function loadNameAliases() {
+    const list = document.getElementById('nameAliasList');
+    try {
+        const result = await (await fetch('/api/name_aliases')).json();
+        savedNameAliases = result.aliases || [];
+        aliasStudents = result.all_students || [];
+        document.getElementById('nameAliasCount').textContent = savedNameAliases.length;
+        if (!savedNameAliases.length) {
+            list.innerHTML = '<p class="text-muted mb-0">No name corrections saved yet.</p>';
+            return;
+        }
+        list.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Name typed</th><th>Teacher</th><th>Roster student</th><th>Saved</th>
+                        <th class="editable-only"></th></tr></thead>
+                    <tbody>${savedNameAliases.map((a, i) => `
+                        <tr>
+                            <td>${escapeHtml(a.uploaded_name)}</td>
+                            <td>${escapeHtml(a.teacher_name)}</td>
+                            <td id="aliasStudent-${i}">${aliasStudentLabel(a)}</td>
+                            <td class="small text-muted">${escapeHtml((a.saved_timestamp || '').slice(0, 10))}</td>
+                            <td class="editable-only text-end text-nowrap" id="aliasActions-${i}">${aliasActions(i)}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (error) {
+        list.innerHTML = `<p class="text-danger mb-0">Could not load name corrections: ${escapeHtml(error.message)}</p>`;
+    }
+}
+
+function aliasStudentLabel(alias) {
+    return alias.student_name
+        ? `${escapeHtml(alias.student_name)} <span class="text-muted small">(${escapeHtml(alias.class_name)})</span>`
+        : '<span class="text-muted">Not a roster student (left out)</span>';
+}
+
+function aliasActions(i) {
+    return `<button class="btn btn-sm btn-outline-primary" onclick="changeNameAlias(${i})" title="Change the roster student">
+                <i class="bi bi-pencil"></i> Change</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteNameAlias(${i})" title="Delete this correction">
+                <i class="bi bi-trash"></i></button>`;
+}
+
+function changeNameAlias(i) {
+    const alias = savedNameAliases[i];
+    const entry = {candidates: [], class_students: alias.class_students || [], teacher_name: alias.teacher_name};
+    document.getElementById(`aliasStudent-${i}`).innerHTML = `
+        <select class="form-select form-select-sm" id="aliasSelect-${i}" aria-label="New roster student for ${escapeHtml(alias.uploaded_name)}">
+            ${nameFixOptions(entry, aliasStudents, alias.student_name || NOT_A_STUDENT)}</select>`;
+    document.getElementById(`aliasActions-${i}`).innerHTML = `
+        <button class="btn btn-sm btn-primary" onclick="saveChangedNameAlias(${i})">Save</button>
+        <button class="btn btn-sm btn-link" onclick="loadNameAliases()">Cancel</button>`;
+}
+
+const ALIAS_CHANGE_NOTE = 'Uploads from now on use the new choice. Days already uploaded keep the earlier one until you ' +
+    'upload them again: the daily minutes files for those days and the latest cumulative file.';
+
+async function saveChangedNameAlias(i) {
+    const alias = savedNameAliases[i];
+    const value = document.getElementById(`aliasSelect-${i}`).value;
+    const result = await (await fetch('/api/name_aliases', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({corrections: [{uploaded_name: alias.uploaded_name, teacher_name: alias.teacher_name,
+                                             student_name: value === NOT_A_STUDENT ? null : value}]})
+    })).json();
+    showNameAliasMessage(result.success ? `Changed "${alias.uploaded_name}". ${ALIAS_CHANGE_NOTE}` : (result.error || 'Could not change it'),
+                         result.success);
+    await loadNameAliases();
+    await loadUnmatchedAlert();
+}
+
+async function deleteNameAlias(i) {
+    const alias = savedNameAliases[i];
+    if (!confirm(`Delete the name correction for "${alias.uploaded_name}" (${alias.teacher_name})?\n\n` +
+                 `Later uploads will ask about this name again. ${ALIAS_CHANGE_NOTE}`)) {
+        return;
+    }
+    const result = await (await fetch('/api/name_aliases/delete', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name_key: alias.name_key, teacher_key: alias.teacher_key})
+    })).json();
+    showNameAliasMessage(result.success ? `Deleted "${alias.uploaded_name}". ${ALIAS_CHANGE_NOTE}` : (result.error || 'Could not delete it'),
+                         result.success);
+    await loadNameAliases();
+}
+
+function showNameAliasMessage(text, ok) {
+    const message = document.getElementById('nameAliasMessage');
+    message.className = `alert ${ok ? 'alert-info' : 'alert-danger'} small py-2`;
+    message.textContent = text;
+}
+
 // Form submission handlers
 document.getElementById('uploadCumulativeForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    await performCumulativeUpload(false);
+    const cumulativeFile = document.getElementById('cumulative_file').files[0];
+    await checkNamesBeforeUpload('cumulative', [cumulativeFile], () => performCumulativeUpload(false));
 });
 
 document.getElementById('uploadBonusForm').addEventListener('submit', async function(e) {
@@ -1336,7 +1780,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Load upload history on page load
-loadUploadHistory();
+// Load upload history and saved name corrections on page load
+loadUploadHistory().then(loadNameAliases);
 </script>
 {% endblock %}

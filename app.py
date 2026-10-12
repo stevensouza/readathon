@@ -335,6 +335,7 @@ def get_unified_items():
         {'id': 'reader_cumulative', 'name': 'Reader Cumulative', 'description': 'Cumulative fundraising stats (donations, sponsors) and total minutes for each student', 'groups': ['table', 'fundraising']},
         {'id': 'reader_cumulative_history', 'name': 'Reader Cumulative History', 'description': 'Saved copy of the cumulative upload for each contest day (the latest upload for a day replaces it) - used for money raised as of a past day', 'groups': ['table', 'fundraising']},
         {'id': 'drawing_winners', 'name': 'Drawing Winners', 'description': 'Daily prize drawing winners saved from the Daily Scoreboard (winners per grade per day set in Admin, default 2) - a saved winner is left out of later drawings', 'groups': ['table']},
+        {'id': 'name_alias', 'name': 'Name Alias', 'description': 'Saved corrections for reader names typed by parents on read-a-thon.com (uploaded name + teacher -> roster student), applied to every upload', 'groups': ['table']},
         {'id': 'team_color_bonus', 'name': 'Team Color Bonus', 'description': 'Special event bonus data: students wearing team colors earn extra participation points and minutes', 'groups': ['table']},
         {'id': 'upload_history', 'name': 'Upload History', 'description': 'Complete history of all data uploads with timestamps, file details, and status', 'groups': ['table', 'database']},
         {'id': 'complete_log', 'name': 'Q7: Complete Log (Query)', 'description': 'Complete denormalized log combining all data - perfect for export to Excel/CSV', 'groups': ['table', 'export']},
@@ -2677,9 +2678,13 @@ def upload_page():
     """Data upload page"""
     env = get_current_db_label()
     db = get_current_db()
+    settings = registry.get_settings()
     return render_template('upload.html', environment=env,
                            default_snapshot_date=db.get_default_snapshot_date(),
-                           contest_dates=sorted(db.get_all_dates()))
+                           contest_dates=sorted(db.get_all_dates()),
+                           minutes_report_url=settings['minutes_report_url'],
+                           readers_report_url=settings['readers_report_url'],
+                           today=datetime.now().strftime('%Y-%m-%d'))
 
 
 # ========== Bulletins: Scoreboards (Feature 39) + Meet the Teams (Feature 41) ==========
@@ -2961,6 +2966,58 @@ def upload_cumulative():
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ========== Roster name matching: parent-typed reader names (name_matching.py) ==========
+
+@app.route('/api/check_upload_names', methods=['POST'])
+def check_upload_names():
+    """Before an upload: names in the selected files that aren't roster names, with suggestions (saves nothing)"""
+    try:
+        upload_type = request.form.get('upload_type')
+        if upload_type not in ('daily', 'cumulative'):
+            return jsonify({'success': False, 'error': 'upload_type must be daily or cumulative'}), 400
+        contents = [f.read().decode('utf-8', errors='replace') for f in request.files.getlist('files')]
+        if not contents:
+            return jsonify({'success': False, 'error': 'No files to check'}), 400
+        return jsonify(get_current_db().check_upload_names(upload_type, contents))
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/unmatched_names', methods=['GET'])
+def unmatched_names():
+    """Names already uploaded that aren't on the roster (count for no class or team), with suggestions"""
+    return jsonify(get_current_db().get_unmatched_names())
+
+
+@app.route('/api/name_aliases', methods=['GET'])
+def list_name_aliases():
+    """Saved name corrections for the current database, with the roster choices for changing one"""
+    db = get_current_db()
+    return jsonify({'success': True, 'aliases': db.get_name_aliases(with_class_students=True),
+                    'all_students': db.get_students_for_name_matching()})
+
+
+@app.route('/api/name_aliases', methods=['POST'])
+@require_editable_db
+def save_name_aliases():
+    """Save name corrections [{uploaded_name, teacher_name, student_name (null = not a roster student)}]
+    and move rows already saved under those names to the roster student"""
+    corrections = (request.json or {}).get('corrections')
+    if not isinstance(corrections, list) or not corrections:
+        return jsonify({'success': False, 'error': 'No name corrections to save'}), 400
+    result = get_current_db().save_name_aliases(corrections)
+    return jsonify(result), (200 if result['success'] else 400)
+
+
+@app.route('/api/name_aliases/delete', methods=['POST'])
+@require_editable_db
+def delete_name_alias():
+    """Forget one saved name correction"""
+    data = request.json or {}
+    result = get_current_db().delete_name_alias(str(data.get('name_key', '')), str(data.get('teacher_key', '')))
+    return jsonify(result), (200 if result['success'] else 404)
 
 
 @app.route('/api/upload_team_color_bonus', methods=['POST'])
@@ -3482,6 +3539,7 @@ def generate_export_readme(metadata: dict) -> str:
 - **Upload_History:** {counts['Upload_History']:,} upload events
 - **Team_Color_Bonus:** {counts['Team_Color_Bonus']:,} bonus records
 - **Drawing_Winners:** {counts['Drawing_Winners']:,} saved daily drawing winners
+- **Name_Alias:** {counts['Name_Alias']:,} saved reader name corrections
 
 ## Files Included
 
@@ -3496,6 +3554,7 @@ def generate_export_readme(metadata: dict) -> str:
 7. **Upload_History.csv** - Audit trail of all CSV uploads
 8. **Team_Color_Bonus.csv** - Special team color day bonus records
 9. **Drawing_Winners.csv** - Daily prize drawing winners saved from the Daily Scoreboard
+10. **Name_Alias.csv** - Saved corrections for reader names typed by parents (uploaded name + teacher -> roster student)
 
 ## Data Notes
 
@@ -3851,7 +3910,8 @@ def delete_database_registration(db_id):
 
 @app.route('/api/settings', methods=['GET', 'POST'])
 def app_settings():
-    """Read or save app-wide settings (school name, contest days, drawing winners per grade) kept in the registry"""
+    """Read or save app-wide settings (school name, contest days, drawing winners per grade,
+    Upload page download links) kept in the registry"""
     if request.method == 'GET':
         return jsonify({'success': True, 'settings': registry.get_settings(),
                         'saved_count': registry.count_saved_settings()})
@@ -3871,9 +3931,20 @@ def app_settings():
     if not 1 <= winners_per_grade <= 5:
         return jsonify({'success': False, 'error': 'Drawing winners per grade must be a number from 1 to 5'}), 400
 
+    # Upload page download links (optional - left unchanged when not sent)
+    report_urls = {}
+    for key in ('minutes_report_url', 'readers_report_url'):
+        if key in data:
+            url = str(data[key]).strip()
+            if not url.startswith(('https://', 'http://')) or len(url) > 300:
+                return jsonify({'success': False, 'error': 'Download links must start with https:// (300 characters at most)'}), 400
+            report_urls[key] = url
+
     registry.set_setting('school_name', school_name)
     registry.set_setting('contest_days', str(contest_days))
     registry.set_setting('drawing_winners_per_grade', str(winners_per_grade))
+    for key, url in report_urls.items():
+        registry.set_setting(key, url)
     return jsonify({'success': True, 'settings': registry.get_settings()})
 
 
@@ -3888,7 +3959,7 @@ def get_table_counts():
         counts = {}
         # Transactional tables (clearable)
         transactional_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus',
-                                'Drawing_Winners']
+                                'Drawing_Winners', 'Name_Alias']
         # System tables (reference only)
         system_tables = ['Roster', 'Class_Info', 'Grade_Rules']
 
@@ -3918,7 +3989,7 @@ def clear_tables():
 
         # Validate table names
         valid_tables = ['Upload_History', 'Reader_Cumulative', 'Reader_Cumulative_History', 'Daily_Logs', 'Team_Color_Bonus',
-                        'Drawing_Winners']
+                        'Drawing_Winners', 'Name_Alias']
         for table in tables:
             if table not in valid_tables:
                 return jsonify({
@@ -4066,6 +4137,7 @@ def view_table(table_id):
             'reader_cumulative_history': 'Reader_Cumulative_History',
             'team_color_bonus': 'Team_Color_Bonus',
             'drawing_winners': 'Drawing_Winners',
+            'name_alias': 'Name_Alias',
             'upload_history': 'Upload_History'
         }
 
@@ -4086,6 +4158,8 @@ def view_table(table_id):
             query += " ORDER BY event_date DESC, class_name ASC"
         elif table_id == 'drawing_winners':
             query += " ORDER BY log_date DESC, grade_level ASC"
+        elif table_id == 'name_alias':
+            query += " ORDER BY teacher_key ASC, uploaded_name ASC"
         elif table_id == 'upload_history':
             query += " ORDER BY upload_timestamp DESC"
         elif table_id == 'roster':

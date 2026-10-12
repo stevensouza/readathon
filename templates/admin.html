@@ -320,7 +320,7 @@
                         </div>
                         <div class="mt-3">
                             <small class="text-muted">
-                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Upload_History, Team_Color_Bonus, Drawing_Winners, and README with export details (Database_Registry excluded)
+                                <i class="bi bi-info-circle"></i> Includes: Roster, Class_Info, Grade_Rules, Daily_Logs, Reader_Cumulative, Reader_Cumulative_History, Upload_History, Team_Color_Bonus, Drawing_Winners, Name_Alias, and README with export details (Database_Registry excluded)
                             </small>
                         </div>
                     </div>
@@ -373,6 +373,16 @@
                                 <label for="settingDrawingWinners" class="form-label fw-bold">Drawing winners per grade</label>
                                 <input type="number" class="form-control" id="settingDrawingWinners" min="1" max="5" required style="max-width: 8rem;">
                                 <div class="form-text">Students drawn per grade each day for the daily prize (Daily Scoreboard). Days whose winners are already saved keep them.</div>
+                            </div>
+                            <h6 class="mt-4 mb-2"><i class="bi bi-box-arrow-up-right"></i> read-a-thon.com download links (Upload page)</h6>
+                            <div class="mb-3">
+                                <label for="settingMinutesReportUrl" class="form-label fw-bold">Daily minutes report</label>
+                                <input type="url" class="form-control" id="settingMinutesReportUrl" maxlength="300" required>
+                                <div class="form-text"><code>{date}</code> is replaced by the day picked on the Upload page (YYYY-MM-DD).</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="settingReadersReportUrl" class="form-label fw-bold">Comprehensive readers report (cumulative)</label>
+                                <input type="url" class="form-control" id="settingReadersReportUrl" maxlength="300" required>
                             </div>
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Settings</button>
                             <span id="settingsStatus" class="ms-2 small text-muted"></span>
@@ -523,6 +533,23 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="col">
+                                <div class="card h-100 border-2">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input table-checkbox" type="checkbox" id="clearNameAlias" value="Name_Alias">
+                                            <label class="form-check-label" for="clearNameAlias">
+                                                <h6 class="mb-1">Name_Alias</h6>
+                                            </label>
+                                        </div>
+                                        <p class="small text-muted mb-2">Clear the saved reader name corrections (later uploads warn about those names again)</p>
+                                        <p class="mb-0">
+                                            <span class="badge bg-secondary" id="countNameAlias">Loading...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {% if is_read_only_database %}
@@ -625,7 +652,7 @@
                                             <span class="badge bg-info ms-2">Separate Database</span>
                                         </h6>
                                         <p class="small text-muted mb-2">
-                                            App-wide settings (school name, contest days, drawing winners per grade) - edit them in Actions &rarr; Bulletin Settings
+                                            App-wide settings (school name, contest days, drawing winners per grade, download links) - edit them in Actions &rarr; Bulletin Settings
                                             <br>
                                             <strong>Location:</strong> <code>db/readathon_registry.db</code> (not in current contest database)
                                         </p>
@@ -2077,6 +2104,8 @@ async function loadSettings() {
             document.getElementById('settingSchoolName').value = result.settings.school_name;
             document.getElementById('settingContestDays').value = result.settings.contest_days;
             document.getElementById('settingDrawingWinners').value = result.settings.drawing_winners_per_grade;
+            document.getElementById('settingMinutesReportUrl').value = result.settings.minutes_report_url;
+            document.getElementById('settingReadersReportUrl').value = result.settings.readers_report_url;
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -2093,7 +2122,9 @@ async function saveSettings(event) {
             body: JSON.stringify({
                 school_name: document.getElementById('settingSchoolName').value,
                 contest_days: document.getElementById('settingContestDays').value,
-                drawing_winners_per_grade: document.getElementById('settingDrawingWinners').value
+                drawing_winners_per_grade: document.getElementById('settingDrawingWinners').value,
+                minutes_report_url: document.getElementById('settingMinutesReportUrl').value,
+                readers_report_url: document.getElementById('settingReadersReportUrl').value
             })
         });
         const result = await response.json();
@@ -2118,6 +2149,7 @@ async function loadTableCounts() {
             document.getElementById('countDailyLogs').textContent = `${result.counts.Daily_Logs} records`;
             document.getElementById('countTeamColorBonus').textContent = `${result.counts.Team_Color_Bonus} records`;
             document.getElementById('countDrawingWinners').textContent = `${result.counts.Drawing_Winners} records`;
+            document.getElementById('countNameAlias').textContent = `${result.counts.Name_Alias} records`;
 
             // System tables
             document.getElementById('countRoster').textContent = `${result.counts.Roster} students`;
