@@ -394,7 +394,7 @@
                                 <ul class="small mb-1">
                                     <li><strong>When:</strong> Once per contest day (after that day's minutes)</li>
                                     <li><strong>File:</strong> CSV with Reader Name + Donations + Sponsors</li>
-                                    <li><strong>Snapshot date:</strong> the contest day the file covers. Defaults to the latest day with daily minutes (the Day 5 file is often uploaded the morning of Day 6); change it if needed</li>
+                                    <li><strong>Snapshot date:</strong> the contest day the file covers. Defaults to the latest day with daily minutes (the Day 5 file is often uploaded the morning of Day 6) and moves to the new day after you upload daily minutes; change it if needed. Picking a day earlier than the latest day with minutes asks first, since read-a-thon.com totals are always current</li>
                                     <li><strong>Updates:</strong> Reader_Cumulative (latest) and a saved copy for that day in Reader_Cumulative_History. Uploading again for the same day replaces that day's copy</li>
                                 </ul>
                             </div>
@@ -406,13 +406,14 @@
                 <h6 id="name-matching">Matching names to the roster</h6>
                 <p class="small">Parents type their child's name on ReadAThon.com, so files contain first names only ("Mateo"), nicknames ("Joey Lambert" for Joseph Lambert) and typos. A name that isn't on the roster counts in school totals but for <strong>no class or team</strong>. When you upload, the app checks the names first:</p>
                 <ul class="small">
-                    <li><strong>Matched automatically:</strong> names with a saved <em>name correction</em>, and names that differ from a roster name only in capitals or spaces ("Leo McKay" = Leo Mckay). The upload results list them.</li>
-                    <li><strong>Match names to the roster:</strong> any other name is shown with a suggested roster student before anything is uploaded.
+                    <li><strong>Matched automatically:</strong> names with a saved <em>name correction</em>, and names that differ from a roster name only in capitals, spaces or accents ("Leo McKay" = Leo Mckay, "Zoë" = Zoe). The upload results list them.</li>
+                    <li><strong>Match names to the roster:</strong> any other name is shown with a suggested roster student before anything is uploaded. Only names that aren't on the roster are listed, grouped <strong>Strong matches</strong> first, then <strong>Possible matches</strong>, then <strong>No suggestion</strong>.
                         <ul>
+                            <li><strong>You don't have to match every name.</strong> A name you leave unticked still uploads as typed: its minutes and money count in the school totals, but not for any class, team or student prize. It shows up again on the next upload and in the alert at the top of the Upload page, and matching it later moves the data already uploaded under that name to the student.</li>
                             <li><strong>Accept (box ticked):</strong> use the roster student shown. It's saved as a name correction, so this upload and every later one count that name's minutes and money for that student, their class and team. Data uploaded earlier under that name moves to the student too.</li>
                             <li><strong>Not accepted (box empty):</strong> the name is uploaded as typed (counts for no class or team) and you're asked again next time.</li>
-                            <li><span class="badge bg-success">Strong match</span> - the app accepts it for you: the only close match in the same class (first name only, nickname + same last name, or nearly the same spelling) for a student who has no data of their own. Untick it if it's wrong.</li>
-                            <li><span class="badge bg-warning text-dark">Possible match</span> - suggested, not accepted: same last name but a different first name (could be a sibling), a student in another class, or two students who could fit. Tick Accept if it's right, or choose another student.</li>
+                            <li><span class="badge bg-success">Strong match</span> - the app accepts it for you: the only close match in the same class (same first and last name, first name only, a known nickname + same last name like Teddy for Theodore, or nearly the same spelling) for a student who has no data of their own. Untick it if it's wrong.</li>
+                            <li><span class="badge bg-warning text-dark">Possible match</span> - suggested, not accepted: a first name that only starts the same ("Sam Lee" for Samuel Lee - or a sibling?), same last name but a different first name, a student in another class, two students who could fit, or two typed names that match the same student. Tick Accept if it's right, or choose another student.</li>
                             <li><strong>Not a roster student</strong> (end of the list): for pages that aren't a student - left out of this and later uploads.</li>
                         </ul>
                     </li>
@@ -423,7 +424,8 @@
                 <h6 id="undo-upload">Undoing an upload</h6>
                 <ul class="small">
                     <li><strong>Upload the right file again:</strong> a daily file replaces everything saved for its date; a cumulative file replaces all current money totals and that snapshot date's saved copy. This is usually all you need.</li>
-                    <li><strong>Delete a day:</strong> Upload History → the trash button on that date's row deletes the day's minutes (full view only).</li>
+                    <li><strong>Delete a day:</strong> Upload History → the trash button on that date's row deletes the day's minutes and that day's saved drawing winners (full view only).</li>
+                    <li><strong>A file with no reader rows</strong> (for example an empty report) is refused, so it can't wipe a day or the money totals.</li>
                     <li><strong>Delete cumulative data:</strong> the trash button on a cumulative row deletes <em>all</em> money data, including every day's saved copy - then upload the latest cumulative file again.</li>
                     <li><strong>Delete Selected</strong> in Upload History only removes history rows, not the data.</li>
                 </ul>

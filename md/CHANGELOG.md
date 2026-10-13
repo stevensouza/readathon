@@ -9,6 +9,49 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.23.0] - 2026-10-12 - Clearer Name Matching Panel + Data-Safety Fixes
+
+### Changed
+- **Match names to the roster panel:** names are grouped **Strong matches** (ticked for you) → **Possible matches**
+  (please check) → **No suggestion**, each with its own accept-all box. The top of the panel says how many names
+  matched the roster, that you don't have to match every name (a name left unticked still uploads and counts for the
+  school, not for any class, team or student prize) and that it can be fixed later from the alert (its data moves
+  then). The Save button shows how many matches are accepted; "How matching works" is folded away
+- **Fewer names are ticked for you:** a first name that only shares letters with the roster name ("Sam Lee" for
+  Samuel Lee - or a sibling?) is now a possible match. Strong matches are the same first + last name, first name
+  only, a known nickname + same last name (Teddy/Theodore) or nearly the same spelling, and never when two typed
+  names match the same student
+- Names that differ only in accents or a phone's curly apostrophe ("Zoë", "O’Brien") are matched automatically
+- Admin → Clear Tables **Select All** no longer ticks Name_Alias (saved name corrections belong with the roster)
+- The dev server handles one request at a time (`threaded=False`)
+
+### Fixed
+- **"bad parameter or other API misuse" errors** (e.g. Reports & Data → a table, gone after a refresh): pages fetch
+  several things at once and every request shared one SQLite connection. The same overlap could also commit or roll
+  back another request's upload half-way
+- **Admin → Clear Tables did nothing** when Team_Color_Bonus or Reader_Cumulative_History was ticked (always with
+  Select All): the record-count lookup only removed the first `_` of the table name
+- **Cumulative snapshot date went stale:** after uploading today's minutes without reloading the page, the cumulative
+  upload was saved as the previous day's money (replacing it). The date now moves to the new day, and saving for a day
+  earlier than the latest day with minutes asks first
+- **An empty or unreadable file no longer wipes data:** a daily file with no reader rows deleted that day's minutes; a
+  cumulative file whose columns passed the check but weren't read (e.g. "Student Name", "Donation Amount") deleted
+  everyone's money. Both are refused now, and the check and the readers share one list of column names
+- Deleting a day also deletes that day's saved drawing winners (they kept those students out of other days' drawings)
+- Text from uploads (names parents typed) is escaped on the Reports, Tables, Workflows and Admin tables, the upload
+  results and the upload audit details
+- Upload page: a double-click no longer starts two uploads; Cancel / Upload without saving can't run while matches are
+  saving; "Match names to the roster" and Saved Name Corrections show an error instead of hanging; Change on a
+  correction whose student left the roster no longer pre-selects another student
+- Matching a name that was later added to the roster now moves its data; a saved correction to a student no longer on
+  the roster is ignored; old rows saved without a teacher aren't moved to one class's student when another class also
+  uploaded that name
+
+### Docs
+- RULES (Roster Name Matching, snapshots, drawing), Help, Volunteer Handoff Guide, CLAUDE.md (single-threaded server)
+- `docs/BUG_BACKLOG.md`: issues found in the review that are not fixed yet
+- Tests: `tests/test_data_safety.py` (new) and `tests/test_name_matching.py`
+
 ## [v2026.22.0] - 2026-10-12 - Roster Name Matching + read-a-thon.com Download Links
 
 ### Added

@@ -2944,12 +2944,22 @@ def upload_cumulative():
             return jsonify({'success': False, 'error': f'Invalid snapshot date: {snapshot_date} (expected YYYY-MM-DD)'}), 400
 
         snapshot_confirmed = request.form.get('snapshot_confirmed', 'false').lower() == 'true'
-        if snapshot_date not in db.get_all_dates() and not snapshot_confirmed:
+        dates = db.get_all_dates()
+        if snapshot_date not in dates and not snapshot_confirmed:
             return jsonify({
                 'success': False,
                 'needs_snapshot_confirmation': True,
                 'snapshot_date': snapshot_date,
                 'error': f'No daily minutes have been uploaded for {snapshot_date}. Save this cumulative upload as the snapshot for {snapshot_date} anyway?'
+            }), 400
+        # read-a-thon.com totals are always current, so an earlier day is usually a stale date field
+        if dates and snapshot_date < max(dates) and not snapshot_confirmed:
+            return jsonify({
+                'success': False,
+                'needs_snapshot_confirmation': True,
+                'snapshot_date': snapshot_date,
+                'error': f'Daily minutes are uploaded through {max(dates)}, but this cumulative upload would be saved as the '
+                         f'money for {snapshot_date} (replacing that day\'s copy). Save it for {snapshot_date} anyway?'
             }), 400
 
         result = db.upload_cumulative_stats(cumulative_file, confirmed, snapshot_date)
@@ -2988,15 +2998,21 @@ def check_upload_names():
 @app.route('/api/unmatched_names', methods=['GET'])
 def unmatched_names():
     """Names already uploaded that aren't on the roster (count for no class or team), with suggestions"""
-    return jsonify(get_current_db().get_unmatched_names())
+    try:
+        return jsonify(get_current_db().get_unmatched_names())
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'unmatched': []}), 500
 
 
 @app.route('/api/name_aliases', methods=['GET'])
 def list_name_aliases():
     """Saved name corrections for the current database, with the roster choices for changing one"""
-    db = get_current_db()
-    return jsonify({'success': True, 'aliases': db.get_name_aliases(with_class_students=True),
-                    'all_students': db.get_students_for_name_matching()})
+    try:
+        db = get_current_db()
+        return jsonify({'success': True, 'aliases': db.get_name_aliases(with_class_students=True),
+                        'all_students': db.get_students_for_name_matching()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/name_aliases', methods=['POST'])
@@ -3004,8 +3020,8 @@ def list_name_aliases():
 def save_name_aliases():
     """Save name corrections [{uploaded_name, teacher_name, student_name (null = not a roster student)}]
     and move rows already saved under those names to the roster student"""
-    corrections = (request.json or {}).get('corrections')
-    if not isinstance(corrections, list) or not corrections:
+    corrections = (request.get_json(silent=True) or {}).get('corrections')
+    if not isinstance(corrections, list) or not corrections or not all(isinstance(c, dict) for c in corrections):
         return jsonify({'success': False, 'error': 'No name corrections to save'}), 400
     result = get_current_db().save_name_aliases(corrections)
     return jsonify(result), (200 if result['success'] else 400)
@@ -4011,9 +4027,6 @@ def clear_tables():
         deleted = {}
 
         try:
-            # Begin transaction
-            cursor.execute('BEGIN')
-
             # Clear each table and track deleted counts
             for table in tables:
                 cursor.execute(f"SELECT COUNT(*) as count FROM {table}")
@@ -4400,4 +4413,7 @@ if __name__ == '__main__':
     print("\nStarting web server...")
     print("Open your browser and go to: http://127.0.0.1:5001")
     print("\nPress CTRL+C to stop the server\n")
-    app.run(debug=True, host='127.0.0.1', port=5001)
+    # One request at a time: each contest DB and the registry share one SQLite connection, so overlapping
+    # requests (pages fetch several APIs at once) caused "bad parameter or other API misuse" errors and could
+    # commit or roll back another request's upload half-way
+    app.run(debug=True, host='127.0.0.1', port=5001, threaded=False)

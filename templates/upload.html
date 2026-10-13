@@ -617,6 +617,7 @@ async function uploadDailyFiles(selectedFiles) {
 
     // Show final results
     showBatchUploadResults(results, successCount, errorCount);
+    moveSnapshotDateForward(results.filter(r => r.success).map(r => r.date));
 
     // Re-enable upload button
     uploadBtn.disabled = false;
@@ -626,23 +627,35 @@ async function uploadDailyFiles(selectedFiles) {
     loadUploadHistory();
 }
 
+// The cumulative snapshot date defaults to the latest day with minutes when the page loads (today if none): keep
+// it on the newest day after daily uploads, so the next cumulative upload isn't saved as an earlier day's money.
+// A date the user picked is only moved forward.
+const LATEST_MINUTES_DATE = {{ (contest_dates[-1] if contest_dates else '')|tojson }};
+function moveSnapshotDateForward(dates) {
+    const field = document.getElementById('snapshot_date');
+    const newest = [LATEST_MINUTES_DATE, ...dates].filter(Boolean).sort().pop();
+    if (field && newest && (field.value === field.defaultValue || newest > field.value)) {
+        field.value = newest;
+    }
+}
+
 // Show batch upload results
 function showBatchUploadResults(results, successCount, errorCount) {
     const resultCard = document.getElementById('resultCard');
 
     const successList = results.filter(r => r.success).map(r =>
-        `<li><strong>${r.date}</strong>: ${r.filename} (${r.minutes} records)</li>`
+        `<li><strong>${r.date}</strong>: ${escapeHtml(r.filename)} (${r.minutes} records)</li>`
     ).join('');
 
     const errorList = results.filter(r => !r.success).map(r =>
-        `<li><strong>${r.date}</strong>: ${r.filename} - <span class="text-danger">${r.error}</span></li>`
+        `<li><strong>${r.date}</strong>: ${escapeHtml(r.filename)} - <span class="text-danger">${escapeHtml(r.error)}</span></li>`
     ).join('');
 
     // Collect all info messages from successful uploads
-    const allInfo = takeNameFixNote();
+    const allInfo = takeNameFixNote().map(escapeHtml);
     results.filter(r => r.success && r.info && r.info.length > 0).forEach(r => {
         r.info.forEach(i => {
-            allInfo.push(`<strong>${r.date}</strong> (${r.filename}): ${i}`);
+            allInfo.push(`<strong>${r.date}</strong> (${escapeHtml(r.filename)}): ${escapeHtml(i)}`);
         });
     });
 
@@ -650,7 +663,7 @@ function showBatchUploadResults(results, successCount, errorCount) {
     const allWarnings = [];
     results.filter(r => r.success && r.warnings && r.warnings.length > 0).forEach(r => {
         r.warnings.forEach(w => {
-            allWarnings.push(`<strong>${r.date}</strong> (${r.filename}): ${w}`);
+            allWarnings.push(`<strong>${r.date}</strong> (${escapeHtml(r.filename)}): ${escapeHtml(w)}`);
         });
     });
 
@@ -783,7 +796,7 @@ function showUploadResult(result, logDate, uploadType) {
                 <div class="alert alert-info mt-3">
                     <h6><i class="bi bi-info-circle"></i> Information:</h6>
                     <ul class="mb-0">
-                        ${result.info.map(i => `<li>${i}</li>`).join('')}
+                        ${result.info.map(i => `<li>${escapeHtml(i)}</li>`).join('')}
                     </ul>
                 </div>
             `;
@@ -795,7 +808,7 @@ function showUploadResult(result, logDate, uploadType) {
                 <div class="alert alert-warning mt-3">
                     <h6><i class="bi bi-exclamation-triangle"></i> Warnings:</h6>
                     <ul class="mb-0">
-                        ${result.warnings.map(w => `<li>${w}</li>`).join('')}
+                        ${result.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
                     </ul>
                 </div>
             `;
@@ -1182,10 +1195,6 @@ const NOT_A_STUDENT = '__not_a_student__';
 let nameFix = null;    // {mode: 'upload' | 'uploaded', uploadType, unmatched, allStudents, corrected, proceed}
 let nameFixNote = '';  // shown with the upload results
 
-function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
-}
-
 function money(value) {
     return '$' + Number(value || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
@@ -1201,7 +1210,21 @@ function showResultCard(html) {
     document.getElementById('resultCard').innerHTML = html;
 }
 
+let uploadBusy = false;  // a name check, its Match names panel or an upload is in progress (no second upload meanwhile)
+
 async function checkNamesBeforeUpload(uploadType, files, proceed) {
+    if (uploadBusy) {
+        document.getElementById('nameFixPanel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+        return;
+    }
+    uploadBusy = true;
+    const proceedOnce = async () => {
+        try {
+            await proceed();
+        } finally {
+            uploadBusy = false;
+        }
+    };
     showResultCard(`<div class="alert alert-info"><div class="spinner-border spinner-border-sm me-2"></div>Checking names against the roster...</div>`);
     let check = null;
     try {
@@ -1214,19 +1237,32 @@ async function checkNamesBeforeUpload(uploadType, files, proceed) {
     }
     // No unmatched names (or the check failed - the upload itself reports file problems): upload now
     if (!check || !check.success || check.unmatched.length === 0) {
-        await proceed();
+        await proceedOnce();
         return;
     }
     nameFix = {mode: 'upload', uploadType, unmatched: check.unmatched, allStudents: check.all_students,
-               corrected: check.corrected.length, proceed};
+               corrected: check.corrected.length, matched: check.matched_count || 0, proceed: proceedOnce};
     renderNameFixPanel();
 }
 
-// "Fix names" in the Names-not-on-the-roster alert: the same panel for names already uploaded
+// "Match names to the roster" in the Names-not-on-the-roster alert: the same panel for names already uploaded
 async function showUnmatchedNames() {
+    if (uploadBusy) {
+        document.getElementById('nameFixPanel')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+        return;
+    }
     showResultCard(`<div class="alert alert-info"><div class="spinner-border spinner-border-sm me-2"></div>Loading names not on the roster...</div>`);
-    const result = await (await fetch('/api/unmatched_names')).json();
-    if (!result.success || result.unmatched.length === 0) {
+    let result;
+    try {
+        result = await (await fetch('/api/unmatched_names')).json();
+    } catch (error) {
+        result = {success: false, error: error.message};
+    }
+    if (!result.success) {
+        showResultCard(`<div class="alert alert-danger"><i class="bi bi-x-circle"></i> Could not load the names: ${escapeHtml(result.error || 'unknown error')}</div>`);
+        return;
+    }
+    if (result.unmatched.length === 0) {
         showResultCard(`<div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> Every uploaded name is on the roster.</div>`);
         return;
     }
@@ -1267,9 +1303,12 @@ function nameFixOptions(entry, allStudents, selected) {
     const classLabel = entry.teacher_name ? `${entry.teacher_name}'s class` : 'Same class';
     const inClass = entry.class_students.filter(name => !suggested.includes(name));
     const others = allStudents.filter(s => !suggested.includes(s.student_name) && !entry.class_students.includes(s.student_name));
+    // A saved correction's student may have left the roster: show "choose" instead of selecting someone else
+    const listed = selected === NOT_A_STUDENT || suggested.includes(selected) || inClass.includes(selected) ||
+        others.some(s => s.student_name === selected);
     const option = (value, label) =>
         `<option value="${escapeHtml(value)}"${value === selected ? ' selected' : ''}>${escapeHtml(label)}</option>`;
-    return (selected ? '' : option('', '- choose a student -')) +
+    return (selected && listed ? '' : option('', '- choose a student -')) +
         (suggested.length ? `<optgroup label="Suggested">${entry.candidates.map(c =>
             option(c.student_name, `${c.student_name} (${c.class_name})`)).join('')}</optgroup>` : '') +
         (inClass.length ? `<optgroup label="${escapeHtml(classLabel)}">${inClass.map(name => option(name, name)).join('')}</optgroup>` : '') +
@@ -1277,15 +1316,28 @@ function nameFixOptions(entry, allStudents, selected) {
         `<optgroup label="Not a student">${option(NOT_A_STUDENT, 'Not a roster student - leave out of uploads')}</optgroup>`;
 }
 
-// Strong match = the app ticks Accept for you; Possible match = suggested, not ticked
+// Sections of the panel, in the order the server sorts the names
+const NAME_FIX_GROUPS = [
+    {key: 'strong', title: 'Strong matches - accepted for you', icon: 'bi-check-circle-fill', color: 'success',
+     help: 'Ticked for you. Untick any that are wrong.'},
+    {key: 'possible', title: 'Possible matches - please check', icon: 'bi-question-circle-fill', color: 'warning',
+     help: 'Not ticked. Tick Accept if the student is right, or choose another student.'},
+    {key: 'none', title: 'No suggestion', icon: 'bi-dash-circle', color: 'secondary',
+     help: 'Choose the student if you know who it is, or leave it.'},
+];
+
+function nameFixGroup(entry) {
+    return entry.confident ? 'strong' : entry.suggestion ? 'possible' : 'none';
+}
+
+// Badge and reason for the student chosen in a row (the badge only shows once you pick someone other than the suggestion)
 function nameFixMatch(entry, value) {
     if (value === NOT_A_STUDENT) return ['<span class="badge bg-secondary">Not a student</span>', 'Left out of this and later uploads'];
-    if (!value) return ['<span class="badge bg-light text-dark border">No match found</span>', 'Pick a student, or leave it unaccepted'];
+    if (!value) return ['', 'Pick a student, or leave it unaccepted'];
     const candidate = (entry.candidates || []).find(c => c.student_name === value);
     if (!candidate) return ['<span class="badge bg-primary">Your choice</span>', 'Chosen by you'];
-    return [value === entry.suggestion && entry.confident ? '<span class="badge bg-success">Strong match</span>'
-                                                          : '<span class="badge bg-warning text-dark">Possible match</span>',
-            candidate.reason];
+    if (value === entry.suggestion) return ['', candidate.reason];
+    return ['<span class="badge bg-warning text-dark">Possible match</span>', candidate.reason];
 }
 
 function nameFixData(entry) {
@@ -1295,84 +1347,126 @@ function nameFixData(entry) {
     return `${entry.minutes} min${nameFix.uploadType === 'cumulative' ? ` · ${money(entry.raised)}` : ''}${entry.rows > 1 ? ` · ${entry.rows} rows` : ''}`;
 }
 
+function nameFixRow(entry, i) {
+    const [badge, why] = nameFixMatch(entry, entry.suggestion);
+    return `
+        <tr>
+            <td class="text-center"><input class="form-check-input name-fix-accept" type="checkbox" data-index="${i}"
+                       data-group="${nameFixGroup(entry)}" ${entry.confident ? 'checked' : ''} onchange="nameFixAcceptChanged()"
+                       aria-label="Accept the match for ${escapeHtml(entry.uploaded_name)}"></td>
+            <td class="text-nowrap"><strong>${escapeHtml(entry.uploaded_name)}</strong>
+                <div class="small text-muted">${escapeHtml(entry.teacher_name) || 'no teacher'}</div></td>
+            <td><select class="form-select form-select-sm name-fix-select" data-index="${i}" onchange="nameFixChanged(${i})"
+                        aria-label="Roster student for ${escapeHtml(entry.uploaded_name)}">${nameFixOptions(entry, nameFix.allStudents, entry.suggestion)}</select>
+                <span id="nameFixBadge-${i}">${badge}</span></td>
+            <td class="small text-muted" id="nameFixWhy-${i}">${escapeHtml(why)}</td>
+            <td class="small text-nowrap text-end">${nameFixData(entry)}</td>
+        </tr>`;
+}
+
 function renderNameFixPanel() {
     const uploading = nameFix.mode === 'upload';
-    const rows = nameFix.unmatched.map((entry, i) => {
-        const [badge, why] = nameFixMatch(entry, entry.suggestion);
+    const count = nameFix.unmatched.length;
+    const sections = NAME_FIX_GROUPS.map(group => {
+        const rows = nameFix.unmatched.map((entry, i) => nameFixGroup(entry) === group.key ? nameFixRow(entry, i) : '').join('');
+        const size = nameFix.unmatched.filter(entry => nameFixGroup(entry) === group.key).length;
+        if (!size) return '';
         return `
-        <tr>
-            <td class="text-center"><input class="form-check-input name-fix-accept" type="checkbox" data-index="${i}" ${entry.confident ? 'checked' : ''}
-                       aria-label="Accept the match for ${escapeHtml(entry.uploaded_name)}"></td>
-            <td><strong>${escapeHtml(entry.uploaded_name)}</strong></td>
-            <td>${escapeHtml(entry.teacher_name)}</td>
-            <td class="small text-nowrap">${nameFixData(entry)}</td>
-            <td><select class="form-select form-select-sm name-fix-select" data-index="${i}" onchange="nameFixChanged(${i})"
-                        aria-label="Roster student for ${escapeHtml(entry.uploaded_name)}">${nameFixOptions(entry, nameFix.allStudents, entry.suggestion)}</select></td>
-            <td id="nameFixBadge-${i}">${badge}</td>
-            <td class="small text-muted" id="nameFixWhy-${i}">${escapeHtml(why)}</td>
-        </tr>`;
+            <tbody>
+                <tr class="table-${group.color}">
+                    <td class="text-center"><input class="form-check-input name-fix-group" type="checkbox" data-group="${group.key}"
+                        ${group.key === 'strong' ? 'checked' : ''} onchange="acceptNameFixGroup(this)" title="Accept all / none in this group"
+                        aria-label="Accept all ${group.title}"></td>
+                    <td colspan="4"><i class="bi ${group.icon}"></i> <strong>${group.title} (${size})</strong>
+                        <span class="small ms-2">${group.help}</span></td>
+                </tr>
+                ${rows}
+            </tbody>`;
     }).join('');
-    const strong = nameFix.unmatched.filter(e => e.confident).length;
-    const title = uploading ? 'Match names to the roster' : 'Match names to the roster (already uploaded)';
-    const intro = uploading
-        ? `These reader names in the file aren't on the roster - parents type their child's name on read-a-thon.com.
-           Choose the roster student for each one, then upload.`
-        : `These names were uploaded but aren't on the roster, so their minutes and money count for no class or team.
-           Choose the roster student for each one; their data uploaded so far moves to that student.`;
+
+    const counts = uploading
+        ? `<p class="mb-2"><strong>${count} name${count === 1 ? '' : 's'} in this upload ${count === 1 ? "isn't" : "aren't"} on the roster</strong>
+               and ${count === 1 ? 'is' : 'are'} listed below - parents type their child's name on read-a-thon.com.
+               ${nameFix.matched} name${nameFix.matched === 1 ? '' : 's'} matched the roster exactly${nameFix.corrected
+                   ? ` and ${nameFix.corrected} ${nameFix.corrected === 1 ? 'was' : 'were'} matched automatically (saved name correction, or only capitals/spaces differed)` : ''}
+               - those aren't listed.</p>`
+        : `<p class="mb-2"><strong>${count} uploaded name${count === 1 ? " isn't" : "s aren't"} on the roster.</strong>
+               Choose the roster student for each one; the data uploaded so far under that name moves to the student.</p>`;
+    const consequences = `
+        <div class="alert alert-info small mb-3" id="nameFixConsequences">
+            <div><i class="bi bi-info-circle"></i> <strong>You don't have to match every name.</strong>
+                A name you leave unticked ${uploading ? 'still uploads under the name as typed' : 'stays as typed'}: its minutes and
+                money count in the school totals, but not for any class, team or student prize.</div>
+            <div class="mt-1"><i class="bi bi-arrow-repeat"></i> <strong>You can fix it later.</strong>
+                It shows up here again on the next upload and in the "names not on the roster" alert at the top of this page.
+                When you match it later, the data already uploaded under that name moves to the student.</div>
+        </div>`;
+    const legend = `
+        <details class="small mb-3" id="nameFixLegend">
+            <summary class="text-muted">How matching works</summary>
+            <ul class="mb-0 mt-1">
+                <li><strong>Accept (box ticked):</strong> use the roster student shown. It's saved as a <em>name correction</em>, so this
+                    upload and every later one count that name's minutes and money for that student, their class and team.</li>
+                <li><strong>Strong matches</strong> are ticked for you only when there's one close match in the same class, for a student
+                    with no data of their own in the upload: the same first and last name, the first name only, a known nickname
+                    with the same last name (Teddy for Theodore), or nearly the same spelling.</li>
+                <li><strong>Possible matches</strong> are suggested but not ticked: a first name that only starts the same (Sam for
+                    Samuel - or a sibling?), the same last name with a different first name, a student in another class, two
+                    students who could fit, or two typed names that match the same student.</li>
+                <li><strong>Not a roster student</strong> (end of the list): for pages that aren't a student; left out of this and later uploads.</li>
+                <li>Each class is separate: "Ellie" in one class and "Ellie" in another are two different corrections.</li>
+            </ul>
+        </details>`;
     const buttons = uploading
-        ? `<button class="btn btn-primary" id="saveNameFixesBtn" onclick="saveNameFixes()">
-               <i class="bi bi-check2-circle"></i> Save accepted matches &amp; upload</button>
+        ? `<button class="btn btn-primary" id="saveNameFixesBtn" onclick="saveNameFixes()"></button>
            <button class="btn btn-outline-secondary" onclick="runNameFixUpload()">
                <i class="bi bi-cloud-upload"></i> Upload without saving matches</button>
            <button class="btn btn-link text-danger" onclick="cancelNameFixes('Upload cancelled - nothing was saved')">Cancel</button>`
-        : `<button class="btn btn-primary" id="saveNameFixesBtn" onclick="saveNameFixes()">
-               <i class="bi bi-check2-circle"></i> Save accepted matches</button>
+        : `<button class="btn btn-primary" id="saveNameFixesBtn" onclick="saveNameFixes()"></button>
            <button class="btn btn-link" onclick="cancelNameFixes('Closed - nothing was saved')">Close</button>`;
 
     showResultCard(`
         <div class="card border-warning" id="nameFixPanel">
             <div class="card-header bg-warning-subtle">
-                <h5 class="mb-0"><i class="bi bi-person-exclamation"></i> ${title}
-                    <span class="badge bg-warning text-dark">${nameFix.unmatched.length}</span></h5>
+                <h5 class="mb-0"><i class="bi bi-person-exclamation"></i>
+                    ${uploading ? 'Match names to the roster' : 'Match names to the roster (already uploaded)'}
+                    <span class="badge bg-warning text-dark">${count}</span></h5>
             </div>
             <div class="card-body">
-                <p class="mb-2">${intro}${nameFix.corrected ? ` (${nameFix.corrected} other name${nameFix.corrected === 1 ? ' was' : 's were'}
-                    already matched by saved name corrections or because only capitals/spaces differed.)` : ''}</p>
-                <div class="alert alert-light border small mb-3" id="nameFixLegend">
-                    <strong>How it works</strong>
-                    <ul class="mb-0 mt-1">
-                        <li><strong>Accept (box ticked):</strong> use the roster student shown. It's saved as a <em>name correction</em>, so this
-                            upload and every later one count that name's minutes and money for that student, their class and team.</li>
-                        <li><strong>Not accepted (box empty):</strong> the name is kept as typed. It counts in school totals but for no class or
-                            team, and you'll be asked again next time.</li>
-                        <li><span class="badge bg-success">Strong match</span> the app accepts these for you (${strong} here): the only close
-                            match in the same class - first name only, nickname + same last name, or nearly the same spelling - for a student
-                            with no data of their own. Untick any that are wrong.</li>
-                        <li><span class="badge bg-warning text-dark">Possible match</span> suggested but not accepted: same last name with a
-                            different first name (could be a sibling), a student in another class, or two students who could fit.
-                            Tick Accept if it's right, or choose another student.</li>
-                        <li><strong>Not a roster student</strong> (end of the list): for pages that aren't a student; left out of this and later uploads.</li>
-                        <li>Each class is separate: "Ellie" in one class and "Ellie" in another are two different corrections.</li>
-                    </ul>
-                </div>
+                ${counts}
+                ${consequences}
+                ${legend}
                 <div class="table-responsive">
                     <table class="table table-sm align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center text-nowrap">Accept<br><input class="form-check-input" type="checkbox" onchange="acceptAllNameFixes(this)"
-                                    title="Accept all / none" aria-label="Accept all"></th>
-                                <th>Name typed</th><th>Teacher</th><th>${uploading ? 'In this upload' : 'Uploaded so far'}</th>
-                                <th style="min-width: 16rem;">Roster student</th><th>Match</th><th>Why</th>
+                                <th class="text-center">Accept</th><th>Name typed</th>
+                                <th style="min-width: 16rem;">Roster student</th><th>Why</th>
+                                <th class="text-end text-nowrap">${uploading ? 'In this upload' : 'Uploaded so far'}</th>
                             </tr>
                         </thead>
-                        <tbody>${rows}</tbody>
+                        ${sections}
                     </table>
                 </div>
                 <div class="d-flex flex-wrap gap-2">${buttons}</div>
                 <div id="nameFixError" class="text-danger small mt-2"></div>
             </div>
         </div>`);
+    nameFixAcceptChanged();
     document.getElementById('resultArea').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+// Keep the Save button's count and each group's "accept all" box in step with the ticked rows
+function nameFixAcceptChanged() {
+    const accepted = document.querySelectorAll('.name-fix-accept:checked').length;
+    const button = document.getElementById('saveNameFixesBtn');
+    const label = `Save ${accepted} accepted match${accepted === 1 ? '' : 'es'}`;
+    button.innerHTML = `<i class="bi bi-check2-circle"></i> ${nameFix.mode === 'upload' ? `${label} &amp; upload` : label}`;
+    button.disabled = accepted === 0;
+    document.querySelectorAll('.name-fix-group').forEach(groupBox => {
+        const boxes = [...document.querySelectorAll(`.name-fix-accept[data-group="${groupBox.dataset.group}"]`)];
+        groupBox.checked = boxes.length > 0 && boxes.every(box => box.checked);
+    });
 }
 
 function nameFixChanged(i) {
@@ -1381,18 +1475,25 @@ function nameFixChanged(i) {
     document.querySelector(`.name-fix-accept[data-index="${i}"]`).checked = !!value;
     document.getElementById(`nameFixBadge-${i}`).innerHTML = badge;
     document.getElementById(`nameFixWhy-${i}`).textContent = why;
+    nameFixAcceptChanged();
 }
 
-function acceptAllNameFixes(checkbox) {
-    document.querySelectorAll('.name-fix-accept').forEach(box => {
+function acceptNameFixGroup(checkbox) {
+    document.querySelectorAll(`.name-fix-accept[data-group="${checkbox.dataset.group}"]`).forEach(box => {
         box.checked = checkbox.checked && !!document.querySelector(`.name-fix-select[data-index="${box.dataset.index}"]`).value;
     });
+    nameFixAcceptChanged();
+}
+
+function setNameFixButtonsDisabled(disabled) {
+    document.querySelectorAll('#nameFixPanel button').forEach(button => button.disabled = disabled);
 }
 
 async function saveNameFixes() {
+    const fix = nameFix;  // Cancel can't clear it while the save is running (its buttons are disabled)
     const corrections = [];
     for (const box of document.querySelectorAll('.name-fix-accept:checked')) {
-        const entry = nameFix.unmatched[box.dataset.index];
+        const entry = fix.unmatched[box.dataset.index];
         const value = document.querySelector(`.name-fix-select[data-index="${box.dataset.index}"]`).value;
         if (!value) {
             document.getElementById('nameFixError').textContent = `Choose a roster student for "${entry.uploaded_name}" or untick Accept.`;
@@ -1401,33 +1502,32 @@ async function saveNameFixes() {
         corrections.push({uploaded_name: entry.uploaded_name, teacher_name: entry.teacher_name,
                           student_name: value === NOT_A_STUDENT ? null : value});
     }
-    if (!corrections.length && nameFix.mode === 'uploaded') {
+    if (!corrections.length) {
         document.getElementById('nameFixError').textContent = 'Nothing is accepted - tick Accept for the names to match.';
         return;
     }
-    if (corrections.length) {
-        const button = document.getElementById('saveNameFixesBtn');
-        button.disabled = true;
-        try {
-            const result = await (await fetch('/api/name_aliases', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({corrections})
-            })).json();
-            if (!result.success) {
-                document.getElementById('nameFixError').textContent = result.error || 'Could not save the name corrections';
-                button.disabled = false;
-                return;
-            }
-            nameFixNote = `Saved ${result.saved} name correction${result.saved === 1 ? '' : 's'}` +
-                (result.rows_moved ? `; moved ${result.rows_moved} rows uploaded earlier under those names to the roster students` : '') +
-                (result.names_left_for_next_upload.length ? `; upload these past days again to finish: ${result.names_left_for_next_upload.join(', ')}` : '');
-            await loadNameAliases();
-        } catch (error) {
-            document.getElementById('nameFixError').textContent = error.message;
-            button.disabled = false;
+    setNameFixButtonsDisabled(true);
+    try {
+        const result = await (await fetch('/api/name_aliases', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({corrections})
+        })).json();
+        if (!result.success) {
+            document.getElementById('nameFixError').textContent = result.error || 'Could not save the name corrections';
+            setNameFixButtonsDisabled(false);
+            nameFixAcceptChanged();
             return;
         }
+        nameFixNote = `Saved ${result.saved} name correction${result.saved === 1 ? '' : 's'}` +
+            (result.rows_moved ? `; moved ${result.rows_moved} rows uploaded earlier under those names to the roster students` : '') +
+            (result.names_left_for_next_upload.length ? `; upload these past days again to finish: ${result.names_left_for_next_upload.join(', ')}` : '');
+        await loadNameAliases();
+    } catch (error) {
+        document.getElementById('nameFixError').textContent = error.message;
+        setNameFixButtonsDisabled(false);
+        nameFixAcceptChanged();
+        return;
     }
-    if (nameFix.mode === 'upload') {
+    if (fix.mode === 'upload') {
         await runNameFixUpload();
         return;
     }
@@ -1437,12 +1537,16 @@ async function saveNameFixes() {
 }
 
 async function runNameFixUpload() {
+    if (!nameFix) return;
     const proceed = nameFix.proceed;
     nameFix = null;
     await proceed();
 }
 
 function cancelNameFixes(message) {
+    if (nameFix && nameFix.mode === 'upload') {
+        uploadBusy = false;
+    }
     nameFix = null;
     showResultCard(`<div class="alert alert-secondary"><i class="bi bi-x-circle"></i> ${message}</div>`);
 }
@@ -1455,6 +1559,9 @@ async function loadNameAliases() {
     const list = document.getElementById('nameAliasList');
     try {
         const result = await (await fetch('/api/name_aliases')).json();
+        if (!result.success) {
+            throw new Error(result.error || 'server error');
+        }
         savedNameAliases = result.aliases || [];
         aliasStudents = result.all_students || [];
         document.getElementById('nameAliasCount').textContent = savedNameAliases.length;
@@ -1513,11 +1620,13 @@ const ALIAS_CHANGE_NOTE = 'Uploads from now on use the new choice. Days already 
 async function saveChangedNameAlias(i) {
     const alias = savedNameAliases[i];
     const value = document.getElementById(`aliasSelect-${i}`).value;
-    const result = await (await fetch('/api/name_aliases', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({corrections: [{uploaded_name: alias.uploaded_name, teacher_name: alias.teacher_name,
-                                             student_name: value === NOT_A_STUDENT ? null : value}]})
-    })).json();
+    if (!value) {
+        showNameAliasMessage('Choose a roster student (or Not a roster student) first', false);
+        return;
+    }
+    const result = await postNameAliasJson('/api/name_aliases', {
+        corrections: [{uploaded_name: alias.uploaded_name, teacher_name: alias.teacher_name,
+                       student_name: value === NOT_A_STUDENT ? null : value}]});
     showNameAliasMessage(result.success ? `Changed "${alias.uploaded_name}". ${ALIAS_CHANGE_NOTE}` : (result.error || 'Could not change it'),
                          result.success);
     await loadNameAliases();
@@ -1530,13 +1639,20 @@ async function deleteNameAlias(i) {
                  `Later uploads will ask about this name again. ${ALIAS_CHANGE_NOTE}`)) {
         return;
     }
-    const result = await (await fetch('/api/name_aliases/delete', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name_key: alias.name_key, teacher_key: alias.teacher_key})
-    })).json();
+    const result = await postNameAliasJson('/api/name_aliases/delete', {name_key: alias.name_key, teacher_key: alias.teacher_key});
     showNameAliasMessage(result.success ? `Deleted "${alias.uploaded_name}". ${ALIAS_CHANGE_NOTE}` : (result.error || 'Could not delete it'),
                          result.success);
     await loadNameAliases();
+}
+
+// POST to a name-correction API; a server or network error comes back as {success: false, error}
+async function postNameAliasJson(url, body) {
+    try {
+        return await (await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'},
+                                        body: JSON.stringify(body)})).json();
+    } catch (error) {
+        return {success: false, error: error.message};
+    }
 }
 
 function showNameAliasMessage(text, ok) {
@@ -1562,7 +1678,8 @@ async function deleteDay(logDate) {
     const confirmMsg = `⚠️ DELETE DATA FOR ${logDate}?\n\n` +
         `This will permanently delete:\n` +
         `- All reading minutes for this date\n` +
-        `- Upload history records for this date\n\n` +
+        `- Upload history records for this date\n` +
+        `- Daily drawing winners saved for this date\n\n` +
         `This action CANNOT be undone!\n\n` +
         `Are you sure you want to continue?`;
 
@@ -1579,7 +1696,8 @@ async function deleteDay(logDate) {
 
         if (result.success) {
             alert(`✅ Successfully deleted data for ${logDate}!\n\n` +
-                  `Deleted ${result.deleted_records} records affecting ${result.affected_students ? result.affected_students.length : 0} students.`);
+                  `Deleted ${result.deleted_records} records affecting ${result.affected_students ? result.affected_students.length : 0} students.` +
+                  (result.drawing_winners_deleted ? `\nRemoved ${result.drawing_winners_deleted} saved drawing winners for that day.` : ''));
 
             // Reload upload history
             loadUploadHistory();
@@ -1684,7 +1802,7 @@ function showAuditDetails(auditDetailsJson) {
             content += '<h6 class="text-danger mt-3">Errors:</h6>';
             content += '<ul class="list-unstyled">';
             audit.errors.forEach(err => {
-                content += `<li class="text-danger"><i class="bi bi-x-circle"></i> ${err}</li>`;
+                content += `<li class="text-danger"><i class="bi bi-x-circle"></i> ${escapeHtml(err)}</li>`;
             });
             content += '</ul>';
         }
@@ -1694,7 +1812,7 @@ function showAuditDetails(auditDetailsJson) {
             content += '<h6 class="text-info mt-3"><i class="bi bi-info-circle"></i> Information:</h6>';
             content += '<ul class="list-unstyled">';
             audit.info.forEach(info => {
-                content += `<li class="text-info"><i class="bi bi-info-circle"></i> ${info}</li>`;
+                content += `<li class="text-info"><i class="bi bi-info-circle"></i> ${escapeHtml(info)}</li>`;
             });
             content += '</ul>';
         }
@@ -1704,7 +1822,7 @@ function showAuditDetails(auditDetailsJson) {
             content += '<h6 class="text-warning mt-3"><i class="bi bi-exclamation-triangle"></i> Warnings:</h6>';
             content += '<ul class="list-unstyled">';
             audit.warnings.forEach(warn => {
-                content += `<li class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${warn}</li>`;
+                content += `<li class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${escapeHtml(warn)}</li>`;
             });
             content += '</ul>';
         }

@@ -315,7 +315,7 @@ function displayWorkflowResults(workflow) {
                                 const rowClass = isWinner ? 'winner-row' : '';
                                 return `
                                     <tr class="${rowClass}">
-                                        ${report.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                        ${report.columns.map(col => `<td>${escapeHtml(row[col])}</td>`).join('')}
                                     </tr>
                                 `;
                             }).join('')}
@@ -515,7 +515,7 @@ function displayGroupResults(groupName, results, successCount, errorCount) {
                             <tbody>
                                 ${previewRows.map(row => `
                                     <tr>
-                                        ${result.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                        ${result.columns.map(col => `<td>${escapeHtml(row[col])}</td>`).join('')}
                                     </tr>
                                 `).join('')}
                             </tbody>

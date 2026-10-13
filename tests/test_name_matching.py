@@ -30,6 +30,7 @@ ROSTER = [
     {'student_name': 'Jack Turner', 'teacher_name': 'Ms. Alvarez', 'class_name': 'Alvarez-K'},
     {'student_name': 'Noah Wilson', 'teacher_name': 'Mr. Kim', 'class_name': 'Kim-1'},
     {'student_name': 'Samuel Lee', 'teacher_name': 'Mr. Kim', 'class_name': 'Kim-1'},
+    {'student_name': 'Theodore Lambert', 'teacher_name': 'Mr. Kim', 'class_name': 'Kim-1'},
     {'student_name': 'Olivia Chen', 'teacher_name': 'Mrs. Hart', 'class_name': 'Hart-2'},
     {'student_name': 'Olivia Grant', 'teacher_name': 'Mrs. Hart', 'class_name': 'Hart-2'},
     {'student_name': 'Ethan Brookes', 'teacher_name': 'Mrs. Hart', 'class_name': 'Hart-2'},
@@ -119,6 +120,11 @@ class TestNameKeys:
         assert name_key('  jack   TURNER ') == name_key('Jack Turner') == 'jack turner'
         assert name_key("Liam O'Brien") == "liam o'brien"
 
+    def test_name_key_ignores_accents_and_curly_apostrophes(self):
+        assert name_key('Liam O\u2019Brien') == name_key("Liam O'Brien")
+        assert name_key('Zoë Adams') == name_key('Zoe Adams') == 'zoe adams'
+        assert NameMatcher(ROSTER).resolve('Clára Rose Wells', 'Ms. Lopez') == ('Clara Rose Wells', 'normalized')
+
     @pytest.mark.parametrize('teacher', ['Mrs. Delgado', 'delgado', 'Delgado', 'Ms Delgado'])
     def test_teacher_key_drops_titles_and_case(self, teacher):
         assert teacher_key(teacher) == 'delgado'
@@ -152,17 +158,37 @@ class TestResolve:
         assert matcher.resolve('Noah', 'Ms. Lopez')[0] == 'Noah Martinez'
         assert matcher.resolve_any_teacher('Noah') == ('Noah', 'ambiguous')
 
+    def test_old_row_without_teacher_is_not_moved_when_another_class_has_no_correction(self):
+        matcher = NameMatcher(ROSTER, [{'name_key': 'noah', 'teacher_key': 'kim', 'student_name': 'Noah Wilson'}])
+        assert matcher.resolve_any_teacher('Noah') == ('Noah Wilson', 'alias')
+        assert matcher.resolve_any_teacher('Noah', ['Mr. Kim']) == ('Noah Wilson', 'alias')
+        assert matcher.resolve_any_teacher('Noah', ['Mr. Kim', 'Ms. Lopez']) == ('Noah', 'ambiguous')
+
+    def test_correction_to_a_student_no_longer_on_the_roster_is_ignored(self):
+        matcher = NameMatcher(ROSTER, [{'name_key': 'maya', 'teacher_key': 'alvarez', 'student_name': 'Maya Old'}])
+        assert matcher.resolve('Maya', 'Ms. Alvarez') == ('Maya', 'unmatched')
+
 
 class TestSuggest:
     @pytest.mark.parametrize('typed,teacher,expected', [
         ('Noah', 'Mr. Kim', 'Noah Wilson'),                     # first name only, one Noah in the class
-        ('Sam Lee', 'Mr. Kim', 'Samuel Lee'),                   # nickname + same last name
+        ('Teddy Lambert', 'Mr. Kim', 'Theodore Lambert'),       # known nickname + same last name
         ('Ethan Brooks', 'Mrs. Hart', 'Ethan Brookes'),         # typo
         ('Clara Wells', 'Ms. Lopez', 'Clara Rose Wells'),  # middle name left out
     ])
     def test_strong_single_match_is_pre_checked(self, typed, teacher, expected):
         result = NameMatcher(ROSTER).suggest(typed, teacher)
         assert result['suggestion'] == expected and result['confident']
+
+    @pytest.mark.parametrize('typed,expected', [
+        ('Sam Lee', 'Samuel Lee'),     # shared letters only: a nickname, or a sibling?
+        ('Sa Lee', 'Samuel Lee'),
+        ('Theo Lambert', 'Theodore Lambert'),
+    ])
+    def test_shared_letters_are_only_a_possible_match(self, typed, expected):
+        result = NameMatcher(ROSTER).suggest(typed, 'Mr. Kim')
+        assert result['suggestion'] == expected and not result['confident']
+        assert 'starts the same' in result['candidates'][0]['reason']
 
     def test_two_strong_matches_in_class_are_not_pre_checked(self):
         result = NameMatcher(ROSTER).suggest('Olivia', 'Mrs. Hart')
@@ -190,6 +216,24 @@ class TestSuggest:
     def test_no_suggestion(self):
         result = NameMatcher(ROSTER).suggest('Zed Quinn', 'Ms. Alvarez')
         assert result == {'candidates': [], 'suggestion': None, 'confident': False}
+
+
+class TestMatchPanelOrder:
+    def test_strong_matches_first_then_possible_then_no_suggestion(self, names_db):
+        check = names_db.check_upload_names('daily', [read(DAY1_CSV), read(DAY2_CSV)])
+        groups = [0 if u['confident'] else 1 if u['suggestion'] else 2 for u in check['unmatched']]
+        assert groups == sorted(groups) and groups[0] == 0 and groups[-1] == 2
+        strong = [u['uploaded_name'] for u in check['unmatched'] if u['confident']]
+        assert strong == ['Ethan Brooks', 'Noah']  # by teacher: Mrs. Hart, Mr. Kim
+        assert check['matched_count'] == 13
+
+    def test_two_typed_names_strongly_matching_one_student_are_not_pre_checked(self, names_db):
+        csv_text = ('ClassID,Teacher,ReaderID,ReaderName,Minutes\n'
+                    '3,Mrs. Hart,1,Ethan Brooks,30\n3,Mrs. Hart,2,Ethan Brokes,20\n')
+        check = names_db.check_upload_names('daily', [csv_text])
+        assert [u['suggestion'] for u in check['unmatched']] == ['Ethan Brookes', 'Ethan Brookes']
+        assert not any(u['confident'] for u in check['unmatched'])
+        assert 'another typed name' in check['unmatched'][0]['candidates'][0]['reason']
 
 
 class TestUploads:
@@ -323,6 +367,48 @@ class TestUploads:
         assert minutes(names_db, DAY2, 'Olivia Chen') is None
         assert minutes(names_db, DAY2, 'Olivia Grant') == 45
 
+    def test_name_added_to_the_roster_later_is_moved_when_matched(self, names_db):
+        csv_text = 'ClassID,Teacher,ReaderID,ReaderName,Minutes\n1,Ms. Alvarez,1,Zed Quinn,40\n'
+        names_db.upload_daily_data(DAY1, FileStorage(io.BytesIO(csv_text.encode()), filename='daily.csv'))
+        assert minutes(names_db, DAY1, 'Zed Quinn (Ms. Alvarez)') == 40
+        names_db.get_connection().execute(
+            "INSERT INTO Roster (student_name, class_name, home_room, teacher_name, grade_level, team_name) "
+            "VALUES ('Zed Quinn', 'Alvarez-K', '101', 'Ms. Alvarez', 'K', 'Phoenix')")
+        result = names_db.save_name_aliases([{'uploaded_name': 'Zed Quinn', 'teacher_name': 'Ms. Alvarez',
+                                              'student_name': 'Zed Quinn'}])
+        assert result['success'] and result['rows_moved'] == 1
+        assert minutes(names_db, DAY1, 'Zed Quinn') == 40
+
+    def test_empty_daily_file_keeps_the_day(self, names_db):
+        names_db.upload_daily_data(DAY1, upload_file(DAY1_CSV))
+        before = minutes_all(names_db)
+        empty = FileStorage(io.BytesIO(b'ClassID,Teacher,ReaderID,ReaderName,Minutes\n'), filename='daily.csv')
+        result = names_db.upload_daily_data(DAY1, empty)
+        assert not result['success'] and 'No reader rows' in result['errors'][0]
+        assert minutes_all(names_db) == before
+
+    def test_cumulative_file_with_no_readable_rows_keeps_the_money(self, names_db):
+        names_db.upload_cumulative_stats(upload_file(CUMULATIVE_CSV), snapshot_date=DAY1)
+        before = total(names_db, 'SELECT SUM(donation_amount) as n FROM Reader_Cumulative')
+        header_only = FileStorage(io.BytesIO(b'Reader Name,Teacher,Raised,Sponsors,Minutes\n'), filename='c.csv')
+        result = names_db.upload_cumulative_stats(header_only, snapshot_date=DAY1)
+        assert not result['success'] and 'No reader rows' in result['errors'][0]
+        assert total(names_db, 'SELECT SUM(donation_amount) as n FROM Reader_Cumulative') == before > 0
+
+    def test_every_accepted_column_name_is_read(self, names_db):
+        csv_text = ('Student Name,Teacher Name,Donation Amount,Sponsor Count,Cumulative Minutes\n'
+                    'Maya Patel,Ms. Alvarez,12.5,2,90\n'
+                    'Noah Wilson,Mr. Kim\n')  # short row
+        result = names_db.upload_cumulative_stats(FileStorage(io.BytesIO(csv_text.encode()), filename='c.csv'),
+                                                  snapshot_date=DAY1)
+        assert result['success'], result
+        row = names_db.execute_query("SELECT donation_amount, sponsors, cumulative_minutes FROM Reader_Cumulative "
+                                     "WHERE student_name = 'Maya Patel'")
+        assert row == [{'donation_amount': 12.5, 'sponsors': 2, 'cumulative_minutes': 90}]
+        daily = 'ReaderName,Teacher,Minutes Read\nMaya Patel,Ms. Alvarez,30\n'
+        assert names_db.upload_daily_data(DAY1, FileStorage(io.BytesIO(daily.encode()), filename='d.csv'))['success']
+        assert minutes(names_db, DAY1, 'Maya Patel') == 30
+
     def test_bad_corrections_are_rejected(self, names_db):
         result = names_db.save_name_aliases([{'uploaded_name': 'Maya', 'teacher_name': 'Ms. Alvarez',
                                               'student_name': 'Not On Roster'}])
@@ -383,6 +469,7 @@ class TestRoutes:
         bad = client.post('/api/name_aliases', json={'corrections': [
             {'uploaded_name': 'Maya', 'teacher_name': 'Ms. Alvarez', 'student_name': 'Nobody'}]})
         assert bad.status_code == 400
+        assert client.post('/api/name_aliases', json={'corrections': ['Maya']}).status_code == 400
 
     def test_saving_refused_on_read_only_database(self, client, names_db_id, make_editable):
         make_editable(-1)

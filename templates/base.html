@@ -884,6 +884,12 @@
     </style>
 
     {% block extra_css %}{% endblock %}
+    <script>
+        // Text from uploads (names parents typed on read-a-thon.com) must be escaped before it goes into innerHTML
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+        }
+    </script>
 </head>
 <body class="{{ ['simple-view' if simple_view, 'read-only-db' if is_read_only_database] | select | join(' ') }}">
     <!-- Navigation -->

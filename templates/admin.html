@@ -1577,7 +1577,7 @@ function displayReport(report) {
                     <tbody id="reportTableBody">
                         ${report.data.map(row => `
                             <tr>
-                                ${report.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                ${report.columns.map(col => `<td>${escapeHtml(row[col])}</td>`).join('')}
                             </tr>
                         `).join('')}
                     </tbody>
@@ -2197,9 +2197,9 @@ document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(trigger => {
     });
 });
 
-// Select all tables
+// Select all tables (not Name_Alias: saved name corrections belong with the roster, like clear_all_data.py keeps them)
 function selectAllTables() {
-    const checkboxes = document.querySelectorAll('.table-checkbox');
+    const checkboxes = document.querySelectorAll('.table-checkbox:not([value="Name_Alias"])');
     checkboxes.forEach(cb => cb.checked = true);
     updateClearButton();
 }
@@ -2246,8 +2246,8 @@ async function clearSelectedTables() {
     // Get current counts for confirmation message
     const counts = {};
     for (const table of tables) {
-        const countSpan = document.getElementById(`count${table.replace('_', '')}`);
-        const match = countSpan.textContent.match(/(\d+) records?/);
+        const countSpan = document.getElementById(`count${table.replace(/_/g, '')}`);
+        const match = countSpan ? countSpan.textContent.match(/(\d+) records?/) : null;
         counts[table] = match ? parseInt(match[1]) : 0;
     }
 

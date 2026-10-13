@@ -210,7 +210,7 @@ Zipping the whole folder (code + `db/`) also works, but moving code with `git pu
    - Select the date
    - Upload your minutes CSV file (columns: `Reader Name`, `Minutes`)
    - Upload your donations CSV file (columns: `Reader Name`, `Donations`); its **snapshot date** defaults to the
-     latest day with minutes, so money raised can be shown as of each day
+     latest day with minutes (and moves to the new day after a daily upload), so money raised can be shown as of each day
    - Click "Upload Data"
 
 2. **Send the Daily Scoreboard**
@@ -319,7 +319,9 @@ lsof -ti:5001 | xargs kill
 ### Upload Warnings
 If you see "Student not found in roster" warnings:
 - The name was typed by a parent on read-a-thon.com. Use **Match names to the roster** (alert at the top of the
-  Upload page) to pick the roster student (the correction is saved for later uploads), or choose *Not a roster student*
+  Upload page) to pick the roster student (the correction is saved for later uploads), or choose *Not a roster student*.
+  You don't have to match every name: an unmatched name still counts in school totals (not for a class or team) and
+  can be matched later
 - Verify CSV column names are correct: `Reader Name` and `Minutes` or `Donations`
 - Make sure CSV file is properly formatted
 

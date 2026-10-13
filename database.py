@@ -10,6 +10,7 @@ import io
 from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
 import random
+from collections import Counter, defaultdict
 from report_metadata import (
     COLUMN_METADATA,
     get_report_terms,
@@ -21,6 +22,14 @@ from queries import *
 from name_matching import NameMatcher, name_key, split_unmatched_label, teacher_key, unmatched_label
 
 DEFAULT_DRAWING_WINNERS_PER_GRADE = 2  # daily prize drawing winners per grade (Admin -> Bulletin Settings)
+
+# Upload CSV column names (lowercase), shared by the column check and the row readers so a file that passes
+# the check is also read
+NAME_COLUMNS = ('reader name', 'readername', 'student name', 'student_name', 'name')
+TEACHER_COLUMNS = ('teacher', 'teacher name', 'teacher_name')
+MINUTES_COLUMNS = ('minutes', 'minutes read', 'minutes_read', 'cumulative minutes', 'cumulative_minutes')
+RAISED_COLUMNS = ('raised', 'donation amount', 'donation_amount', 'donations')
+SPONSORS_COLUMNS = ('sponsors', 'sponsor count', 'sponsor_count')
 
 
 class DatabaseRegistry:
@@ -758,11 +767,17 @@ class ReadathonDB:
             # Delete from Upload_History
             cursor.execute(DELETE_UPLOAD_HISTORY_BY_DATE, (log_date,))
 
+            # The day's saved drawing winners (they would still keep those students out of other days' drawings).
+            # Team_Color_Bonus stays: it comes from its own upload, not from the day's minutes file
+            cursor.execute(DELETE_DRAWING_WINNERS_BY_DATE, (log_date,))
+            drawing_winners_deleted = cursor.rowcount
+
             conn.commit()
 
             return {
                 'success': True,
                 'deleted_records': count,
+                'drawing_winners_deleted': drawing_winners_deleted,
                 'log_date': log_date,
                 'affected_students': affected_students
             }
@@ -853,11 +868,11 @@ class ReadathonDB:
         headers_lower = [h.lower().strip() for h in csv_headers]
 
         return {
-            'student_name': any(h in headers_lower for h in ['reader name', 'readername', 'student name', 'student_name', 'name']),
-            'minutes': any(h in headers_lower for h in ['minutes', 'minutes read', 'minutes_read', 'cumulative minutes', 'cumulative_minutes']),
-            'teacher': any(h in headers_lower for h in ['teacher', 'teacher name', 'teacher_name']),
-            'raised': any(h in headers_lower for h in ['raised', 'donation amount', 'donation_amount', 'donations']),
-            'sponsors': any(h in headers_lower for h in ['sponsors', 'sponsor count', 'sponsor_count'])
+            'student_name': any(h in headers_lower for h in NAME_COLUMNS),
+            'minutes': any(h in headers_lower for h in MINUTES_COLUMNS),
+            'teacher': any(h in headers_lower for h in TEACHER_COLUMNS),
+            'raised': any(h in headers_lower for h in RAISED_COLUMNS),
+            'sponsors': any(h in headers_lower for h in SPONSORS_COLUMNS)
         }
 
     @staticmethod
@@ -865,14 +880,15 @@ class ReadathonDB:
         """(reader name, teacher, minutes) from one daily minutes CSV row (case-insensitive columns)"""
         student_name = teacher_name = minutes = None
         for key in row.keys():
-            if key.lower() in ['reader name', 'readername', 'student name', 'student_name', 'name']:
+            column = (key or '').lower().strip()  # key None = extra values past the last header
+            if column in NAME_COLUMNS:
                 student_name = row[key].strip() if row[key] else None
-            elif key.lower() in ['minutes', 'minutes_read']:
+            elif column in MINUTES_COLUMNS:
                 try:
                     minutes = int(row[key]) if row[key] else 0
                 except (ValueError, TypeError):
                     minutes = 0
-            elif key.lower() in ['teacher', 'teacher name', 'teacher_name']:
+            elif column in TEACHER_COLUMNS:
                 teacher_name = row[key].strip() if row[key] else None
         return student_name, teacher_name, minutes
 
@@ -882,21 +898,22 @@ class ReadathonDB:
         student_name = teacher_name = None
         donation_amount, sponsors, cumulative_minutes = 0.0, 0, 0
         for key in row.keys():
-            if key.lower() in ['reader name', 'student_name', 'name']:
-                student_name = row[key].strip()
-            elif key.lower() in ['teacher', 'teacher_name']:
-                teacher_name = row[key].strip()
-            elif key.lower() in ['raised', 'donation_amount', 'donations']:
+            column = (key or '').lower().strip()  # key None = extra values past the last header
+            if column in NAME_COLUMNS:
+                student_name = row[key].strip() if row[key] else None
+            elif column in TEACHER_COLUMNS:
+                teacher_name = row[key].strip() if row[key] else None
+            elif column in RAISED_COLUMNS:
                 try:
                     donation_amount = float(row[key]) if row[key] else 0.0
                 except (ValueError, TypeError):
                     donation_amount = 0.0
-            elif key.lower() in ['sponsors', 'sponsor_count']:
+            elif column in SPONSORS_COLUMNS:
                 try:
                     sponsors = int(row[key]) if row[key] else 0
                 except (ValueError, TypeError):
                     sponsors = 0
-            elif key.lower() in ['minutes', 'cumulative_minutes']:
+            elif column in MINUTES_COLUMNS:
                 try:
                     cumulative_minutes = int(row[key]) if row[key] else 0
                 except (ValueError, TypeError):
@@ -967,9 +984,11 @@ class ReadathonDB:
                 if name:
                     rows.append((name, teacher or '', minutes or 0, raised, has_values))
 
-        has_data, unmatched, corrected = set(), {}, {}
+        has_data, unmatched, corrected, exact = set(), {}, {}, set()
         for name, teacher, minutes, raised, has_values in rows:
             roster_name, how = matcher.resolve(name, teacher)
+            if how == 'exact':
+                exact.add(name)
             if how == 'unmatched':
                 entry = unmatched.setdefault((name, teacher), {'uploaded_name': name, 'teacher_name': teacher,
                                                                'rows': 0, 'minutes': 0, 'raised': 0.0})
@@ -984,7 +1003,7 @@ class ReadathonDB:
                                               'student_name': roster_name, 'how': how}
 
         return {**self._suggest_roster_students(matcher, unmatched.values(), has_data),
-                'corrected': list(corrected.values())}
+                'corrected': list(corrected.values()), 'matched_count': len(exact)}
 
     def get_unmatched_names(self) -> Dict[str, Any]:
         """Names already saved (Daily_Logs, Reader_Cumulative, Reader_Cumulative_History) that aren't roster names:
@@ -1019,12 +1038,21 @@ class ReadathonDB:
         return result
 
     def _suggest_roster_students(self, matcher: NameMatcher, entries, has_data: set) -> Dict[str, Any]:
-        """Add suggested roster students to each unmatched name (for the Fix names panel)"""
-        entries = sorted(entries, key=lambda e: (e['teacher_name'].lower(), e['uploaded_name'].lower()))
+        """Add suggested roster students to each unmatched name (for the Match names panel). Strong matches
+        come first, then possible matches, then names with no suggestion (each by teacher surname, then name)."""
+        entries = list(entries)
         for entry in entries:
             entry.update(matcher.suggest(entry['uploaded_name'], entry['teacher_name'], has_data))
             entry['class_students'] = matcher.class_students(entry['teacher_name'])
             entry['raised'] = round(entry['raised'], 2)
+        # Two typed names strongly matching the same student: neither is accepted for the user
+        strong_for = Counter(e['suggestion'] for e in entries if e['confident'])
+        for entry in entries:
+            if entry['confident'] and strong_for[entry['suggestion']] > 1:
+                entry['confident'] = False
+                entry['candidates'][0]['reason'] += '; another typed name also matches this student'
+        entries.sort(key=lambda e: (0 if e['confident'] else 1 if e['suggestion'] else 2,
+                                    teacher_key(e['teacher_name']), e['uploaded_name'].lower()))
         return {'success': True, 'unmatched': entries, 'all_students': self.get_students_for_name_matching()}
 
     def get_students_for_name_matching(self) -> List[Dict[str, Any]]:
@@ -1074,13 +1102,22 @@ class ReadathonDB:
         names were saved as "name (teacher)")."""
         matcher = self.get_name_matcher()
         moved, left = 0, set()
+        # 'exact': a name saved as "Ellie Bean (Hart)" before Ellie Bean was added to the roster
+        movable = ('exact', 'alias', 'normalized', 'skip')
+
+        # Classes known to have uploaded a name saved without a teacher (from the money rows)
+        teachers = defaultdict(set)
+        for select in (SELECT_UNMATCHED_READER_CUMULATIVE, SELECT_UNMATCHED_READER_CUMULATIVE_HISTORY):
+            for r in cursor.execute(select).fetchall():
+                teachers[r['student_name']].add(r['teacher_name'])
 
         for r in cursor.execute(SELECT_UNMATCHED_DAILY_LOGS).fetchall():
             typed, teacher = split_unmatched_label(r['student_name'])
-            target, how = matcher.resolve(typed, teacher) if teacher else matcher.resolve_any_teacher(typed)
+            target, how = (matcher.resolve(typed, teacher) if teacher
+                           else matcher.resolve_any_teacher(typed, teachers[r['student_name']]))
             if how == 'ambiguous':
                 left.add(r['student_name'])
-            if how not in ('alias', 'normalized', 'skip'):
+            if how not in movable:
                 continue
             if target:
                 cursor.execute(ADD_DAILY_LOGS_MINUTES, (r['log_date'], target, r['minutes_read']))
@@ -1095,7 +1132,7 @@ class ReadathonDB:
             for r in cursor.execute(select).fetchall():
                 typed, teacher = split_unmatched_label(r['student_name'])
                 target, how = matcher.resolve(typed, teacher or r['teacher_name'])
-                if how not in ('alias', 'normalized', 'skip'):
+                if how not in movable:
                     continue
                 date_key = (r['snapshot_date'],) if history else ()
                 if target:
@@ -1256,6 +1293,12 @@ class ReadathonDB:
                     f"donations {donations_list}, sponsors {sponsors_list}, minutes {minutes_list}, "
                     f"summed to ${total_donation:.2f} donations, {total_sponsors} sponsors, {total_minutes} minutes"
                 )
+
+            # A file with no reader rows would replace everyone's money with nothing
+            if not cumulative_data:
+                result['success'] = False
+                result['errors'].append('ERROR: No reader rows were found in the file - nothing was changed')
+                return result
 
             # Get existing data before deletion for audit trail
             cursor.execute(SELECT_COUNT_READER_CUMULATIVE)
@@ -1444,6 +1487,12 @@ class ReadathonDB:
                     continue
                 total = sum(minutes_list)
                 result['warnings'].append(f"Duplicate rows for {student_name}: found {len(minutes_list)} rows with minutes {minutes_list}, summed to {total}")
+
+            # A file with no reader rows would wipe the day (e.g. an empty report saved under this date's name)
+            if not minutes_data:
+                result.update(success=False, info=[], replaced_data=False, records_replaced=0)
+                result['errors'].append(f'ERROR: No reader rows were found in the file - nothing was changed for {log_date}')
+                return result
 
             # The file is the whole day from read-a-thon.com: it replaces everything saved for this date, so rows
             # under a name corrected (or a correction changed) since the last upload don't stay behind

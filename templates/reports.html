@@ -470,7 +470,7 @@ function displayTable(tableData, metadata) {
                     <tbody id="reportTableBody">
                         ${tableData.data.map(row => `
                             <tr>
-                                ${tableData.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                ${tableData.columns.map(col => `<td>${escapeHtml(row[col])}</td>`).join('')}
                             </tr>
                         `).join('')}
                     </tbody>
@@ -784,7 +784,7 @@ function displayReport(report) {
                             const rowClass = isWinner ? 'winner-row' : '';
                             return `
                                 <tr class="${rowClass}">
-                                    ${report.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                    ${report.columns.map(col => `<td>${escapeHtml(row[col])}</td>`).join('')}
                                 </tr>
                             `;
                         }).join('')}

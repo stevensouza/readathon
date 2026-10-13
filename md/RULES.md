@@ -36,7 +36,8 @@ Parents type their child's name on read-a-thon.com, so uploads contain first nam
 - **Stored names are always roster spellings.** Uploads translate each name before saving, so every query keeps
   comparing names exactly (no case-insensitive SQL needed).
 - **Order (`NameMatcher.resolve`):** exact roster name → saved correction (`Name_Alias`) → the only roster name that
-  differs just in capitals/spaces/punctuation (automatic, reported as info) → unmatched (imported under the typed name
+  differs just in capitals/spaces/punctuation/accents (automatic, reported as info; "Zoë" = "Zoe", a phone's curly
+  apostrophe = '). A correction to a student who is no longer on the roster is ignored (the name is unmatched again) → unmatched (imported under the typed name
   with a "Student not found in roster" warning; cumulative rows get team `ERROR: NO ROSTER MATCH`).
 - **An unmatched name is saved with its teacher: "Ellie (Hart)"** (`unmatched_label` / `split_unmatched_label`), so
   two unmatched "Ellie"s in different classes stay two rows, and matching them later knows the class (Daily_Logs has
@@ -48,11 +49,17 @@ Parents type their child's name on read-a-thon.com, so uploads contain first nam
   names are shown in a **Match names to the roster** panel with suggestions (`NameMatcher.suggest`).
   Wording on the page (avoid "check"/"pre-check" - it reads like "examine"): **Accept** = the tick box (accepted rows are
   saved as name corrections and used for this upload and every later one); **Strong match** = accepted for you;
-  **Possible match** = suggested, not accepted; **Your choice**; **No match found**; **Not a roster student**.
-- **Strong match** only when it's the only strong match (first name only, nickname + same last name, near-identical
-  spelling, same first + last name) **in the same class** and that student has no data of their own in the upload.
-  Same last name with an unrelated first name (preferred name or sibling?), another teacher's student, two possible
-  students, or a student who already has their own row are **possible matches**.
+  **Possible match** = suggested, not accepted; **Your choice**; **No suggestion**; **Not a roster student**.
+- **Panel layout:** the top says what the list is and what happens to a name left unmatched (it still uploads as typed
+  and counts for the school, not for any class/team/student prize; it's listed again next upload and in the alert, and
+  matching it later moves its data). Names are grouped **Strong matches → Possible matches → No suggestion** (sorted
+  on the server, `_suggest_roster_students`), each group by teacher surname then name, with its own accept-all box.
+- **Strong match** only when it's the only strong match (same first + last name, first name only, a **known nickname**
+  from `NICKNAMES` + same last name, near-identical spelling) **in the same class** and that student has no data of
+  their own in the upload. Everything else is a **possible match** that the user must tick: a first name that only
+  shares letters ("Sam Lee" for Samuel Lee - nickname or sibling?), the same last name with an unrelated first name,
+  another teacher's student, two possible students, a student who already has their own row, or **two typed names
+  that both strongly match the same student**.
 - **After the fact:** `/api/unmatched_names` lists names already saved that aren't roster names (with their minutes and
   money). The Upload page shows them in an alert at the top ("N uploaded names are not on the roster") with **Match names
   to the roster** (same panel; saving moves their data) and a link to the Q23 report.
@@ -65,7 +72,12 @@ Parents type their child's name on read-a-thon.com, so uploads contain first nam
   (PageCreated = No, all zeros) beside a student's real page, so a duplicate warning only appears when 2+ rows have data.
 - **A daily upload replaces everything saved for its date** (the file is the whole day from read-a-thon.com), so a
   changed or deleted correction leaves nothing stale behind once the day is uploaded again.
-- `Name_Alias` belongs to the roster: `clear_all_data.py` keeps it (Admin → Clear Tables can clear it).
+- **A file with no reader rows is refused** (daily and cumulative): it would otherwise wipe the day or everyone's money.
+  The column check and the row readers share one list of accepted column names (`NAME_COLUMNS` etc. in `database.py`).
+- Old rows saved without a teacher ("Ellie", from before v2026.22.0) move only when no other class that uploaded that
+  name lacks a correction (`resolve_any_teacher`); otherwise they wait for those days to be uploaded again.
+- `Name_Alias` belongs to the roster: `clear_all_data.py` keeps it, and Admin → Clear Tables **Select All** leaves it
+  (it can still be ticked on its own).
 
 ---
 
@@ -299,7 +311,9 @@ Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
 
 ### Money as of a day (snapshots)
 - Every cumulative upload is also saved in `Reader_Cumulative_History` under a **snapshot date** (Upload page;
-  defaults to the latest `Daily_Logs` date because the Day N file is often uploaded the morning of Day N+1).
+  defaults to the latest `Daily_Logs` date because the Day N file is often uploaded the morning of Day N+1). After a
+  daily upload the field moves to the newest uploaded day (no page reload needed), and saving a cumulative upload for a
+  day **earlier** than the latest day with minutes asks first (read-a-thon.com totals are always current).
 - **The latest upload for a day wins:** re-uploading for the same date replaces that day's whole copy (not a merge).
 - Money for day N comes **only from day N's snapshot**. No snapshot → "Not available\*" with a footnote, and no
   trophy for that row. Never carry an older day's money forward.
@@ -333,7 +347,8 @@ Prize Scoreboard (`/scoreboards/prize`). Data code: `scoreboards.py`.
     are drawn from that day's goal-meeters who already won. Those rows store `fallback = 1` and a note shows in the
     toolbar (not in the copied image).
   - **Clear is per day:** "Clear saved winners (Day N)" deletes only that day; its winners become eligible again in
-    other days' previews, and other days' saved winners never change.
+    other days' previews, and other days' saved winners never change. **Deleting a day's minutes** (Upload page) also
+    deletes that day's saved winners. Team_Color_Bonus rows stay (they come from their own upload).
   - Q4 on the Reports page is unchanged (unseeded, ignores saved winners).
 - **Showdown:** the registry database whose `year` = this year − 1, using its own Nth contest date (final vs final
   on the Prize Scoreboard's final view). Hidden when there is no prior-year database. Always the **last section** of

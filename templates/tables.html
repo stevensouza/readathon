@@ -115,7 +115,7 @@ function displayTable(table) {
                         ${table.data.map(row => {
                             return `
                                 <tr>
-                                    ${table.columns.map(col => `<td>${row[col] ?? ''}</td>`).join('')}
+                                    ${table.columns.map(col => `<td>${escapeHtml(row[col])}</td>`).join('')}
                                 </tr>
                             `;
                         }).join('')}

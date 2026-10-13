@@ -11,19 +11,22 @@ read-a-thon.com's class list, so it is usually right and narrows the search to o
   in case/spacing. Anything else stays unmatched: saved as "typed name (teacher)" (unmatched_label), with a warning.
 - NameMatcher.suggest() ranks likely roster students for an unmatched name, for the Upload
   page's "Match names to the roster" panel. Only a single strong match in the same class, for a student
-  with no data of their own in the upload, is a "strong match" (accepted for the user).
+  with no data of their own in the upload, is a "strong match" (accepted for the user). Strong = same first and
+  last name, first name only, a known nickname (NICKNAMES) + same last name, or nearly the same spelling; a guess
+  from shared letters ("Sam Lee" for Samuel Lee - or a sibling?) is only a possible match.
 See md/RULES.md -> "Roster name matching".
 """
 
 import difflib
 import re
+import unicodedata
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 TEACHER_TITLES = {'mr', 'mrs', 'ms', 'miss', 'mx', 'dr'}
 
-# Nicknames whose letters don't give away the formal name (the first-letters rule finds the rest,
-# e.g. Ben/Benjamin, Abby/Abigail, Maggie/Margaret)
+# Known nicknames: with the same last name these are strong matches. Names that only share letters
+# (Ben/Benjamin, Abby/Abigail, Maggie/Margaret) are found by first_names_related() as possible matches.
 NICKNAMES = {
     'bill': {'william'}, 'billy': {'william'}, 'will': {'william'}, 'liam': {'william'},
     'bob': {'robert'}, 'bobby': {'robert'}, 'rob': {'robert'}, 'robbie': {'robert'},
@@ -49,21 +52,25 @@ NICKNAMES = {
 # Suggestion scores (higher = more likely). A strong match (accepted for the user) needs STRONG or above.
 SCORE_SAME_FIRST_AND_LAST = 95   # "Clara Wells" -> "Clara Rose Wells"
 SCORE_FIRST_NAME_ONLY = 90       # "Mateo" -> "Mateo Ruiz"
-SCORE_NICKNAME_SAME_LAST = 85    # "Joey Lambert" -> "Joseph Lambert"
+SCORE_NICKNAME_SAME_LAST = 85    # "Teddy Lambert" -> "Theodore Lambert" (known nickname)
 SCORE_CLOSE_SPELLING = 80        # "Ethan Brooks" -> "Ethan Brookes"
 STRONG = 80
+SCORE_LETTERS_SAME_LAST = 70     # "Sam Lee" -> "Samuel Lee" (shared letters only: nickname or a sibling?)
 SCORE_NICKNAME_ONLY = 60         # "Ellie" -> "Eleanor Quill"
 SCORE_SAME_LAST_ONLY = 55        # "Hudson Brookes" -> "Ethan Brookes" (preferred name, or a sibling?)
 SCORE_SOME_SPELLING = 50
 OWN_DATA_PENALTY = 30            # the student already has their own data in the upload (maybe another child)
 OTHER_CLASS_PENALTY = 35         # the upload names a different teacher
-MIN_SCORE = 45
+MIN_SCORE = 35                   # lowest score suggested (e.g. a shared-letters guess in another class)
 MAX_CANDIDATES = 5
 
 
 def name_key(name: Optional[str]) -> str:
-    """Name for comparing: lowercase, single spaces, no punctuation except - and '"""
-    cleaned = re.sub(r"[^a-z0-9' -]", ' ', (name or '').lower())
+    """Name for comparing: lowercase, single spaces, no accents ("Zoë" = "Zoe"), no punctuation except - and '
+    (a phone's curly apostrophe counts as ')"""
+    text = unicodedata.normalize('NFKD', (name or '').replace('\u2019', "'").replace('\u2018', "'"))
+    text = ''.join(c for c in text if not unicodedata.combining(c))
+    cleaned = re.sub(r"[^a-z0-9' -]", ' ', text.lower())
     return ' '.join(cleaned.split())
 
 
@@ -87,11 +94,15 @@ def split_unmatched_label(saved_name: str) -> Tuple[str, str]:
     return (found.group(1), found.group(2)) if found else (saved_name, '')
 
 
+def known_nickname(typed: str, formal: str) -> bool:
+    """Is `typed` `formal` or a nickname of it in NICKNAMES? (lowercase single words)"""
+    return typed == formal or typed in NICKNAMES.get(formal, ()) or formal in NICKNAMES.get(typed, ())
+
+
 def first_names_related(typed: str, formal: str) -> bool:
-    """Could `typed` be `formal` or a nickname of it? (lowercase single words)"""
-    if typed == formal:
-        return True
-    if typed in NICKNAMES.get(formal, ()) or formal in NICKNAMES.get(typed, ()):
+    """Could `typed` be `formal` or a nickname of it? Known nicknames, or names that share letters
+    (lowercase single words)"""
+    if known_nickname(typed, formal):
         return True
     return len(typed) >= 2 and len(formal) >= 2 and (typed[:2] == formal[:2]
                                                      or (len(typed) >= 3 and typed in formal))
@@ -113,8 +124,10 @@ def _score(typed: str, roster_name: str) -> Tuple[int, str]:
         if last == roster_last:
             if first == roster_first:
                 return SCORE_SAME_FIRST_AND_LAST, 'same first and last name'
-            if first_names_related(first, roster_first):
+            if known_nickname(first, roster_first):
                 return SCORE_NICKNAME_SAME_LAST, 'nickname, same last name'
+            if first_names_related(first, roster_first):
+                return SCORE_LETTERS_SAME_LAST, 'first name starts the same, same last name (nickname or sibling?)'
             return SCORE_SAME_LAST_ONLY, 'same last name only (preferred name or sibling?)'
     similarity = difflib.SequenceMatcher(None, typed, roster_name).ratio()
     if similarity >= 0.85:
@@ -129,14 +142,16 @@ class NameMatcher:
 
     def __init__(self, roster: Iterable[Dict[str, Any]], aliases: Iterable[Dict[str, Any]] = ()):
         """roster: dicts with student_name, teacher_name, class_name.
-        aliases: Name_Alias rows (name_key, teacher_key, student_name; student_name None = not a student)"""
+        aliases: Name_Alias rows (name_key, teacher_key, student_name; student_name None = not a student).
+        A correction to a student no longer on the roster is ignored (the name is unmatched again)."""
         self.roster = [dict(r) for r in roster]
         self.roster_names = {r['student_name'] for r in self.roster}
         self.by_name_key = defaultdict(list)
         for r in self.roster:
             r['name_key'], r['teacher_key'] = name_key(r['student_name']), teacher_key(r['teacher_name'])
             self.by_name_key[r['name_key']].append(r)
-        self.aliases = {(a['name_key'], a['teacher_key']): a['student_name'] for a in aliases}
+        self.aliases = {(a['name_key'], a['teacher_key']): a['student_name'] for a in aliases
+                        if a['student_name'] is None or a['student_name'] in self.roster_names}
 
     def resolve(self, name: str, teacher: Optional[str]) -> Tuple[Optional[str], str]:
         """Roster name for an uploaded name + teacher, and how it was found:
@@ -155,14 +170,17 @@ class NameMatcher:
                 return found[0]['student_name'], 'normalized'
         return name, 'unmatched'
 
-    def resolve_any_teacher(self, name: str) -> Tuple[Optional[str], str]:
+    def resolve_any_teacher(self, name: str, teachers: Iterable[str] = ()) -> Tuple[Optional[str], str]:
         """Like resolve() for saved rows that don't keep the teacher (Daily_Logs): 'ambiguous' when
-        saved corrections for this name point to different students"""
+        saved corrections for this name point to different students, or when one of `teachers` (classes known
+        to have uploaded this name) has no correction for it - the row may hold another class's child"""
         if name in self.roster_names:
             return name, 'exact'
         key = name_key(name)
-        targets = {target for (alias_key, _), target in self.aliases.items() if alias_key == key}
-        if len(targets) > 1:
+        corrected = {tkey: target for (alias_key, tkey), target in self.aliases.items() if alias_key == key}
+        targets = set(corrected.values())
+        uncorrected = {teacher_key(t) for t in teachers if t} - set(corrected)
+        if len(targets) > 1 or (targets and uncorrected):
             return name, 'ambiguous'
         if targets:
             target = targets.pop()
