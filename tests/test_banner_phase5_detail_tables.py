@@ -54,37 +54,31 @@ class TestPhase5TeamsComparisonTable:
             "Teams comparison table should have 'Avg. Participation (With Color)' row"
 
     def test_teams_both_participation_metrics_present(self, client):
-        """Verify Teams table has BOTH 'Participation %' and 'Avg. Participation (With Color)'"""
+        """Verify Teams table has BOTH 'Read ≥1 Day %' and 'Avg. Participation (With Color)'"""
         response = client.get('/teams')
         html = response.data.decode('utf-8')
 
         assert response.status_code == 200
 
-        # Should have simple Participation %
-        assert 'Participation %' in html or 'Participation' in html
+        # Should have simple Read ≥1 Day %
+        assert 'Read ≥1 Day %' in html
 
         # Should have Avg. Participation (With Color)
         assert 'Avg. Participation (With Color)' in html
 
-        # These should be different rows (both present)
-        comparison_section = html
-        participation_count = html.count('Participation')
-        assert participation_count >= 2, \
-            "Should have at least 2 references to 'Participation' (simple % and with color)"
-
     def test_teams_avg_participation_row_positioned_correctly(self, client):
-        """Verify new row appears after simple 'Participation %' row"""
+        """Verify new row appears after simple 'Read ≥1 Day %' row"""
         response = client.get('/teams')
         html = response.data.decode('utf-8')
 
         assert response.status_code == 200
 
         # Find positions of both metrics
-        simple_pos = html.find('Participation %')
+        simple_pos = html.find('Read ≥1 Day %')
         avg_with_color_pos = html.find('Avg. Participation (With Color)')
 
         # New metric should appear after simple metric in HTML
-        assert simple_pos > 0, "Simple 'Participation %' should exist"
+        assert simple_pos > 0, "Simple 'Read ≥1 Day %' should exist"
         assert avg_with_color_pos > 0, "'Avg. Participation (With Color)' should exist"
         # Note: They might be in different sections, so we just verify both exist
 
@@ -171,15 +165,11 @@ class TestPhase5GradeLevelClassesTable:
         table_header = table_match.group(0)
 
         # Should have both columns
-        assert 'PARTICIPATION' in table_header.upper(), "Should have simple Participation % column"
-
-        # Count occurrences of "PARTICIPATION" in headers
-        participation_count = table_header.upper().count('PARTICIPATION')
-        assert participation_count >= 2, \
-            f"Should have at least 2 'Participation' columns, found {participation_count}"
+        assert 'READ ≥1 DAY %' in table_header.upper(), "Should have simple Read ≥1 Day % column"
+        assert 'AVG. PARTICIPATION (WITH COLOR)' in table_header.upper(), "Should have Avg. Participation (With Color) column"
 
     def test_grade_level_avg_participation_column_positioned_correctly(self, client):
-        """Verify new column appears after simple 'PARTICIPATION %' column"""
+        """Verify new column appears after simple 'READ ≥1 DAY %' column"""
         response = client.get('/classes')
         html = response.data.decode('utf-8')
 
@@ -200,19 +190,19 @@ class TestPhase5GradeLevelClassesTable:
 
         for i, h in enumerate(headers):
             h_text = re.sub(r'<[^>]+>', '', h).strip().upper()
-            if 'PARTICIPATION' in h_text and 'COLOR' not in h_text:
+            if 'READ ≥1 DAY' in h_text:
                 if simple_part_index is None:  # First occurrence
                     simple_part_index = i
             if 'PARTICIPATION' in h_text and 'COLOR' in h_text:
                 avg_part_index = i
 
         # Both should exist
-        assert simple_part_index is not None, "Should find simple Participation % column"
+        assert simple_part_index is not None, "Should find simple Read ≥1 Day % column"
         assert avg_part_index is not None, "Should find Avg. Participation (With Color) column"
 
         # New column should come after simple column
         assert avg_part_index > simple_part_index, \
-            f"Avg. Participation column (index {avg_part_index}) should come after simple Participation column (index {simple_part_index})"
+            f"Avg. Participation column (index {avg_part_index}) should come after Read ≥1 Day column (index {simple_part_index})"
 
     def test_grade_level_avg_participation_shows_values(self, client):
         """Verify all classes show Avg. Participation (With Color) values"""

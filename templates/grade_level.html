@@ -901,7 +901,7 @@
                     <th onclick="sortTable(3)" class="text-end">FUNDRAISING</th>
                     <th onclick="sortTable(4)" class="text-end">SPONSORS</th>
                     <th onclick="sortTable(5)" class="text-end">MINUTES READ {% if date_filter != 'all' %}◐{% endif %}</th>
-                    <th onclick="sortTable(6)" class="text-end">PARTICIPATION % {% if date_filter != 'all' %}◐{% endif %}</th>
+                    <th onclick="sortTable(6)" class="text-end">READ ≥1 DAY % {% if date_filter != 'all' %}◐{% endif %}</th>
                     <th onclick="sortTable(7)" class="text-end">AVG. PARTICIPATION (WITH COLOR) {% if date_filter != 'all' %}◐{% endif %}</th>
                     <th onclick="sortTable(8)" class="text-end">ALL DAYS ACTIVE % {% if date_filter != 'all' %}◐{% endif %}</th>
                     <th onclick="sortTable(9)" class="text-end">MET GOAL ≥1 DAY % {% if date_filter != 'all' %}◐{% endif %}</th>
@@ -1022,7 +1022,8 @@
                 <ul>
                     <li><strong>Minutes Read:</strong> Total capped reading minutes through selected date</li>
                     <li><strong>Avg/Student:</strong> Average minutes per student through selected date</li>
-                    <li><strong>Participation %:</strong> Average daily participation through selected date</li>
+                    <li><strong>Read ≥1 Day %:</strong> Students who read on at least one day through selected date</li>
+                    <li><strong>Avg. Participation (With Color):</strong> (student-days read + color points) ÷ (students × days) through selected date; 100% = every student read every day, color points can push it past 100%</li>
                     <li><strong>Goal Met ≥1 Day:</strong> Students who met their goal on at least one day through selected date</li>
                 </ul>
 

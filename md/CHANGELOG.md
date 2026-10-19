@@ -9,6 +9,25 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.23.1] - 2026-10-19 - Grade Level Participation Matches the Reports and Bulletins
+
+### Changed
+- **"Participation %" renamed "Read ≥1 Day %"** (Grade Level column, Teams row, School row "Total Participating"):
+  it is the share of students who read on at least one day, which is a different number from Avg. Participation
+  (With Color) and can be higher. Page legends and Help → Key Definitions now explain both
+- Avg. Participation (With Color) is defined as one fraction everywhere: (student-days read + color points) ÷
+  (students × days). School, Teams and Grade Level share one calculation
+
+### Fixed
+- **Grade Level Avg. Participation (With Color) was wrong for some classes** (table, grade cards, banner): it averaged
+  per-day percentages, so students with no reading at all added an extra 0% "day" (a class with 6 non-readers showed
+  64.1% instead of 69.6%) and days nobody in a class logged were skipped. It now matches Q6/Q18 and the Prize Bulletin
+- Grade Level color points now respect the date filter (all color days were counted on earlier dates)
+- Grade Level banner names every tied class for Avg. Participation and Goal Met (it showed only one); the Goal Met
+  leader respects the team filter
+- Reports: Q15 Goal Getters no longer lists every student before any reading is uploaded; Q19's TOTAL row hours come
+  from total minutes (155 + 90 min showed 3 h, not 4)
+
 ## [v2026.23.0] - 2026-10-12 - Clearer Name Matching Panel + Data-Safety Fixes
 
 ### Changed

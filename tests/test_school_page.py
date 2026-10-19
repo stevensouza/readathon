@@ -80,7 +80,7 @@ class TestSchoolPage:
         response = client.get('/school')
         html = response.data.decode('utf-8')
 
-        assert 'Total Participating' in html or 'participating' in html.lower()
+        assert 'Read ≥1 Day' in html
         assert 'Total Roster' in html or 'roster' in html.lower()
 
     def test_sample_data_integrity(self, client, sample_db):

@@ -5,7 +5,8 @@ Flask-based browser interface for managing and reporting on read-a-thon data
 
 from flask import Flask, render_template, request, jsonify, send_file, Response, session, redirect, url_for
 from database import ReadathonDB, ReportGenerator, DatabaseRegistry
-from queries import get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query
+from queries import (get_grade_level_classes_query, get_grade_aggregations_query, get_school_wide_leaders_query,
+                     get_team_avg_participation_query, bonus_date_where)
 import scoreboards
 import handoff_doc
 import csv
@@ -419,6 +420,18 @@ def get_workflow_reports(workflow_id):
     return [item for item in items if is_report(item)]
 
 
+def team_avg_participation(db, team_name, date_where=""):
+    """Avg. Participation for one team: student-days read / (team size x days), without and with color points"""
+    row = db.execute_query(get_team_avg_participation_query(team_name, date_where))[0]
+    slots = row['team_size'] * row['total_days']
+    return {
+        'team_size': row['team_size'],
+        'color_bonus_points': row['bonus_points'],
+        'participation_pct': row['student_days'] * 100.0 / slots if slots else 0,
+        'participation_pct_with_color': (row['student_days'] + row['bonus_points']) * 100.0 / slots if slots else 0,
+    }
+
+
 @app.route('/')
 @app.route('/school')
 def school_tab():
@@ -513,42 +526,20 @@ def school_tab():
     metrics['total_hours'] = metrics['total_minutes'] // 60
     metrics['participation_pct'] = (metrics['participating_students'] / total_roster * 100) if total_roster > 0 else 0
 
-    # Average Daily Participation (With Color) - school-wide
-    # Calculate average daily participation percentage across all students
+    # Average Daily Participation (With Color) - school-wide:
+    # (student-days read + color points) / (students x days); color points act as "free" participation days
     school_participation_query = f"""
         SELECT
-            AVG(daily_pct) as avg_participation
-        FROM (
-            SELECT
-                dl.log_date,
-                (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / {total_roster}) as daily_pct
-            FROM Daily_Logs dl
-            WHERE 1=1 {date_where}
-            GROUP BY dl.log_date
-        )
+            (SELECT COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || dl.student_name END)
+             FROM Daily_Logs dl WHERE 1=1 {date_where}) as student_days,
+            (SELECT COALESCE(SUM(tcb.bonus_participation_points), 0)
+             FROM Team_Color_Bonus tcb WHERE 1=1 {bonus_date_where(date_where)}) as bonus_points,
+            (SELECT COUNT(DISTINCT dl.log_date) FROM Daily_Logs dl WHERE 1=1 {date_where}) as total_days
     """
-    school_participation_result = db.execute_query(school_participation_query)
-    base_school_participation = school_participation_result[0]['avg_participation'] or 0 if school_participation_result and school_participation_result[0] else 0
-
-    # Get total color bonus points across all classes
-    school_color_bonus_query = """
-        SELECT COALESCE(SUM(bonus_participation_points), 0) as total_bonus
-        FROM Team_Color_Bonus
-    """
-    school_color_bonus_result = db.execute_query(school_color_bonus_query)
-    school_color_bonus = school_color_bonus_result[0]['total_bonus'] if school_color_bonus_result and school_color_bonus_result[0] else 0
-
-    # Calculate total days in date range for color bonus calculation
-    total_days_query = f"""
-        SELECT COUNT(DISTINCT dl.log_date) as total_days
-        FROM Daily_Logs dl
-        WHERE 1=1 {date_where}
-    """
-    total_days_result = db.execute_query(total_days_query)
-    total_days = total_days_result[0]['total_days'] if total_days_result and total_days_result[0] else 1
-
-    # Apply color bonus: color points act as "free" participation days
-    metrics['avg_participation_with_color'] = base_school_participation + (school_color_bonus * 100.0 / (total_roster * total_days)) if total_roster > 0 and total_days > 0 else base_school_participation
+    school_participation = db.execute_query(school_participation_query)[0]
+    total_days = school_participation['total_days']
+    metrics['avg_participation_with_color'] = ((school_participation['student_days'] + school_participation['bonus_points'])
+                                               * 100.0 / (total_roster * total_days)) if total_roster > 0 and total_days > 0 else 0
 
     # Goals met calculation
     goals_met_query = f"""
@@ -680,76 +671,12 @@ def school_tab():
     else:
         teams[team2_name] = {'display_name': team2_name.upper(), 'classes': 0, 'fundraising': team2_fundraising, 'minutes_base': 0, 'bonus_minutes': 0, 'minutes_with_color': 0, 'hours_base': 0, 'hours_with_color': 0, 'students': 0}
 
-    # Team 1 - Average Daily Participation Percentage (with and without color bonus)
-    # Get total days and team size for calculations
-    total_days_query = f"""
-        SELECT COUNT(DISTINCT log_date) as total_days
-        FROM Daily_Logs
-        WHERE 1=1 {team1_where.replace('dl.', '')}
-    """
-    total_days_result = db.execute_query(total_days_query)
-    total_days = total_days_result[0]['total_days'] if total_days_result and total_days_result[0] else 1
-
-    team1_size = teams[team1_name]['students']
-    team1_participation_query = f"""
-        SELECT
-            AVG(daily_pct) as avg_participation
-        FROM (
-            SELECT
-                dl.log_date,
-                (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 /
-                 (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team1_name}'))) as daily_pct
-            FROM Daily_Logs dl
-            JOIN Roster r ON dl.student_name = r.student_name
-            WHERE LOWER(r.team_name) = LOWER('{team1_name}') {team1_where}
-            GROUP BY dl.log_date
-        )
-    """
-    team1_participation_result = db.execute_query(team1_participation_query)
-    teams[team1_name]['participation_pct'] = team1_participation_result[0]['avg_participation'] or 0 if team1_participation_result and team1_participation_result[0] else 0
-
-    # Calculate participation with color bonus for Team 1
-    team1_bonus_query = f"""
-        SELECT SUM(tcb.bonus_participation_points) as total_bonus
-        FROM Team_Color_Bonus tcb
-        INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-        WHERE LOWER(ci.team_name) = LOWER('{team1_name}')
-    """
-    team1_bonus_result = db.execute_query(team1_bonus_query)
-    team1_color_bonus = team1_bonus_result[0]['total_bonus'] if team1_bonus_result and team1_bonus_result[0] and team1_bonus_result[0]['total_bonus'] else 0
-    teams[team1_name]['color_bonus_points'] = team1_color_bonus
-    teams[team1_name]['participation_pct_with_color'] = teams[team1_name]['participation_pct'] + (team1_color_bonus * 100.0 / (team1_size * total_days)) if team1_size > 0 and total_days > 0 else teams[team1_name]['participation_pct']
-
-    # Team 2 - Average Daily Participation Percentage (with and without color bonus)
-    team2_size = teams[team2_name]['students']
-    team2_participation_query = f"""
-        SELECT
-            AVG(daily_pct) as avg_participation
-        FROM (
-            SELECT
-                dl.log_date,
-                (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 /
-                 (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team2_name}'))) as daily_pct
-            FROM Daily_Logs dl
-            JOIN Roster r ON dl.student_name = r.student_name
-            WHERE LOWER(r.team_name) = LOWER('{team2_name}') {team1_where}
-            GROUP BY dl.log_date
-        )
-    """
-    team2_participation_result = db.execute_query(team2_participation_query)
-    teams[team2_name]['participation_pct'] = team2_participation_result[0]['avg_participation'] or 0 if team2_participation_result and team2_participation_result[0] else 0
-
-    # Calculate participation with color bonus for Team 2
-    team2_bonus_query = f"""
-        SELECT SUM(tcb.bonus_participation_points) as total_bonus
-        FROM Team_Color_Bonus tcb
-        INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-        WHERE LOWER(ci.team_name) = LOWER('{team2_name}')
-    """
-    team2_bonus_result = db.execute_query(team2_bonus_query)
-    team2_color_bonus = team2_bonus_result[0]['total_bonus'] if team2_bonus_result and team2_bonus_result[0] and team2_bonus_result[0]['total_bonus'] else 0
-    teams[team2_name]['color_bonus_points'] = team2_color_bonus
-    teams[team2_name]['participation_pct_with_color'] = teams[team2_name]['participation_pct'] + (team2_color_bonus * 100.0 / (team2_size * total_days)) if team2_size > 0 and total_days > 0 else teams[team2_name]['participation_pct']
+    # Average Daily Participation (with and without color bonus) per team
+    for team_name in (team1_name, team2_name):
+        participation = team_avg_participation(db, team_name, team1_where)
+        teams[team_name]['participation_pct'] = participation['participation_pct']
+        teams[team_name]['color_bonus_points'] = participation['color_bonus_points']
+        teams[team_name]['participation_pct_with_color'] = participation['participation_pct_with_color']
 
     # Determine leader and calculate gaps for each metric
     # Note: Different teams may lead different metrics - gaps show which team is ahead in each category
@@ -1223,53 +1150,10 @@ def teams_tab():
         else:
             metrics['minutes_with_color'] = 0
 
-        # 3. Participation % (average daily with color bonus)
-        # Get total days being measured
-        total_days_query = f"""
-            SELECT COUNT(DISTINCT log_date) as total_days
-            FROM Daily_Logs
-            WHERE 1=1 {date_where_no_alias}
-        """
-        total_days_result = db.execute_query(total_days_query)
-        days_count = total_days_result[0]['total_days'] if total_days_result and total_days_result[0] else 1
-
-        # Get team size
-        team_size_query = f"""
-            SELECT COUNT(*) as team_size
-            FROM Roster
-            WHERE LOWER(team_name) = LOWER('{team_name}')
-        """
-        team_size_result = db.execute_query(team_size_query)
-        team_size = team_size_result[0]['team_size'] if team_size_result and team_size_result[0] else 1
-
-        # Calculate average daily participation
-        participation_query = f"""
-            SELECT AVG(daily_pct) as avg_participation
-            FROM (
-                SELECT
-                    dl.log_date,
-                    (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 /
-                     (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team_name}'))) as daily_pct
-                FROM Daily_Logs dl
-                JOIN Roster r ON dl.student_name = r.student_name
-                WHERE LOWER(r.team_name) = LOWER('{team_name}') {date_where}
-                GROUP BY dl.log_date
-            )
-        """
-        participation_result = db.execute_query(participation_query)
-        base_participation = participation_result[0]['avg_participation'] or 0 if participation_result and participation_result[0] else 0
-
-        # Add color bonus to participation
-        color_bonus_query = f"""
-            SELECT SUM(tcb.bonus_participation_points) as total_bonus
-            FROM Team_Color_Bonus tcb
-            INNER JOIN Class_Info ci ON tcb.class_name = ci.class_name
-            WHERE LOWER(ci.team_name) = LOWER('{team_name}')
-        """
-        color_bonus_result = db.execute_query(color_bonus_query)
-        color_bonus_points = color_bonus_result[0]['total_bonus'] if color_bonus_result and color_bonus_result[0] and color_bonus_result[0]['total_bonus'] else 0
-
-        metrics['participation_pct'] = base_participation + (color_bonus_points * 100.0 / (team_size * days_count)) if team_size > 0 and days_count > 0 else base_participation
+        # 3. Avg. Participation (With Color)
+        participation = team_avg_participation(db, team_name, date_where)
+        team_size = participation['team_size']
+        metrics['participation_pct'] = participation['participation_pct_with_color']
         metrics['participation_students'] = team_size  # Total students on team
 
         # 4. Goal Met ≥1 Day (students who met their grade's goal at least once)
@@ -1662,7 +1546,7 @@ def teams_tab():
     team2_participated_count = team2_participated_result[0]['participated_count'] if team2_participated_result and team2_participated_result[0] else 0
     team2_participation_pct = (team2_participated_count / team2_metrics['participation_students'] * 100) if team2_metrics['participation_students'] > 0 else 0
 
-    add_comparison_row('Participation %', 'Reading', team1_participation_pct, team2_participation_pct, 'percentage')
+    add_comparison_row('Read ≥1 Day %', 'Reading', team1_participation_pct, team2_participation_pct, 'percentage')
 
     # 3. Avg. Participation (With Color) - average daily participation with color bonus
     add_comparison_row('Avg. Participation (With Color)', 'Reading', team1_metrics['participation_pct'], team2_metrics['participation_pct'], 'percentage')
@@ -2123,9 +2007,9 @@ def grade_level_tab():
                         cls_value = cls.get('total_minutes', 0)
                     elif metric == 'sponsors':
                         cls_value = cls.get('total_sponsors', 0)
-                    elif metric == 'avg_participation_with_color':
+                    elif metric == 'participation':
                         cls_value = cls.get('avg_participation_with_color_pct', 0)
-                    elif metric == 'goal_met':
+                    elif metric == 'goals_met':
                         cls_value = cls.get('goal_met_once_pct', 0)
 
                     if cls_value == max_value and max_value > 0:

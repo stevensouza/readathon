@@ -277,8 +277,8 @@ class TestDetailTableCompleteness:
 
         assert response.status_code == 200
 
-        # Should have simple Participation %
-        assert 'Participation %' in html
+        # Should have simple Read ≥1 Day % (students who read at least once)
+        assert 'Read ≥1 Day %' in html
 
         # Should have Avg. Participation (With Color)
         assert 'Avg. Participation (With Color)' in html
@@ -289,7 +289,7 @@ class TestDetailTableCompleteness:
             f"Should have at least 2 'Participation' references, found {participation_count}"
 
     def test_grade_level_has_both_participation_columns(self, client):
-        """Verify Grade Level table has both 'PARTICIPATION %' AND 'AVG. PART. (W/ COLOR)'"""
+        """Verify Grade Level table has both 'READ ≥1 DAY %' AND 'AVG. PARTICIPATION (WITH COLOR)'"""
         response = client.get('/classes')
         html = response.data.decode('utf-8')
 
@@ -302,12 +302,8 @@ class TestDetailTableCompleteness:
         thead = thead_match.group(0).upper()
 
         # Should have both columns
-        assert 'PARTICIPATION' in thead
-
-        # Count column headers with "PARTICIPATION"
-        th_matches = re.findall(r'<TH[^>]*>.*?PARTICIPATION.*?</TH>', thead, re.DOTALL)
-        assert len(th_matches) >= 2, \
-            f"Should have at least 2 Participation columns, found {len(th_matches)}"
+        assert 'READ ≥1 DAY %' in thead
+        assert 'AVG. PARTICIPATION (WITH COLOR)' in thead
 
 
 class TestFilterBehavior:

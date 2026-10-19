@@ -20,7 +20,8 @@ This file contains universal rules that apply across all pages and features in t
 ### Data Calculation Rules
 - **Minutes are ALWAYS capped at 120/day** for contest calculations
 - **Color war bonus points MUST always be included** in minute totals
-- **Participation % = (students with >0 minutes) / (total students in class/grade/school)**
+- **Read ≥1 Day % = (students with >0 minutes on at least one day) / (total students in class/grade/school)**
+- **Avg. Participation (With Color) = (student-days read + color points) / (students × days) × 100** (see below)
 - **Goals Met = count of students who achieved reading goal ≥1 day**
 
 ### Contest Period
@@ -154,7 +155,7 @@ All card-based pages (School, Teams, Grade Level, Students) MUST follow this ord
    - Format: X.X% (1 decimal place)
    - Subtitle: Varies by page (e.g., "Top Class: TeacherName - 85.3%")
    - Filter: Respects date filter ◐
-   - Formula: (days_read / (students * days)) * 100 + (color_points / (students * days)) * 100
+   - Formula: (student_days_read + color_points) / (students * days) * 100
    - **Special Rule: CAN EXCEED 100%** if all students read all days AND team has color war points
    - Example: 10 students read 10/10 days = 100%, + 5 color points = 105%
 
@@ -167,12 +168,13 @@ All card-based pages (School, Teams, Grade Level, Students) MUST follow this ord
 
 The application uses **TWO distinct participation metrics**. DO NOT confuse them:
 
-#### 1. Participation % (Simple Cumulative)
+#### 1. Read ≥1 Day % (Simple Cumulative; called "Participation %" before v2026.23.1)
 - **Formula:** `(students_who_participated / total_students) * 100`
 - **Definition:** Percentage of students who read >0 minutes at least once in the date range
 - **Used in:**
-  - Grade Level classes table "PARTICIPATION %" column
-  - Teams comparison table "Participation %" row
+  - Grade Level classes table "READ ≥1 DAY %" column
+  - Teams comparison table "Read ≥1 Day %" row
+  - School page participation breakdown "Read ≥1 Day" row
 - **Example:** 80 out of 100 students participated = 80%
 - **Does NOT include:** Color war bonus points
 - **Does NOT reflect:** Daily participation patterns or consistency
@@ -180,11 +182,16 @@ The application uses **TWO distinct participation metrics**. DO NOT confuse them
 #### 2. Avg. Participation (With Color)
 - **Formula:**
   ```
-  base_avg = (total_days_read / (team_size * days_in_range)) * 100
-  color_adj = (color_war_points / (team_size * days_in_range)) * 100
-  result = base_avg + color_adj
+  result = (student_days_read + color_war_points) / (students * days_in_range) * 100
   ```
-- **Definition:** Average daily participation rate + color bonus points
+  - `student_days_read` = distinct (student, date) pairs with minutes > 0 in the range; `days_in_range` = distinct
+    `Daily_Logs` dates in the range (school-wide); `students` = class/team size; color points dated in the range.
+  - Without color the result is at most 100% (every student read every day); color points can push it past 100%.
+  - **Never compute it as an average of per-day percentages** (`AVG(daily_pct)` grouped by date): a `LEFT JOIN`
+    gives students with no log rows a NULL-date group that counts as an extra 0% day, and dates nobody in the
+    class/team logged are skipped. (Grade Level page bug fixed in v2026.23.1: a class with 6 non-readers
+    showed 64.1% instead of 69.6%.)
+- **Definition:** Share of all possible student-days that were read, with color points counted as extra read days
 - **Used in:**
   - All 3 page banners (School, Teams, Grade Level)
   - Teams comparison table "Avg. Participation (With Color)" row
@@ -196,7 +203,7 @@ The application uses **TWO distinct participation metrics**. DO NOT confuse them
 
 #### Why Two Metrics?
 
-**Simple Participation %:**
+**Read ≥1 Day %:**
 - Shows breadth: "What percentage of students participated at all?"
 - Binary: Either a student participated (1) or didn't (0)
 - Useful for: Comparing class engagement levels
@@ -208,7 +215,9 @@ The application uses **TWO distinct participation metrics**. DO NOT confuse them
 - Useful for: Measuring sustained engagement + team spirit
 
 **Key Difference:**
-- A class with 100% Simple Participation (all students read once) might have 50% Avg. Participation (if they only read half the days)
+- A class with 100% Read ≥1 Day (all students read once) might have 50% Avg. Participation (if they only read half the days)
+- So Avg. Participation (With Color) can be lower than Read ≥1 Day %; it can never be lower than the same
+  average without color
 - Avg. Participation rewards consistent daily reading + team color spirit
 
 ### Team Badges

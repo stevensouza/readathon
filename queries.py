@@ -1063,7 +1063,7 @@ QUERY_Q15_GOAL_GETTERS = """
         LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name AND dl.log_date <= :as_of
         LEFT JOIN Grade_Rules gr ON r.grade_level = gr.grade_level
         GROUP BY r.student_name, r.grade_level, r.team_name, r.class_name, td.total_days
-        HAVING days_met_goal = td.total_days AND days_with_data = td.total_days
+        HAVING td.total_days > 0 AND days_met_goal = td.total_days AND days_with_data = td.total_days
     )
     SELECT
         student_name,
@@ -1218,10 +1218,10 @@ QUERY_Q19_TEAM_MINUTES = """
             'TOTAL' as team_name,
             SUM(total_students) as total_students,
             SUM(total_minutes_base) as total_minutes_base,
-            SUM(total_hours_base) as total_hours_base,
+            SUM(total_minutes_base) / 60 as total_hours_base,
             SUM(bonus_minutes) as bonus_minutes,
             SUM(total_minutes_with_color) as total_minutes_with_color,
-            SUM(total_hours_with_color) as total_hours_with_color,
+            SUM(total_minutes_with_color) / 60 as total_hours_with_color,
             ROUND(1.0 * SUM(total_minutes_base) / SUM(total_students), 1) as avg_minutes_per_student,
             ROUND(1.0 * SUM(total_minutes_with_color) / SUM(total_students), 1) as avg_minutes_per_student_with_color
         FROM TeamTotals
@@ -1445,6 +1445,29 @@ QUERY_Q23_ROSTER_INTEGRITY = """
 # GRADE LEVEL TAB QUERIES
 # ============================================================================
 
+def bonus_date_where(date_where=""):
+    """The Daily_Logs date filter (" AND dl.log_date <= '...'") applied to Team_Color_Bonus (alias tcb)"""
+    return date_where.replace('dl.log_date', 'tcb.event_date')
+
+
+def get_team_avg_participation_query(team_name, date_where=""):
+    """Inputs for one team's Avg. Participation: team size (Roster), days in range, student-days read, color points"""
+    bonus_where = bonus_date_where(date_where)
+    return f"""
+        SELECT
+            (SELECT COUNT(*) FROM Roster WHERE LOWER(team_name) = LOWER('{team_name}')) as team_size,
+            (SELECT COUNT(DISTINCT dl.log_date) FROM Daily_Logs dl WHERE 1=1 {date_where}) as total_days,
+            (SELECT COUNT(DISTINCT dl.log_date || '-' || dl.student_name)
+             FROM Daily_Logs dl
+             JOIN Roster r ON dl.student_name = r.student_name
+             WHERE LOWER(r.team_name) = LOWER('{team_name}') AND dl.minutes_read > 0 {date_where}) as student_days,
+            (SELECT COALESCE(SUM(tcb.bonus_participation_points), 0)
+             FROM Team_Color_Bonus tcb
+             JOIN Class_Info ci ON tcb.class_name = ci.class_name
+             WHERE LOWER(ci.team_name) = LOWER('{team_name}') {bonus_where}) as bonus_points
+    """
+
+
 def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
     """
     Get all classes with their metrics for the Grade Level tab.
@@ -1469,6 +1492,7 @@ def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
     - Color War Points (bonus_participation_points)
     - Students (Team Size) - total students
     """
+    bonus_where = bonus_date_where(date_where)
     return f"""
         -- Separate Reader_Cumulative metrics (fundraising, sponsors) from Daily_Logs metrics (minutes)
         -- This prevents the Daily_Logs JOIN from multiplying Reader_Cumulative data
@@ -1524,6 +1548,7 @@ def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
                 COALESCE(SUM(tcb.bonus_minutes), 0) as bonus_minutes,
                 COALESCE(SUM(tcb.bonus_participation_points), 0) as bonus_participation_points
             FROM Team_Color_Bonus tcb
+            WHERE 1=1 {bonus_where}
             GROUP BY tcb.class_name
         ),
         FilterDaysCount AS (
@@ -1599,24 +1624,18 @@ def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
             )
             GROUP BY class_name
         ),
-        AvgDailyParticipation AS (
+        -- Student-days read (not an average of per-day %: that adds a 0% "day" for students
+        -- with no log rows and skips dates nobody in the class logged)
+        StudentDaysRead AS (
             SELECT
-                class_name,
-                AVG(daily_pct) as avg_daily_pct
-            FROM (
-                SELECT
-                    ci.class_name,
-                    ci.total_students,
-                    dl.log_date,
-                    (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / ci.total_students) as daily_pct
-                FROM Class_Info ci
-                JOIN Roster r ON ci.class_name = r.class_name
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                WHERE 1=1 {date_where}
-                {grade_where}{team_where}
-                GROUP BY ci.class_name, ci.total_students, dl.log_date
-            )
-            GROUP BY class_name
+                ci.class_name,
+                COUNT(DISTINCT dl.log_date || '-' || dl.student_name) as student_days
+            FROM Class_Info ci
+            JOIN Roster r ON ci.class_name = r.class_name
+            JOIN Daily_Logs dl ON r.student_name = dl.student_name
+            WHERE dl.minutes_read > 0 {date_where}
+            {grade_where}{team_where}
+            GROUP BY ci.class_name
         )
         SELECT
             cm.class_name,
@@ -1640,14 +1659,14 @@ def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
                 ELSE 0
             END as participation_pct,
 
-            -- Avg. Participation (With Color) - average daily participation + color bonus
+            -- Avg. Participation (With Color) = (student-days read + color points) / (students x days)
             CASE WHEN cm.total_students > 0 AND (SELECT total_days FROM FilterDaysCount) > 0
                 THEN ROUND(
-                    COALESCE(adp.avg_daily_pct, 0) +
-                    (COALESCE(cb.bonus_participation_points, 0) * 100.0 / (cm.total_students * (SELECT total_days FROM FilterDaysCount))),
+                    (COALESCE(sdr.student_days, 0) + COALESCE(cb.bonus_participation_points, 0)) * 100.0 /
+                    (cm.total_students * (SELECT total_days FROM FilterDaysCount)),
                     1
                 )
-                ELSE COALESCE(adp.avg_daily_pct, 0)
+                ELSE 0
             END as avg_participation_with_color_pct,
 
             -- All Days Active % (students who read all days / total)
@@ -1674,7 +1693,7 @@ def get_grade_level_classes_query(date_where="", grade_where="", team_where=""):
         FROM ClassMetrics cm
         LEFT JOIN ColorBonus cb ON cm.class_name = cb.class_name
         LEFT JOIN Participation p ON cm.class_name = p.class_name
-        LEFT JOIN AvgDailyParticipation adp ON cm.class_name = adp.class_name
+        LEFT JOIN StudentDaysRead sdr ON cm.class_name = sdr.class_name
         LEFT JOIN AllDaysActive ada ON cm.class_name = ada.class_name
         LEFT JOIN GoalMetOnce gmo ON cm.class_name = gmo.class_name
         LEFT JOIN GoalMetAllDays gma ON cm.class_name = gma.class_name
@@ -1694,6 +1713,7 @@ def get_grade_aggregations_query(date_where="", grade_where="", team_where=""):
     # Build WHERE clauses for Roster table (using r. prefix)
     grade_where_r = grade_where.replace('ci.grade_level', 'r.grade_level') if grade_where else ""
     team_where_r = team_where.replace('ci.team_name', 'r.team_name') if team_where else ""
+    bonus_where = bonus_date_where(date_where)
 
     return f"""
         WITH TeamNames AS (
@@ -1747,28 +1767,43 @@ def get_grade_aggregations_query(date_where="", grade_where="", team_where=""):
             WHERE 1=1 {grade_where_r} {team_where_r}
             GROUP BY r.grade_level, r.teacher_name, r.team_name
         ),
-        ClassDailyParticipation AS (
+        DaysCount AS (
+            SELECT COUNT(DISTINCT dl.log_date) as total_days
+            FROM Daily_Logs dl
+            WHERE 1=1 {date_where}
+        ),
+        ClassParticipationBonus AS (
+            SELECT
+                tcb.class_name,
+                SUM(tcb.bonus_participation_points) as bonus_points
+            FROM Team_Color_Bonus tcb
+            WHERE 1=1 {bonus_where}
+            GROUP BY tcb.class_name
+        ),
+        -- Avg. Participation (With Color) per class = (student-days read + color points) / (students x days)
+        ClassParticipation AS (
             SELECT
                 ci.grade_level,
                 ci.teacher_name,
                 ci.team_name,
-                dl.log_date,
-                (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / ci.total_students) as daily_pct
+                (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || dl.student_name END)
+                    + COALESCE(MAX(cpb.bonus_points), 0)) * 100.0
+                    / (ci.total_students * (SELECT total_days FROM DaysCount)) as avg_participation_pct
             FROM Class_Info ci
             LEFT JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
-            WHERE 1=1 {grade_where} {team_where}
-            GROUP BY ci.grade_level, ci.teacher_name, ci.team_name, dl.log_date, ci.total_students
+            LEFT JOIN ClassParticipationBonus cpb ON ci.class_name = cpb.class_name
+            WHERE ci.total_students > 0 AND (SELECT total_days FROM DaysCount) > 0 {grade_where} {team_where}
+            GROUP BY ci.class_name, ci.grade_level, ci.teacher_name, ci.team_name, ci.total_students
         ),
         GradeTopParticipation AS (
             SELECT
                 grade_level,
                 teacher_name,
                 team_name,
-                AVG(daily_pct) as avg_participation_pct,
-                ROW_NUMBER() OVER (PARTITION BY grade_level ORDER BY AVG(daily_pct) DESC) as rn
-            FROM ClassDailyParticipation
-            GROUP BY grade_level, teacher_name, team_name
+                avg_participation_pct,
+                ROW_NUMBER() OVER (PARTITION BY grade_level ORDER BY avg_participation_pct DESC) as rn
+            FROM ClassParticipation
         ),
         StudentTopFundraising AS (
             SELECT
@@ -2265,6 +2300,7 @@ def get_school_wide_leaders_query(date_where="", grade=None, team=None):
     """
     grade_where = f" AND ci.grade_level = '{grade}'" if grade else ""
     team_where = f" AND ci.team_name = '{team}'" if team else ""
+    bonus_where = bonus_date_where(date_where)
 
     return f"""
         SELECT * FROM (
@@ -2303,10 +2339,11 @@ def get_school_wide_leaders_query(date_where="", grade=None, team=None):
             ),
             ColorBonus AS (
                 SELECT
-                    class_name,
-                    SUM(bonus_minutes) as bonus_minutes
-                FROM Team_Color_Bonus
-                GROUP BY class_name
+                    tcb.class_name,
+                    SUM(tcb.bonus_minutes) as bonus_minutes
+                FROM Team_Color_Bonus tcb
+                WHERE 1=1 {bonus_where}
+                GROUP BY tcb.class_name
             )
             SELECT
                 'minutes' as metric,
@@ -2343,38 +2380,15 @@ def get_school_wide_leaders_query(date_where="", grade=None, team=None):
         UNION ALL
 
         SELECT * FROM (
-            WITH ClassDailyParticipation AS (
+            -- Avg. Participation (With Color) = (student-days read + color points) / (students x days),
+            -- rounded like the classes table so the banner can find tied classes there
+            WITH ColorBonus AS (
                 SELECT
-                    ci.class_name,
-                    ci.teacher_name,
-                    ci.grade_level,
-                    ci.team_name,
-                    ci.total_students,
-                    dl.log_date,
-                    (COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.student_name END) * 100.0 / ci.total_students) as daily_pct
-                FROM Class_Info ci
-                JOIN Roster r ON ci.class_name = r.class_name
-                LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
-                WHERE 1=1 {grade_where} {team_where} {date_where}
-                GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students, dl.log_date
-            ),
-            ClassAvgParticipation AS (
-                SELECT
-                    class_name,
-                    teacher_name,
-                    grade_level,
-                    team_name,
-                    total_students,
-                    AVG(daily_pct) as avg_participation
-                FROM ClassDailyParticipation
-                GROUP BY class_name, teacher_name, grade_level, team_name, total_students
-            ),
-            ColorBonus AS (
-                SELECT
-                    class_name,
-                    SUM(bonus_participation_points) as bonus_points
-                FROM Team_Color_Bonus
-                GROUP BY class_name
+                    tcb.class_name,
+                    SUM(tcb.bonus_participation_points) as bonus_points
+                FROM Team_Color_Bonus tcb
+                WHERE 1=1 {bonus_where}
+                GROUP BY tcb.class_name
             ),
             DaysCount AS (
                 SELECT COUNT(DISTINCT dl.log_date) as total_days
@@ -2383,13 +2397,19 @@ def get_school_wide_leaders_query(date_where="", grade=None, team=None):
             )
             SELECT
                 'participation' as metric,
-                cap.class_name,
-                cap.teacher_name,
-                cap.grade_level,
-                cap.team_name,
-                (cap.avg_participation + (COALESCE(cb.bonus_points, 0) * 100.0 / (cap.total_students * (SELECT total_days FROM DaysCount)))) as value
-            FROM ClassAvgParticipation cap
-            LEFT JOIN ColorBonus cb ON cap.class_name = cb.class_name
+                ci.class_name,
+                ci.teacher_name,
+                ci.grade_level,
+                ci.team_name,
+                ROUND((COUNT(DISTINCT CASE WHEN dl.minutes_read > 0 THEN dl.log_date || '-' || dl.student_name END)
+                       + COALESCE(MAX(cb.bonus_points), 0)) * 100.0
+                      / (ci.total_students * (SELECT total_days FROM DaysCount)), 1) as value
+            FROM Class_Info ci
+            JOIN Roster r ON ci.class_name = r.class_name
+            LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name {date_where}
+            LEFT JOIN ColorBonus cb ON ci.class_name = cb.class_name
+            WHERE ci.total_students > 0 AND (SELECT total_days FROM DaysCount) > 0 {grade_where} {team_where}
+            GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students
             ORDER BY value DESC
             LIMIT 1
         )
@@ -2411,7 +2431,7 @@ def get_school_wide_leaders_query(date_where="", grade=None, team=None):
             JOIN Roster r ON ci.class_name = r.class_name
             LEFT JOIN Daily_Logs dl ON r.student_name = dl.student_name
             JOIN Grade_Rules gr ON ci.grade_level = gr.grade_level
-            WHERE dl.minutes_read >= gr.min_daily_minutes {grade_where} {date_where}
+            WHERE dl.minutes_read >= gr.min_daily_minutes {grade_where} {team_where} {date_where}
             GROUP BY ci.class_name, ci.teacher_name, ci.grade_level, ci.team_name, ci.total_students
             ORDER BY value DESC
             LIMIT 1
