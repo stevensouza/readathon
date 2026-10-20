@@ -185,16 +185,16 @@ Runs on a laptop at http://127.0.0.1:5001. **✨ Simple view** (top right) shows
 ### Every morning (Day 1 to Day 10, plus the morning after the last day)
 
 1. **ReadAThon.com** (sign in first): on the app's Upload page, **Open Minutes Report** (pick yesterday's date) and **Open Comprehensive Readers Report** open the two reports - download each as CSV. By hand: View Reports → All Reports → Reports By Date (date + Minutes Read), and Reports By Reader → Comprehensive Report.
-2. **Upload → Daily Minutes Upload:** choose the day's file.
-3. **Upload → Cumulative Stats Upload:** check the **snapshot date** = the contest day the file covers.
+2. **Upload → Daily Minutes tab:** choose the day's file. A big green **Upload succeeded** means it saved; red **Upload failed** means it didn't (the errors are shown). Yellow notes under it (names not on the roster, warnings) don't mean anything was lost.
+3. **Upload → Cumulative Stats tab:** check the **snapshot date** = the contest day the file covers.
    - Either upload: if **Match names to the roster** appears (names parents typed that aren't on the roster): look at each suggested student. **Strong matches** (listed first) are already accepted (ticked); **Possible matches** aren't - tick **Accept** if the student is right (a different first name may be a sibling), or choose another. Then **Save accepted matches & upload**. You don't have to match every name: one left unticked still uploads and counts for the school (not for a class or team), and you can match it later from the alert at the top of the Upload page. A saved name correction is remembered for every later day. Pick **Not a roster student** for pages that aren't a student (no money, no minutes).
-   - An alert at the top of the Upload page shows names still not on the roster - fix them there any time. Upload → **Saved Name Corrections** lists every correction (Change / delete).
+   - An alert at the top of the Upload page shows names still not on the roster - fix them there any time. Upload → **Saved Name Corrections** tab (next to Upload History) lists every correction (Change / delete).
 4. **Bulletins → Daily Scoreboard:** check the day, then **Save winners** (the drawing is final once saved).
 5. **Copy as image** → paste into the email to the school (or Download PNG and attach it).
 
 ### Color War day
 
-- **Upload → Team Color Bonus Upload:** the date plus a file with one row per class (columns: timestamp, class_name, team_name, grade_level, students_count).
+- **Upload → Team Color Bonus tab:** the date plus a file with one row per class (columns: timestamp, class_name, team_name, grade_level, students_count).
 
 ### After the contest
 

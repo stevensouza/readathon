@@ -9,6 +9,23 @@ Releases v2026.1.0-v2026.14.3 were numbered under an earlier school-year scheme 
 
 ## [Unreleased]
 
+## [v2026.24.0] - 2026-10-19 - Upload Page: Tabs and a Clear Success/Failure Result
+
+### Changed
+- **Upload page is one screen:** the three uploads are tabs (**Daily Minutes | Cumulative Stats | Team Color Bonus**)
+  instead of three long stacked sections, and **Upload History | Saved Name Corrections** are tabs below. Each row
+  of tabs reopens on the tab used last. The tabs still switch on a read-only database (the forms stay disabled)
+- **The upload result says success or failure first:** a large green **Upload succeeded** (what was saved) or red
+  **Upload failed** / **2 of 5 files failed** (nothing, or not every file, was saved). It appears right under the
+  upload tabs
+- **Names not on the roster no longer make a good upload look like a problem:** they're one line ("4 names aren't
+  on the roster - uploaded as typed") with **Match names to the roster**, listed once even across several days.
+  Other warnings show as a count (the data was saved)
+- **Every message is still there, under Details** (errors, warnings, names not on the roster, corrected names, files
+  saved); Details opens by itself when an upload fails, and long name lists fold. Upload History's Audit button
+  keeps the same messages after the page is reloaded
+- No change to what is uploaded or saved (no Python or database changes)
+
 ## [v2026.23.1] - 2026-10-19 - Grade Level Participation Matches the Reports and Bulletins
 
 ### Changed
